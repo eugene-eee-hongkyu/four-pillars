@@ -35,8 +35,8 @@ export default function ScreenChat() {
   const [streamingText, setStreamingText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const profile = useRef(loadProfile());
-  const conversation = useRef(loadConversation());
+  const profile = useRef<ReturnType<typeof loadProfile>>(null);
+  const conversation = useRef<ReturnType<typeof loadConversation>>(null);
 
   useEffect(() => {
     const p = loadProfile();

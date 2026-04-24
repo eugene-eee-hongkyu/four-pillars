@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getOrCreateAnonId } from '@/lib/session/anonymous';
 import { saveProfile, loadProfile } from '@/lib/session/local-store';
+import { lunarToSolar } from '@fullstackfamily/manseryeok';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1949 }, (_, i) => CURRENT_YEAR - i);
@@ -25,6 +26,8 @@ export default function ScreenBirthInput() {
   const [birthHour, setBirthHour] = useState<number>(12);
   const [birthMinute, setBirthMinute] = useState<number>(0);
   const [timeUnknown, setTimeUnknown] = useState(false);
+  const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar');
+  const [isLeapMonth, setIsLeapMonth] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,13 +46,28 @@ export default function ScreenBirthInput() {
 
     try {
       const anonId = getOrCreateAnonId();
+
+      let solarYear = birthYear, solarMonth = birthMonth, solarDay = birthDay;
+      if (calendarType === 'lunar') {
+        try {
+          const converted = lunarToSolar(birthYear, birthMonth, birthDay, isLeapMonth);
+          solarYear = converted.solar.year;
+          solarMonth = converted.solar.month;
+          solarDay = converted.solar.day;
+        } catch {
+          setError('올바르지 않은 음력 날짜입니다. 다시 확인해주세요.');
+          setLoading(false);
+          return;
+        }
+      }
+
       const res = await fetch('/api/manse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          year: birthYear,
-          month: birthMonth,
-          day: birthDay,
+          year: solarYear,
+          month: solarMonth,
+          day: solarDay,
           hour: timeUnknown ? undefined : birthHour,
           minute: timeUnknown ? undefined : birthMinute,
           gender,
@@ -122,6 +140,34 @@ export default function ScreenBirthInput() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* 양력/음력 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">달력</label>
+            <div className="flex gap-6">
+              {(['solar', 'lunar'] as const).map((c) => (
+                <label key={c} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="calendarType"
+                    checked={calendarType === c}
+                    onChange={() => { setCalendarType(c); setIsLeapMonth(false); }}
+                    className="accent-primary"
+                  />
+                  <span className="text-sm">{c === 'solar' ? '양력' : '음력'}</span>
+                </label>
+              ))}
+            </div>
+            {calendarType === 'lunar' && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={isLeapMonth}
+                  onCheckedChange={(v) => setIsLeapMonth(v === true)}
+                />
+                <span className="text-sm text-muted-foreground">윤달</span>
+              </label>
+            )}
           </div>
 
           {/* 생년월일 */}

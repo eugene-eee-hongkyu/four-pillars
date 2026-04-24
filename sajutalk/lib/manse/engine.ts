@@ -31,7 +31,7 @@ export function computeManse(input: ManseInput): ManseResult {
   const minute = input.minute ?? 0;
   const timeUnknown = input.hour === undefined;
 
-  const raw = calculateSaju(year, month, day, hour, minute, gender === 'male' ? 'male' : 'female');
+  const raw = calculateSaju(year, month, day, hour, minute);
 
   const result: ManseResult = {
     yearPillar: raw.yearPillar,

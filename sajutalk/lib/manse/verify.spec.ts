@@ -33,7 +33,7 @@ const TEST_CASES: TestCase[] = [
 ];
 
 function getLibResult(tc: TestCase) {
-  const raw = calculateSaju(tc.year, tc.month, tc.day, tc.hour, 0, tc.gender);
+  const raw = calculateSaju(tc.year, tc.month, tc.day, tc.hour, 0);
   return {
     year: raw.yearPillar,
     month: raw.monthPillar,
