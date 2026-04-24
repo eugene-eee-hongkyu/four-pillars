@@ -6,29 +6,30 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 18:22
-## 마지막 업데이트: 2026-04-24 18:22
+## 마지막 실행: 2026-04-24 20:24
+## 마지막 업데이트: 2026-04-24 20:24
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 사주 해석 강화 run 진행 중 — 구현 완료, localhost E2E 수동 확인 대기
-- 현재 run: docs/runs/2026-04-24-saju-interpretation-enhancement_run.md
+- 사주 해석 품질 개선 — 합충형파해 구현 vs 프롬프트 수정 우선순위 결정 대기
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E 확인 (화면1 → 채팅 → 40문장+ 해석 직접 읽기)
-2. 미커밋 구현 파일 git add/commit/push (sajutalk 구현 파일 별도 커밋)
-3. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
+1. 합충형파해 구현 vs 프롬프트 수정 중 우선순위 결정 (사람 판단 필요)
+2. 결정에 따라 프롬프트 수정 또는 lib/manse/clashes.ts 구현 착수
+3. 미커밋 구현 파일 git add/commit/push
 
 ### 막힌 것
 
+- 합충형파해 구현 vs 프롬프트 수정 중 어느 것을 먼저 할지 미결 (사람 판단 대기)
 - Supabase credentials 미입력: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
   → /api/session만 영향 (나머지 API 라우트는 동작 확인됨)
 
 ### 사람 판단 필요
 
-- localhost:3002 E2E 수동 품질 확인 (40문장+ 해석 직접 읽고 품질 판단)
+- 합충형파해 구현 vs 프롬프트 수정 우선순위 결정
+- localhost:3002 E2E 수동 품질 확인 (해석 직접 읽고 품질 판단)
 - Supabase 프로젝트 생성 및 credentials 제공 (사용자 직접)
 - Vercel 배포 직전 승인 (§9 [트리거 4] — 첫 공개 배포 전 정지)
 
@@ -56,13 +57,22 @@
 - [x] 화면 1 양력/음력 선택 추가 (lunarToSolar 변환, 윤달 체크박스)
 - [x] 대운·세운·월운 LuckCycleTable UI 추가 (result 페이지, 우측=현재, 좌측=미래)
 - [x] lib/manse/luck-cycles.ts — 대운·세운·월운 계산 모듈
-- [x] lib/manse/shensha.ts — 신살 8종 계산 (도화·역마·학당귀인·천의성·암록·문창귀인·양인살·공망)
+- [x] lib/manse/shensha.ts — 신살 19종 계산 (초기 8종 → 19종 확장)
 - [x] lib/manse/yongsin.ts — 억부용신 근사 계산
 - [x] lib/prompts/interpret.ts 전면 개편 (5구획 40문장+, 전체 만세력 주입)
 - [x] app/api/interpret/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] 40문장+ 스트리밍 개발 서버 수신 확인 (~50초)
 - [x] getElementStyle 인라인 스타일 수정 (Tailwind 동적 클래스 색상 미적용 문제 해결)
 - [x] 월주 십신 비견 표시 누락 버그 수정
+- [x] 대운 49세 癸未 천간 십신 오류 수정 (hanja 기준 역변환 테이블로 방어)
+- [x] 일주 십신 하드코딩 제거 (i===1 제거 → 비견/비견 정상 표시)
+- [x] 첫 화면 자동 리다이렉트 제거 (sessionCount 기반 useEffect 삭제)
+- [x] 사주 그리드 한자(작게)+한글(크게) 병기
+- [x] 신살·길성 섹션 추가 (건록 포함, 길성=녹색/살=빨간색)
+- [x] 채팅 프롬프트 6섹션 구조 전환 (성격/적성/운세/주의/재물/건강 + 나이대별 예시)
+- [x] 채팅 답변 잘림 수정 (max_tokens 1024→3072)
+- [x] react-markdown + @tailwindcss/typography 설치 (마크다운 렌더링)
+- [ ] 합충형파해 구현 vs 프롬프트 수정 우선순위 결정 및 실행
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] 미커밋 구현 파일 git commit/push
 - [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
