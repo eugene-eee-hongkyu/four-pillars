@@ -1,31 +1,42 @@
 // 긴 해석 스트리밍 (S6)
-// POST { name, manse, concern, pattern, prevSummary? } → Server-Sent Events stream
+// POST { name, gender, birthYear, concern, pattern, fullManse, prevSummary? }
+// → Server-Sent Events stream
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { INTERPRET_SYSTEM, buildInterpretPrompt } from '@/lib/prompts/interpret';
+import { INTERPRET_SYSTEM, buildInterpretPrompt, type InterpretContext } from '@/lib/prompts/interpret';
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, manse, concern, pattern, prevSummary } = body;
+  const { name, gender, birthYear, concern, pattern, fullManse, prevSummary } = body;
 
-  if (!name || !manse || !concern || !pattern) {
+  if (!name || !concern || !pattern || !fullManse) {
     return new Response(JSON.stringify({ error: 'missing required fields' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
+  const ctx: InterpretContext = {
+    name,
+    gender: gender ?? 'female',
+    birthYear: birthYear ?? 1990,
+    concern,
+    pattern,
+    fullManse,
+    prevSummary,
+  };
+
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+    max_tokens: 4096,
     system: INTERPRET_SYSTEM,
     messages: [
       {
         role: 'user',
-        content: buildInterpretPrompt({ name, manse, concern, pattern, prevSummary }),
+        content: buildInterpretPrompt(ctx),
       },
     ],
   });

@@ -59,9 +59,11 @@ export default function ScreenChat() {
     const c = conversation.current!;
     streamAiResponse('/api/interpret', {
       name: p.name,
-      manse: (p.manse as { summary: string })?.summary ?? '',
+      gender: p.gender,
+      birthYear: p.birthYear,
       concern: c.concern,
       pattern: c.pattern,
+      fullManse: p.manse ?? {},
     }, (text) => {
       dispatch({ type: 'INTERPRETATION_DONE' });
       setMessages((prev) => [...prev, { role: 'ai', content: text }]);

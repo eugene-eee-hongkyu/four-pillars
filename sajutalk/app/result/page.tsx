@@ -16,6 +16,7 @@ import {
   countElements,
   type Element,
 } from '@/lib/manse/pillars';
+import type { LuckCycles, DaeunItem, SewunItem, WolwunItem } from '@/lib/manse/luck-cycles';
 
 type ManseResult = {
   yearPillar: string;
@@ -27,6 +28,7 @@ type ManseResult = {
   dayPillarHanja: string;
   hourPillarHanja: string | null;
   summary: string;
+  luckCycles?: LuckCycles;
 };
 
 const PILLAR_LABELS = ['시주', '일주', '월주', '년주'];
@@ -269,7 +271,138 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
           </div>
         )}
 
+        {/* 대운·세운·월운 */}
+        {manse.luckCycles && (
+          <>
+            <LuckCycleTable
+              title="대운 (大運)"
+              rows={manse.luckCycles.daeun.map((d) => ({ ...d, label: d.age }))}
+              labelSuffix="세"
+            />
+            <LuckCycleTable
+              title="세운 (歲運)"
+              rows={manse.luckCycles.sewun.map((s) => ({ ...s, label: s.year }))}
+              labelSuffix="년"
+            />
+            <LuckCycleTable
+              title={`월운 (月運) — ${new Date().getFullYear()}년`}
+              rows={manse.luckCycles.wolwun.map((w) => ({ ...w, label: w.month }))}
+              labelSuffix="월"
+            />
+          </>
+        )}
+
       </div>
     </main>
   );
 }
+
+interface LuckRow {
+  label: number;
+  stem: string;
+  branch: string;
+  stemHanja: string;
+  branchHanja: string;
+  stemSipsin: string;
+  branchSipsin: string;
+  isCurrent: boolean;
+}
+
+function LuckCycleTable({
+  title,
+  rows,
+  labelSuffix,
+}: {
+  title: string;
+  rows: LuckRow[];
+  labelSuffix: string;
+}) {
+  if (!rows.length) return null;
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-2">{title}</p>
+      <div className="overflow-x-auto">
+        <table className="border-collapse text-center" style={{ minWidth: 'max-content' }}>
+          <tbody>
+            {/* 라벨 행 */}
+            <tr>
+              {rows.map((row, i) => (
+                <td key={i} className="px-1 pb-0.5 text-xs text-muted-foreground w-11">
+                  <span className={row.isCurrent ? 'font-bold text-foreground' : ''}>
+                    {row.label}{labelSuffix}
+                  </span>
+                </td>
+              ))}
+            </tr>
+            {/* 천간 십신 */}
+            <tr>
+              {rows.map((row, i) => (
+                <td key={i} className="px-1 pb-0.5 text-xs text-muted-foreground h-4">
+                  {row.stemSipsin}
+                </td>
+              ))}
+            </tr>
+            {/* 천간 한자 박스 */}
+            <tr>
+              {rows.map((row, i) => {
+                const el = STEM_EL[row.stem] ?? null;
+                return (
+                  <td key={i} className="px-1 pb-0.5">
+                    <div
+                      className="mx-auto w-10 h-10 flex items-center justify-center rounded text-lg font-bold"
+                      style={{
+                        ...getElementStyle(el),
+                        outline: row.isCurrent ? '2px solid #a78bfa' : undefined,
+                        outlineOffset: row.isCurrent ? '1px' : undefined,
+                      }}
+                    >
+                      {row.stemHanja}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+            {/* 지지 한자 박스 */}
+            <tr>
+              {rows.map((row, i) => {
+                const el = BRANCH_EL[row.branch] ?? null;
+                return (
+                  <td key={i} className="px-1 pb-0.5">
+                    <div
+                      className="mx-auto w-10 h-10 flex items-center justify-center rounded text-lg font-bold"
+                      style={{
+                        ...getElementStyle(el),
+                        outline: row.isCurrent ? '2px solid #a78bfa' : undefined,
+                        outlineOffset: row.isCurrent ? '1px' : undefined,
+                      }}
+                    >
+                      {row.branchHanja}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+            {/* 지지 십신 */}
+            <tr>
+              {rows.map((row, i) => (
+                <td key={i} className="px-1 pt-0.5 text-xs text-muted-foreground h-4">
+                  {row.branchSipsin}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const STEM_EL: Record<string, Element> = {
+  갑: 'wood', 을: 'wood', 병: 'fire', 정: 'fire',
+  무: 'earth', 기: 'earth', 경: 'metal', 신: 'metal', 임: 'water', 계: 'water',
+};
+const BRANCH_EL: Record<string, Element> = {
+  자: 'water', 축: 'earth', 인: 'wood', 묘: 'wood',
+  진: 'earth', 사: 'fire', 오: 'fire', 미: 'earth',
+  신: 'metal', 유: 'metal', 술: 'earth', 해: 'water',
+};
