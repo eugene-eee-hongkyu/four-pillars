@@ -96,7 +96,7 @@ export default function ScreenResult() {
     const col = (v: string) => v.padEnd(6, ' ');
     const sipsinRow = [
       pillars[0] ? getStemSipsin(dayStem, pillars[0].stem) : '?',
-      '일간',
+      getStemSipsin(dayStem, dayStem),
       pillars[2] ? getStemSipsin(dayStem, pillars[2].stem) : '?',
       pillars[3] ? getStemSipsin(dayStem, pillars[3].stem) : '?',
     ];
@@ -187,8 +187,7 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
               {/* 천간 십신 */}
               <tr>
                 {pillars.map((p, i) => {
-                  const label =
-                    i === 1 ? '일간' : getStemSipsin(dayStem, p?.stem ?? '');
+                  const label = getStemSipsin(dayStem, p?.stem ?? '');
                   return (
                     <td key={i} className="pb-1 text-xs text-muted-foreground h-5">
                       {label}
@@ -234,8 +233,7 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
               {/* 지지 십신 */}
               <tr>
                 {pillars.map((p, i) => {
-                  const label =
-                    i === 1 ? '' : getBranchSipsin(dayStem, p?.branch ?? '');
+                  const label = getBranchSipsin(dayStem, p?.branch ?? '');
                   return (
                     <td key={i} className="pt-1 text-xs text-muted-foreground h-5">
                       {label}

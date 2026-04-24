@@ -1,6 +1,17 @@
 import { SIXTY_PILLARS, getGapja, getPillarByHangul } from '@fullstackfamily/manseryeok';
 import { getStemSipsin, getBranchSipsin } from './pillars';
 
+// 라이브러리 SIXTY_PILLARS의 hangul 필드가 일부 인덱스에서 잘못된 경우를 방어
+// hanja를 ground truth로 사용해 hangul을 역산
+const HANJA_STEM: Record<string, string> = {
+  '甲': '갑', '乙': '을', '丙': '병', '丁': '정', '戊': '무',
+  '己': '기', '庚': '경', '辛': '신', '壬': '임', '癸': '계',
+};
+const HANJA_BRANCH: Record<string, string> = {
+  '子': '자', '丑': '축', '寅': '인', '卯': '묘', '辰': '진',
+  '巳': '사', '午': '오', '未': '미', '申': '신', '酉': '유', '戌': '술', '亥': '해',
+};
+
 // 월절 (節) approximate dates [month, day]: 소한~대설
 const WOLJEOL: [number, number][] = [
   [1, 6], [2, 4], [3, 6], [4, 5], [5, 6], [6, 6],
@@ -77,16 +88,25 @@ export interface LuckCycles {
   wolwun: WolwunItem[];
 }
 
+function safeStem(p: { tiangan: { hanja: string; hangul: string } }): string {
+  return HANJA_STEM[p.tiangan.hanja] ?? p.tiangan.hangul;
+}
+function safeBranch(p: { dizhi: { hanja: string; hangul: string } }): string {
+  return HANJA_BRANCH[p.dizhi.hanja] ?? p.dizhi.hangul;
+}
+
 function makeLuckPillar(pillarHangul: string, dayStem: string): LuckPillar | null {
   const p = getPillarByHangul(pillarHangul);
   if (!p) return null;
+  const stem = safeStem(p);
+  const branch = safeBranch(p);
   return {
-    stem: p.tiangan.hangul,
-    branch: p.dizhi.hangul,
+    stem,
+    branch,
     stemHanja: p.tiangan.hanja,
     branchHanja: p.dizhi.hanja,
-    stemSipsin: getStemSipsin(dayStem, p.tiangan.hangul),
-    branchSipsin: getBranchSipsin(dayStem, p.dizhi.hangul),
+    stemSipsin: getStemSipsin(dayStem, stem),
+    branchSipsin: getBranchSipsin(dayStem, branch),
   };
 }
 
@@ -114,14 +134,16 @@ export function buildLuckCycles(
     const id = ((baseId + dir * (i + 1)) % 60 + 60) % 60;
     const p = SIXTY_PILLARS[id];
     if (!p) continue;
+    const stem = safeStem(p);
+    const branch = safeBranch(p);
     allDaeun.push({
       age: startAge + i * 10,
-      stem: p.tiangan.hangul,
-      branch: p.dizhi.hangul,
+      stem,
+      branch,
       stemHanja: p.tiangan.hanja,
       branchHanja: p.dizhi.hanja,
-      stemSipsin: getStemSipsin(dayStem, p.tiangan.hangul),
-      branchSipsin: getBranchSipsin(dayStem, p.dizhi.hangul),
+      stemSipsin: getStemSipsin(dayStem, stem),
+      branchSipsin: getBranchSipsin(dayStem, branch),
       isCurrent: false,
     });
   }
