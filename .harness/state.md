@@ -6,27 +6,29 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 16:21
-## 마지막 업데이트: 2026-04-24 16:21
-## 현재 모드: acceptEdits
+## 마지막 실행: 2026-04-24 17:40
+## 마지막 업데이트: 2026-04-24 17:40
+## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 사주톡 MVP 빌드 — 수동 E2E 테스트 (localhost:3002) 진행 가능 상태
+- 사주 해석 강화 run 진행 중 — 구현 완료, localhost E2E 수동 확인 대기
+- 현재 run: docs/runs/2026-04-24-saju-interpretation-enhancement_run.md — 사주 해석 강화
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E 테스트 (화면 1→2→3→4 전체 흐름, Supabase 없이 가능)
-2. Supabase 프로젝트 생성 → DB 스키마 migration 적용 → /api/session 활성화 (단계 4~6)
+1. localhost:3002 수동 E2E 확인 (화면1 → 채팅 → 40문장+ 해석 직접 읽기)
+2. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
 3. Vercel 배포 승인 요청 후 진행 (단계 18, §9 [트리거 4])
 
 ### 막힌 것
 
 - Supabase credentials 미입력: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-  → /api/session만 영향 (나머지 API 라우트는 현재 동작 확인됨)
+  → /api/session만 영향 (나머지 API 라우트는 동작 확인됨)
 
 ### 사람 판단 필요
 
+- localhost:3002 E2E 수동 품질 확인 (40문장+ 해석 직접 읽고 품질 판단)
 - Supabase 프로젝트 생성 및 credentials 제공 (사용자 직접)
 - Vercel 배포 직전 승인 (§9 [트리거 4] — 첫 공개 배포 전 정지)
 
@@ -52,6 +54,13 @@
 - [x] 개발 서버 빌드 오류 수정 (Tailwind v3/v4 호환성, SSR localStorage, calculateSaju 시그니처)
 - [x] /api/manse, /api/classify, /api/interpret 동작 확인
 - [x] 화면 1 양력/음력 선택 추가 (lunarToSolar 변환, 윤달 체크박스)
+- [x] 대운·세운·월운 LuckCycleTable UI 추가 (result 페이지, 우측=현재, 좌측=미래)
+- [x] lib/manse/luck-cycles.ts — 대운·세운·월운 계산 모듈
+- [x] lib/manse/shensha.ts — 신살 8종 계산 (도화·역마·학당귀인·천의성·암록·문창귀인·양인살·공망)
+- [x] lib/manse/yongsin.ts — 억부용신 근사 계산
+- [x] lib/prompts/interpret.ts 전면 개편 (5구획 40문장+, 전체 만세력 주입)
+- [x] app/api/interpret/route.ts — max_tokens 4096, fullManse 파라미터
+- [x] 40문장+ 스트리밍 개발 서버 수신 확인 (~50초)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)

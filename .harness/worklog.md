@@ -4,6 +4,41 @@
 
 ---
 
+## Session 2026-04-24 17:40 — 대운·세운·월운 UI 추가 및 사주 해석 강화 (신살·용신·프롬프트 개편)
+
+### 작업 요약
+- **result 페이지 대운·세운·월운 테이블 추가** (`app/result/page.tsx`)
+  - `LuckCycleTable` 컴포넌트: 7컬럼, 우측=현재(보라 테두리), 좌측=미래
+  - 대운(age)/세운(year)/월운(month·year) 3행 표시
+- **lib/manse/luck-cycles.ts** 신규 — 대운·세운·월운 계산 전체 담당
+  - 절기 근사 테이블 `WOLJEOL` 직접 구현 (라이브러리 2020~2030 범위 제한 우회)
+  - `buildLuckCycles()` → `LuckCycles { daeun, sewun, wolwun }` 반환
+  - 순행/역행: `isForward = (yearStemId % 2 === 0) === (gender === 'male')`
+- **lib/manse/shensha.ts** 신규 — 신살 8종 매핑 테이블 기반 계산
+  - 도화·역마·학당귀인·천의성·암록·문창귀인·양인살·공망
+  - `strong` 자동 선정: 길성 우선, 부족하면 살
+- **lib/manse/yongsin.ts** 신규 — 억부용신 단순 근사 (과다 50%+ → 극 오행, 부재 → 보완 오행)
+- **lib/manse/engine.ts** 확장 — `shensha`, `yongsin`, `elementCounts` 필드 추가
+- **lib/prompts/interpret.ts** 전면 개편 — 5구획 40문장+, `FullManseData` 인터페이스, 구조화 주입
+- **app/api/interpret/route.ts** — `max_tokens` 1024 → 4096, `fullManse` 파라미터 수신
+- **app/chat/page.tsx** — `fullManse: p.manse ?? {}` 전달 방식으로 변경
+- **docs/runs/2026-04-24-saju-interpretation-enhancement_run.md** 신규 (kickoff)
+- `next build` 빌드 통과 확인
+- 개발 서버에서 40문장+ 스트리밍 수신 확인 (~50초)
+
+### 실패한 시도
+- `LuckItem` union type 오류 (`DaeunItem[]` → `LuckItem[]` 불일치): `LuckRow` 단순 인터페이스 + 호출부 `.map()` 변환으로 교체
+- `new Set` 다운레벨 이터레이션 오류 (shensha.ts): `filter/indexOf` 패턴으로 교체
+- `string | null` 타입 가드 누락 (engine.ts): `if (!timeUnknown && raw.hourPillar)` 추가
+- webpack 캐시 오류 (`Cannot find module './948.js'`): 개발 서버 재시작으로 해결
+
+### 다음 액션
+1. localhost:3002 수동 E2E 확인 (화면1 → 채팅 → 40문장+ 해석 직접 읽기)
+2. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화
+3. Vercel 배포 승인 요청 (§9 [트리거 4])
+
+---
+
 ## Session 2026-04-24 16:21 — 화면 1 양력/음력 선택 추가 및 빌드 오류 수정
 
 ### 작업 요약
