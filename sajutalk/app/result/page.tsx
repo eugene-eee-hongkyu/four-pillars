@@ -18,6 +18,14 @@ import {
 } from '@/lib/manse/pillars';
 import type { LuckCycles, DaeunItem, SewunItem, WolwunItem } from '@/lib/manse/luck-cycles';
 
+type ShenshaResult = {
+  yearPillar: string[];
+  monthPillar: string[];
+  dayPillar: string[];
+  hourPillar: string[];
+  strong: string[];
+};
+
 type ManseResult = {
   yearPillar: string;
   monthPillar: string;
@@ -29,11 +37,18 @@ type ManseResult = {
   hourPillarHanja: string | null;
   summary: string;
   luckCycles?: LuckCycles;
+  shensha?: ShenshaResult;
+  yongsin?: { primary: string; secondary: string | null; reasoning: string };
+  elementCounts?: { wood: number; fire: number; earth: number; metal: number; water: number };
 };
 
 const PILLAR_LABELS = ['시주', '일주', '월주', '년주'];
 const GUIIN_POSITION_LABELS = ['년지', '월지', '일지', '시지'];
 const ELEMENT_ORDER: Element[] = ['wood', 'fire', 'earth', 'metal', 'water'];
+const EL_KO: Record<Element, string> = {
+  wood: '목', fire: '화', earth: '토', metal: '금', water: '수',
+};
+const GILSEONG_SET = new Set(['건록', '학당귀인', '천의성', '암록', '문창귀인']);
 
 function koreanAge(birthYear: number): number {
   return new Date().getFullYear() - birthYear + 1;
@@ -73,7 +88,7 @@ export default function ScreenResult() {
   // 오행 분포
   const allStems = pillars.map((p) => p?.stem ?? '').filter(Boolean);
   const allBranches = pillars.map((p) => p?.branch ?? '').filter(Boolean);
-  const elementCounts = countElements(allStems, allBranches);
+  const elementCounts = manse.elementCounts ?? countElements(allStems, allBranches);
 
   // 천을귀인 — 순서: [년지, 월지, 일지, 시지]
   const branchesForGuiin = [
@@ -85,6 +100,15 @@ export default function ScreenResult() {
   const guiinPositions = getGuiin(dayStem, branchesForGuiin).map(
     (i) => GUIIN_POSITION_LABELS[i],
   );
+
+  // 신살 — 기둥 순서 [시주, 일주, 월주, 년주] 매핑
+  const shenshaByPillar: string[][] = [
+    manse.shensha?.hourPillar ?? [],
+    manse.shensha?.dayPillar ?? [],
+    manse.shensha?.monthPillar ?? [],
+    manse.shensha?.yearPillar ?? [],
+  ];
+  const hasShensha = shenshaByPillar.some(arr => arr.length > 0);
 
   function buildCopyPrompt(): string {
     const { name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, timeUnknown } =
@@ -102,7 +126,7 @@ export default function ScreenResult() {
     ];
 
     const elemStr = ELEMENT_ORDER.map(
-      (el) => `${getElementLabel(el)} ${elementCounts[el]}개`,
+      (el) => `${getElementLabel(el)}${EL_KO[el]} ${elementCounts[el]}개`,
     ).join('  ');
 
     return `저의 사주를 분석해 주세요.
@@ -143,6 +167,10 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
     router.push('/chat');
   }
 
+  function handleBack() {
+    router.push('/');
+  }
+
   const { name, birthYear, birthMonth, birthDay, birthHour, birthMinute, timeUnknown } = profile;
   const age = koreanAge(birthYear);
   const timeDisplay = timeUnknown
@@ -153,8 +181,11 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
     <main className="min-h-screen bg-background flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-sm space-y-6">
 
-        {/* 복사 / 채팅 버튼 */}
+        {/* 복사 / 채팅 / 다시입력 버튼 */}
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleBack}>
+            다시 입력
+          </Button>
           <Button variant="outline" className="flex-1" onClick={handleCopy}>
             {copied ? '복사됨 ✓' : '복사'}
           </Button>
@@ -196,34 +227,48 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
                 })}
               </tr>
 
-              {/* 천간 박스 */}
+              {/* 천간 박스 — 한자(작게) + 한글(크게) */}
               <tr>
                 {pillars.map((p, i) => {
                   const el = p ? getElement(p.stem, 'stem') : null;
                   return (
                     <td key={i} className="px-1 pb-1">
                       <div
-                        className="mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold"
+                        className="mx-auto w-14 h-14 flex flex-col items-center justify-center rounded-md"
                         style={getElementStyle(el)}
                       >
-                        {p ? p.stemHanja : <span className="text-xs opacity-40">?</span>}
+                        {p ? (
+                          <>
+                            <span className="text-xs opacity-60 leading-none">{p.stemHanja}</span>
+                            <span className="text-xl font-bold leading-tight">{p.stem}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs opacity-40">?</span>
+                        )}
                       </div>
                     </td>
                   );
                 })}
               </tr>
 
-              {/* 지지 박스 */}
+              {/* 지지 박스 — 한자(작게) + 한글(크게) */}
               <tr>
                 {pillars.map((p, i) => {
                   const el = p ? getElement(p.branch, 'branch') : null;
                   return (
                     <td key={i} className="px-1 pb-1">
                       <div
-                        className="mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold"
+                        className="mx-auto w-14 h-14 flex flex-col items-center justify-center rounded-md"
                         style={getElementStyle(el)}
                       >
-                        {p ? p.branchHanja : <span className="text-xs opacity-40">?</span>}
+                        {p ? (
+                          <>
+                            <span className="text-xs opacity-60 leading-none">{p.branchHanja}</span>
+                            <span className="text-xl font-bold leading-tight">{p.branch}</span>
+                          </>
+                        ) : (
+                          <span className="text-xs opacity-40">?</span>
+                        )}
                       </div>
                     </td>
                   );
@@ -245,6 +290,36 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
           </table>
         </div>
 
+        {/* 신살 · 길성 */}
+        {hasShensha && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">신살 · 길성</p>
+            <div className="grid grid-cols-4 text-center gap-x-1 gap-y-2">
+              {shenshaByPillar.map((items, i) => (
+                <div key={i} className="flex flex-col gap-1 items-center">
+                  {items.length === 0 ? (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  ) : (
+                    items.map((name) => (
+                      <span
+                        key={name}
+                        className="text-xs px-1.5 py-0.5 rounded-full whitespace-nowrap"
+                        style={
+                          GILSEONG_SET.has(name)
+                            ? { backgroundColor: '#dcfce7', color: '#166534' }
+                            : { backgroundColor: '#fef2f2', color: '#991b1b' }
+                        }
+                      >
+                        {name}
+                      </span>
+                    ))
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 오행 분포 */}
         <div>
           <p className="text-xs text-muted-foreground mb-2">오행 분포</p>
@@ -252,10 +327,12 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
             {ELEMENT_ORDER.map((el) => (
               <div
                 key={el}
-                className="px-2.5 py-1 rounded text-xs font-semibold"
+                className="px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-0.5"
                 style={getElementStyle(el)}
               >
-                {getElementLabel(el)} {elementCounts[el]}
+                <span className="opacity-70 text-xs">{getElementLabel(el)}</span>
+                <span>{EL_KO[el]}</span>
+                <span className="ml-1">{elementCounts[el]}</span>
               </div>
             ))}
           </div>
@@ -266,6 +343,14 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
           <div className="rounded-lg border p-3 space-y-1">
             <p className="text-xs font-medium text-muted-foreground">天乙귀인 (천을귀인)</p>
             <p className="text-sm font-medium">{guiinPositions.join(' · ')}에 있습니다</p>
+          </div>
+        )}
+
+        {/* 용신 */}
+        {manse.yongsin && (
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">용신 (억부법 근사)</p>
+            <p className="text-sm">{manse.yongsin.reasoning}</p>
           </div>
         )}
 
@@ -340,41 +425,43 @@ function LuckCycleTable({
                 </td>
               ))}
             </tr>
-            {/* 천간 한자 박스 */}
+            {/* 천간 한자+한글 박스 */}
             <tr>
               {rows.map((row, i) => {
                 const el = STEM_EL[row.stem] ?? null;
                 return (
                   <td key={i} className="px-1 pb-0.5">
                     <div
-                      className="mx-auto w-10 h-10 flex items-center justify-center rounded text-lg font-bold"
+                      className="mx-auto w-10 h-10 flex flex-col items-center justify-center rounded"
                       style={{
                         ...getElementStyle(el),
                         outline: row.isCurrent ? '2px solid #a78bfa' : undefined,
                         outlineOffset: row.isCurrent ? '1px' : undefined,
                       }}
                     >
-                      {row.stemHanja}
+                      <span className="text-xs opacity-60 leading-none">{row.stemHanja}</span>
+                      <span className="text-sm font-bold leading-tight">{row.stem}</span>
                     </div>
                   </td>
                 );
               })}
             </tr>
-            {/* 지지 한자 박스 */}
+            {/* 지지 한자+한글 박스 */}
             <tr>
               {rows.map((row, i) => {
                 const el = BRANCH_EL[row.branch] ?? null;
                 return (
                   <td key={i} className="px-1 pb-0.5">
                     <div
-                      className="mx-auto w-10 h-10 flex items-center justify-center rounded text-lg font-bold"
+                      className="mx-auto w-10 h-10 flex flex-col items-center justify-center rounded"
                       style={{
                         ...getElementStyle(el),
                         outline: row.isCurrent ? '2px solid #a78bfa' : undefined,
                         outlineOffset: row.isCurrent ? '1px' : undefined,
                       }}
                     >
-                      {row.branchHanja}
+                      <span className="text-xs opacity-60 leading-none">{row.branchHanja}</span>
+                      <span className="text-sm font-bold leading-tight">{row.branch}</span>
                     </div>
                   </td>
                 );

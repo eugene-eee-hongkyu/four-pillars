@@ -71,6 +71,12 @@ const YANGIN_MAP: Record<string, string> = {
   갑: '묘', 병: '오', 무: '오', 경: '유', 임: '자',
 };
 
+// --- 건록(정록): 일간의 녹지(祿地)가 4기둥에 있을 때 ---
+const GEOLLOK_MAP: Record<string, string> = {
+  갑: '인', 을: '묘', 병: '사', 정: '오',
+  무: '사', 기: '오', 경: '신', 신: '유', 임: '해', 계: '자',
+};
+
 // --- 공망: 일주 60갑자 기준 6개 순(旬)별 공망 2지지 ---
 // 갑자순(0~9): 술해, 갑술순(10~19): 신유, 갑신순(20~29): 오미
 // 갑오순(30~39): 진사, 갑진순(40~49): 인묘, 갑인순(50~59): 자축
@@ -198,6 +204,15 @@ export function calcShensha(
     }
   }
 
+  // --- 건록(정록) ---
+  const geollokTarget = GEOLLOK_MAP[dayStem];
+  if (geollokTarget) {
+    for (const pos of branchPositions(geollokTarget, pillarsMap)) {
+      const key = pos === '년지' ? '년주' : pos === '월지' ? '월주' : pos === '일지' ? '일주' : '시주';
+      byPillar[key].push('건록');
+    }
+  }
+
   // --- 공망 ---
   const [g1, g2] = getGongmangBranches(dayPillarId);
   for (const gTarget of [g1, g2]) {
@@ -208,7 +223,7 @@ export function calcShensha(
   }
 
   // --- 강조 신살 선정: 길성 우선, 없으면 강한 살 ---
-  const GILSEONG = ['학당귀인', '천의성', '암록', '문창귀인'];
+  const GILSEONG = ['건록', '학당귀인', '천의성', '암록', '문창귀인'];
   const all = [...byPillar['년주'], ...byPillar['월주'], ...byPillar['일주'], ...byPillar['시주']];
   const unique = all.filter((v, i, a) => a.indexOf(v) === i);
   const strong: string[] = [];

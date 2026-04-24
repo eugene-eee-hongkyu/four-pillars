@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getOrCreateAnonId } from '@/lib/session/anonymous';
-import { saveProfile, loadProfile } from '@/lib/session/local-store';
+import { saveProfile } from '@/lib/session/local-store';
 import { lunarToSolar } from '@fullstackfamily/manseryeok';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -31,13 +31,6 @@ export default function ScreenBirthInput() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 2회차 이상이면 /result로 바로 이동 (만세력 이미 저장됨)
-  useEffect(() => {
-    const profile = loadProfile();
-    if (profile && profile.sessionCount > 0) {
-      router.replace('/result');
-    }
-  }, [router]);
 
   async function handleSubmit() {
     if (!name.trim()) { setError('이름을 입력해주세요.'); return; }
