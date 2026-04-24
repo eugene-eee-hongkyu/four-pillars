@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 15:59
-## 마지막 업데이트: 2026-04-24 15:59
+## 마지막 실행: 2026-04-24 16:21
+## 마지막 업데이트: 2026-04-24 16:21
 ## 현재 모드: acceptEdits
 
 ### 현재 집중
 
-- 사주톡 MVP 빌드 — 단계 17/20 (수동 E2E) 진행 전 Supabase credentials 대기 중
+- 사주톡 MVP 빌드 — 수동 E2E 테스트 (localhost:3002) 진행 가능 상태
 
 ### 이어서 할 것
 
-1. `.env.local` 작성 (ANTHROPIC_API_KEY 확인됨, Supabase 3개 키 필요)
+1. localhost:3002 수동 E2E 테스트 (화면 1→2→3→4 전체 흐름, Supabase 없이 가능)
 2. Supabase 프로젝트 생성 → DB 스키마 migration 적용 → /api/session 활성화 (단계 4~6)
-3. 수동 E2E 테스트 localhost:3001 (단계 17) → Vercel 배포 승인 요청 후 진행 (단계 18, §9 [트리거 4])
+3. Vercel 배포 승인 요청 후 진행 (단계 18, §9 [트리거 4])
 
 ### 막힌 것
 
@@ -29,6 +29,11 @@
 
 - Supabase 프로젝트 생성 및 credentials 제공 (사용자 직접)
 - Vercel 배포 직전 승인 (§9 [트리거 4] — 첫 공개 배포 전 정지)
+
+### 백로그 요약
+
+- 대기 중: 1개
+- 최근 추가: 2026-04-24 — Supabase 연동 및 DB 스키마 migration
 
 ### 진행 상황
 
@@ -44,11 +49,11 @@
 - [x] [10/20] lib/state/chat-machine.ts — 상태 머신 A~F
 - [x] [11/20] API routes 6개 스텁 — session, manse, classify, interpret, qna, summary
 - [x] [12~16/20] 화면 1~5 구현 (app/page.tsx, concern, pattern, chat)
-- [x] 개발 서버 빌드 오류 수정 (Tailwind v3/v4 호환성)
+- [x] 개발 서버 빌드 오류 수정 (Tailwind v3/v4 호환성, SSR localStorage, calculateSaju 시그니처)
 - [x] /api/manse, /api/classify, /api/interpret 동작 확인
-- [x] worklog/state/decision/backlog.md 작성 후 git 커밋·푸시
+- [x] 화면 1 양력/음력 선택 추가 (lunarToSolar 변환, 윤달 체크박스)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
-- [ ] [17/20] 수동 E2E localhost 확인
+- [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
 - [ ] [20/20] 완료 보고 생성

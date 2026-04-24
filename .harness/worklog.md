@@ -4,6 +4,31 @@
 
 ---
 
+## Session 2026-04-24 16:21 — 화면 1 양력/음력 선택 추가 및 빌드 오류 수정
+
+### 작업 요약
+- 화면 1(`app/page.tsx`)에 양력/음력 라디오 버튼 추가 (성별 아래, 생년월일 위)
+  - 음력 선택 시 윤달 체크박스 조건부 표시
+  - 음력 제출 시 `lunarToSolar()` 호출 → 변환된 양력 날짜로 /api/manse 호출
+  - 잘못된 음력 날짜 에러 처리 추가
+- `lib/manse/engine.ts`, `verify.spec.ts` — `calculateSaju()` 6번째 인자(gender) 제거
+  - 실제 라이브러리 API: `calculateSaju(year, month, day, hour?, minute?, options?)` — gender 없음
+  - 이전 코드가 gender string을 넘겨 타입 오류 발생 → 제거
+- `app/chat/page.tsx` — `useRef(loadProfile())` SSR 오류 수정
+  - useRef 초기화에서 localStorage 직접 호출 → SSR 단계에서 `localStorage is not defined` 오류
+  - `useRef(null)`로 변경, useEffect에서만 클라이언트 로드
+- `next build` 전체 통과 확인
+
+### 실패한 시도
+- 없음
+
+### 다음 액션
+1. localhost:3002 수동 E2E 테스트 (Supabase 없이 화면 1~4 전체 흐름)
+2. Supabase 프로젝트 생성 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
+3. Vercel 배포 (단계 18, §9 [트리거 4] 발동 — 사람 확인 필요)
+
+---
+
 ## Session 2026-04-24 15:59 — 세션 종료 하네스 파일 기록 및 커밋
 
 ### 작업 요약
