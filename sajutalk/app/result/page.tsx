@@ -48,7 +48,7 @@ const ELEMENT_ORDER: Element[] = ['wood', 'fire', 'earth', 'metal', 'water'];
 const EL_KO: Record<Element, string> = {
   wood: '목', fire: '화', earth: '토', metal: '금', water: '수',
 };
-const GILSEONG_SET = new Set(['건록', '학당귀인', '천의성', '암록', '문창귀인']);
+const GILSEONG_SET = new Set(['건록', '천덕귀인', '월덕귀인', '학당귀인', '천의성', '암록', '문창귀인', '금여성']);
 
 function koreanAge(birthYear: number): number {
   return new Date().getFullYear() - birthYear + 1;

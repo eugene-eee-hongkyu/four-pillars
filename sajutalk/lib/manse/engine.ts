@@ -78,7 +78,7 @@ export function computeManse(input: ManseInput): ManseResult {
       raw.monthPillar, year, month, day, yearStem, dayStem, gender,
     ),
     shensha: calcShensha(
-      raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId,
+      raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId, gender,
     ),
     yongsin: calcYongsin(elementCounts),
     elementCounts,
