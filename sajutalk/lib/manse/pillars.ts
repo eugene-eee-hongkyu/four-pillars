@@ -1,4 +1,5 @@
 // 오행·십신·귀인 계산 헬퍼
+import type React from 'react';
 
 export type Element = 'wood' | 'fire' | 'earth' | 'metal' | 'water';
 
@@ -51,7 +52,7 @@ export function getElement(char: string, type: 'stem' | 'branch'): Element | nul
 }
 
 export function getStemSipsin(dayMaster: string, stem: string): string {
-  if (!stem || stem === dayMaster) return '';
+  if (!stem) return '';
   const dmEl = STEM_ELEMENT[dayMaster];
   const stemEl = STEM_ELEMENT[stem];
   if (!dmEl || !stemEl) return '';
@@ -78,14 +79,15 @@ export function getGuiin(dayMaster: string, branches: (string | null)[]): number
     .filter((i) => i >= 0);
 }
 
-export function getElementBg(el: Element | null): string {
+// 인라인 스타일 반환 — Tailwind 동적 클래스 purge 문제 회피
+export function getElementStyle(el: Element | null): React.CSSProperties {
   switch (el) {
-    case 'wood':  return 'bg-green-700 text-white';
-    case 'fire':  return 'bg-red-600 text-white';
-    case 'earth': return 'bg-amber-400 text-gray-900';
-    case 'metal': return 'bg-gray-100 text-gray-800 border border-gray-300';
-    case 'water': return 'bg-gray-900 text-white';
-    default:      return 'bg-gray-200 text-gray-600';
+    case 'wood':  return { backgroundColor: '#15803d', color: '#fff' };
+    case 'fire':  return { backgroundColor: '#dc2626', color: '#fff' };
+    case 'earth': return { backgroundColor: '#fbbf24', color: '#111827' };
+    case 'metal': return { backgroundColor: '#f3f4f6', color: '#1f2937', border: '1px solid #d1d5db' };
+    case 'water': return { backgroundColor: '#111827', color: '#fff' };
+    default:      return { backgroundColor: '#e5e7eb', color: '#6b7280' };
   }
 }
 

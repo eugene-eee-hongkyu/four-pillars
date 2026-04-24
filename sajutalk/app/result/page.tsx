@@ -11,7 +11,7 @@ import {
   getStemSipsin,
   getBranchSipsin,
   getGuiin,
-  getElementBg,
+  getElementStyle,
   getElementLabel,
   countElements,
   type Element,
@@ -202,7 +202,8 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
                   return (
                     <td key={i} className="px-1 pb-1">
                       <div
-                        className={`mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold ${getElementBg(el)}`}
+                        className="mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold"
+                        style={getElementStyle(el)}
                       >
                         {p ? p.stemHanja : <span className="text-xs opacity-40">?</span>}
                       </div>
@@ -218,7 +219,8 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
                   return (
                     <td key={i} className="px-1 pb-1">
                       <div
-                        className={`mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold ${getElementBg(el)}`}
+                        className="mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold"
+                        style={getElementStyle(el)}
                       >
                         {p ? p.branchHanja : <span className="text-xs opacity-40">?</span>}
                       </div>
@@ -250,7 +252,8 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
             {ELEMENT_ORDER.map((el) => (
               <div
                 key={el}
-                className={`px-2.5 py-1 rounded text-xs font-semibold ${getElementBg(el)}`}
+                className="px-2.5 py-1 rounded text-xs font-semibold"
+                style={getElementStyle(el)}
               >
                 {getElementLabel(el)} {elementCounts[el]}
               </div>
