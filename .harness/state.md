@@ -7,17 +7,18 @@
 ---
 
 ## 마지막 실행: 2026-04-24 12:53
-## 마지막 업데이트: 2026-04-24 12:53
+## 마지막 업데이트: 2026-04-24 13:10
 ## 현재 모드: -
 
 ### 현재 집중
 
-- harness 초기 세팅 완료 후 harness-doctor 점검 항목 확인
+- 빌드 진입 준비 완료. 다음 단계는 실제 Next.js 앱 생성
 
 ### 이어서 할 것
 
-1. harness-doctor 점검 항목 완료 (hooks, commands, env, 의존성)
-2. CONTEXT.md 작성
+1. `docs/04_B_빌드지침서_사주톡.md §1` 체크리스트 확인 (Supabase·Vercel·API Key 준비)
+2. Claude Code bypass 세션으로 빌드 시작 — `docs/04_B §11` 프롬프트 복붙
+3. 만세력 Playwright 검증(§5-8번) 먼저 통과 확인
 
 ### 막힌 것
 
@@ -31,7 +32,11 @@
 
 - [x] GitHub repo `four-pillars` 생성 (four_pillars → four-pillars 수정)
 - [x] docs/ 6개 파일 첫 커밋·푸시
-- [x] `CLAUDE.md`, `settings.json`, profiles 4개 fetch 및 신규 생성
-- [x] `.harness/` 하위 빈 템플릿 5개 작성, 디렉토리 구조, `.gitignore` 생성
-- [ ] harness-doctor 점검 항목 완료 (hooks, commands, env, 의존성)
-- [ ] CONTEXT.md 작성
+- [x] harness 초기화: `CLAUDE.md`, `settings.json`, profiles 4개, `.harness/` 템플릿, `.gitignore`
+- [x] `CONTEXT.md` 초안 작성 (A-0~B 문서 기반)
+- [ ] §1 체크리스트 (Anthropic API Key, Supabase, Vercel, Node.js 확인)
+- [ ] 빌드 시작 (docs/04_B §5 순서대로)
+- [ ] 만세력 Playwright 검증 10/10 통과
+- [ ] 화면 1~5 구현
+- [ ] Vercel 배포
+- [ ] 10명 지인 테스트
