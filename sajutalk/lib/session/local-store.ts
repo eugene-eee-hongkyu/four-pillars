@@ -1,6 +1,8 @@
 // localStorage 기반 세션 데이터 관리
 // 화면 간 상태를 전달하는 유일한 경로.
 
+export type ToneType = 'yeoksulga' | 'science' | 'example' | 'counselor';
+
 export interface LocalProfile {
   anonId: string;
   name: string;
@@ -20,6 +22,7 @@ export interface LocalConversation {
   concernText?: string;
   concernCategory?: string;
   pattern: string;
+  tone?: ToneType;
 }
 
 const PROFILE_KEY = 'sajutalk_profile';

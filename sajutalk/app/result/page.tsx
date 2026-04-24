@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { loadProfile, saveConversation } from '@/lib/session/local-store';
+import { loadProfile, saveConversation, type ToneType } from '@/lib/session/local-store';
 import type { LocalProfile } from '@/lib/session/local-store';
 import {
   splitPillar,
@@ -162,8 +162,8 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
     }
   }
 
-  function handleChat() {
-    saveConversation({ concern: '전반적인 운세', pattern: '일반 상담' });
+  function handleChatWithTone(tone: ToneType) {
+    saveConversation({ concern: '전반적인 운세', pattern: '일반 상담', tone });
     router.push('/chat');
   }
 
@@ -181,7 +181,7 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
     <main className="min-h-screen bg-background flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-sm space-y-6">
 
-        {/* 복사 / 채팅 / 다시입력 버튼 */}
+        {/* 다시입력 / 복사 버튼 */}
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleBack}>
             다시 입력
@@ -189,9 +189,28 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
           <Button variant="outline" className="flex-1" onClick={handleCopy}>
             {copied ? '복사됨 ✓' : '복사'}
           </Button>
-          <Button className="flex-1" onClick={handleChat}>
-            채팅
-          </Button>
+        </div>
+
+        {/* 해석 스타일 선택 */}
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground font-medium">해석 스타일로 대화하기</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { tone: 'yeoksulga', label: '역술가', desc: '전통 명리 풀이' },
+              { tone: 'science',   label: '과학형',   desc: '확률·데이터 분석' },
+              { tone: 'example',   label: '예시형',   desc: '연도별 사건 예측' },
+              { tone: 'counselor', label: '심리상담가', desc: '내면 탐색 상담' },
+            ] as { tone: ToneType; label: string; desc: string }[]).map(({ tone, label, desc }) => (
+              <button
+                key={tone}
+                onClick={() => handleChatWithTone(tone)}
+                className="flex flex-col items-start rounded-xl border border-border px-3 py-2.5 text-left hover:bg-accent transition-colors"
+              >
+                <span className="text-sm font-semibold">{label}</span>
+                <span className="text-xs text-muted-foreground">{desc}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* 인적 정보 헤더 */}

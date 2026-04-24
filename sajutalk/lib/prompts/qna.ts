@@ -1,9 +1,9 @@
 // §6-b Q&A 답변 프롬프트 (S9)
 // 긴 해석 이후 사용자 질문에 답변. 2회차+2번째 질문이면 답변 말미에 4지선다 삽입.
 
-import { INTERPRET_SYSTEM, FullManseData } from './interpret';
+import { INTERPRET_SYSTEM, getInterpretSystem, FullManseData, type ToneType } from './interpret';
 
-export const QNA_SYSTEM = `${INTERPRET_SYSTEM}
+const QNA_SUFFIX = `
 
 [Q&A 추가 규칙]
 - 사용자 질문에 직접 답변. 원 해석과 모순 없이 일관성 유지
@@ -11,11 +11,18 @@ export const QNA_SYSTEM = `${INTERPRET_SYSTEM}
 - 5~8문장. 질문 성격에 따라 조금 더 길어도 됨
 - 현재 대운·세운 데이터 있으면 반드시 활용: "지금 ○○ 대운 데이터상 이 시기에는..."
 - 합충 정보 있으면 활용: "월일이 충하는 구조라서 이 패턴이 나타나는 거예요"
+- 사용자가 과거 사건을 공유하면 해당 연도 세운과 연결해 역검증 먼저 제시
 - 확률 언어 필수: "이런 구조에서 약 7할은..." "데이터상..."
 - Sycophancy 금지: 원국 근거 있으면 사용자가 원하지 않는 답도 말함
 
 - 2회차 세션 + 이번이 2번째 질문 + 50% 조건이면 답변 말미에
   "혹시 이런 경험 있으세요?" 4지선다 4개 삽입. 답변 본문과 구분선.`;
+
+export const QNA_SYSTEM = `${INTERPRET_SYSTEM}${QNA_SUFFIX}`;
+
+export function getQnaSystem(tone?: ToneType): string {
+  return `${getInterpretSystem(tone)}${QNA_SUFFIX}`;
+}
 
 const ELEMENT_KO: Record<string, string> = {
   wood: '木(나무)', fire: '火(불)', earth: '土(땅)', metal: '金(쇠)', water: '水(물)',
@@ -106,6 +113,7 @@ export interface QnaContext {
   question: string;
   inlineChoices?: string[];
   fullManse?: FullManseData;
+  tone?: ToneType;
 }
 
 export function buildQnaPrompt(ctx: QnaContext): string {

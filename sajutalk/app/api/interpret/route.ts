@@ -4,13 +4,13 @@
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { INTERPRET_SYSTEM, buildInterpretPrompt, type InterpretContext } from '@/lib/prompts/interpret';
+import { getInterpretSystem, buildInterpretPrompt, type InterpretContext, type ToneType } from '@/lib/prompts/interpret';
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, gender, birthYear, concern, pattern, fullManse, prevSummary } = body;
+  const { name, gender, birthYear, concern, pattern, fullManse, prevSummary, tone } = body;
 
   if (!name || !concern || !pattern || !fullManse) {
     return new Response(JSON.stringify({ error: 'missing required fields' }), {
@@ -27,12 +27,13 @@ export async function POST(req: NextRequest) {
     pattern,
     fullManse,
     prevSummary,
+    tone: tone as ToneType | undefined,
   };
 
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 4096,
-    system: INTERPRET_SYSTEM,
+    system: getInterpretSystem(tone as ToneType | undefined),
     messages: [
       {
         role: 'user',

@@ -3,13 +3,14 @@
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { QNA_SYSTEM, buildQnaPrompt } from '@/lib/prompts/qna';
+import { getQnaSystem, buildQnaPrompt } from '@/lib/prompts/qna';
+import type { ToneType } from '@/lib/prompts/interpret';
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, manse, concern, pattern, history, question, inlineChoices, fullManse } = body;
+  const { name, manse, concern, pattern, history, question, inlineChoices, fullManse, tone } = body;
 
   if (!name || !concern || !pattern || !question) {
     return new Response(JSON.stringify({ error: 'missing required fields' }), {
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 4096,
-    system: QNA_SYSTEM,
+    system: getQnaSystem(tone as ToneType | undefined),
     messages: [
       {
         role: 'user',
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
           question,
           inlineChoices,
           fullManse: fullManse ?? undefined,
+          tone: tone as ToneType | undefined,
         }),
       },
     ],

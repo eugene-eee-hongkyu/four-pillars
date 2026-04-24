@@ -65,6 +65,7 @@ export default function ScreenChat() {
       concern: c.concern,
       pattern: c.pattern,
       fullManse: p.manse ?? {},
+      tone: c.tone,
     }, (text) => {
       dispatch({ type: 'INTERPRETATION_DONE' });
       setMessages((prev) => [...prev, { role: 'ai', content: text }]);
@@ -175,6 +176,7 @@ export default function ScreenChat() {
       history,
       question,
       inlineChoices,
+      tone: c.tone,
     }, (text) => {
       const newMsg: Message = {
         role: 'ai',
@@ -197,11 +199,21 @@ export default function ScreenChat() {
   const inputDisabled = !isInputEnabled(state.phase) || state.phase === 'DONE';
   const showDoneButton = showDoneEarlyButton(state.phase);
 
+  const TONE_LABEL: Record<string, string> = {
+    yeoksulga: '역술가', science: '과학형', example: '예시형', counselor: '심리상담가',
+  };
+  const toneLabel = TONE_LABEL[conversation.current?.tone ?? ''] ?? '';
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
       {/* 헤더 */}
-      <header className="sticky top-0 border-b bg-background/80 backdrop-blur z-10 px-4 py-3">
+      <header className="sticky top-0 border-b bg-background/80 backdrop-blur z-10 px-4 py-3 flex items-center gap-2">
         <span className="text-base font-semibold">사주톡</span>
+        {toneLabel && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {toneLabel}
+          </span>
+        )}
       </header>
 
       {/* 메시지 영역 */}
