@@ -7,3 +7,9 @@
 .claude/scheduled_tasks.lock
 .harness/.last-worklog
 .harness/.last-notified
+
+# playwright MCP 세션 아티팩트
+.playwright-mcp/
+
+# 임시 UI 테스트 스크린샷
+screen*.png
