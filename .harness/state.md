@@ -6,8 +6,8 @@
 
 ---
 
-## 마지막 실행: 2026-04-25 00:36
-## 마지막 업데이트: 2026-04-25 00:36
+## 마지막 실행: 2026-04-25 06:54
+## 마지막 업데이트: 2026-04-25 06:54
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
@@ -62,6 +62,7 @@
 - [x] getElementStyle 인라인 스타일 수정
 - [x] 4가지 해석 톤 셀렉터 — result 2×2 그리드 버튼 + chat 헤더 뱃지 + 톤별 시스템 프롬프트
 - [x] tone 전달 방식 localStorage 채택 결정 — worklog.md, state.md, decision.md 커밋·푸시
+- [x] /docs/internal-process.md 작성 — 내부 계산·AI 호출 시점·프롬프트/데이터 구성 방식 명세화
 - [ ] [17/20] 수동 E2E localhost 확인 (4개 톤 답변 비교)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
