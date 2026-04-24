@@ -4,6 +4,23 @@
 
 ---
 
+## Session 2026-04-24 14:57 — 만세력 검증 자동화 Playwright 스펙 작성 및 폼 자동화 시도
+
+### 작업 요약
+- Next.js 14 앱(`sajutalk`) 생성, shadcn 초기화 및 컴포넌트 설치
+- `@fullstackfamily/manseryeok` 설치 및 API 시그니처 확인 (`calculateSaju` positional args)
+- 만세력 래퍼(`engine.ts`)와 Playwright 검증 스펙(`verify.spec.ts`) 작성
+- forceteller.com 도시 검색 다이얼로그 흐름 파악 및 자동화: 다이얼로그 열기 → "서울" 입력 → 서울특별시 선택 → 폼 제출 → 결과 페이지 도달 성공
+
+### 실패한 시도
+- forceteller.com React 폼에 `fill` / `pressSequentially` / `click+type` 으로 직접 입력 시 React state 미반영 → 버튼 비활성화 유지로 제출 불가
+
+### 다음 액션
+- 결과 페이지에서 년주/월주/일주/시주 추출 완료
+- 10개 테스트케이스 반복 검증 → 10/10 통과 확인
+- Supabase 크레덴셜 확보 후 4~6단계(DB 스키마, Edge Function, 연동) 진행
+
+
 ## Session 2026-04-24 12:56 — harness 초기화 + CONTEXT.md 작성
 
 ### 작업 요약
