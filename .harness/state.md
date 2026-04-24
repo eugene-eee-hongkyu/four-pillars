@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 20:53
-## 마지막 업데이트: 2026-04-24 20:53
+## 마지막 실행: 2026-04-24 22:35
+## 마지막 업데이트: 2026-04-24 22:35
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 합충형파해·지장간·과학자톤 구현 완료 (커밋 abdb548) — 수동 E2E 확인 대기
+- 4가지 해석 톤 셀렉터 구현 완료 (커밋 6f9be91) — 수동 E2E 확인 대기
 - 현재 run: docs/runs/2026-04-24-manse-v2-hapchunh-sciencetone_run.md
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E 확인 (채팅 답변 톤 변화 + 합충 표현 등장 여부 직접 읽기)
-2. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션 → Vercel 배포
+1. localhost:3002 수동 E2E — 4개 톤 답변 직접 비교 (예시형 연도별 포맷, 역술가·상담가 톤 차이)
+2. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션
 
 ### 막힌 것
 
@@ -26,7 +26,7 @@
 
 ### 사람 판단 필요
 
-- localhost:3002 채팅 E2E 수동 확인 (톤 변화 + 합충 표현 품질 판단)
+- 4개 톤 답변 품질 직접 비교 (예시형이 실제로 연도별 사건 예측 형식으로 나오는지)
 - Vercel 배포 직전 승인 (Phase 3 진입 시)
 
 ### 백로그 요약
@@ -60,7 +60,8 @@
 - [x] app/api/qna/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
-- [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
+- [x] 4가지 해석 톤 셀렉터 — result 2×2 그리드 버튼 + chat 헤더 뱃지 + 톤별 시스템 프롬프트
+- [ ] [17/20] 수동 E2E localhost 확인 (4개 톤 답변 비교)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인

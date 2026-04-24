@@ -15,6 +15,17 @@
 - **영향 범위**: app/chat/page.tsx, lib/state/chat-machine.ts
 - **되돌리는 방법**: chat-machine.ts의 chatReducer를 XState machine으로 교체 (인터페이스 동일하게 유지하면 page.tsx 수정 최소화)
 
+## 2026-04-24: 해석 톤 선택을 URL 파라미터가 아닌 localStorage(conversation.tone)로 전달
+
+- **선택**: `saveConversation({ tone })` → localStorage → `loadConversation().tone` 읽기
+- **대안 검토**:
+  - URL searchParams (`/chat?tone=science`): 공유 가능하고 명시적이나 기존 라우팅 패턴과 다르고 result→chat 전환에 router.push 수정 필요
+  - URL searchParams: SSR에서 `useSearchParams` Suspense 경계 필요 — 추가 래퍼 컴포넌트 발생
+  - localStorage (conversation): 기존 concern·pattern 전달 방식과 완전히 동일 — 일관성 유지
+- **선택 이유**: 기존 `saveConversation`/`loadConversation` 패턴이 이미 화면 간 상태 전달의 유일 경로로 정해져 있음. 톤도 "대화 설정"이므로 같은 버킷에 넣는 것이 자연스러움.
+- **영향 범위**: lib/session/local-store.ts, app/result/page.tsx, app/chat/page.tsx
+- **되돌리는 방법**: URL searchParams 방식으로 전환 시 `useSearchParams` 훅 추가 + Suspense boundary 래핑 필요
+
 ## 2026-04-24: 사주 AI 톤앤매너 전환 (역술가 → 과학자+심리상담가)
 
 - **선택**: 과학자+심리상담가 톤 — 확률 언어("약 7할"), 결론 먼저 → 근거 → 시나리오, 불확실성 인정 필수

@@ -4,6 +4,26 @@
 
 ---
 
+## Session 2026-04-24 22:35 — 4가지 해석 스타일 톤 셀렉터 구현
+
+### 작업 요약
+- **입력1~4 품질 분석**: 사용자가 현재 출력(입력1)과 원하는 출력 형태(입력2~4) 비교 제시 → 구현 가능성 평가 및 로드맵 정리 (과거 세운 주입·연도별 포맷·질문 유형별 템플릿·역검증 패턴 4가지)
+- **4가지 톤 셀렉터 구현**:
+  - `lib/session/local-store.ts` — `ToneType` ('yeoksulga' | 'science' | 'example' | 'counselor') 추가
+  - `lib/prompts/interpret.ts` — `INTERPRET_SYSTEM_YEOKSULGA` / `INTERPRET_SYSTEM_EXAMPLE` / `INTERPRET_SYSTEM_COUNSELOR` 3개 신규 + `getInterpretSystem(tone)` 선택 함수. 예시형은 과거 세운 데이터 자동 주입 로직 포함
+  - `lib/prompts/qna.ts` — `QNA_SUFFIX` 분리 + `getQnaSystem(tone)` 추가
+  - `app/result/page.tsx` — 단일 "채팅" 버튼 → "해석 스타일로 대화하기" 2×2 그리드 (역술가/과학형/예시형/심리상담가)
+  - `app/chat/page.tsx` — `conversation.tone` 읽어 API 전달 + 헤더 뱃지 표시
+  - `app/api/interpret/route.ts`, `app/api/qna/route.ts` — `tone` 파라미터 수신·전달
+- **Playwright E2E**: 4개 버튼 렌더링 확인 + 과학형 클릭 → 채팅 헤더 "과학형" 뱃지 + 스트리밍 정상 동작 확인
+- **`.gitignore`**: Playwright 스크린샷 패턴 추가 (`*-check.png`, `*-buttons.png`, `*-header.png`)
+- **커밋 2개 푸시**: `6f9be91` (톤 셀렉터), `75eef90` (.gitignore)
+
+### 다음 액션
+1. localhost:3002 수동 E2E — 4개 톤 답변 직접 비교 (특히 예시형이 연도별 포맷으로 나오는지)
+2. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션
+
+
 ## Session 2026-04-24 20:49 — 합충형파해·지장간 구현 + 프롬프트 과학자톤 전환
 
 ### 작업 요약
