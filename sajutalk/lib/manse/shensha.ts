@@ -1,4 +1,4 @@
-// 신살 계산 모듈 (16종)
+// 신살 계산 모듈 (19종)
 // 기준: 일간·일지·년지·월지·일주 60갑자 위치
 
 export interface ShenshaResult {
@@ -134,6 +134,26 @@ const GOJIN_MAP: Record<string, string> = {
   사: '신', 오: '신', 미: '신',
   신: '해', 유: '해', 술: '해',
   해: '인', 자: '인', 축: '인',
+};
+
+// ── 귀문관살: 지지 쌍이 4기둥에 모두 있을 때 ──
+const GWIMON_PAIRS: [string, string][] = [
+  ['자', '유'], ['축', '오'], ['인', '미'],
+  ['묘', '신'], ['진', '해'], ['사', '술'],
+];
+
+// ── 원진살: 지지 쌍이 4기둥에 모두 있을 때 ──
+const WONJIN_PAIRS: [string, string][] = [
+  ['자', '미'], ['축', '오'], ['인', '유'],
+  ['묘', '신'], ['진', '해'], ['사', '술'],
+];
+
+// ── 겁살: 년지 삼합국 기준 지지 ──
+const GEOBSAL_MAP: Record<string, string> = {
+  인: '해', 오: '해', 술: '해',
+  신: '사', 자: '사', 진: '사',
+  해: '신', 묘: '신', 미: '신',
+  사: '인', 유: '인', 축: '인',
 };
 
 // ── 공망: 일주 60갑자 기준 ──
@@ -297,6 +317,32 @@ export function calcShensha(
   const solitudeTarget = solitudeMap[yearBranch];
   if (solitudeTarget) {
     for (const i of branchPositions(solitudeTarget, stems as string[], branches)) pushTo(byPillar, i, solitudeName);
+  }
+
+  // ── 귀문관살: 쌍이 4기둥 지지에 모두 있으면 두 기둥 모두 표시 ──
+  for (const [a, b] of GWIMON_PAIRS) {
+    const posA = branchPositions(a, stems as string[], branches);
+    const posB = branchPositions(b, stems as string[], branches);
+    if (posA.length > 0 && posB.length > 0) {
+      for (const i of posA) pushTo(byPillar, i, '귀문관살');
+      for (const i of posB) pushTo(byPillar, i, '귀문관살');
+    }
+  }
+
+  // ── 원진살: 쌍이 4기둥 지지에 모두 있으면 두 기둥 모두 표시 ──
+  for (const [a, b] of WONJIN_PAIRS) {
+    const posA = branchPositions(a, stems as string[], branches);
+    const posB = branchPositions(b, stems as string[], branches);
+    if (posA.length > 0 && posB.length > 0) {
+      for (const i of posA) pushTo(byPillar, i, '원진살');
+      for (const i of posB) pushTo(byPillar, i, '원진살');
+    }
+  }
+
+  // ── 겁살: 년지 삼합국 기준 ──
+  const geobsalTarget = GEOBSAL_MAP[yearBranch];
+  if (geobsalTarget) {
+    for (const i of branchPositions(geobsalTarget, stems as string[], branches)) pushTo(byPillar, i, '겁살');
   }
 
   // ── 공망 ──
