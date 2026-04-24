@@ -3,6 +3,8 @@ import { buildLuckCycles, type LuckCycles } from './luck-cycles';
 import { splitPillar, countElements, STEM_ELEMENT, BRANCH_ELEMENT } from './pillars';
 import { calcShensha, type ShenshaResult } from './shensha';
 import { calcYongsin, type YongsinResult } from './yongsin';
+import { calcAllJijanggan, type AllJijanggan } from './jijanggan';
+import { calcHapchunh, type HapchunhResult } from './hapchunh';
 
 export interface ManseInput {
   year: number;
@@ -29,7 +31,8 @@ export interface ManseResult {
   luckCycles: LuckCycles;
   shensha: ShenshaResult;
   yongsin: YongsinResult;
-  // 오행 비중 (프롬프트용)
+  jijanggan: AllJijanggan;
+  hapchunh: HapchunhResult;
   elementCounts: { wood: number; fire: number; earth: number; metal: number; water: number };
 }
 
@@ -49,17 +52,27 @@ export function computeManse(input: ManseInput): ManseResult {
   const dayPillarId = dayPillarEntry?.id ?? 0;
 
   // 오행 비중
-  const stems = [yearStem, splitPillar(raw.monthPillar).stem, dayStem];
-  const branches = [
-    splitPillar(raw.yearPillar).branch,
-    splitPillar(raw.monthPillar).branch,
-    splitPillar(raw.dayPillar).branch,
-  ];
-  if (!timeUnknown && raw.hourPillar) {
-    stems.push(splitPillar(raw.hourPillar).stem);
-    branches.push(splitPillar(raw.hourPillar).branch);
-  }
+  const yearBranch = splitPillar(raw.yearPillar).branch;
+  const monthBranch = splitPillar(raw.monthPillar).branch;
+  const dayBranch = splitPillar(raw.dayPillar).branch;
+  const hourBranch = (!timeUnknown && raw.hourPillar) ? splitPillar(raw.hourPillar).branch : null;
+  const monthStem = splitPillar(raw.monthPillar).stem;
+  const hourStem = (!timeUnknown && raw.hourPillar) ? splitPillar(raw.hourPillar).stem : null;
+
+  const stems = [yearStem, monthStem, dayStem];
+  const branches = [yearBranch, monthBranch, dayBranch];
+  if (hourStem) stems.push(hourStem);
+  if (hourBranch) branches.push(hourBranch);
   const elementCounts = countElements(stems, branches);
+
+  const jijanggan = calcAllJijanggan({ yearBranch, monthBranch, dayBranch, hourBranch });
+  const hapchunh = calcHapchunh({
+    yearStem, yearBranch,
+    monthStem, monthBranch,
+    dayStem, dayBranch,
+    hourStem, hourBranch,
+    dayPillarFull: raw.dayPillar,
+  });
 
   return {
     yearPillar: raw.yearPillar,
@@ -81,6 +94,8 @@ export function computeManse(input: ManseInput): ManseResult {
       raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId, gender,
     ),
     yongsin: calcYongsin(elementCounts),
+    jijanggan,
+    hapchunh,
     elementCounts,
   };
 }

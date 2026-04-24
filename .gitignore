@@ -13,3 +13,7 @@
 
 # 임시 UI 테스트 스크린샷
 screen*.png
+*-test.png
+
+# Next.js 빌드 아티팩트 (sajutalk/ 외 위치)
+.next/

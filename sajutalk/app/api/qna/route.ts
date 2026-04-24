@@ -9,9 +9,9 @@ const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, manse, concern, pattern, history, question, inlineChoices } = body;
+  const { name, manse, concern, pattern, history, question, inlineChoices, fullManse } = body;
 
-  if (!name || !manse || !concern || !pattern || !question) {
+  if (!name || !concern || !pattern || !question) {
     return new Response(JSON.stringify({ error: 'missing required fields' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
@@ -20,19 +20,20 @@ export async function POST(req: NextRequest) {
 
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 3072,
+    max_tokens: 4096,
     system: QNA_SYSTEM,
     messages: [
       {
         role: 'user',
         content: buildQnaPrompt({
           name,
-          manse,
+          manse: manse ?? '',
           concern,
           pattern,
           history: history ?? [],
           question,
           inlineChoices,
+          fullManse: fullManse ?? undefined,
         }),
       },
     ],

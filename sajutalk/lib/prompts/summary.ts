@@ -5,16 +5,16 @@ import { INTERPRET_SYSTEM } from './interpret';
 
 export const SUMMARY_SYSTEM = `${INTERPRET_SYSTEM}
 
-추가 규칙:
-- 지금까지 대화 맥락 전체를 한 번 더 묶어 정리
+[정리 응답 추가 규칙]
+- 지금까지 대화 맥락 전체를 데이터 기반으로 종합 정리
 - 밀도는 질문 횟수 비례:
-  * 0회 (이제 됐어요 바로): 3~4문장 짧게
-  * 1~2회: 5~7문장 중간 밀도
-  * 3회 다 씀: 8~12문장 풍부하게. 누적된 Q&A 답까지 종합
-- 자동 전환(3번 다 씀)으로 진입하면 맨 앞 1문장에
-  "세 번 물어봐주셨으니, 오늘 얘기 정리해드릴게요" 전환 문구
-- 마지막 1문장: 따뜻한 맺음말 ("이번 해석이 도움 되셨길 바라요" 류)
-- 금지: "다음에 또 오세요" 류 재방문 유도`;
+  * 0회 (이제 됐어요 바로): 3~4문장 핵심만
+  * 1~2회: 5~7문장 — Q&A에서 추가로 파악된 패턴 포함
+  * 3회 다 씀: 8~12문장 — 누적 Q&A 종합 + 행동 제안 1~2개
+- 자동 전환(3번 다 씀)이면 맨 앞에 "세 번 질문하셨으니 오늘 분석을 정리해드릴게요" 한 문장
+- 확률 언어 유지: "이 구조에서는 약 ~"
+- 마지막 1~2문장: 구체적 행동 제안 또는 핵심 선택 기준 ("지금 가장 중요한 판단 기준은 ~")
+- 금지: "다음에 또 오세요" 류 재방문 유도, 모호한 응원 문구`;
 
 export interface SummaryContext {
   name: string;
@@ -27,8 +27,10 @@ export interface SummaryContext {
 }
 
 export function buildSummaryPrompt(ctx: SummaryContext): string {
+  const today = new Date().toISOString().slice(0, 10);
   const questionCount = ctx.history.length;
   const lines = [
+    `[분석 기준일]: ${today}`,
     `사용자 이름: ${ctx.name}`,
     `만세력 원국: ${ctx.manse}`,
     `현재 고민: ${ctx.concern}`,

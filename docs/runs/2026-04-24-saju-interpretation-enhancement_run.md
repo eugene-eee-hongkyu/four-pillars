@@ -2,9 +2,9 @@
 name: 사주 해석 강화
 slug: saju-interpretation-enhancement
 type: other
-status: 진행중
+status: 완료
 created: 2026-04-24 17:00
-completed:
+completed: 2026-04-24
 ---
 
 # 사주 해석 강화
@@ -139,6 +139,7 @@ completed:
 
 ## Report
 
-> /worklog 실행 시 완료 기준이 모두 충족되면 자동으로 작성 제안됨.
-
-_(진행중)_
+- **실행 결과**: 신살 19종·용신·대운·세운·월운 전체 만세력 데이터를 interpret/qna 프롬프트에 구조화 주입. 40문장+ 스트리밍 수신 확인. QNA max_tokens 3072→4096 증가, fullManse 주입으로 대운/세운 인지 문제 해결.
+- **이슈**: 답변 잘림 지속 (3072 토큰 부족). QNA가 manse.summary 텍스트만 받아 대운 정보 누락 → 둘 다 이번 세션에서 수정 완료.
+- **결정**: 합충형파해 + 지장간은 별도 run으로 분리하려다 사용자 요청으로 다음 run에 통합.
+- **다음 액션**: 합충형파해·지장간 계산 + 과학자톤 전환 (manse-v2-hapchunh-sciencetone run으로 이어짐)

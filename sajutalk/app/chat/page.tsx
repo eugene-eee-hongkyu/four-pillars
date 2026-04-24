@@ -169,6 +169,7 @@ export default function ScreenChat() {
     streamAiResponse('/api/qna', {
       name: p.name,
       manse: (p.manse as { summary: string })?.summary ?? '',
+      fullManse: p.manse ?? {},
       concern: c.concern,
       pattern: c.pattern,
       history,
