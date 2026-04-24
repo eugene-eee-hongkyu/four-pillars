@@ -31,11 +31,11 @@ export default function ScreenBirthInput() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 2회차 이상이면 /concern으로 바로 이동
+  // 2회차 이상이면 /result로 바로 이동 (만세력 이미 저장됨)
   useEffect(() => {
     const profile = loadProfile();
     if (profile && profile.sessionCount > 0) {
-      router.replace('/concern');
+      router.replace('/result');
     }
   }, [router]);
 
@@ -91,7 +91,7 @@ export default function ScreenBirthInput() {
         sessionCount: 0,
       });
 
-      router.push('/concern');
+      router.push('/result');
     } catch {
       setError('잠시 후 다시 시도해주세요.');
     } finally {

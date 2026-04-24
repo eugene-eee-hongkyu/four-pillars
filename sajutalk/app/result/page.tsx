@@ -1,0 +1,272 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { loadProfile, saveConversation } from '@/lib/session/local-store';
+import type { LocalProfile } from '@/lib/session/local-store';
+import {
+  splitPillar,
+  getElement,
+  getStemSipsin,
+  getBranchSipsin,
+  getGuiin,
+  getElementBg,
+  getElementLabel,
+  countElements,
+  type Element,
+} from '@/lib/manse/pillars';
+
+type ManseResult = {
+  yearPillar: string;
+  monthPillar: string;
+  dayPillar: string;
+  hourPillar: string | null;
+  yearPillarHanja: string;
+  monthPillarHanja: string;
+  dayPillarHanja: string;
+  hourPillarHanja: string | null;
+  summary: string;
+};
+
+const PILLAR_LABELS = ['시주', '일주', '월주', '년주'];
+const GUIIN_POSITION_LABELS = ['년지', '월지', '일지', '시지'];
+const ELEMENT_ORDER: Element[] = ['wood', 'fire', 'earth', 'metal', 'water'];
+
+function koreanAge(birthYear: number): number {
+  return new Date().getFullYear() - birthYear + 1;
+}
+
+export default function ScreenResult() {
+  const router = useRouter();
+  const [profile, setProfile] = useState<LocalProfile | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const p = loadProfile();
+    if (!p || !p.manse) { router.replace('/'); return; }
+    setProfile(p);
+  }, [router]);
+
+  if (!profile || !profile.manse) return null;
+
+  const manse = profile.manse as ManseResult;
+
+  // pillars 배열: [시주, 일주, 월주, 년주] 순서
+  const rawPillars = [
+    { pillar: manse.hourPillar, hanja: manse.hourPillarHanja },
+    { pillar: manse.dayPillar, hanja: manse.dayPillarHanja },
+    { pillar: manse.monthPillar, hanja: manse.monthPillarHanja },
+    { pillar: manse.yearPillar, hanja: manse.yearPillarHanja },
+  ];
+
+  const pillars = rawPillars.map((p) => {
+    if (!p.pillar || !p.hanja) return null;
+    const { stem, branch } = splitPillar(p.pillar);
+    return { stem, branch, stemHanja: p.hanja[0] ?? '', branchHanja: p.hanja[1] ?? '' };
+  });
+
+  const dayStem = pillars[1]?.stem ?? '';
+
+  // 오행 분포
+  const allStems = pillars.map((p) => p?.stem ?? '').filter(Boolean);
+  const allBranches = pillars.map((p) => p?.branch ?? '').filter(Boolean);
+  const elementCounts = countElements(allStems, allBranches);
+
+  // 천을귀인 — 순서: [년지, 월지, 일지, 시지]
+  const branchesForGuiin = [
+    pillars[3]?.branch ?? null,
+    pillars[2]?.branch ?? null,
+    pillars[1]?.branch ?? null,
+    pillars[0]?.branch ?? null,
+  ];
+  const guiinPositions = getGuiin(dayStem, branchesForGuiin).map(
+    (i) => GUIIN_POSITION_LABELS[i],
+  );
+
+  function buildCopyPrompt(): string {
+    const { name, gender, birthYear, birthMonth, birthDay, birthHour, birthMinute, timeUnknown } =
+      profile!;
+    const timeStr = timeUnknown
+      ? '시간 미상'
+      : `${String(birthHour).padStart(2, '0')}시 ${String(birthMinute ?? 0).padStart(2, '0')}분`;
+
+    const col = (v: string) => v.padEnd(6, ' ');
+    const sipsinRow = [
+      pillars[0] ? getStemSipsin(dayStem, pillars[0].stem) : '?',
+      '일간',
+      pillars[2] ? getStemSipsin(dayStem, pillars[2].stem) : '?',
+      pillars[3] ? getStemSipsin(dayStem, pillars[3].stem) : '?',
+    ];
+
+    const elemStr = ELEMENT_ORDER.map(
+      (el) => `${getElementLabel(el)} ${elementCounts[el]}개`,
+    ).join('  ');
+
+    return `저의 사주를 분석해 주세요.
+
+■ 기본 정보
+이름: ${name}
+성별: ${gender === 'female' ? '여성' : '남성'}
+생년월일: ${birthYear}년 ${birthMonth}월 ${birthDay}일 (양력)
+태어난 시간: ${timeStr}
+
+■ 사주 (四柱八字)
+      ${col('시주')}${col('일주')}${col('월주')}${col('년주')}
+십신: ${col(sipsinRow[0])}${col(sipsinRow[1])}${col(sipsinRow[2])}${col(sipsinRow[3])}
+천간: ${col(pillars[0]?.stem ?? '?')}${col(pillars[1]?.stem ?? '?')}${col(pillars[2]?.stem ?? '?')}${col(pillars[3]?.stem ?? '?')}
+지지: ${col(pillars[0]?.branch ?? '?')}${col(pillars[1]?.branch ?? '?')}${col(pillars[2]?.branch ?? '?')}${col(pillars[3]?.branch ?? '?')}
+
+■ 한자 표기
+천간: ${col(pillars[0]?.stemHanja ?? '?')}${col(pillars[1]?.stemHanja ?? '?')}${col(pillars[2]?.stemHanja ?? '?')}${col(pillars[3]?.stemHanja ?? '?')}
+지지: ${col(pillars[0]?.branchHanja ?? '?')}${col(pillars[1]?.branchHanja ?? '?')}${col(pillars[2]?.branchHanja ?? '?')}${col(pillars[3]?.branchHanja ?? '?')}
+
+■ 오행 분포: ${elemStr}
+${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}에 있습니다\n` : ''}
+제 사주팔자를 바탕으로 성격, 적성, 현재 운세와 주의할 점을 역술가처럼 상세히 해석해 주세요.`;
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(buildCopyPrompt());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard API 실패 시 무시
+    }
+  }
+
+  function handleChat() {
+    saveConversation({ concern: '전반적인 운세', pattern: '일반 상담' });
+    router.push('/chat');
+  }
+
+  const { name, birthYear, birthMonth, birthDay, birthHour, birthMinute, timeUnknown } = profile;
+  const age = koreanAge(birthYear);
+  const timeDisplay = timeUnknown
+    ? ''
+    : ` ${String(birthHour).padStart(2, '0')}:${String(birthMinute ?? 0).padStart(2, '0')}`;
+
+  return (
+    <main className="min-h-screen bg-background flex flex-col items-center py-8 px-4">
+      <div className="w-full max-w-sm space-y-6">
+
+        {/* 복사 / 채팅 버튼 */}
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={handleCopy}>
+            {copied ? '복사됨 ✓' : '복사'}
+          </Button>
+          <Button className="flex-1" onClick={handleChat}>
+            채팅
+          </Button>
+        </div>
+
+        {/* 인적 정보 헤더 */}
+        <div>
+          <p className="font-semibold text-base">{name} ({age}세)</p>
+          <p className="text-sm text-muted-foreground">
+            {birthYear}년 {birthMonth}월 {birthDay}일{timeDisplay} (양력)
+          </p>
+        </div>
+
+        {/* 사주 그리드 */}
+        <div>
+          <table className="w-full border-collapse text-center">
+            <thead>
+              <tr>
+                {PILLAR_LABELS.map((label) => (
+                  <th key={label} className="pb-1 text-xs text-muted-foreground font-normal w-1/4">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* 천간 십신 */}
+              <tr>
+                {pillars.map((p, i) => {
+                  const label =
+                    i === 1 ? '일간' : getStemSipsin(dayStem, p?.stem ?? '');
+                  return (
+                    <td key={i} className="pb-1 text-xs text-muted-foreground h-5">
+                      {label}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* 천간 박스 */}
+              <tr>
+                {pillars.map((p, i) => {
+                  const el = p ? getElement(p.stem, 'stem') : null;
+                  return (
+                    <td key={i} className="px-1 pb-1">
+                      <div
+                        className={`mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold ${getElementBg(el)}`}
+                      >
+                        {p ? p.stemHanja : <span className="text-xs opacity-40">?</span>}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* 지지 박스 */}
+              <tr>
+                {pillars.map((p, i) => {
+                  const el = p ? getElement(p.branch, 'branch') : null;
+                  return (
+                    <td key={i} className="px-1 pb-1">
+                      <div
+                        className={`mx-auto w-14 h-14 flex items-center justify-center rounded-md text-2xl font-bold ${getElementBg(el)}`}
+                      >
+                        {p ? p.branchHanja : <span className="text-xs opacity-40">?</span>}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* 지지 십신 */}
+              <tr>
+                {pillars.map((p, i) => {
+                  const label =
+                    i === 1 ? '' : getBranchSipsin(dayStem, p?.branch ?? '');
+                  return (
+                    <td key={i} className="pt-1 text-xs text-muted-foreground h-5">
+                      {label}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* 오행 분포 */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">오행 분포</p>
+          <div className="flex gap-1.5 flex-wrap">
+            {ELEMENT_ORDER.map((el) => (
+              <div
+                key={el}
+                className={`px-2.5 py-1 rounded text-xs font-semibold ${getElementBg(el)}`}
+              >
+                {getElementLabel(el)} {elementCounts[el]}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 천을귀인 */}
+        {guiinPositions.length > 0 && (
+          <div className="rounded-lg border p-3 space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">天乙귀인 (천을귀인)</p>
+            <p className="text-sm font-medium">{guiinPositions.join(' · ')}에 있습니다</p>
+          </div>
+        )}
+
+      </div>
+    </main>
+  );
+}

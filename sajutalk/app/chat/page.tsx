@@ -40,8 +40,8 @@ export default function ScreenChat() {
 
   useEffect(() => {
     const p = loadProfile();
-    const c = loadConversation();
-    if (!p || !c || !c.pattern) { router.replace('/'); return; }
+    if (!p) { router.replace('/'); return; }
+    const c = loadConversation() ?? { concern: '', pattern: '' };
     profile.current = p;
     conversation.current = c;
 
