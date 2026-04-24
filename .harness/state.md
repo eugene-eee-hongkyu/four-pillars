@@ -6,20 +6,20 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 17:40
-## 마지막 업데이트: 2026-04-24 17:40
+## 마지막 실행: 2026-04-24 18:22
+## 마지막 업데이트: 2026-04-24 18:22
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
 - 사주 해석 강화 run 진행 중 — 구현 완료, localhost E2E 수동 확인 대기
-- 현재 run: docs/runs/2026-04-24-saju-interpretation-enhancement_run.md — 사주 해석 강화
+- 현재 run: docs/runs/2026-04-24-saju-interpretation-enhancement_run.md
 
 ### 이어서 할 것
 
 1. localhost:3002 수동 E2E 확인 (화면1 → 채팅 → 40문장+ 해석 직접 읽기)
-2. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
-3. Vercel 배포 승인 요청 후 진행 (단계 18, §9 [트리거 4])
+2. 미커밋 구현 파일 git add/commit/push (sajutalk 구현 파일 별도 커밋)
+3. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
 
 ### 막힌 것
 
@@ -61,7 +61,10 @@
 - [x] lib/prompts/interpret.ts 전면 개편 (5구획 40문장+, 전체 만세력 주입)
 - [x] app/api/interpret/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] 40문장+ 스트리밍 개발 서버 수신 확인 (~50초)
+- [x] getElementStyle 인라인 스타일 수정 (Tailwind 동적 클래스 색상 미적용 문제 해결)
+- [x] 월주 십신 비견 표시 누락 버그 수정
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
+- [ ] 미커밋 구현 파일 git commit/push
 - [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
