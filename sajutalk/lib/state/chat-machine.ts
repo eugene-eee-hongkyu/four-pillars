@@ -2,7 +2,10 @@
 // A-2 §4 화면 4 흐름도 기반. useReducer와 함께 사용.
 //
 // 상태 전이 요약:
-//   A → B: START_INTERPRETING (1~2초 배너 후)
+//   A → B_HOOK: START_HOOK (역술가 톤)
+//   A → B: START_INTERPRETING (그 외 톤)
+//   B_HOOK → C_CALIBRATING: HOOK_DONE
+//   C_CALIBRATING → B: CALIBRATE (예/아니오 선택)
 //   B → C: INTERPRETATION_DONE (스트리밍 완료)
 //   C → D: SEND_QUESTION (counter -1)
 //   D → E: ANSWER_DONE (2회차+2번째+50% 조건 충족 시)
@@ -14,13 +17,15 @@
 //   F → DONE: SUMMARY_DONE
 
 export type ChatPhase =
-  | 'A'     // 시작 배너 (1~2초)
-  | 'B'     // 긴 해석 스트리밍 (입력창 disabled)
-  | 'C'     // 질문 대기 (입력창 활성)
-  | 'D'     // Q&A 답변 스트리밍 (입력창 disabled)
-  | 'E'     // 2회차 2번째 답변 4지선다 (입력창 disabled, 선택 후 활성)
-  | 'F'     // 정리 응답 스트리밍
-  | 'DONE'; // 세션 완료
+  | 'A'              // 시작 배너 (1~2초)
+  | 'B_HOOK'         // 훅 스트리밍 — 역술가 전용 (입력창 disabled)
+  | 'C_CALIBRATING'  // 예/아니오 버튼 대기 — 역술가 전용 (입력창 disabled)
+  | 'B'              // 긴 해석 스트리밍 (입력창 disabled)
+  | 'C'              // 질문 대기 (입력창 활성)
+  | 'D'              // Q&A 답변 스트리밍 (입력창 disabled)
+  | 'E'              // 2회차 2번째 답변 4지선다 (입력창 disabled, 선택 후 활성)
+  | 'F'              // 정리 응답 스트리밍
+  | 'DONE';          // 세션 완료
 
 export interface ChatState {
   phase: ChatPhase;
@@ -34,6 +39,9 @@ export interface ChatState {
 }
 
 export type ChatAction =
+  | { type: 'START_HOOK' }
+  | { type: 'HOOK_DONE' }
+  | { type: 'CALIBRATE' }
   | { type: 'START_INTERPRETING' }
   | { type: 'INTERPRETATION_DONE' }
   | { type: 'SEND_QUESTION' }
@@ -58,6 +66,18 @@ export const INITIAL_STATE: ChatState = {
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
+    case 'START_HOOK':
+      if (state.phase !== 'A') return state;
+      return { ...state, phase: 'B_HOOK' };
+
+    case 'HOOK_DONE':
+      if (state.phase !== 'B_HOOK') return state;
+      return { ...state, phase: 'C_CALIBRATING' };
+
+    case 'CALIBRATE':
+      if (state.phase !== 'C_CALIBRATING') return state;
+      return { ...state, phase: 'B' };
+
     case 'START_INTERPRETING':
       if (state.phase !== 'A') return state;
       return { ...state, phase: 'B' };

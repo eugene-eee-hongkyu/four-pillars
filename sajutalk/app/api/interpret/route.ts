@@ -4,13 +4,13 @@
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { getInterpretSystem, buildInterpretPrompt, type InterpretContext, type ToneType } from '@/lib/prompts/interpret';
+import { getInterpretSystem, buildInterpretPrompt, type InterpretContext, type ToneType, type CalibrationContext } from '@/lib/prompts/interpret';
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, gender, birthYear, concern, pattern, fullManse, prevSummary, tone } = body;
+  const { name, gender, birthYear, concern, pattern, fullManse, prevSummary, tone, calibration } = body;
 
   if (!name || !concern || !pattern || !fullManse) {
     return new Response(JSON.stringify({ error: 'missing required fields' }), {
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     fullManse,
     prevSummary,
     tone: tone as ToneType | undefined,
+    calibration: calibration as CalibrationContext | undefined,
   };
 
   const stream = await client.messages.stream({

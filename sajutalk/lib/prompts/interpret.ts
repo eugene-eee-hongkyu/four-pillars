@@ -156,6 +156,11 @@ export interface FullManseData {
   summary?: string;
 }
 
+export interface CalibrationContext {
+  hookText: string;
+  answer: 'yes' | 'no';
+}
+
 export interface InterpretContext {
   name: string;
   gender: 'male' | 'female';
@@ -165,6 +170,7 @@ export interface InterpretContext {
   fullManse: FullManseData;
   prevSummary?: string;
   tone?: ToneType;
+  calibration?: CalibrationContext;
 }
 
 const ELEMENT_KO: Record<string, string> = {
@@ -267,6 +273,18 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
         const yearAge = s.year - birthYear + 1;
         lines.push(`${s.year}년 ${s.stem}${s.branch}(${s.stemSipsin}) — ${yearAge}세`);
       }
+    }
+  }
+
+  if (ctx.calibration) {
+    const cal = ctx.calibration;
+    lines.push(``, `[Calibration Context — 아래 내용을 해석 전체에 반영할 것]`);
+    lines.push(`역술가가 제시한 내용:\n${cal.hookText}`);
+    lines.push(`사용자 답변: ${cal.answer === 'yes' ? '예' : '아니오'}`);
+    if (cal.answer === 'yes') {
+      lines.push('해석 방향: 해당 운이 현실에서 확인됨. 재물·직업·관계 해석의 기준점으로 활용.');
+    } else {
+      lines.push('해석 방향: 외부 사건보다 내면·환경·준비 과정으로 발현됐을 가능성. 단정 금지.');
     }
   }
 

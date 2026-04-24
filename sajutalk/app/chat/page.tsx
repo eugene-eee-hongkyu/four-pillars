@@ -12,6 +12,7 @@ import {
   showDoneEarlyButton,
 } from '@/lib/state/chat-machine';
 import { loadProfile, loadConversation, saveProfile } from '@/lib/session/local-store';
+import type { CalibrationContext } from '@/lib/prompts/interpret';
 
 // 2회차 세션 4지선다 선택지 (카테고리별)
 const INLINE_CHOICES: Record<string, string[]> = {
@@ -38,6 +39,8 @@ export default function ScreenChat() {
 
   const profile = useRef<ReturnType<typeof loadProfile>>(null);
   const conversation = useRef<ReturnType<typeof loadConversation>>(null);
+  // calibration은 예/아니오 클릭 시 설정되고 B 페이즈 시작 시 읽힘 — ref로 관리해 stale closure 방지
+  const calibrationRef = useRef<CalibrationContext | null>(null);
 
   useEffect(() => {
     const p = loadProfile();
@@ -46,14 +49,39 @@ export default function ScreenChat() {
     profile.current = p;
     conversation.current = c;
 
-    // 배너 1.5초 후 자동으로 B 상태 진입
+    // 배너 1.5초 후: 역술가 톤은 훅 먼저, 그 외는 바로 해석
     const timer = setTimeout(() => {
-      dispatch({ type: 'START_INTERPRETING' });
+      if (c.tone === 'yeoksulga') {
+        dispatch({ type: 'START_HOOK' });
+      } else {
+        dispatch({ type: 'START_INTERPRETING' });
+      }
     }, 1500);
     return () => clearTimeout(timer);
   }, [router]);
 
-  // 상태 B 진입 시 긴 해석 스트리밍 시작
+  // 상태 B_HOOK 진입 시 훅 스트리밍
+  useEffect(() => {
+    if (state.phase !== 'B_HOOK') return;
+    const p = profile.current!;
+    const c = conversation.current!;
+    streamAiResponse('/api/hook', {
+      name: p.name,
+      gender: p.gender,
+      birthYear: p.birthYear,
+      concern: c.concern,
+      pattern: c.pattern,
+      fullManse: p.manse ?? {},
+      tone: c.tone,
+    }, (text) => {
+      dispatch({ type: 'HOOK_DONE' });
+      setMessages((prev) => [...prev, { role: 'ai', content: text }]);
+      setStreamingText('');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase === 'B_HOOK']);
+
+  // 상태 B 진입 시 긴 해석 스트리밍
   useEffect(() => {
     if (state.phase !== 'B') return;
     const p = profile.current!;
@@ -66,6 +94,7 @@ export default function ScreenChat() {
       pattern: c.pattern,
       fullManse: p.manse ?? {},
       tone: c.tone,
+      calibration: calibrationRef.current ?? undefined,
     }, (text) => {
       dispatch({ type: 'INTERPRETATION_DONE' });
       setMessages((prev) => [...prev, { role: 'ai', content: text }]);
@@ -139,6 +168,12 @@ export default function ScreenChat() {
     } catch {
       dispatch({ type: 'SET_ERROR', message: '해석 생성 중 오류가 있었어요.' });
     }
+  }
+
+  function handleCalibrate(answer: 'yes' | 'no') {
+    const hookMessage = messages[messages.length - 1];
+    calibrationRef.current = { hookText: hookMessage?.content ?? '', answer };
+    dispatch({ type: 'CALIBRATE' });
   }
 
   function sendQuestion() {
@@ -275,6 +310,24 @@ export default function ScreenChat() {
               </div>
               <span className="animate-pulse">▋</span>
             </div>
+          </div>
+        )}
+
+        {/* 예/아니오 — 역술가 훅 후 보정 질문 */}
+        {state.phase === 'C_CALIBRATING' && (
+          <div className="flex gap-2 pl-2">
+            <button
+              onClick={() => handleCalibrate('yes')}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              예, 있었어요
+            </button>
+            <button
+              onClick={() => handleCalibrate('no')}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              아니오, 없었어요
+            </button>
           </div>
         )}
 
