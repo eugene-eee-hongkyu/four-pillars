@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+    max_tokens: 3072,
     system: QNA_SYSTEM,
     messages: [
       {

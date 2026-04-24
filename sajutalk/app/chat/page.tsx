@@ -3,6 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import ReactMarkdown from 'react-markdown';
 import {
   chatReducer,
   INITIAL_STATE,
@@ -216,13 +217,17 @@ export default function ScreenChat() {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
+              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                 msg.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-br-sm'
+                  ? 'bg-primary text-primary-foreground rounded-br-sm whitespace-pre-wrap'
                   : 'bg-muted text-foreground rounded-bl-sm'
               }`}
             >
-              {msg.content}
+              {msg.role === 'user' ? msg.content : (
+                <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
+              )}
               {/* 4지선다 (상태 E) */}
               {msg.inlineChoices && !msg.inlineChosen && (
                 <div className="mt-3 space-y-2 border-t pt-3">
@@ -251,8 +256,10 @@ export default function ScreenChat() {
         {/* 스트리밍 중 텍스트 */}
         {streamingText && (
           <div className="flex justify-start">
-            <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-muted px-4 py-3 text-sm whitespace-pre-wrap">
-              {streamingText}
+            <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-muted px-4 py-3 text-sm">
+              <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                <ReactMarkdown>{streamingText}</ReactMarkdown>
+              </div>
               <span className="animate-pulse">▋</span>
             </div>
           </div>
