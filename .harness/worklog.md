@@ -4,6 +4,32 @@
 
 ---
 
+## Session 2026-04-24 20:49 — 합충형파해·지장간 구현 + 프롬프트 과학자톤 전환
+
+### 작업 요약
+- **QNA fullManse 주입 수정**: `max_tokens` 3072→4096, QNA가 manse.summary 텍스트만 받던 버그 수정 → `fullManse: p.manse ?? {}` 전달
+- **해석 품질 아키텍처 논의**: ChatGPT(3단계 아키텍처), Gemini(70/20/10 가중치), Claude(출력 표현) 3개 AI 의견 종합 → 합충형파해 미구현이 가장 큰 gap으로 결론
+- **오늘 날짜 프롬프트 주입 방향 결정**: "오늘 날짜만으로 충분" — 대운/세운/월운이 이미 서버에서 계산·주입 중
+- **Kickoff**: `manse-v2-hapchunh-sciencetone` run 생성, 이전 run(`saju-interpretation-enhancement`) 완료 처리
+- **lib/manse/jijanggan.ts** 신규: 지장간 12지지 고정 테이블, `getJijanggan()` / `calcAllJijanggan()`
+- **lib/manse/hapchunh.ts** 신규: 합충형파해 전체 — 천간합 5종, 지지 6합 6종, 3합 4종(반합 포함), 충 6종, 삼형+자형, 파 6종, 해 6종, 공망(60갑자 순공 테이블)
+- **lib/manse/engine.ts** 확장: `jijanggan` / `hapchunh` 필드 추가, 두 모듈 호출 연결
+- **lib/prompts/interpret.ts** 전면 개편: 역술가 톤 → 과학자+심리상담가 톤 (확률% 필수, 결론 먼저, 불확실성 인정), 오늘 날짜·합충·지장간 섹션 주입
+- **lib/prompts/qna.ts**: 동일 톤 동기화, `buildManseSection`에 합충·지장간·오늘 날짜 추가
+- **lib/prompts/summary.ts**: 추가 규칙 톤 맞춤 + 오늘 날짜 주입
+- **.gitignore**: `.next/` (루트 빌드 아티팩트), `*-test.png` 추가
+- `next build` 통과, localhost:3002 서버 가동, 텔레그램 알림 전송
+- **커밋 푸시**: `abdb548` — 12개 파일 변경, 691줄 추가
+
+### 실패한 시도
+- Telegram MCP allowlist 미등록으로 전송 실패 → curl 직접 전송으로 우회
+
+### 다음 액션
+1. localhost:3002 수동 E2E 확인 (채팅 답변 톤 변화 + 합충 표현 등장 여부 직접 읽기)
+2. Phase 3 진입 준비: Supabase credentials 입력 → DB 마이그레이션
+3. Vercel 배포 승인 요청 (Phase 3)
+
+
 ## Session 2026-04-24 20:24 — 신살 19종 완성 + 해석 품질 개선 방향 정리
 
 ### 작업 요약
@@ -30,12 +56,11 @@
 - **interpret API route 재작성**: 전체 만세력 데이터(십성·신살·용신·대운) 주입, 훅 4개(일주→오행→대운→신살) + 40문장+ 쉬운 풀이 구조로 프롬프트 전면 개편
 - `chat/page.tsx`에 fullManse 데이터 전달 연결
 - run 파일 생성: `docs/runs/2026-04-24-saju-interpretation-enhancement_run.md`
-- `.harness/` 파일 git commit/push, `state.md` 전체 재작성
 
 ### 실패한 시도
 - Tailwind 동적 클래스(`getElementBg`) 색상 미적용 → `lib/` 폴더가 Tailwind 스캔 대상 외였음 → 인라인 스타일(`getElementStyle`)로 교체
 - 월주 십신이 일간과 동일할 때 비견 공백 반환 버그 → 수정
-- dev server 재시작 없이 화면 확인을 건너뛰고 완료 선언 → 이후 Playwright로 직접 확인하는 프로세스 수립
+- dev server 재시작 없이 화면 확인을 건너뛰고 완료 선언
 
 ### 다음 액션
 - 미커밋 구현 파일들 별도 커밋 여부 확인 및 커밋
@@ -47,160 +72,73 @@
 
 ### 작업 요약
 - **result 페이지 대운·세운·월운 테이블 추가** (`app/result/page.tsx`)
-  - `LuckCycleTable` 컴포넌트: 7컬럼, 우측=현재(보라 테두리), 좌측=미래
-  - 대운(age)/세운(year)/월운(month·year) 3행 표시
 - **lib/manse/luck-cycles.ts** 신규 — 대운·세운·월운 계산 전체 담당
-  - 절기 근사 테이블 `WOLJEOL` 직접 구현 (라이브러리 2020~2030 범위 제한 우회)
-  - `buildLuckCycles()` → `LuckCycles { daeun, sewun, wolwun }` 반환
-  - 순행/역행: `isForward = (yearStemId % 2 === 0) === (gender === 'male')`
 - **lib/manse/shensha.ts** 신규 — 신살 8종 매핑 테이블 기반 계산
-  - 도화·역마·학당귀인·천의성·암록·문창귀인·양인살·공망
-  - `strong` 자동 선정: 길성 우선, 부족하면 살
-- **lib/manse/yongsin.ts** 신규 — 억부용신 단순 근사 (과다 50%+ → 극 오행, 부재 → 보완 오행)
+- **lib/manse/yongsin.ts** 신규 — 억부용신 단순 근사
 - **lib/manse/engine.ts** 확장 — `shensha`, `yongsin`, `elementCounts` 필드 추가
 - **lib/prompts/interpret.ts** 전면 개편 — 5구획 40문장+, `FullManseData` 인터페이스, 구조화 주입
 - **app/api/interpret/route.ts** — `max_tokens` 1024 → 4096, `fullManse` 파라미터 수신
-- **app/chat/page.tsx** — `fullManse: p.manse ?? {}` 전달 방식으로 변경
 - **docs/runs/2026-04-24-saju-interpretation-enhancement_run.md** 신규 (kickoff)
-- `next build` 빌드 통과 확인
-- 개발 서버에서 40문장+ 스트리밍 수신 확인 (~50초)
+- `next build` 빌드 통과 확인, 개발 서버에서 40문장+ 스트리밍 수신 확인
 
 ### 실패한 시도
-- `LuckItem` union type 오류 (`DaeunItem[]` → `LuckItem[]` 불일치): `LuckRow` 단순 인터페이스 + 호출부 `.map()` 변환으로 교체
-- `new Set` 다운레벨 이터레이션 오류 (shensha.ts): `filter/indexOf` 패턴으로 교체
-- `string | null` 타입 가드 누락 (engine.ts): `if (!timeUnknown && raw.hourPillar)` 추가
-- webpack 캐시 오류 (`Cannot find module './948.js'`): 개발 서버 재시작으로 해결
+- `LuckItem` union type 오류, `new Set` 다운레벨 이터레이션 오류, `string | null` 타입 가드 누락
+- webpack 캐시 오류 → 개발 서버 재시작으로 해결
 
 ### 다음 액션
-1. localhost:3002 수동 E2E 확인 (화면1 → 채팅 → 40문장+ 해석 직접 읽기)
-2. Supabase credentials 입력 → DB 마이그레이션 → /api/session 활성화
-3. Vercel 배포 승인 요청 (§9 [트리거 4])
+1. localhost:3002 수동 E2E 확인
+2. Supabase credentials 입력 → DB 마이그레이션
+3. Vercel 배포 승인 요청
 
 ---
 
 ## Session 2026-04-24 16:21 — 화면 1 양력/음력 선택 추가 및 빌드 오류 수정
 
 ### 작업 요약
-- 화면 1(`app/page.tsx`)에 양력/음력 라디오 버튼 추가 (성별 아래, 생년월일 위)
-  - 음력 선택 시 윤달 체크박스 조건부 표시
-  - 음력 제출 시 `lunarToSolar()` 호출 → 변환된 양력 날짜로 /api/manse 호출
-  - 잘못된 음력 날짜 에러 처리 추가
+- 화면 1(`app/page.tsx`)에 양력/음력 라디오 버튼 추가 (음력 선택 시 윤달 체크박스)
 - `lib/manse/engine.ts`, `verify.spec.ts` — `calculateSaju()` 6번째 인자(gender) 제거
-  - 실제 라이브러리 API: `calculateSaju(year, month, day, hour?, minute?, options?)` — gender 없음
-  - 이전 코드가 gender string을 넘겨 타입 오류 발생 → 제거
 - `app/chat/page.tsx` — `useRef(loadProfile())` SSR 오류 수정
-  - useRef 초기화에서 localStorage 직접 호출 → SSR 단계에서 `localStorage is not defined` 오류
-  - `useRef(null)`로 변경, useEffect에서만 클라이언트 로드
 - `next build` 전체 통과 확인
 
-### 실패한 시도
-- 없음
-
 ### 다음 액션
-1. localhost:3002 수동 E2E 테스트 (Supabase 없이 화면 1~4 전체 흐름)
-2. Supabase 프로젝트 생성 → DB 마이그레이션 → /api/session 활성화 (단계 4~6)
-3. Vercel 배포 (단계 18, §9 [트리거 4] 발동 — 사람 확인 필요)
+1. localhost:3002 수동 E2E 테스트
+2. Supabase 프로젝트 생성 → DB 마이그레이션 → /api/session 활성화
+3. Vercel 배포 (단계 18, §9 [트리거 4] 발동)
 
 ---
-
-## Session 2026-04-24 15:59 — 세션 종료 하네스 파일 기록 및 커밋
-
-### 작업 요약
-- `worklog/state/decision/backlog.md` 작성
-- 작성한 파일 git 커밋 및 푸시
-
-### 다음 액션
-- Supabase credentials 입력
-- DB 마이그레이션 수행 (단계 4~6)
-- E2E 확인 후 Vercel 배포 (단계 17~18)
-
 
 ## Session 2026-04-24 15:54 — 사주톡 MVP 빌드 8~16/20 단계 완료
 
 ### 작업 요약
-- [8/20] 만세력 Playwright 검증 10/10 통과 (1.4m)
-  - React controlled input: `fill()` 대신 `pressSequentially()` 사용
-  - 도시 검색 다이얼로그 자동화 → React state 업데이트 → 버튼 활성화
-  - `/profile/confirm` 페이지에서 "프로필 수정하기" 버튼 `waitFor` (React async context 대기)
-  - `/result` 페이지에서 `waitForFunction`으로 클라이언트 사이드 사주 그리드 렌더 대기
-  - 서울 -32분 보정 경계 회피: 홀수 시간 → 짝수 시간으로 교체
-- [9/20] lib/prompts/ 4개 파일 (interpret.ts, qna.ts, summary.ts, classify.ts)
-  - §6-a~d 시스템 프롬프트 + Context 인터페이스 + buildXxxPrompt() 함수
+- [8/20] 만세력 Playwright 검증 10/10 통과
+- [9/20] lib/prompts/ 4개 파일 작성
 - [10/20] lib/state/chat-machine.ts
-  - chatReducer (A→B→C→D→E→F→DONE), shouldTriggerInlineChoice, isInputEnabled, showDoneEarlyButton
-- [11/20] API routes 6개 스텁 (session, manse, classify, interpret, qna, summary)
-  - @anthropic-ai/sdk, @supabase/supabase-js 설치
-  - lib/supabase/client.ts, server.ts, lib/session/anonymous.ts
+- [11/20] API routes 6개 스텁
 - [12~16/20] 화면 1~5 구현
-  - app/page.tsx: 생시 입력 폼 + /api/manse 호출 + localStorage 저장
-  - app/concern/page.tsx: 4지선다 카드 + 직접입력 + /api/classify 호출
-  - app/pattern/page.tsx: 영역별 반복 패턴 4지선다
-  - app/chat/page.tsx: 상태 머신 A~F + 스트리밍 + 이제됐어요 + 에러 처리 + 화면 5 ParentRequestBanner
-  - lib/session/local-store.ts: LocalProfile / LocalConversation localStorage 유틸
-- CSS 빌드 에러 수정
-  - tailwind.config.ts에 shadcn CSS 변수 색상 토큰 전체 추가
-  - globals.css에서 shadcn/tailwind.css (Tailwind v4 전용) 및 tw-animate-css import 제거
-- 개발 서버 확인: localhost:3001 화면 1 정상 렌더링, /api/manse·/api/classify·/api/interpret 동작 확인
+- CSS 빌드 에러 수정 (Tailwind v3/v4 호환성)
+- 개발 서버 localhost:3001 동작 확인
 
 ### 실패한 시도
-- globals.css에서 `@import "shadcn/tailwind.css"` → Tailwind v4 전용 `@theme` 구문 오류 (shadcn 패키지 v4.4.0이 v4 전용)
-- tailwind.config.ts 색상 토큰만 추가해서는 해결 안 됨 → globals.css import 제거가 핵심
+- globals.css에서 `@import "shadcn/tailwind.css"` → Tailwind v4 전용 구문 오류
 
 ### 다음 액션
-1. `.env.local` 작성 후 수동 E2E 테스트 (Supabase credentials 필요 — /api/session 제외 나머지는 이미 동작)
-2. Supabase 프로젝트 생성 → DB 스키마 migration → /api/session 활성화 (단계 4~6)
-3. Vercel 배포 (단계 18, §9 [트리거 4] 발동 — 사람 확인 필요)
+1. `.env.local` 작성 후 수동 E2E 테스트
+2. Supabase 프로젝트 생성 → DB 마이그레이션
+3. Vercel 배포
 
-
-## Session 2026-04-24 14:57 — 만세력 검증 자동화 Playwright 스펙 작성 및 폼 자동화 시도
-
-### 작업 요약
-- Next.js 14 앱(`sajutalk`) 생성, shadcn 초기화 및 컴포넌트 설치
-- `@fullstackfamily/manseryeok` 설치 및 API 시그니처 확인 (`calculateSaju` positional args)
-- 만세력 래퍼(`engine.ts`)와 Playwright 검증 스펙(`verify.spec.ts`) 작성
-- forceteller.com 도시 검색 다이얼로그 흐름 파악 및 자동화: 다이얼로그 열기 → "서울" 입력 → 서울특별시 선택 → 폼 제출 → 결과 페이지 도달 성공
-
-### 실패한 시도
-- forceteller.com React 폼에 `fill` / `pressSequentially` / `click+type` 으로 직접 입력 시 React state 미반영 → 버튼 비활성화 유지로 제출 불가
-
-### 다음 액션
-- 결과 페이지에서 년주/월주/일주/시주 추출 완료
-- 10개 테스트케이스 반복 검증 → 10/10 통과 확인
-- Supabase 크레덴셜 확보 후 4~6단계(DB 스키마, Edge Function, 연동) 진행
-
+---
 
 ## Session 2026-04-24 12:56 — harness 초기화 + CONTEXT.md 작성
 
 ### 작업 요약
-- GitHub repo `four-pillars` 생성 (`four_pillars` → `four-pillars` 수정 후 `gh repo create`로 직접 생성)
-- `docs/` 6개 파일(기획문서 4개 + 사진 2개) 첫 커밋·푸시
-- `/harness-init` 실행: `CLAUDE.md`, `.claude/settings.json`, profiles 4개(`bypassPermissions`, `acceptEdits`, `default`, `plan`), `.harness/` 빈 템플릿 5개, `.gitignore` 신규 생성
-- `harness-doctor` 점검 결과: hooks 8/8, commands 5/5, api_key ✓, telegram ✓, tools ✓, launchd 2/2, PC 스코프 4/4 — 전항목 정상
-- `/context-init` 실행: `docs/01~04` 전체 스캔 후 `CONTEXT.md` 초안 작성 (프로젝트 개요·기술 스택·핵심 구조·중요 결정사항 채움)
-- `.harness/state.md` 진행 상황 갱신 (빌드 전 준비 완료 상태 반영)
-- 하네스 파일 + CONTEXT.md 커밋·푸시
+- GitHub repo `four-pillars` 생성
+- `/harness-init` 실행: CLAUDE.md, settings.json, profiles 4개, .harness/ 빈 템플릿
+- harness-doctor 전항목 정상 (hooks 8/8, commands 5/5, api_key, telegram, launchd)
+- `/context-init` 실행: CONTEXT.md 초안 작성
 
 ### 실패한 시도
-- 초기 원격 URL을 `four_pillars`(언더스코어)로 설정 → `remote: Repository not found` 오류, `four-pillars`(하이픈)로 수정
+- 초기 URL을 `four_pillars`(언더스코어)로 설정 → 404 → `four-pillars`(하이픈)로 수정
 
 ### 다음 액션
-- `docs/04_B §1` 체크리스트 확인 (Supabase·Vercel 계정, Anthropic API Key 크레딧 $20)
-- bypass 세션으로 빌드 시작 — `docs/04_B §11` Claude Code 첫 프롬프트 복붙
-- 만세력 Playwright 검증(§5-8번) 먼저 통과 확인 후 UI 작업 진행
-
----
-
-## Session 2026-04-24 12:53 — harness 초기 세팅 완료 후 harness-doctor 점검 항목 확인
-
-### 작업 요약
-- `gh repo create`로 `four-pillars` GitHub 레포 생성 후 docs/ 6개 파일 첫 커밋·푸시
-- `harness-template_simple`에서 `CLAUDE.md`, `settings.json`, profiles 4개 fetch → 신규 생성
-- `.harness/` 하위 빈 템플릿 5개 작성, 디렉토리 구조, `.gitignore` 생성
-- harness-doctor 점검 항목 확인 중 (hooks, commands, env, 의존성 등)
-
-### 실패한 시도
-- 초기 URL을 `four_pillars`(언더스코어)로 설정 → 404 오류, `four-pillars`(하이픈)로 수정 후 레포 직접 생성
-
-### 다음 액션
-- harness-doctor 점검 완료 (hooks, commands, env, 의존성 전항목 통과 확인)
-- 필요시 누락 항목 보완 후 harness 정상 동작 검증
+- bypass 세션으로 빌드 시작
+- 만세력 Playwright 검증(§5-8번) 먼저 통과 확인

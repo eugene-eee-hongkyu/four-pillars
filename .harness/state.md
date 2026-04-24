@@ -6,20 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-24 20:35
-## 마지막 업데이트: 2026-04-24 20:50
+## 마지막 실행: 2026-04-24 20:53
+## 마지막 업데이트: 2026-04-24 20:53
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 만세력 해석 고도화 v2 run 진행 중 — 합충형파해·지장간·과학자톤 구현 완료, 수동 E2E 확인 대기
+- 합충형파해·지장간·과학자톤 구현 완료 (커밋 abdb548) — 수동 E2E 확인 대기
 - 현재 run: docs/runs/2026-04-24-manse-v2-hapchunh-sciencetone_run.md
 
 ### 이어서 할 것
 
 1. localhost:3002 수동 E2E 확인 (채팅 답변 톤 변화 + 합충 표현 등장 여부 직접 읽기)
-2. 미커밋 구현 파일 git commit/push
-3. Phase 3 (백로그) — 로컬 검증 완료 후: Supabase 연동 → Vercel 배포 → 지인 테스트
+2. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션 → Vercel 배포
 
 ### 막힌 것
 
@@ -62,7 +61,6 @@
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
 - [ ] [17/20] 수동 E2E localhost 확인 (localhost:3002)
-- [ ] 미커밋 구현 파일 git commit/push
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
