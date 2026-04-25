@@ -101,9 +101,21 @@ export interface FullManseData {
   summary?: string;
 }
 
+export type CalibrationCategory =
+  | 'work'
+  | 'money_business'
+  | 'relationship'
+  | 'family'
+  | 'health_move'
+  | 'other'
+  | 'none';
+
 export interface CalibrationContext {
   hookText: string;
-  answer: 'yes' | 'no';
+  answer: 'yes' | 'no' | 'other';
+  year?: number | 'multiple' | 'before';
+  category?: CalibrationCategory;
+  description?: string;
 }
 
 export interface InterpretContext {
@@ -208,13 +220,32 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
 
   if (ctx.calibration) {
     const cal = ctx.calibration;
+    const ANSWER_LABEL = { yes: '예, 있었어요', no: '아니오, 없었어요', other: '다른 형태였어요' };
+    const YEAR_LABEL: Record<string, string> = { multiple: '여러 해에 걸침', before: '5년 이전' };
+    const CAT_LABEL: Record<string, string> = {
+      work: '직장/일', money_business: '돈/사업', relationship: '관계/이별',
+      family: '가족', health_move: '건강/이사', other: '기타', none: '특별한 일 없음',
+    };
+    const yearStr = cal.year == null ? '미입력'
+      : typeof cal.year === 'number' ? `${cal.year}년`
+      : (YEAR_LABEL[cal.year] ?? cal.year);
+    const catStr = cal.category ? (CAT_LABEL[cal.category] ?? cal.category) : '미입력';
+
     lines.push(``, `[Calibration Context — 반드시 [왜 그런 일이 일어났는가] 섹션에 반영]`);
     lines.push(`역술가가 제시한 내용:\n${cal.hookText}`);
-    lines.push(`사용자 답변: ${cal.answer === 'yes' ? '예' : '아니오'}`);
+    lines.push(`사용자 답변: ${ANSWER_LABEL[cal.answer]}`);
+    lines.push(`발생 시점: ${yearStr}`);
+    lines.push(`사건 영역: ${catStr}`);
+    if (cal.description) lines.push(`사용자 설명: ${cal.description}`);
+
     if (cal.answer === 'yes') {
-      lines.push(`해석 방향: 제시된 사건이 실제 발현됨 확인. [왜 그런 일이 일어났는가]에서 해당 대운·세운이 그 사건으로 이어진 흐름을 풀이할 것.`);
+      lines.push(`해석 방향: 사건이 실제 발현됨 확인. 발생 시점(${yearStr})의 대운·세운이 그 사건(${catStr} 영역)으로 이어진 흐름을 역술가 언어로 구체적으로 풀이할 것.`);
+    } else if (cal.answer === 'other') {
+      lines.push(`해석 방향: 제시한 영역과 다른 형태로 발현됨. 기존 가설의 방향은 유지하되, ${catStr} 영역으로 에너지가 흘렀음을 반영하여 풀이할 것.`);
+    } else if (cal.category && cal.category !== 'none') {
+      lines.push(`해석 방향: 기존 가설로 제시한 영역은 아니나, ${catStr} 영역에서 변화가 있었음. 같은 대운·세운 에너지가 ${catStr} 방향으로 발현됐을 가능성을 풀이할 것.`);
     } else {
-      lines.push(`해석 방향: 외부 사건으로 드러나지 않음. [왜 그런 일이 일어났는가]에서 그 에너지가 내면·환경·준비 과정으로 발현됐을 가능성을 제시할 것.`);
+      lines.push(`해석 방향: 과거 사건 검증 없음. 원국·대운·세운 중심으로 조심스럽게 해석하고, [왜 그런 일이 일어났는가]에서 그 에너지가 내면·준비·환경 변화로 발현됐을 가능성을 제시할 것.`);
     }
   }
 

@@ -12,7 +12,7 @@ import {
   showDoneEarlyButton,
 } from '@/lib/state/chat-machine';
 import { loadProfile, loadConversation, saveProfile } from '@/lib/session/local-store';
-import type { CalibrationContext } from '@/lib/prompts/interpret';
+import type { CalibrationContext, CalibrationCategory } from '@/lib/prompts/interpret';
 
 // 2회차 세션 4지선다 선택지 (카테고리별)
 const INLINE_CHOICES: Record<string, string[]> = {
@@ -39,8 +39,13 @@ export default function ScreenChat() {
 
   const profile = useRef<ReturnType<typeof loadProfile>>(null);
   const conversation = useRef<ReturnType<typeof loadConversation>>(null);
-  // calibration은 예/아니오 클릭 시 설정되고 B 페이즈 시작 시 읽힘 — ref로 관리해 stale closure 방지
+  // calibration은 CALIBRATE_DONE 시 설정되고 B 페이즈 시작 시 읽힘 — ref로 관리해 stale closure 방지
   const calibrationRef = useRef<CalibrationContext | null>(null);
+  // calibration detail 입력 상태
+  const [calibrateAnswer, setCalibrateAnswer] = useState<'yes' | 'no' | 'other' | null>(null);
+  const [detailYear, setDetailYear] = useState<number | 'multiple' | 'before' | null>(null);
+  const [detailCategory, setDetailCategory] = useState<CalibrationCategory | null>(null);
+  const [detailDescription, setDetailDescription] = useState('');
 
   useEffect(() => {
     const p = loadProfile();
@@ -170,10 +175,35 @@ export default function ScreenChat() {
     }
   }
 
-  function handleCalibrate(answer: 'yes' | 'no') {
+  function handleCalibrateInitial(answer: 'yes' | 'no' | 'other') {
+    setCalibrateAnswer(answer);
+    setDetailYear(null);
+    setDetailCategory(null);
+    setDetailDescription('');
+    dispatch({ type: 'CALIBRATE_INITIAL', answer });
+  }
+
+  function handleCalibrateDone(noCategory?: CalibrationCategory) {
     const hookMessage = messages[messages.length - 1];
-    calibrationRef.current = { hookText: hookMessage?.content ?? '', answer };
-    dispatch({ type: 'CALIBRATE' });
+    const hookText = hookMessage?.content ?? '';
+    if (noCategory !== undefined) {
+      // C_CALIBRATING_NO: single category click → immediately done
+      calibrationRef.current = { hookText, answer: 'no', category: noCategory };
+    } else {
+      // C_CALIBRATING_DETAIL: year + category + optional description
+      calibrationRef.current = {
+        hookText,
+        answer: calibrateAnswer ?? 'yes',
+        year: detailYear ?? undefined,
+        category: detailCategory ?? undefined,
+        description: detailDescription.trim() || undefined,
+      };
+    }
+    setCalibrateAnswer(null);
+    setDetailYear(null);
+    setDetailCategory(null);
+    setDetailDescription('');
+    dispatch({ type: 'CALIBRATE_DONE' });
   }
 
   function sendQuestion() {
@@ -313,22 +343,41 @@ export default function ScreenChat() {
           </div>
         )}
 
-        {/* 예/아니오 — 역술가 훅 후 보정 질문 */}
+        {/* 캘리브레이션 1단계 — 예/아니오/다른형태 */}
         {state.phase === 'C_CALIBRATING' && (
-          <div className="flex gap-2 pl-2">
-            <button
-              onClick={() => handleCalibrate('yes')}
-              className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
-            >
-              예, 있었어요
-            </button>
-            <button
-              onClick={() => handleCalibrate('no')}
-              className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
-            >
-              아니오, 없었어요
-            </button>
+          <div className="flex flex-wrap gap-2 pl-2">
+            {([
+              { answer: 'yes',   label: '예, 있었어요' },
+              { answer: 'no',    label: '아니오, 없었어요' },
+              { answer: 'other', label: '다른 형태였어요' },
+            ] as const).map(({ answer, label }) => (
+              <button
+                key={answer}
+                onClick={() => handleCalibrateInitial(answer)}
+                className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                {label}
+              </button>
+            ))}
           </div>
+        )}
+
+        {/* 캘리브레이션 2단계 — 연도 + 카테고리 + 설명 (예·다른형태) */}
+        {state.phase === 'C_CALIBRATING_DETAIL' && (
+          <CalibrationDetail
+            detailYear={detailYear}
+            detailCategory={detailCategory}
+            detailDescription={detailDescription}
+            onYearChange={setDetailYear}
+            onCategoryChange={setDetailCategory}
+            onDescriptionChange={setDetailDescription}
+            onConfirm={() => handleCalibrateDone()}
+          />
+        )}
+
+        {/* 캘리브레이션 2단계 — 카테고리 선택 (아니오) */}
+        {state.phase === 'C_CALIBRATING_NO' && (
+          <CalibrationNoDetail onSelect={(cat) => handleCalibrateDone(cat)} />
         )}
 
         {/* 에러 */}
@@ -391,6 +440,126 @@ export default function ScreenChat() {
         </div>
       )}
     </main>
+  );
+}
+
+// 캘리브레이션 상세 입력 — 연도 + 카테고리 + 선택 설명 (예·다른형태)
+const CURRENT_YEAR = new Date().getFullYear();
+const CAL_YEARS: Array<number | 'multiple' | 'before'> = [
+  ...Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 4 + i) as number[],
+  CURRENT_YEAR,
+  'multiple',
+  'before',
+];
+const CAL_YEAR_LABEL: Record<string, string> = { multiple: '여러 해', before: '더 이전' };
+const CAL_CATEGORIES: Array<{ value: CalibrationCategory; label: string }> = [
+  { value: 'work',           label: '직장/일' },
+  { value: 'money_business', label: '돈/사업' },
+  { value: 'relationship',   label: '관계/이별' },
+  { value: 'family',         label: '가족' },
+  { value: 'health_move',    label: '건강/이사' },
+  { value: 'other',          label: '기타' },
+];
+
+function CalibrationDetail({
+  detailYear, detailCategory, detailDescription,
+  onYearChange, onCategoryChange, onDescriptionChange, onConfirm,
+}: {
+  detailYear: number | 'multiple' | 'before' | null;
+  detailCategory: CalibrationCategory | null;
+  detailDescription: string;
+  onYearChange: (v: number | 'multiple' | 'before') => void;
+  onCategoryChange: (v: CalibrationCategory) => void;
+  onDescriptionChange: (v: string) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-border p-4 space-y-4 text-sm">
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground font-medium">그 일이 언제였나요?</p>
+        <div className="flex flex-wrap gap-1.5">
+          {CAL_YEARS.map((y) => {
+            const label = typeof y === 'number' ? `${y}년` : CAL_YEAR_LABEL[y];
+            const selected = detailYear === y;
+            return (
+              <button
+                key={String(y)}
+                onClick={() => onYearChange(y)}
+                className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
+                  selected ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground font-medium">어느 쪽에 가까웠나요?</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {CAL_CATEGORIES.map(({ value, label }) => {
+            const selected = detailCategory === value;
+            return (
+              <button
+                key={value}
+                onClick={() => onCategoryChange(value)}
+                className={`rounded-lg border px-2 py-1.5 text-xs transition-colors ${
+                  selected ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-accent'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <p className="text-xs text-muted-foreground font-medium">짧게 설명해 주세요. <span className="opacity-60">(선택사항)</span></p>
+        <input
+          value={detailDescription}
+          onChange={(e) => onDescriptionChange(e.target.value)}
+          maxLength={60}
+          placeholder="예: 이직, 투자 손실, 가족 문제"
+          className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+      <button
+        onClick={onConfirm}
+        disabled={!detailYear || !detailCategory}
+        className="w-full rounded-xl bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-opacity"
+      >
+        확인
+      </button>
+    </div>
+  );
+}
+
+// 캘리브레이션 상세 입력 — 카테고리만 (아니오)
+function CalibrationNoDetail({ onSelect }: { onSelect: (cat: CalibrationCategory) => void }) {
+  const categories: Array<{ value: CalibrationCategory; label: string }> = [
+    ...CAL_CATEGORIES,
+    { value: 'none', label: '특별한 일 없음' },
+  ];
+  return (
+    <div className="rounded-xl border border-border p-4 space-y-3 text-sm">
+      <p className="text-xs text-muted-foreground font-medium">
+        그렇다면 최근 5년 중 가장 크게 바뀐 영역은 어느 쪽이었나요?
+      </p>
+      <div className="grid grid-cols-3 gap-1.5">
+        {categories.map(({ value, label }) => (
+          <button
+            key={value}
+            onClick={() => onSelect(value)}
+            className={`rounded-lg border border-border px-2 py-1.5 text-xs hover:bg-accent transition-colors ${
+              value === 'none' ? 'col-span-3' : ''
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -5,7 +5,10 @@
 //   A → B_HOOK: START_HOOK (역술가 톤)
 //   A → B: START_INTERPRETING (그 외 톤)
 //   B_HOOK → C_CALIBRATING: HOOK_DONE
-//   C_CALIBRATING → B: CALIBRATE (예/아니오 선택)
+//   C_CALIBRATING → C_CALIBRATING_DETAIL: CALIBRATE_INITIAL(yes|other)
+//   C_CALIBRATING → C_CALIBRATING_NO: CALIBRATE_INITIAL(no)
+//   C_CALIBRATING_DETAIL → B: CALIBRATE_DONE
+//   C_CALIBRATING_NO → B: CALIBRATE_DONE
 //   B → C: INTERPRETATION_DONE (스트리밍 완료)
 //   C → D: SEND_QUESTION (counter -1)
 //   D → E: ANSWER_DONE (2회차+2번째+50% 조건 충족 시)
@@ -17,15 +20,17 @@
 //   F → DONE: SUMMARY_DONE
 
 export type ChatPhase =
-  | 'A'              // 시작 배너 (1~2초)
-  | 'B_HOOK'         // 훅 스트리밍 — 역술가 전용 (입력창 disabled)
-  | 'C_CALIBRATING'  // 예/아니오 버튼 대기 — 역술가 전용 (입력창 disabled)
-  | 'B'              // 긴 해석 스트리밍 (입력창 disabled)
-  | 'C'              // 질문 대기 (입력창 활성)
-  | 'D'              // Q&A 답변 스트리밍 (입력창 disabled)
-  | 'E'              // 2회차 2번째 답변 4지선다 (입력창 disabled, 선택 후 활성)
-  | 'F'              // 정리 응답 스트리밍
-  | 'DONE';          // 세션 완료
+  | 'A'                    // 시작 배너 (1~2초)
+  | 'B_HOOK'               // 훅 스트리밍 — 역술가 전용 (입력창 disabled)
+  | 'C_CALIBRATING'        // 예/아니오/다른형태 3버튼 대기
+  | 'C_CALIBRATING_DETAIL' // 예·다른형태 → 연도+카테고리+설명 입력
+  | 'C_CALIBRATING_NO'     // 아니오 → 영역 카테고리 선택
+  | 'B'                    // 긴 해석 스트리밍 (입력창 disabled)
+  | 'C'                    // 질문 대기 (입력창 활성)
+  | 'D'                    // Q&A 답변 스트리밍 (입력창 disabled)
+  | 'E'                    // 2회차 2번째 답변 4지선다 (입력창 disabled, 선택 후 활성)
+  | 'F'                    // 정리 응답 스트리밍
+  | 'DONE';                // 세션 완료
 
 export interface ChatState {
   phase: ChatPhase;
@@ -41,7 +46,8 @@ export interface ChatState {
 export type ChatAction =
   | { type: 'START_HOOK' }
   | { type: 'HOOK_DONE' }
-  | { type: 'CALIBRATE' }
+  | { type: 'CALIBRATE_INITIAL'; answer: 'yes' | 'no' | 'other' }
+  | { type: 'CALIBRATE_DONE' }
   | { type: 'START_INTERPRETING' }
   | { type: 'INTERPRETATION_DONE' }
   | { type: 'SEND_QUESTION' }
@@ -74,8 +80,14 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       if (state.phase !== 'B_HOOK') return state;
       return { ...state, phase: 'C_CALIBRATING' };
 
-    case 'CALIBRATE':
+    case 'CALIBRATE_INITIAL': {
       if (state.phase !== 'C_CALIBRATING') return state;
+      if (action.answer === 'no') return { ...state, phase: 'C_CALIBRATING_NO' };
+      return { ...state, phase: 'C_CALIBRATING_DETAIL' };
+    }
+
+    case 'CALIBRATE_DONE':
+      if (state.phase !== 'C_CALIBRATING_DETAIL' && state.phase !== 'C_CALIBRATING_NO') return state;
       return { ...state, phase: 'B' };
 
     case 'START_INTERPRETING':
