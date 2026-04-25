@@ -4,6 +4,20 @@
 
 ---
 
+## Session 2026-04-25 15:07 — reality → premium 톤 교체 및 스마트 스크롤 제거
+
+### 작업 요약
+- reality → premium 톤 교체 결정 및 적용
+- 스마트 스크롤 기능 제거
+- worklog.md, state.md, decision.md 업데이트
+- `.harness/` 변경사항 git commit & push
+
+### 다음 액션
+- localhost:3002 E2E 확인
+- daily 톤 회귀 테스트
+- Phase 3 Supabase DB 마이그레이션
+
+
 ## Session 2026-04-25 13:07 — premium 톤 구현 + remark-gfm 테이블 렌더링 + 스마트 스크롤 제거
 
 ### 작업 요약

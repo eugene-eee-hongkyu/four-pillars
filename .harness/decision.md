@@ -4,6 +4,11 @@
 
 ---
 
+NONE
+
+(세션 요약에 대안 비교 후 의사결정한 사항이 없습니다. "reality → premium 톤 교체, 스마트 스크롤 제거"는 결정 사항으로 언급되었으나, 대안 검토 과정이 기록되지 않았습니다.)
+
+
 ## 2026-04-25: reality 톤 제거 → premium 톤 신설
 
 - **선택**: `ToneType = 'daily' | 'premium'` — reality 완전 삭제, premium(12섹션 리포트형) 신설

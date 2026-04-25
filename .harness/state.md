@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-04-25 13:07
-## 마지막 업데이트: 2026-04-25 13:07
+## 마지막 실행: 2026-04-25 15:07
+## 마지막 업데이트: 2026-04-25 15:07
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- premium 톤 구현 완료 + 테이블 렌더링(remark-gfm) 확인 — E2E 수동 확인 대기
+- premium 톤 구현 완료 + remark-gfm 설치 — localhost:3002 수동 E2E 확인 대기
 
 ### 이어서 할 것
 
@@ -79,6 +79,7 @@
 - [x] reality 톤 제거 → premium 톤 신설 (12섹션 리포트형, HOOK_SYSTEM_PREMIUM)
 - [x] remark-gfm 설치 — 마크다운 테이블 렌더링 정상화
 - [x] 스마트 스크롤 제거 — 항상 하단 자동 스크롤
+- [x] .harness/ 변경사항 git commit & push (워크로그 세션 마무리)
 - [ ] [17/20] 수동 E2E localhost 확인 (premium 플로우 + daily 회귀)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
