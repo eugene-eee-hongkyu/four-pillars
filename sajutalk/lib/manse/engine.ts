@@ -5,6 +5,7 @@ import { calcShensha, type ShenshaResult } from './shensha';
 import { calcYongsin, type YongsinResult } from './yongsin';
 import { calcAllJijanggan, type AllJijanggan } from './jijanggan';
 import { calcHapchunh, type HapchunhResult } from './hapchunh';
+import { calcScores, type ScoreResult } from './score';
 
 export interface ManseInput {
   year: number;
@@ -34,6 +35,7 @@ export interface ManseResult {
   jijanggan: AllJijanggan;
   hapchunh: HapchunhResult;
   elementCounts: { wood: number; fire: number; earth: number; metal: number; water: number };
+  scores: ScoreResult;
 }
 
 export function computeManse(input: ManseInput): ManseResult {
@@ -74,6 +76,26 @@ export function computeManse(input: ManseInput): ManseResult {
     dayPillarFull: raw.dayPillar,
   });
 
+  const luckCycles = buildLuckCycles(
+    raw.monthPillar, year, month, day, yearStem, dayStem, gender,
+  );
+  const shensha = calcShensha(
+    raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId, gender,
+  );
+
+  const scores = calcScores({
+    dayPillar: raw.dayPillar,
+    yearPillar: raw.yearPillar,
+    monthPillar: raw.monthPillar,
+    hourPillar,
+    elementCounts,
+    shensha,
+    hapchunh,
+    luckCycles,
+    jijanggan,
+    gender,
+  });
+
   return {
     yearPillar: raw.yearPillar,
     monthPillar: raw.monthPillar,
@@ -87,16 +109,13 @@ export function computeManse(input: ManseInput): ManseResult {
     correctedHour: raw.correctedTime?.hour,
     correctedMinute: raw.correctedTime?.minute,
     summary: buildSummary(raw, timeUnknown),
-    luckCycles: buildLuckCycles(
-      raw.monthPillar, year, month, day, yearStem, dayStem, gender,
-    ),
-    shensha: calcShensha(
-      raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId, gender,
-    ),
+    luckCycles,
+    shensha,
     yongsin: calcYongsin(elementCounts),
     jijanggan,
     hapchunh,
     elementCounts,
+    scores,
   };
 }
 

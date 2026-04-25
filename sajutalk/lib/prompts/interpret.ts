@@ -1,6 +1,7 @@
-// §6-a 긴 해석 프롬프트 — 역술가형 / 전략가형 (전략가형은 추후 분리 예정)
+// §6-a 긴 해석 프롬프트 — 역술가형 / 전략가형
 
 import type { ToneType } from '@/lib/session/local-store';
+import type { ScoreResult } from '@/lib/manse/score';
 export type { ToneType };
 
 // ── 역술가형 (전략가형도 현재 동일) ─────────────────────────────────────────
@@ -68,6 +69,78 @@ export const INTERPRET_SYSTEM_YEOKSULGA = `당신은 30년 경력의 사주명�
 // summary.ts·qna.ts 호환성 유지 — 추후 분리 시 제거
 export const INTERPRET_SYSTEM = INTERPRET_SYSTEM_YEOKSULGA;
 
+// ── 전략가형 ─────────────────────────────────────────────────────────────────
+export const INTERPRET_SYSTEM_STRATEGIST = `당신은 동양 명리학과 현대 전략적 사고를 결합한 사주 분석 전문가입니다.
+백엔드에서 계산된 운세 점수를 기반으로 분석합니다.
+
+[핵심 원칙]
+- [운세 점수 데이터] 섹션의 점수·등급을 그대로 사용. 점수를 새로 생성하거나 수정 금지.
+- 분석적이고 명확한 어조: "데이터에 따르면", "이 사주 구조는 ~를 나타냅니다"
+- 구체적 수치와 시기를 명시: "직업운 82점(강함)은 ~을 의미합니다"
+- 강점은 전략적 기회로, 약점은 리스크 관리 방안으로 제시
+- TOP 3 강점과 주의 영역을 반드시 분석에 녹일 것
+
+[출력 형식 — 반드시 이 순서대로 12개 섹션 작성]
+
+[핵심 구조]
+딱 한 문장. 형식: "이 사주는 ○○의 구조로, ○○에서 강점을 발휘하고 ○○에서 주의가 필요한 형국입니다."
+
+[운세 종합 분석]
+제공된 8개 운세 점수 기반 전체 평가. 2~3문장.
+반드시 TOP 3 강점과 주의 영역 1개를 언급.
+"가장 강한 영역은 ○○(○점)이며, 주의가 필요한 영역은 ○○(○점)입니다" 형식 포함.
+
+[재물·사업 전략]
+재물운·사업운 점수 기반. 3~4문장.
+점수와 등급을 명시하고 구체적 전략 방향 제시.
+반드시 시기 특정("○○대운이 끝나는 ○○년까지", "현재 세운 기준").
+
+[커리어·직업 전략]
+직업운 점수 기반. 3~4문장.
+현재 대운·세운과 연결하여 커리어 방향 제시.
+
+[관계·연애 분석]
+관계운·연애운 점수 기반. 3~4문장.
+성별에 맞는 분석 (점수에 이미 성별 보정 반영됨).
+
+[건강·이동 관리]
+건강운·이동운 점수 기반. 2~3문장.
+점수가 낮은 영역은 구체적 관리 방안 제시.
+
+[가족 관계]
+가족운 점수 기반. 2~3문장.
+
+[성격과 의사결정 패턴]
+★[X세 맞춤 상황]
+4~5문장. 오행·십신 구조에서 드러나는 의사결정 성향 분석.
+
+[인생 구간 분석]
+초년(0~35세)/중년(36~60세)/말년(61세~) 구간별 점수를 명시하고 각 1~2문장 분석.
+시제 규칙:
+- 이미 지난 구간: 과거형 ("○○점으로 ○○의 시절이었습니다")
+- 현재 구간: 현재형 ("현재 ○○점 구간입니다")
+- 미래 구간: 가능성형 ("앞으로 ○○점 수준의 흐름이 펼쳐질 것입니다")
+마지막 줄 필수: "이 사주의 정점은 ○○입니다. 현재 ○○세는 그 정점의 [전반부/한가운데/후반부]에 있습니다."
+
+[현재 대운·세운 기회]
+현재 대운·세운 기반. 2~3문장.
+지금 어떤 기회와 리스크가 있는지 전략적으로 분석.
+
+[향후 5년 액션 플랜]
+3~4문장. 구체적 행동 항목 2~3개 포함. 고민·반복 패턴과 반드시 연결.
+
+[다음 질문]
+반드시 구체적인 질문 1개. "더 궁금한 것 있으시면 편하게 물어보세요" 류 금지.
+8개 운세 중 사용자 고민과 가장 관련 깊은 영역에서 자연스럽게 이어지는 질문.
+
+[나이대별 맞춤 상황 작성 기준]
+★[X세 맞춤 상황] 태그: 사용자 나이에 맞는 구체적 상황으로 시작.
+20~30대: 이직, 팀장 갈등, 창업 고민, 연애
+40~50대: 임원/팀장 역할, 자녀, 배우자, 건강검진
+
+[명리 용어]
+한자 용어 반드시 한글 병기: 木(나무기운), 火(불기운), 土(땅기운), 金(쇠기운), 水(물기운)`;
+
 export interface FullManseData {
   yearPillar: string;
   yearPillarHanja: string;
@@ -99,6 +172,7 @@ export interface FullManseData {
     hourPillar: string[];
   };
   summary?: string;
+  scores?: ScoreResult;
 }
 
 export type CalibrationCategory =
@@ -218,6 +292,36 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
     `반복 패턴: ${pattern}`,
   ];
 
+  if (ctx.tone === 'strategist' && m.scores) {
+    const s = m.scores;
+    const GRADE_KO: Record<string, string> = {
+      '매우강함': '매우강함', '강함': '강함', '보통': '보통', '약함': '약함', '매우약함': '매우약함',
+    };
+    const fmt = (cat: { score: number; grade: string }) =>
+      `${cat.score}점 (${GRADE_KO[cat.grade] ?? cat.grade})`;
+    lines.push(
+      ``,
+      `[운세 점수 데이터 — 이 숫자를 그대로 사용할 것. LLM이 점수를 새로 생성하거나 수정 금지]`,
+      `재물운: ${fmt(s.재물운)}`,
+      `사업운: ${fmt(s.사업운)}`,
+      `직업운: ${fmt(s.직업운)}`,
+      `관계운: ${fmt(s.관계운)}`,
+      `연애운: ${fmt(s.연애운)}`,
+      `건강운: ${fmt(s.건강운)}`,
+      `가족운: ${fmt(s.가족운)}`,
+      `이동운: ${fmt(s.이동운)}`,
+      ``,
+      `TOP 3 강점: ${s.top3.join(', ')}`,
+      `주의 영역: ${s.caution1}`,
+      ``,
+      `인생 구간 점수:`,
+      `초년(0~35세): ${s.lifePeriod.early}점`,
+      `중년(36~60세): ${s.lifePeriod.middle}점`,
+      `말년(61세~): ${s.lifePeriod.late}점`,
+      `정점: ${s.lifePeriod.peak} (가장 빛나는 시기)`,
+    );
+  }
+
   if (ctx.calibration) {
     const cal = ctx.calibration;
     const ANSWER_LABEL = { yes: '예, 있었어요', no: '아니오, 없었어요', other: '다른 형태였어요' };
@@ -258,6 +362,6 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
 
 // ── 톤 선택 함수 ─────────────────────────────────────────────────────────────
 export function getInterpretSystem(tone?: ToneType): string {
-  // 전략가형은 추후 별도 시스템 프롬프트 예정 — 현재는 역술가형과 동일
+  if (tone === 'strategist') return INTERPRET_SYSTEM_STRATEGIST;
   return INTERPRET_SYSTEM_YEOKSULGA;
 }
