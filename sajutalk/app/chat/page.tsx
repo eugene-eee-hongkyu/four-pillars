@@ -515,7 +515,6 @@ export default function ScreenChat() {
 const CURRENT_YEAR = new Date().getFullYear();
 const CAL_YEARS: Array<number | 'multiple' | 'before'> = [
   ...Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - 4 + i) as number[],
-  CURRENT_YEAR,
   'multiple',
   'before',
 ];
