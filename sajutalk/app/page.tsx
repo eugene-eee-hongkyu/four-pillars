@@ -18,12 +18,12 @@ const MINUTES = [0, 15, 30, 45];
 
 export default function ScreenBirthInput() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [gender, setGender] = useState<'female' | 'male'>('female');
-  const [birthYear, setBirthYear] = useState<number>(1990);
+  const [name, setName] = useState('이홍규');
+  const [gender, setGender] = useState<'female' | 'male'>('male');
+  const [birthYear, setBirthYear] = useState<number>(1976);
   const [birthMonth, setBirthMonth] = useState<number>(1);
-  const [birthDay, setBirthDay] = useState<number>(1);
-  const [birthHour, setBirthHour] = useState<number>(12);
+  const [birthDay, setBirthDay] = useState<number>(3);
+  const [birthHour, setBirthHour] = useState<number>(23);
   const [birthMinute, setBirthMinute] = useState<number>(0);
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar');
