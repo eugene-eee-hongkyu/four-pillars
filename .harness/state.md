@@ -6,20 +6,20 @@
 
 ---
 
-## 마지막 실행: 2026-04-25 08:45
-## 마지막 업데이트: 2026-04-25 08:45
+## 마지막 실행: 2026-04-25 10:45
+## 마지막 업데이트: 2026-04-25 10:45
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 3단계 보정된 리딩 구현 완료 (커밋 2c059de) — 수동 E2E 확인 대기
-- localhost:3002 dev server 정상 기동 중
+- 캘리브레이션 상세 입력 + 결정론 점수 엔진 구현 완료 — 수동 E2E 확인 대기
+- 톤 2개 `reality(현실 풀이형)/daily(생활 상담형)`으로 단순화 완료
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E — 역술가형·전략가형 버튼 → 훅 흐름 → 9섹션 리딩 출력 확인
-2. 결과 보고 후 전략가형 실제 시스템 프롬프트 구현 방향 결정
-3. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션
+1. localhost:3002 수동 E2E — reality·daily 톤 버튼 → 훅 흐름 → 9섹션(역술가)/12섹션(전략가) 리딩 출력 확인
+2. E2E 결과 보고 후 Phase 3 진입 여부 결정
+3. Phase 3: Supabase credentials 입력 → DB 마이그레이션
 
 ### 막힌 것
 
@@ -27,8 +27,7 @@
 
 ### 사람 판단 필요
 
-- 역술가형 9섹션 리딩 품질 직접 확인 (calibration context가 [왜 그런 일이 일어났는가]에 실제 반영되는지)
-- 전략가형 시스템 프롬프트 구현 방향 결정 (점수 엔진·5단계 평가 구조 적용 여부)
+- localhost:3002 수동 E2E 직접 확인 (캘리브레이션 상세 입력 3버튼 흐름, 점수 주입 블록, 리딩 품질)
 - Vercel 배포 직전 승인 (Phase 3 진입 시)
 
 ### 백로그 요약
@@ -62,13 +61,19 @@
 - [x] app/api/qna/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
-- [x] 해석 스타일 톤 2개 — 역술가형·전략가형 (result 2버튼 + chat 헤더 뱃지)
+- [x] 해석 스타일 톤 2개 — reality(현실 풀이형)·daily(생활 상담형) (result 2버튼 + chat 헤더 뱃지)
 - [x] tone 전달 방식 localStorage 채택 결정
 - [x] /docs/internal-process.md 작성 — 내부 계산·AI 호출 시점·프롬프트/데이터 구성 방식 명세화
 - [x] 역술가 캘리브레이션 훅 — B_HOOK·C_CALIBRATING 상태 + /api/hook + CalibrationContext 주입
 - [x] 화면 1 테스트 샘플 데이터 프리필 (이홍규·남성·1976/01/03·23:00)
 - [x] INTERPRET_SYSTEM_YEOKSULGA 9섹션 개편 (calibration-aware [왜 그런 일이 일어났는가])
-- [ ] [17/20] 수동 E2E localhost 확인 (역술가형·전략가형 훅 흐름 + 9섹션 리딩)
+- [x] 캘리브레이션 상세 입력 — 예/아니오/다른형태 3버튼, C_CALIBRATING_DETAIL·C_CALIBRATING_NO 상태 구현 (커밋 7759369)
+- [x] lib/manse/score.ts 신규 — calcScores() 결정론 점수 엔진 (십신 가중치·합충 패널티·대운/세운 보너스)
+- [x] lib/manse/engine.ts — scores: ScoreResult ManseResult에 통합
+- [x] INTERPRET_SYSTEM_STRATEGIST 12섹션 시스템 프롬프트 + 점수 주입 블록 추가
+- [x] docs/refs/sajutalk_final_style_guide.md 생성
+- [x] next build 대신 tsc --noEmit 사용 규칙 수립 (dev server 청크 해시 충돌 방지)
+- [ ] [17/20] 수동 E2E localhost 확인 (reality·daily 톤 훅 흐름 + 리딩 출력)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인

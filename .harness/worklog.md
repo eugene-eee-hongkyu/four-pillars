@@ -4,6 +4,28 @@
 
 ---
 
+## Session 2026-04-25 10:45 — 캘리브레이션 상세 입력 + 결정론 점수 엔진 구현
+
+### 작업 요약
+- worklog.md, state.md, decision.md 업데이트 후 커밋
+- 캘리브레이션 응답 버튼 예/아니오 2버튼 → 예/아니오/다른형태 3버튼으로 확장
+  - 예·다른형태 → `C_CALIBRATING_DETAIL` (연도 버튼 + 6개 카테고리 + 선택 설명)
+  - 아니오 → `C_CALIBRATING_NO` (카테고리 + 특별한 일 없음)
+  - `CalibrationContext` 타입에 `year`, `category`, `description` 추가
+- `lib/manse/score.ts` 신규: `calcScores()` — 십신 가중치 합산으로 8개 운세 카테고리 결정론적 점수 계산 (LLM 개입 없음)
+- `lib/manse/engine.ts` 수정: `ManseResult`에 `scores: ScoreResult` 통합
+- `lib/prompts/interpret.ts` 수정: `INTERPRET_SYSTEM_STRATEGIST` 12섹션 시스템 프롬프트 + 점수 주입 블록 추가
+- 톤을 `reality(현실 풀이형)` / `daily(생활 상담형)` 2개로 단순화 (과학형 등 제거)
+- 스타일 가이드 문서화: `docs/refs/sajutalk_final_style_guide.md` 생성
+- dev server 화면 깨짐 원인 파악 및 규칙 수립: `next build` 대신 타입 검사는 `tsc --noEmit`만 사용
+
+### 실패한 시도
+- `next build` 실행 시 `.next/` 청크 해시 갱신으로 기존 dev server가 구버전 유지 → 404 화면 깨짐 2회 반복
+
+### 다음 액션
+- localhost:3002 수동 E2E 테스트
+
+
 ## Session 2026-04-25 08:45 — 3단계 보정된 리딩 구현 + 톤 2개 축소
 
 ### 작업 요약
