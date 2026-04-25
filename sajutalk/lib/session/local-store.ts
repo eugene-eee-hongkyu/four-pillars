@@ -1,7 +1,7 @@
 // localStorage 기반 세션 데이터 관리
 // 화면 간 상태를 전달하는 유일한 경로.
 
-export type ToneType = 'reality' | 'daily';
+export type ToneType = 'daily' | 'premium';
 
 export interface LocalProfile {
   anonId: string;

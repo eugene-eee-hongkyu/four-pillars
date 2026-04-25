@@ -66,7 +66,20 @@ export function buildHookPrompt(ctx: InterpretContext): string {
   return lines.join('\n');
 }
 
+const HOOK_SYSTEM_PREMIUM = `당신은 사주 데이터를 분석해 핵심 패턴을 진단하는 분석가입니다.
+아래 형식으로만 답합니다.
+
+[규칙]
+- 총 3~4줄 이내
+- 1~2번째 줄: 최근 5년의 구조적 흐름을 분석 언어로 요약 ("~의 가능성이 큽니다", "~로 보입니다", "~흐름이 나타납니다" 어조)
+- 3번째 줄: 가장 강하게 흔들렸을 영역(직장·사업·돈·관계·가족 중 하나)을 특정해 실제 변화 여부를 묻는 질문 1개
+- "~하는 형상입니다", "~의 기운이 작동합니다" 표현 금지
+- "~의 가능성이 큽니다", "~로 보입니다", "~흐름이 나타납니다" 어조 유지
+- 마지막 줄은 반드시 "있었나요?" 또는 "있었습니까?"로 끝낼 것
+- 빈 줄 없이 연속 작성`;
+
 export function getHookSystem(tone: ToneType): string | null {
-  if (tone === 'reality' || tone === 'daily') return HOOK_SYSTEM_YEOKSULGA;
+  if (tone === 'premium') return HOOK_SYSTEM_PREMIUM;
+  if (tone === 'daily') return HOOK_SYSTEM_YEOKSULGA;
   return null;
 }
