@@ -4,6 +4,27 @@
 
 ---
 
+## Session 2026-04-25 11:49 — B_ACK 단계 구현 + interpret max_tokens 수정 + A-2 역산 문서 작성
+
+### 작업 요약
+- **B_ACK 상태 신규 구현**: 캘리브레이션 완료 후 LLM 없이 템플릿 메시지로 확인 버블 표시 → 0.8초 후 자동으로 B(긴 해석)로 전환
+  - `chat-machine.ts`: `B_ACK` 상태·`ACK_DONE` 액션 추가, `CALIBRATE_DONE` → `B_ACK`(기존 `B`)
+  - `chat/page.tsx`: B_ACK useEffect — `calibrationRef`에서 answer/year/category 읽어 문장 생성
+  - 템플릿 4가지: yes(연도+영역)/yes(연도만)/yes(영역만)/other/no(영역있음)/no(특별없음)
+- **interpret max_tokens 4096 → 8192 수정**: 9섹션 풀이가 4096 토큰 도중 잘리는 문제 수정 (`/api/interpret/route.ts`)
+- **A-2 산출물 역산 작성**: 코드베이스 전체 읽고 `docs/03_A-2_프로세스를_화면으로_사주톡.md` 생성
+  - 라우트 5개 / 상태 14개 / API 4개 전체 와이어프레임 + UX 의도 + 인터랙션 + 상태표
+  - §3 Wireflow: 두 진입 경로(경로 A: /→/result→/chat / 경로 B: /concern→/pattern→/chat) 명시
+  - §5 [SO 결정 필요] 6개 항목 추출
+  - 커밋: `84630fa`(B_ACK), `b4fb8ba`(max_tokens), `67d228f`(A-2 문서)
+
+### 다음 액션
+1. localhost:3002 수동 E2E — B_ACK 흐름(훅→캘리브레이션→확인 메시지→풀이) 확인
+2. A-2 §5 [SO 결정 필요] 6개 항목 검토 및 결정
+3. Phase 3: Supabase credentials 입력 → DB 마이그레이션
+
+---
+
 ## Session 2026-04-25 10:45 — 캘리브레이션 상세 입력 + 결정론 점수 엔진 구현
 
 ### 작업 요약
