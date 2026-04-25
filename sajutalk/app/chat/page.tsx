@@ -88,6 +88,59 @@ export default function ScreenChat() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase === 'B_HOOK']);
 
+  // 상태 B_ACK 진입 시 캘리브레이션 확인 메시지 표시 후 B로 자동 전환
+  useEffect(() => {
+    if (state.phase !== 'B_ACK') return;
+    const cal = calibrationRef.current;
+
+    const yearStr = (() => {
+      if (cal?.year == null) return '';
+      if (typeof cal.year === 'number') return `${cal.year}년`;
+      if (cal.year === 'multiple') return '여러 해 동안';
+      return '그 이전에';
+    })();
+
+    const CAT_LABEL: Record<string, string> = {
+      work: '직장/일', money_business: '돈/사업', relationship: '관계/이별',
+      family: '가족', health_move: '건강/이사', other: '기타',
+    };
+    const catStr = cal?.category && cal.category !== 'none' ? (CAT_LABEL[cal.category] ?? '') : '';
+    const answer = cal?.answer ?? 'no';
+
+    let ackText: string;
+    if (answer === 'yes') {
+      if (yearStr && catStr) {
+        ackText = `네, ${yearStr}에 ${catStr}에서 실제로 있었던 일이군요. 그 시기의 흐름을 사주로 풀어드릴게요.`;
+      } else if (yearStr) {
+        ackText = `네, ${yearStr}에 실제로 있었던 일이군요. 그 시기의 흐름을 사주로 풀어드릴게요.`;
+      } else if (catStr) {
+        ackText = `네, ${catStr}에서 실제로 있었던 일이군요. 그 시기의 흐름을 사주로 풀어드릴게요.`;
+      } else {
+        ackText = '네, 실제로 있었던 일이군요. 그 시기의 흐름을 사주로 풀어드릴게요.';
+      }
+    } else if (answer === 'other') {
+      if (yearStr && catStr) {
+        ackText = `${yearStr}에 ${catStr}과 연관된 변화가 있었군요. 사주에서 그 흐름이 어디서 왔는지 읽어드릴게요.`;
+      } else if (catStr) {
+        ackText = `${catStr}과 연관된 변화가 있었군요. 사주에서 그 흐름이 어디서 왔는지 읽어드릴게요.`;
+      } else {
+        ackText = '다른 형태의 변화가 있었군요. 사주에서 그 흐름이 어디서 왔는지 읽어드릴게요.';
+      }
+    } else {
+      // no
+      if (catStr) {
+        ackText = `${catStr}에서는 특별한 일은 없었군요. 그 에너지가 어떤 방향으로 흘렀을지 함께 살펴볼게요.`;
+      } else {
+        ackText = '특별히 기억에 남는 변화는 없으셨군요. 원국과 운세 흐름 중심으로 풀어드릴게요.';
+      }
+    }
+
+    setMessages((prev) => [...prev, { role: 'ai', content: ackText }]);
+    const timer = setTimeout(() => dispatch({ type: 'ACK_DONE' }), 800);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase === 'B_ACK']);
+
   // 상태 B 진입 시 긴 해석 스트리밍
   useEffect(() => {
     if (state.phase !== 'B') return;

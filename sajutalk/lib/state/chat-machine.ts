@@ -7,8 +7,9 @@
 //   B_HOOK → C_CALIBRATING: HOOK_DONE
 //   C_CALIBRATING → C_CALIBRATING_DETAIL: CALIBRATE_INITIAL(yes|other)
 //   C_CALIBRATING → C_CALIBRATING_NO: CALIBRATE_INITIAL(no)
-//   C_CALIBRATING_DETAIL → B: CALIBRATE_DONE
-//   C_CALIBRATING_NO → B: CALIBRATE_DONE
+//   C_CALIBRATING_DETAIL → B_ACK: CALIBRATE_DONE
+//   C_CALIBRATING_NO → B_ACK: CALIBRATE_DONE
+//   B_ACK → B: ACK_DONE (템플릿 메시지 표시 후 자동 전환)
 //   B → C: INTERPRETATION_DONE (스트리밍 완료)
 //   C → D: SEND_QUESTION (counter -1)
 //   D → E: ANSWER_DONE (2회차+2번째+50% 조건 충족 시)
@@ -25,6 +26,7 @@ export type ChatPhase =
   | 'C_CALIBRATING'        // 예/아니오/다른형태 3버튼 대기
   | 'C_CALIBRATING_DETAIL' // 예·다른형태 → 연도+카테고리+설명 입력
   | 'C_CALIBRATING_NO'     // 아니오 → 영역 카테고리 선택
+  | 'B_ACK'                // 캘리브레이션 확인 메시지 (템플릿, LLM 없음)
   | 'B'                    // 긴 해석 스트리밍 (입력창 disabled)
   | 'C'                    // 질문 대기 (입력창 활성)
   | 'D'                    // Q&A 답변 스트리밍 (입력창 disabled)
@@ -48,6 +50,7 @@ export type ChatAction =
   | { type: 'HOOK_DONE' }
   | { type: 'CALIBRATE_INITIAL'; answer: 'yes' | 'no' | 'other' }
   | { type: 'CALIBRATE_DONE' }
+  | { type: 'ACK_DONE' }
   | { type: 'START_INTERPRETING' }
   | { type: 'INTERPRETATION_DONE' }
   | { type: 'SEND_QUESTION' }
@@ -88,6 +91,10 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'CALIBRATE_DONE':
       if (state.phase !== 'C_CALIBRATING_DETAIL' && state.phase !== 'C_CALIBRATING_NO') return state;
+      return { ...state, phase: 'B_ACK' };
+
+    case 'ACK_DONE':
+      if (state.phase !== 'B_ACK') return state;
       return { ...state, phase: 'B' };
 
     case 'START_INTERPRETING':
