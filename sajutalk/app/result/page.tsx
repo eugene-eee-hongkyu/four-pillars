@@ -196,8 +196,8 @@ ${guiinPositions.length > 0 ? `■ 천을귀인: ${guiinPositions.join(' · ')}�
           <p className="text-xs text-muted-foreground font-medium">해석 스타일로 대화하기</p>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { tone: 'yeoksulga',  label: '역술가형', desc: '전통 명리 풀이' },
-              { tone: 'strategist', label: '전략가형', desc: '구조·흐름 분석' },
+              { tone: 'reality', label: '현실 풀이형', desc: '직장·돈·관계 현실 언어' },
+              { tone: 'daily',   label: '생활 상담형', desc: '가족·일상·생활 중심' },
             ] as { tone: ToneType; label: string; desc: string }[]).map(({ tone, label, desc }) => (
               <button
                 key={tone}

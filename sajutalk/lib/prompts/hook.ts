@@ -67,6 +67,6 @@ export function buildHookPrompt(ctx: InterpretContext): string {
 }
 
 export function getHookSystem(tone: ToneType): string | null {
-  if (tone === 'yeoksulga' || tone === 'strategist') return HOOK_SYSTEM_YEOKSULGA;
+  if (tone === 'reality' || tone === 'daily') return HOOK_SYSTEM_YEOKSULGA;
   return null;
 }
