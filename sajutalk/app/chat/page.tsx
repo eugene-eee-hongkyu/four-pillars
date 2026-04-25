@@ -51,7 +51,7 @@ export default function ScreenChat() {
 
     // 배너 1.5초 후: 역술가 톤은 훅 먼저, 그 외는 바로 해석
     const timer = setTimeout(() => {
-      if (c.tone === 'yeoksulga') {
+      if (c.tone === 'yeoksulga' || c.tone === 'strategist') {
         dispatch({ type: 'START_HOOK' });
       } else {
         dispatch({ type: 'START_INTERPRETING' });
@@ -235,7 +235,7 @@ export default function ScreenChat() {
   const showDoneButton = showDoneEarlyButton(state.phase);
 
   const TONE_LABEL: Record<string, string> = {
-    yeoksulga: '역술가', science: '과학형', example: '예시형', counselor: '심리상담가',
+    yeoksulga: '역술가형', strategist: '전략가형',
   };
   const toneLabel = TONE_LABEL[conversation.current?.tone ?? ''] ?? '';
 
