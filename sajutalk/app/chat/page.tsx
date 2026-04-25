@@ -36,6 +36,8 @@ export default function ScreenChat() {
   const [inputValue, setInputValue] = useState('');
   const [streamingText, setStreamingText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledUp = useRef(false);
 
   const profile = useRef<ReturnType<typeof loadProfile>>(null);
   const conversation = useRef<ReturnType<typeof loadConversation>>(null);
@@ -141,8 +143,21 @@ export default function ScreenChat() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase === 'F']);
 
-  // 스크롤 to bottom
+  // 사용자가 위로 스크롤 중이면 자동 스크롤 멈춤
   useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+      userScrolledUp.current = !atBottom;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // 스크롤 to bottom — 사용자가 위로 올라간 경우 건너뜀
+  useEffect(() => {
+    if (userScrolledUp.current) return;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingText]);
 
@@ -282,7 +297,7 @@ export default function ScreenChat() {
       </header>
 
       {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {/* 상태 A 배너 */}
         {state.phase === 'A' && (
           <div className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
