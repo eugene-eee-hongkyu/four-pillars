@@ -4,6 +4,30 @@
 
 ---
 
+## Session 2026-04-25 13:07 — premium 톤 구현 + remark-gfm 테이블 렌더링 + 스마트 스크롤 제거
+
+### 작업 요약
+- **premium 톤 신규 구현** (reality 완전 제거):
+  - `lib/session/local-store.ts`: `ToneType` = `'reality' | 'daily'` → `'daily' | 'premium'`
+  - `lib/prompts/hook.ts`: `HOOK_SYSTEM_PREMIUM` 추가 (진단 분석 어조 — "~의 가능성이 큽니다", "~로 보입니다"); `getHookSystem` 업데이트
+  - `lib/prompts/interpret.ts`: `INTERPRET_SYSTEM_REALITY` 제거, `INTERPRET_SYSTEM_PREMIUM` 추가 (12섹션: 한줄결론·전체사주등급표·명리구조평가표·TOP3·주의운·사건해석표·인생구간역할표·향후5년연도별표·밀방향TOP3·피할것·체크리스트·다음질문); `INTERPRET_SYSTEM` alias → DAILY
+  - `app/result/page.tsx`: `현실 풀이형` 버튼 → `프리미엄 리포트형` (desc: `표·등급·연도별 진단 포함`)
+  - `app/chat/page.tsx`: `TONE_LABEL`, 훅 진입 조건 premium 포함으로 갱신
+- **remark-gfm 설치·적용**: 마크다운 테이블이 텍스트로 출력되던 문제 수정. `remark-gfm` 패키지 설치, 모든 `ReactMarkdown` 인스턴스에 `remarkPlugins={[remarkGfm]}` 추가. 테이블 정상 렌더링 확인.
+- **스마트 스크롤 제거**: 조금만 스크롤해도 자동 스크롤이 멈추는 UX 문제 → `userScrolledUp` ref·스크롤 이벤트 리스너 전체 제거, 항상 하단 자동 스크롤로 단순화
+- **A-2 v2 문서 원본 보존 + 수정**: `docs/03_A-2_*_v2.md` — `/concern`, `/pattern` 미사용 표시; 진입 경로 1개(/ → /result → /chat)만 활성으로 수정
+- **docs/refs/ 7개 파일 커밋**: 기획 하네스 v11, A-0~A-3, B-1~B-2
+
+### 실패한 시도
+- 포트 3002 프로세스 kill 후 재시작 시 작업 디렉토리 리셋으로 `npm run dev` 실패 → `npm --prefix` 절대경로 방식으로 해결
+
+### 다음 액션
+1. localhost:3002 수동 E2E — premium 플로우 전체 확인 (훅 → 캘리브레이션 → 12섹션 리포트 + 테이블 렌더링)
+2. daily 톤 E2E도 함께 확인 (회귀 없는지)
+3. Phase 3: Supabase credentials 입력 → DB 마이그레이션
+
+---
+
 ## Session 2026-04-25 11:49 — B_ACK 단계 구현 + interpret max_tokens 수정 + A-2 역산 문서 작성
 
 ### 작업 요약

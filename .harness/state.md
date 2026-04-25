@@ -6,19 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-04-25 11:49
-## 마지막 업데이트: 2026-04-25 11:49
+## 마지막 실행: 2026-04-25 13:07
+## 마지막 업데이트: 2026-04-25 13:07
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- B_ACK 단계 구현 완료 — localhost:3002 수동 E2E 확인 대기
-- A-2 역산 문서 작성 완료 — §5 SO 결정 필요 6개 항목 검토 대기
+- premium 톤 구현 완료 + 테이블 렌더링(remark-gfm) 확인 — E2E 수동 확인 대기
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E — B_ACK 흐름 (훅 → 캘리브레이션 → 확인 메시지 → 풀이) 확인
-2. A-2 §5 [SO 결정 필요] 6개 항목 검토 및 결정 (SO-1 진입 경로 통합, SO-6 상태 E 랜덤 제거 여부)
+1. localhost:3002 수동 E2E — premium 플로우 (훅 → 캘리브레이션 → 12섹션 리포트 + 테이블) 확인
+2. daily 톤 회귀 없는지 확인
 3. Phase 3: Supabase credentials 입력 → DB 마이그레이션
 
 ### 막힌 것
@@ -27,8 +26,7 @@
 
 ### 사람 판단 필요
 
-- localhost:3002 수동 E2E 직접 확인 (B_ACK 확인 메시지 자연스러움, 캘리브레이션 전체 흐름)
-- A-2 §5 SO-1~SO-6 결정 (진입 경로 통합 여부, 화면 5-a 데이터 저장 MVP 포함 여부, 상태 E 랜덤 제거 여부)
+- localhost:3002 수동 E2E 직접 확인 (premium 리포트 품질, 테이블 렌더링, daily 회귀 여부)
 - Vercel 배포 직전 승인 (Phase 3 진입 시)
 
 ### 백로그 요약
@@ -62,7 +60,7 @@
 - [x] app/api/qna/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
-- [x] 해석 스타일 톤 2개 — reality(현실 풀이형)·daily(생활 상담형) (result 2버튼 + chat 헤더 뱃지)
+- [x] 해석 스타일 톤 2개 — daily(생활 상담형)·premium(프리미엄 리포트형) (result 2버튼 + chat 헤더 뱃지)
 - [x] tone 전달 방식 localStorage 채택 결정
 - [x] /docs/internal-process.md 작성 — 내부 계산·AI 호출 시점·프롬프트/데이터 구성 방식 명세화
 - [x] 역술가 캘리브레이션 훅 — B_HOOK·C_CALIBRATING 상태 + /api/hook + CalibrationContext 주입
@@ -77,8 +75,11 @@
 - [x] B_ACK 상태 신규 — 캘리브레이션 후 LLM 없이 템플릿 확인 메시지 → 0.8초 후 B 자동 전환
 - [x] /api/interpret max_tokens 4096 → 8192 (9섹션 중간 절단 수정)
 - [x] docs/03_A-2_프로세스를_화면으로_사주톡.md — 코드 역산 A-2 문서 (라우트 5개, 상태 14개)
-- [ ] [17/20] 수동 E2E localhost 확인 (B_ACK 흐름 + reality·daily 톤 훅 흐름 + 리딩 출력)
-- [ ] A-2 §5 SO 결정 6개 항목 검토
+- [x] docs/03_A-2_프로세스를_화면으로_사주톡_v2.md — 실제 구현 반영 v2 (진입 경로 1개, 미사용 화면 명시)
+- [x] reality 톤 제거 → premium 톤 신설 (12섹션 리포트형, HOOK_SYSTEM_PREMIUM)
+- [x] remark-gfm 설치 — 마크다운 테이블 렌더링 정상화
+- [x] 스마트 스크롤 제거 — 항상 하단 자동 스크롤
+- [ ] [17/20] 수동 E2E localhost 확인 (premium 플로우 + daily 회귀)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
