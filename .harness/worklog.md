@@ -4,6 +4,32 @@
 
 ---
 
+## Session 2026-04-25 08:45 — 3단계 보정된 리딩 구현 + 톤 2개 축소
+
+### 작업 요약
+- **INTERPRET_SYSTEM_YEOKSULGA 전면 개편**: 기존 7섹션 → 9섹션 캘리브레이션 인식 구조
+  - `[왜 그런 일이 일어났는가]`: calibration context 유무·예/아니오 분기
+  - `[초·중·말년 흐름]`: 시제 규칙(과거형/현재형/가능성형) + 정점 식별 필수
+  - `[다음 질문]`: 구체적 1개 필수, 일반형 금지
+- **ToneType 축소**: `'science' | 'example' | 'counselor'` 삭제 → `'yeoksulga' | 'strategist'` 2개
+- **INTERPRET_SYSTEM alias** 유지: `export const INTERPRET_SYSTEM = INTERPRET_SYSTEM_YEOKSULGA` (qna.ts·summary.ts 하위 호환)
+- **getInterpretSystem**: strategist → 현재 동일하게 역술가형 반환 (placeholder)
+- **hook.ts**: `getHookSystem('strategist')` → `HOOK_SYSTEM_YEOKSULGA` 반환으로 확장
+- **result/page.tsx**: 4버튼 그리드 → 2버튼 (역술가형 / 전략가형)
+- **chat/page.tsx**: TONE_LABEL 2개로 축소, strategist도 B_HOOK 플로우 진입
+- `next build` 통과, 커밋 푸시: `2c059de` (5개 파일, +50/-208줄)
+- dev server stale 404 → 재시작 (localhost:3002 정상 기동)
+
+### 실패한 시도
+- `next build` 후 dev server 정상처럼 보였으나 static chunk 경로 불일치로 404 → kill 후 재시작
+
+### 다음 액션
+1. localhost:3002 수동 E2E — 역술가형·전략가형 버튼 → 훅 흐름 → 9섹션 리딩 출력 확인
+2. 결과 보고 후 전략가형 실제 시스템 프롬프트 구현 방향 결정
+3. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션
+
+---
+
 ## Session 2026-04-25 08:04 — 역술가 캘리브레이션 훅 구현 + 테스트 샘플 데이터
 
 ### 작업 요약

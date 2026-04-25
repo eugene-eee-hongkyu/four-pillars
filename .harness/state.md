@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-25 08:04
-## 마지막 업데이트: 2026-04-25 08:04
+## 마지막 실행: 2026-04-25 08:45
+## 마지막 업데이트: 2026-04-25 08:45
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 역술가 캘리브레이션 훅 구현 완료 (커밋 680b789) — 수동 E2E 확인 대기
-- 테스트 샘플 데이터 프리필 완료 (커밋 ad131a7)
+- 3단계 보정된 리딩 구현 완료 (커밋 2c059de) — 수동 E2E 확인 대기
+- localhost:3002 dev server 정상 기동 중
 
 ### 이어서 할 것
 
-1. localhost:3002 수동 E2E — 역술가 훅 흐름 직접 확인 (훅 질문 품질, 예/아니오 후 해석 보정 여부)
-2. 결과 보고 후 과학형·예시형·심리상담가 훅 적용 여부 결정
+1. localhost:3002 수동 E2E — 역술가형·전략가형 버튼 → 훅 흐름 → 9섹션 리딩 출력 확인
+2. 결과 보고 후 전략가형 실제 시스템 프롬프트 구현 방향 결정
 3. Phase 3 진입: Supabase credentials 입력 → DB 마이그레이션
 
 ### 막힌 것
@@ -27,9 +27,8 @@
 
 ### 사람 판단 필요
 
-- 역술가 훅 질문 품질 직접 확인 (훅 3~4줄이 실제로 사주 특성을 잘 잡아내는지)
-- 예/아니오 후 전체 리딩에 calibration context가 실제로 반영되는지 확인
-- 나머지 3개 톤 훅 적용 여부 결정 (역술가 E2E 후)
+- 역술가형 9섹션 리딩 품질 직접 확인 (calibration context가 [왜 그런 일이 일어났는가]에 실제 반영되는지)
+- 전략가형 시스템 프롬프트 구현 방향 결정 (점수 엔진·5단계 평가 구조 적용 여부)
 - Vercel 배포 직전 승인 (Phase 3 진입 시)
 
 ### 백로그 요약
@@ -57,18 +56,19 @@
 - [x] lib/manse/yongsin.ts — 억부용신 근사
 - [x] lib/manse/jijanggan.ts — 지장간 12지지
 - [x] lib/manse/hapchunh.ts — 합충형파해 (천간합·지지합·충·형·파·해·공망)
-- [x] lib/prompts/interpret.ts — 과학자+심리상담가 톤 전면 개편 + 오늘날짜·합충·지장간 주입
+- [x] lib/prompts/interpret.ts — 9섹션 캘리브레이션 인식 구조 + 오늘날짜·합충·지장간 주입
 - [x] lib/prompts/qna.ts — 동일 톤 동기화 + fullManse 주입
 - [x] lib/prompts/summary.ts — 톤 맞춤 + 오늘날짜 주입
 - [x] app/api/qna/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
-- [x] 4가지 해석 톤 셀렉터 — result 2×2 그리드 버튼 + chat 헤더 뱃지 + 톤별 시스템 프롬프트
-- [x] tone 전달 방식 localStorage 채택 결정 — worklog.md, state.md, decision.md 커밋·푸시
+- [x] 해석 스타일 톤 2개 — 역술가형·전략가형 (result 2버튼 + chat 헤더 뱃지)
+- [x] tone 전달 방식 localStorage 채택 결정
 - [x] /docs/internal-process.md 작성 — 내부 계산·AI 호출 시점·프롬프트/데이터 구성 방식 명세화
 - [x] 역술가 캘리브레이션 훅 — B_HOOK·C_CALIBRATING 상태 + /api/hook + CalibrationContext 주입
 - [x] 화면 1 테스트 샘플 데이터 프리필 (이홍규·남성·1976/01/03·23:00)
-- [ ] [17/20] 수동 E2E localhost 확인 (역술가 훅 흐름 + 4개 톤 답변 비교)
+- [x] INTERPRET_SYSTEM_YEOKSULGA 9섹션 개편 (calibration-aware [왜 그런 일이 일어났는가])
+- [ ] [17/20] 수동 E2E localhost 확인 (역술가형·전략가형 훅 흐름 + 9섹션 리딩)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
