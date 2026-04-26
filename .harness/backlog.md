@@ -4,6 +4,34 @@
 
 ## 대기 중
 
+## 2026-04-25: localhost:3002 E2E 확인
+
+- **백로그 이유**: 세션 종료 시점에 시간 부족, 워크로그 커밋 마무리 우선
+- **할 것**: localhost:3002에서 E2E 흐름 직접 확인 (premium 톤 교체 및 스마트 스크롤 제거 반영 여부 검증)
+- **필요한 것**: 로컬 dev 서버 실행 상태, 변경된 컴포넌트 목록
+- **이전 검토**: reality → premium 톤 교체 결정 완료, 스마트 스크롤 제거 결정 완료, 코드 변경 이미 적용됨
+
+---
+
+## 2026-04-25: daily 톤 회귀 테스트
+
+- **백로그 이유**: premium 톤 교체 작업 후 daily 톤에 사이드 이펙트 없는지 미확인 상태로 세션 종료
+- **할 것**: daily 톤 전체 흐름 회귀 테스트 실행, 깨진 케이스 있으면 수정
+- **필요한 것**: 기존 daily 톤 테스트 케이스 또는 체크리스트, 로컬 서버
+- **이전 검토**: reality → premium 교체가 주요 변경, daily는 별도 톤이므로 영향 범위 불명확한 상태
+
+---
+
+## 2026-04-25: Phase 3 Supabase DB 마이그레이션
+
+- **백로그 이유**: 현재 Phase 우선순위 외, 선행 작업(Supabase credentials 확보) 미완료
+- **할 것**: Phase 3 마이그레이션 스크립트 작성 및 Supabase 스키마 적용
+- **필요한 것**: Supabase 프로젝트 접근 권한 및 credentials(.env.local 3개 변수), 마이그레이션 대상 테이블 정의
+- **이전 검토**: lib/supabase/client.ts·server.ts 작성 완료. /api/session route.ts 완성됨. SQL 스키마는 §4에 설계됨.
+- **관련 파일**: sajutalk/lib/supabase/client.ts, server.ts, sajutalk/app/api/session/route.ts
+
+---
+
 ## 2026-04-24: Supabase 연동 및 DB 스키마 migration
 
 - **백로그 이유**: 선행 작업 필요 — Supabase 프로젝트 생성 및 credentials 확보 (사용자 직접 수행)
@@ -32,29 +60,3 @@
 
 ~~합충형파해 + 지장간 계산 모듈 추가~~ → docs/runs/2026-04-24-manse-v2-hapchunh-sciencetone_run.md
 - 완료일: 2026-04-24 (커밋 abdb548)
-
-
-## 2026-04-25: localhost:3002 E2E 확인
-
-- **백로그 이유**: 세션 종료 시점에 시간 부족, 워크로그 커밋 마무리 우선
-- **할 것**: localhost:3002에서 E2E 흐름 직접 확인 (reality → premium 톤 교체 및 스마트 스크롤 제거 반영 여부 검증)
-- **필요한 것**: 로컬 dev 서버 실행 상태, 변경된 컴포넌트 목록
-- **이전 검토**: reality → premium 톤 교체 결정 완료, 스마트 스크롤 제거 결정 완료, 코드 변경은 이미 적용됨
-
----
-
-## 2026-04-25: daily 톤 회귀 테스트
-
-- **백로그 이유**: premium 톤 교체 작업 후 daily 톤에 사이드 이펙트 없는지 미확인 상태로 세션 종료
-- **할 것**: daily 톤 전체 흐름 회귀 테스트 실행, 깨진 케이스 있으면 수정
-- **필요한 것**: 기존 daily 톤 테스트 케이스 또는 체크리스트, 로컬 서버
-- **이전 검토**: reality → premium 교체가 주요 변경, daily는 별도 톤이므로 영향 범위 불명확한 상태
-
----
-
-## 2026-04-25: Phase 3 Supabase DB 마이그레이션
-
-- **백로그 이유**: 현재 Phase 우선순위 외, 준비 선행 작업 미완료
-- **할 것**: Phase 3 마이그레이션 스크립트 작성 및 Supabase 스키마 적용
-- **필요한 것**: Phase 3 요구사항 확정, Supabase 프로젝트 접근 권한, 마이그레이션 대상 테이블 정의
-- **이전
