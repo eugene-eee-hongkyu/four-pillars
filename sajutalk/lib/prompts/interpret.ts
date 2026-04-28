@@ -286,16 +286,17 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
   const today = new Date().toISOString().slice(0, 10);
   const age = new Date().getFullYear() - birthYear + 1;
 
-  const total = Object.values(m.elementCounts).reduce((s, v) => s + v, 0);
-  const elemLines = (Object.entries(m.elementCounts) as [string, number][])
+  const ec = m.elementCounts ?? { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+  const total = Object.values(ec).reduce((s, v) => s + v, 0);
+  const elemLines = (Object.entries(ec) as [string, number][])
     .map(([el, cnt]) => `${ELEMENT_KO[el] ?? el} ${cnt}개 (${total > 0 ? Math.round(cnt / total * 100) : 0}%)`)
     .join(', ');
 
-  const missing = (Object.entries(m.elementCounts) as [string, number][])
+  const missing = (Object.entries(ec) as [string, number][])
     .filter(([, cnt]) => cnt === 0)
     .map(([el]) => ELEMENT_KO[el] ?? el);
 
-  const dominant = (Object.entries(m.elementCounts) as [string, number][])
+  const dominant = (Object.entries(ec) as [string, number][])
     .sort(([, a], [, b]) => b - a)[0];
   const dominantStr = dominant
     ? `${ELEMENT_KO[dominant[0]] ?? dominant[0]} ${Math.round(dominant[1] / total * 100)}% 과다`
