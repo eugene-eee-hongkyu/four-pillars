@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 19:51
-## 마지막 업데이트: 2026-04-28 19:51
+## 마지막 실행: 2026-04-28 20:30
+## 마지막 업데이트: 2026-04-28 20:30
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 캡쳐 완료 — Phase 3 Supabase 연동 대기
+- 대화·결과 화면 dark 디자인 구현 완료 — Phase 3 Supabase 연동 대기
 
 ### 이어서 할 것
 
@@ -29,8 +29,8 @@
 
 ### 백로그 요약
 
-- 대기 중: 5개
-- 최근 추가: 2026-04-25 — Phase 3 Supabase DB 마이그레이션
+- 대기 중: 4개
+- 최근 추가: 2026-04-25 — daily 톤 회귀 테스트
 
 ### 진행 상황
 
@@ -79,7 +79,10 @@
 - [x] docs/03_A-2_프로세스를_화면으로_사주톡_v3.md 신규 작성 (섹션 0~6 완성, 코드 역산 기준)
 - [x] docs/03_A-2_프로세스를_화면으로_사주톡_v3.md 0-b 섹션에 AI 프롬프트명 병기
 - [x] docs/03_A-2_프로세스를_화면으로_사주톡_v2.md 삭제 (v3로 대체)
-- [x] [17/20] 수동 E2E localhost 확인 (캡쳐 완료)
+- [x] app/result/page.tsx — dawn-mood dark 디자인 (CharBox, ElementBar, LuckTable, 끝 문구)
+- [x] app/chat/page.tsx — 5 버블 변형 + 페이즈 구분선 + 다크 입력 독 + DONE 상태
+- [x] layout.tsx — Cormorant Garamond, IBM Plex Sans KR, Noto Serif KR, Pretendard 폰트
+- [x] [17/20] 수동 E2E localhost 확인 (chat/result 화면 스크린샷 검증 완료)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인

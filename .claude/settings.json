@@ -1,12 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "_description": "BypassPermissions (YOLO) mode - auto-approves everything EXCEPT deny rules. Deny list is the only safety net. Use only in isolated environments: testnet repos, containers, sandboxes, scratch branches. Allow list is documentation-only; missing entries still auto-approve unless explicitly denied.",
-  "_safety_notes": [
-    "Deny list is IDENTICAL to acceptEdits.json - keep it that way. Deny rules are the only fence in bypass mode.",
-    "Always work on a feature branch (git checkout -b testnet-yolo) so git reset --hard can undo anything.",
-    "Consider running inside a container/VM for filesystem isolation. See github.com/con/yolo for podman-based setup.",
-    "Do NOT use this profile on main branches or production repos."
-  ],
   "permissions": {
     "allow": [
       "Read",
@@ -18,9 +11,12 @@
       "TodoWrite",
       "WebSearch",
       "WebFetch",
-      "Bash"
+      "Bash",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__wait_for"
     ],
-    "ask": [],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
@@ -147,6 +143,17 @@
       "Bash(* ; *)",
       "Bash(* || *)"
     ],
-    "defaultMode": "bypassPermissions"
-  }
+    "ask": [],
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/Users/eugene/.claude/projects/-Users-eugene-Downloads-coding-four-pillars/b0cc2726-02e3-4b4e-9bd7-1d04cf9163ed/tool-results"
+    ]
+  },
+  "_description": "BypassPermissions (YOLO) mode - auto-approves everything EXCEPT deny rules. Deny list is the only safety net. Use only in isolated environments: testnet repos, containers, sandboxes, scratch branches. Allow list is documentation-only; missing entries still auto-approve unless explicitly denied.",
+  "_safety_notes": [
+    "Deny list is IDENTICAL to acceptEdits.json - keep it that way. Deny rules are the only fence in bypass mode.",
+    "Always work on a feature branch (git checkout -b testnet-yolo) so git reset --hard can undo anything.",
+    "Consider running inside a container/VM for filesystem isolation. See github.com/con/yolo for podman-based setup.",
+    "Do NOT use this profile on main branches or production repos."
+  ]
 }

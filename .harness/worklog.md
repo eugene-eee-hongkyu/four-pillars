@@ -4,6 +4,24 @@
 
 ---
 
+## Session 2026-04-28 20:30 — 대화 화면 dark 디자인 구현 + 검증
+
+### 작업 요약
+- `app/chat/page.tsx` 전면 재작성: 5가지 버블 스타일(CalibrationBubble, InterpretationBubble, QnABubble, SummaryBubble, UserBubble), 페이즈 구분선("Saju Reading" / "Closing"), typing dots 애니메이션, 다크 입력 독, DONE 상태
+- `app/result/page.tsx` 전면 재작성: midnight 팔레트, CharBox, ElementBar, Callout, LuckTable 수평 스크롤, 채도 낮춘 오행 색상, 끝 문구("천천히 읽으세요 · 새벽은 깁니다")
+- `app/layout.tsx`: Cormorant Garamond, IBM Plex Sans KR, Noto Serif KR, Pretendard 폰트 추가
+- `lib/prompts/interpret.ts`: `elementCounts` null 가드 추가 (localStorage 구버전 데이터 호환)
+- `app/chat/page.tsx` TS 오류 수정: `streamingBubbleType === 'ack'` dead comparison 제거
+- dev 서버로 E2E 시각 검증 완료 (Chrome DevTools MCP로 스크린샷 확인)
+- `4c4e358` 커밋·푸시
+- `.claude/settings.json` 변경: Chrome DevTools MCP 도구 3개 allow 목록 추가 (new_page, list_console_messages, list_network_requests)
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
+
 ## Session 2026-04-28 19:51 — 캡쳐용 dev 서버 기동 및 종료
 
 ### 작업 요약
