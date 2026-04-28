@@ -4,6 +4,21 @@
 
 ---
 
+## Session 2026-04-28 16:29 — A-2 v3 0-b 섹션 AI 프롬프트명 병기
+
+### 작업 요약
+- 섹션 0-b "주요 내부 로직 핵심"에 AI에 넘기는 프롬프트명 병기
+  - 캘리브레이션 훅 항목: `HOOK_SYSTEM_YEOKSULGA`(daily) / `HOOK_SYSTEM_PREMIUM`(premium) 명시
+  - 해석 프롬프트 항목 신규: `INTERPRET_SYSTEM_DAILY`(9섹션) / `INTERPRET_SYSTEM_PREMIUM`(12섹션)
+  - QnA·정리 프롬프트 항목 신규: `QNA_SYSTEM`, `SUMMARY_SYSTEM` + `lib/prompts/` 경로 포인터
+
+### 다음 액션
+- localhost:3002 수동 E2E — premium 플로우 (훅 → 캘리브레이션 → 12섹션 리포트 + 테이블) 확인
+- daily 톤 회귀 없는지 확인
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+
+---
+
 ## Session 2026-04-28 16:15 — a-2 v3 문서 독자 구조 확인
 
 ### 작업 요약
