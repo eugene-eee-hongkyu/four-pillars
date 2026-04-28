@@ -4,6 +4,19 @@
 
 ---
 
+## Session 2026-04-28 19:51 — 캡쳐용 dev 서버 기동 및 종료
+
+### 작업 요약
+- localhost:3002 dev 서버 기동 (캡쳐용)
+- 캡쳐 완료 후 서버 종료
+- A-2 v2 파일 삭제 커밋·푸시 (`0cf59a0`)
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
+
 ## Session 2026-04-28 18:30 — 워크로그/state.md 정리 및 docs v3 커밋
 
 ### 작업 요약
