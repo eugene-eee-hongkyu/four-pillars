@@ -6,18 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 12:51
-## 마지막 업데이트: 2026-04-29 10:40
+## 마지막 실행: 2026-04-29 16:43
+## 마지막 업데이트: 2026-04-29 16:43
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 첫화면 dawn-mood 디자인 적용 완료 — Phase 3 Supabase 연동 대기
+- 채팅 화면 폭 통일 검토 중 (chat maxWidth vs 첫화면/result)
 
 ### 이어서 할 것
 
-1. Phase 3: Supabase credentials 입력 → DB 마이그레이션
-2. Vercel 배포 직전 승인
+1. 채팅 화면 maxWidth 통일 수정 적용
+2. Phase 3: Supabase credentials 입력 → DB 마이그레이션
+3. Vercel 배포 직전 승인
 
 ### 막힌 것
 
