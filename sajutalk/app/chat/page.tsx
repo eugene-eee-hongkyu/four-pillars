@@ -506,7 +506,6 @@ export default function ScreenChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [streamingText, setStreamingText] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
 
   const profile = useRef<ReturnType<typeof loadProfile>>(null);
   const conversation = useRef<ReturnType<typeof loadConversation>>(null);
@@ -625,10 +624,6 @@ export default function ScreenChat() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase === 'F']);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingText]);
 
   async function streamAI(url: string, body: Record<string, unknown>, onDone: (t: string) => void) {
     setStreamingText('');
@@ -901,8 +896,6 @@ export default function ScreenChat() {
 
           {/* 화면 5 — 부모 생시 요청 */}
           {state.phase === 'DONE' && state.showParentRequest && <ParentRequestBanner />}
-
-          <div ref={bottomRef} />
         </div>
 
         {/* 입력 독 */}

@@ -4,6 +4,22 @@
 
 ---
 
+## Session 2026-04-29 09:08 — chat 자동 스크롤 제거 + 서버 운영 가이드
+
+### 작업 요약
+- `app/chat/page.tsx` 자동 스크롤 useEffect 전체 제거 (라인 629-631)
+  - `bottomRef` 선언, sentinel `<div ref={bottomRef} />` 도 함께 정리
+  - 이제 메시지 추가/스트리밍 시 페이지가 자동으로 내려가지 않고 사용자가 직접 스크롤
+- TS 검증 통과 (사전 존재 `verify.spec.ts` 오류 외 신규 없음)
+- 사용자에게 dev 서버 직접 띄우는 방법 안내 (`npm run dev -- --port 3002`)
+- `.next` 캐시 삭제 가이드 안내 (필요할 때만 — chunk 404, config 변경 후)
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
+
 ## Session 2026-04-29 08:49 — 개발 서버 실행 및 구동 확인
 
 ### 작업 요약
