@@ -4,6 +4,27 @@
 
 ---
 
+## Session 2026-04-29 10:19 — 첫화면 dawn-mood 디자인 적용 + 캘리브레이션 입력 제한 해제
+
+### 작업 요약
+- `app/page.tsx` 전면 재작성 — Anthropic Design 번들(`사주톡 첫화면.html`)을 기반으로 미드나잇 + 더스티 라벤더 톤 적용
+  - 배경: `#0F0F24` 미드나잇 + 라디얼 그라데이션 + SVG 별빛 장식
+  - 헤더: 四柱 한자 힌트 → Cormorant Garamond 36px "사주톡" → *SAJUTALK · 사주 대화* 이탤릭 서브
+  - 섹션별 한자 힌트 (姓名/性別/陽曆·陰曆/生年月日/出生 時刻)
+  - 성별/달력 ChoiceChips: 陰/陽 글리프 + 라벤더 글로우 선택 상태
+  - 커스텀 chevron PillSelect 드롭다운
+  - 버튼: 라벤더 글로우 + 로딩 스피너 CSS 애니메이션
+  - 위스퍼 풋터: "한 사람의 시간을 펼치는 일입니다 / 천천히 입력하세요 · 새벽은 깁니다"
+  - 기존 로직(만세력 API 호출, localStorage 저장, /result 라우팅) 완전 유지
+  - TS 타입 오류 없음 (기존 verify.spec.ts 오류 외 신규 없음)
+- `app/chat/page.tsx` 캘리브레이션 상세 입력 `maxLength={60}` 제거 — 길이 제한 없음
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
+
 ## Session 2026-04-29 09:08 — chat 자동 스크롤 제거 + 서버 운영 가이드
 
 ### 작업 요약

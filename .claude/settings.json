@@ -146,7 +146,8 @@
     "ask": [],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
-      "/Users/eugene/.claude/projects/-Users-eugene-Downloads-coding-four-pillars/b0cc2726-02e3-4b4e-9bd7-1d04cf9163ed/tool-results"
+      "/Users/eugene/.claude/projects/-Users-eugene-Downloads-coding-four-pillars/b0cc2726-02e3-4b4e-9bd7-1d04cf9163ed/tool-results",
+      "/Users/eugene/.claude/projects/-Users-eugene-Downloads-coding-four-pillars/a5bbc852-7d11-4256-b03d-cb4e06f6fea6/tool-results"
     ]
   },
   "_description": "BypassPermissions (YOLO) mode - auto-approves everything EXCEPT deny rules. Deny list is the only safety net. Use only in isolated environments: testnet repos, containers, sandboxes, scratch branches. Allow list is documentation-only; missing entries still auto-approve unless explicitly denied.",

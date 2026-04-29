@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 09:08
-## 마지막 업데이트: 2026-04-29 09:08
+## 마지막 실행: 2026-04-29 10:19
+## 마지막 업데이트: 2026-04-29 10:19
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- chat 자동 스크롤 제거 완료 — Phase 3 Supabase 연동 대기
+- 첫화면 dawn-mood 디자인 적용 완료 — Phase 3 Supabase 연동 대기
 
 ### 이어서 할 것
 
@@ -85,6 +85,8 @@
 - [x] [17/20] 수동 E2E localhost 확인 (chat/result 화면 스크린샷 검증 완료)
 - [x] 개발 서버 (`sajutalk`) HTTP 200 응답 확인 (2026-04-29)
 - [x] chat 자동 스크롤 완전 제거 — 사용자 수동 스크롤 (2026-04-25 결정 무효화)
+- [x] app/page.tsx — dawn-mood dark 디자인 (첫화면, Design 번들 기반)
+- [x] app/chat/page.tsx 캘리브레이션 입력 maxLength 제한 제거
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
