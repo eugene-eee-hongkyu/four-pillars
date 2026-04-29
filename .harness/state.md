@@ -6,17 +6,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 16:43
-## 마지막 업데이트: 2026-04-29 16:43
+## 마지막 실행: 2026-04-29 18:45
+## 마지막 업데이트: 2026-04-29 18:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 채팅 화면 폭 통일 검토 중 (chat maxWidth vs 첫화면/result)
+- 전체 화면 폭 640px 통일 완료, 프롬프트 테스트 인프라 준비 단계
 
 ### 이어서 할 것
 
-1. 채팅 화면 maxWidth 통일 수정 적용
+1. CLI 테스트 스크립트(`test-prompt.ts`) 작성 — 대상 프롬프트 종류와 출력 형식 결정
 2. Phase 3: Supabase credentials 입력 → DB 마이그레이션
 3. Vercel 배포 직전 승인
 
@@ -59,35 +59,22 @@
 - [x] app/api/qna/route.ts — max_tokens 4096, fullManse 파라미터
 - [x] react-markdown + @tailwindcss/typography (마크다운 렌더링)
 - [x] getElementStyle 인라인 스타일 수정
-- [x] 해석 스타일 톤 2개 — daily(생활 상담형)·premium(프리미엄 리포트형) (result 2버튼 + chat 헤더 뱃지)
+- [x] 해석 스타일 톤 2개 — daily(생활 상담형)·premium(프리미엄 리포트형)
 - [x] tone 전달 방식 localStorage 채택 결정
-- [x] /docs/internal-process.md 작성 — 내부 계산·AI 호출 시점·프롬프트/데이터 구성 방식 명세화
+- [x] /docs/internal-process.md 작성
 - [x] 역술가 캘리브레이션 훅 — B_HOOK·C_CALIBRATING 상태 + /api/hook + CalibrationContext 주입
-- [x] 화면 1 테스트 샘플 데이터 프리필 (이홍규·남성·1976/01/03·23:00)
-- [x] INTERPRET_SYSTEM_YEOKSULGA 9섹션 개편 (calibration-aware [왜 그런 일이 일어났는가])
-- [x] 캘리브레이션 상세 입력 — 예/아니오/다른형태 3버튼, C_CALIBRATING_DETAIL·C_CALIBRATING_NO 상태 구현
-- [x] lib/manse/score.ts 신규 — calcScores() 결정론 점수 엔진 (십신 가중치·합충 패널티·대운/세운 보너스)
-- [x] lib/manse/engine.ts — scores: ScoreResult ManseResult에 통합
-- [x] INTERPRET_SYSTEM_STRATEGIST 12섹션 시스템 프롬프트 + 점수 주입 블록 추가
-- [x] docs/refs/sajutalk_final_style_guide.md 생성
-- [x] next build 대신 tsc --noEmit 사용 규칙 수립 (dev server 청크 해시 충돌 방지)
-- [x] B_ACK 상태 신규 — 캘리브레이션 후 LLM 없이 템플릿 확인 메시지 → 0.8초 후 B 자동 전환
-- [x] /api/interpret max_tokens 4096 → 8192 (9섹션 중간 절단 수정)
-- [x] docs/03_A-2_프로세스를_화면으로_사주톡.md — 코드 역산 A-2 문서 (라우트 5개, 상태 14개)
-- [x] reality 톤 제거 → premium 톤 신설 (12섹션 리포트형, HOOK_SYSTEM_PREMIUM)
-- [x] remark-gfm 설치 — 마크다운 테이블 렌더링 정상화
-- [x] 스마트 스크롤 제거 — 항상 하단 자동 스크롤
-- [x] docs/03_A-2_프로세스를_화면으로_사주톡_v3.md 신규 작성 (섹션 0~6 완성, 코드 역산 기준)
-- [x] docs/03_A-2_프로세스를_화면으로_사주톡_v3.md 0-b 섹션에 AI 프롬프트명 병기
-- [x] docs/03_A-2_프로세스를_화면으로_사주톡_v2.md 삭제 (v3로 대체)
-- [x] app/result/page.tsx — dawn-mood dark 디자인 (CharBox, ElementBar, LuckTable, 끝 문구)
-- [x] app/chat/page.tsx — 5 버블 변형 + 페이즈 구분선 + 다크 입력 독 + DONE 상태
-- [x] layout.tsx — Cormorant Garamond, IBM Plex Sans KR, Noto Serif KR, Pretendard 폰트
-- [x] [17/20] 수동 E2E localhost 확인 (chat/result 화면 스크린샷 검증 완료)
-- [x] 개발 서버 (`sajutalk`) HTTP 200 응답 확인 (2026-04-29)
-- [x] chat 자동 스크롤 완전 제거 — 사용자 수동 스크롤 (2026-04-25 결정 무효화)
-- [x] app/page.tsx — dawn-mood dark 디자인 (첫화면, Design 번들 기반)
-- [x] app/chat/page.tsx 캘리브레이션 입력 maxLength 제한 제거
+- [x] 캘리브레이션 상세 입력 — 예/아니오/다른형태 3버튼
+- [x] lib/manse/score.ts — calcScores() 결정론 점수 엔진
+- [x] B_ACK 상태 신규 — 캘리브레이션 후 템플릿 확인 메시지
+- [x] /api/interpret max_tokens 8192
+- [x] reality 톤 제거 → premium 톤 신설
+- [x] remark-gfm 설치 — 마크다운 테이블 렌더링
+- [x] app/page.tsx, result/page.tsx, chat/page.tsx — dawn-mood dark 디자인
+- [x] chat 자동 스크롤 완전 제거
+- [x] [17/20] 수동 E2E localhost 확인 완료
+- [x] 전체 화면 폭 max-width 640px 통일 (page.tsx, result/page.tsx, chat/page.tsx)
+- [x] 프롬프트 테스트 방법 결정: CLI 스크립트 + Anthropic Workbench
+- [ ] CLI 테스트 스크립트(`test-prompt.ts`) 작성
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
