@@ -4,12 +4,34 @@
 
 ---
 
-이미 동일 세션의 worklog가 존재합니다 (18:49 타임스탬프). 내용도 제공된 요약과 일치하므로 추가 작성 불필요합니다.
+## Session 2026-04-29 20:11 — prompt_checker 도구 셋업 + 프롬프트 .md 분리
 
-기존 항목 확인:
-- `worklog.md` 7행: `## Session 2026-04-29 18:49 — 화면 폭 통일 및 프롬프트 테스트 방법 결정`
-- 작업 요약 4건, 다음 액션 1건 — 모두 제공된 세션 요약과 동일
+### 작업 요약
+- `prompt_checker/` 신규 디렉토리 (sajutalk와 sibling 위치) — fixtures × prompts 매트릭스 러너 + diff 웹뷰어
+  - `package.json`, `tsconfig.json` (자체 의존성: anthropic, manseryeok, diff, diff2html, dotenv, tsx)
+  - `scripts/test.ts`: dev 서버 `/api/manse` + `/api/interpret` HTTP 호출 → outputs/current/{prompt}__{fixture}.md 저장 + meta.json + run.json (git hash 포함)
+  - `scripts/promote.ts`: current → keepers 복사 (--prompt/--fixture 또는 --all)
+  - `scripts/view.ts`: localhost:4321에 HTTP 서버 + diff2html 좌우 분할 뷰어 + 자동 브라우저 오픈
+  - `.gitignore`: outputs/current/, node_modules/ 제외
+  - `README.md`: 사용법 + 비용 안내
+- `sajutalk/prompts/interpret-daily.md`, `interpret-premium.md` 신규 — 시스템 프롬프트 단일 소스
+- `lib/prompts/interpret.ts`: `loadPromptFile()` 추가 (fs.readFileSync), DAILY/PREMIUM 모두 .md 로드로 교체. SECTION_STRUCTURE/SELF_VALIDATE/PREMIUM_SECTION_STRUCTURE 인라인 상수 200여 줄 제거
+- fixtures 5개 추가:
+  - `leehonggyu.json` (51세 男, 木 과다, 시간 23시)
+  - `younger-female-relationship.json` (32세 女, 연애)
+  - `midage-female-marriage.json` (36세 女, 결혼)
+  - `time-unknown.json` (39세 男, 시간 미상 edge case)
+  - `with-calibration.json` (이홍규 + calibration 데이터)
+- E2E 검증: test 1차 실행 → promote → test 2차 실행 → diff 좌우 분할 뷰어로 변화 확인 OK
+- 화면 폭 max-width 640px 통일도 함께 커밋 (page/result/chat 3개 화면 + .claude/settings.json playwright_resize/close 권한 추가)
+- `8593a65` 커밋·푸시 (22 파일, +2116 / -223)
 
+### 다음 액션
+- 추가 프롬프트(`qna`, `summary`, `hook`) .md 분리 시 test.ts에 엔드포인트 라우팅 추가 필요
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
 
 ## Session 2026-04-29 18:49 — 화면 폭 통일 및 프롬프트 테스트 방법 결정
 

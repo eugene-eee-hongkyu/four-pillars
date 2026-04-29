@@ -6,17 +6,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 18:45
-## 마지막 업데이트: 2026-04-29 18:49
+## 마지막 실행: 2026-04-29 20:11
+## 마지막 업데이트: 2026-04-29 20:11
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 전체 화면 폭 640px 통일 완료, 프롬프트 테스트 인프라 준비 단계
+- prompt_checker 도구 셋업 완료 — Phase 3 Supabase 연동 대기
 
 ### 이어서 할 것
 
-1. CLI 테스트 스크립트(`test-prompt.ts`) 작성 — 대상 프롬프트 종류와 출력 형식 결정
+1. (선택) 추가 프롬프트(`qna`/`summary`/`hook`) .md 분리 + test.ts 엔드포인트 라우팅 추가
 2. Phase 3: Supabase credentials 입력 → DB 마이그레이션
 3. Vercel 배포 직전 승인
 
@@ -74,7 +74,8 @@
 - [x] [17/20] 수동 E2E localhost 확인 완료
 - [x] 전체 화면 폭 max-width 640px 통일 (page.tsx, result/page.tsx, chat/page.tsx)
 - [x] 프롬프트 테스트 방법 결정: CLI 스크립트 + Anthropic Workbench
-- [ ] CLI 테스트 스크립트(`test-prompt.ts`) 작성
+- [x] sajutalk/prompts/interpret-daily.md, interpret-premium.md — .md 단일 소스 분리
+- [x] prompt_checker/ — fixtures × prompts 매트릭스 러너 + diff2html 웹뷰어 (커밋 8593a65)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인

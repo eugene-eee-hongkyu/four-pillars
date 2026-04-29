@@ -4,6 +4,45 @@
 
 ---
 
+## 2026-04-29: 시스템 프롬프트를 .md 파일로 분리 (단일 소스)
+
+- **선택**: `INTERPRET_SYSTEM_DAILY`, `INTERPRET_SYSTEM_PREMIUM`을 `sajutalk/prompts/*.md`로 분리, `lib/prompts/interpret.ts`는 `fs.readFileSync(process.cwd()/prompts/...)`로 읽음.
+- **대안 검토**:
+  - 코드 안 인라인 (기존): TS 문자열 리터럴. 수정마다 코드 PR, prompt caching 시 system 부분 안정성 ↓.
+  - .md 파일 + import: webpack raw-loader 추가 필요. Next.js 빌드 설정 손대야 함.
+  - .md 파일 + fs.readFileSync (선택): 모듈 로드 시 1회 읽음. Next.js 표준 동작. prompt_checker도 같은 .md 참조 가능.
+- **선택 이유**: (1) 단일 소스 — prompt_checker가 dev 서버 통해 사용하므로 자연히 같은 .md 사용. (2) prompt caching의 prefix(system) 안정화 → 운영비 30~50% 절감 기대. (3) git diff가 곧 프롬프트 변경 이력 (PR 리뷰 = 거버넌스). (4) 따로 빌드 설정 변경 없음.
+- **영향 범위**: `sajutalk/prompts/interpret-daily.md`, `interpret-premium.md` 신규. `lib/prompts/interpret.ts`에서 인라인 상수 200여 줄 제거.
+- **되돌리는 방법**: `git revert 8593a65` 또는 .md 파일 내용을 다시 TS 문자열 리터럴로 인라인.
+
+---
+
+## 2026-04-29: prompt_checker를 sajutalk와 sibling 디렉토리로 분리
+
+- **선택**: `four-pillars/prompt_checker/` (sajutalk와 같은 레벨). prompts/는 sajutalk 안에 유지.
+- **대안 검토**:
+  - 모두 sajutalk 안 (원안): scripts·fixtures·outputs까지 sajutalk/에 두면 앱 디렉토리가 테스트 인프라로 폐허.
+  - 모두 prompt_checker로 (prompts 포함): 완전 분리되지만 Next.js Vercel 배포가 sajutalk/만 빌드해서 prompts/가 누락. cross-dir 경로 처리 복잡.
+  - 부분 분리 (선택): prompts는 prod 런타임용이라 sajutalk에 유지. 테스트 인프라(fixtures/outputs/scripts/뷰어)만 sibling 분리.
+- **선택 이유**: 앱 배포 안전성 (prompts가 sajutalk와 함께 deploy됨) + 테스트 인프라 격리 (앱 디렉토리 깨끗) + 단일 소스 (prompt_checker가 dev 서버 HTTP API를 통해 동일 prompts 사용).
+- **영향 범위**: `prompt_checker/` 신규 디렉토리 (자체 package.json, scripts/, fixtures/, outputs/, README.md).
+- **되돌리는 방법**: `prompt_checker/` 폴더 삭제 또는 git revert.
+
+---
+
+## 2026-04-29: prompt_checker가 dev 서버 HTTP API로 동작 (TS 직접 import 안 함)
+
+- **선택**: `prompt_checker/scripts/test.ts`가 `localhost:3002/api/manse` + `/api/interpret` 호출. sajutalk의 `buildInterpretPrompt`나 manse 엔진을 직접 import 안 함.
+- **대안 검토**:
+  - sajutalk TS 직접 import: cross-dir tsx 설정 + `@/` 경로 aliases 처리 + interpret.ts의 cwd 의존 fs.readFileSync 동작 보장 등 복잡. drift 위험.
+  - manse 엔진을 prompt_checker가 직접 사용 + buildInterpretPrompt 로직 재구현: drift 위험 (sajutalk 변경 시 prompt_checker 따로 수정 필요).
+  - HTTP API 사용 (선택): 실제 prod 코드를 거치므로 drift 0. 단점은 dev 서버 띄워야 함.
+- **선택 이유**: 단일 소스 보장 + 구현 단순. dev 서버 실행은 어차피 평소 작업에 필요한 상태.
+- **영향 범위**: `prompt_checker/scripts/test.ts` (HTTP fetch 사용). 친절한 에러 메시지로 dev 서버 미실행 시 안내.
+- **되돌리는 방법**: 직접 import 방식으로 전환 — tsx 설정 + paths 설정 + interpret.ts의 path resolution 변경 필요.
+
+---
+
 ## 2026-04-29: 화면 최대 폭(max-width) 기준 결정
 
 - **선택**: 데스크톱 640px / 모바일 100% (Option A)
