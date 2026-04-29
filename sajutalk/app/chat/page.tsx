@@ -286,7 +286,6 @@ function CalibrationDetail({
         <input
           value={detailDescription}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          maxLength={60}
           placeholder="예: 이직, 투자 손실, 가족 문제"
           style={{
             width: '100%', background: 'transparent', border: `1px solid ${T.indigoBorder}`,
