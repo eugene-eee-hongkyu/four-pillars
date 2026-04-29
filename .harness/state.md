@@ -6,8 +6,8 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 21:51
-## 마지막 업데이트: 2026-04-28 20:30
+## 마지막 실행: 2026-04-29 08:49
+## 마지막 업데이트: 2026-04-29 08:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
@@ -83,6 +83,7 @@
 - [x] app/chat/page.tsx — 5 버블 변형 + 페이즈 구분선 + 다크 입력 독 + DONE 상태
 - [x] layout.tsx — Cormorant Garamond, IBM Plex Sans KR, Noto Serif KR, Pretendard 폰트
 - [x] [17/20] 수동 E2E localhost 확인 (chat/result 화면 스크린샷 검증 완료)
+- [x] 개발 서버 (`sajutalk`) HTTP 200 응답 확인 (2026-04-29)
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인
