@@ -4,6 +4,21 @@
 
 ---
 
+worklog 항목 추가 완료. state.md도 갱신이 필요하면 알려주세요.
+
+
+## Session 2026-04-29 12:51 — 워크로그 기록 및 푸시
+
+### 작업 요약
+- worklog.md, state.md 업데이트 후 커밋·푸시 완료
+- 백그라운드 dev 서버 태스크가 killed 상태로 종료됨
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 승인
+
+---
+
 ## Session 2026-04-29 10:40 — 앱 코드 커밋·푸시 + 프롬프트 구조 조회
 
 ### 작업 요약
