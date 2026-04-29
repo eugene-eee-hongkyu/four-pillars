@@ -7,19 +7,20 @@ import type { ToneType } from '@/lib/session/local-store';
 import type { ScoreResult } from '@/lib/manse/score';
 export type { ToneType };
 
-// .md 파일에서 시스템 프롬프트 로드 (모듈 로드 시 1회 읽음)
+// .md 파일에서 시스템 프롬프트 로드 — 매 호출마다 디스크에서 새로 읽음.
+// 이렇게 해야 dev 서버 재시작 없이 .md 수정이 즉시 반영됨 (prompt_checker 웹 어드민 핫리로드).
+// prod에서는 .md가 변경되지 않으므로 동작 동일.
 function loadPromptFile(filename: string): string {
   return fs.readFileSync(path.join(process.cwd(), 'prompts', filename), 'utf8');
 }
 
-// ── 시스템 프롬프트 — prompts/*.md 단일 소스 ─────────────────────────────────
-// 생활 상담형: 마음·가족·일상 안정 중심
-// 프리미엄 리포트형: 등급·표·체크리스트 기반 분석
-export const INTERPRET_SYSTEM_DAILY = loadPromptFile('interpret-daily.md');
-export const INTERPRET_SYSTEM_PREMIUM = loadPromptFile('interpret-premium.md');
-
-// summary.ts·qna.ts 호환성 유지
-export const INTERPRET_SYSTEM = INTERPRET_SYSTEM_DAILY;
+// ── 시스템 프롬프트 — prompts/*.md 단일 소스, 함수형(매 호출 재로드) ──────
+export function getInterpretSystemDaily(): string {
+  return loadPromptFile('interpret-daily.md');
+}
+export function getInterpretSystemPremium(): string {
+  return loadPromptFile('interpret-premium.md');
+}
 
 export interface FullManseData {
   yearPillar: string;
@@ -269,6 +270,6 @@ export function buildInterpretPrompt(ctx: InterpretContext): string {
 
 // ── 톤 선택 함수 ─────────────────────────────────────────────────────────────
 export function getInterpretSystem(tone?: ToneType): string {
-  if (tone === 'premium') return INTERPRET_SYSTEM_PREMIUM;
-  return INTERPRET_SYSTEM_DAILY;
+  if (tone === 'premium') return getInterpretSystemPremium();
+  return getInterpretSystemDaily();
 }

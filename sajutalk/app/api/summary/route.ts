@@ -3,7 +3,7 @@
 
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { SUMMARY_SYSTEM, buildSummaryPrompt } from '@/lib/prompts/summary';
+import { getSummarySystem, buildSummaryPrompt } from '@/lib/prompts/summary';
 
 const client = new Anthropic();
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const stream = await client.messages.stream({
     model: 'claude-sonnet-4-6',
     max_tokens: 1536,
-    system: SUMMARY_SYSTEM,
+    system: getSummarySystem(),
     messages: [
       {
         role: 'user',

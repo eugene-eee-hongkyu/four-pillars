@@ -1,7 +1,7 @@
 // §6-b Q&A 답변 프롬프트 (S9)
 // 긴 해석 이후 사용자 질문에 답변. 2회차+2번째 질문이면 답변 말미에 4지선다 삽입.
 
-import { INTERPRET_SYSTEM, getInterpretSystem, FullManseData, type ToneType } from './interpret';
+import { getInterpretSystem, FullManseData, type ToneType } from './interpret';
 
 const QNA_SUFFIX = `
 
@@ -18,8 +18,7 @@ const QNA_SUFFIX = `
 - 2회차 세션 + 이번이 2번째 질문 + 50% 조건이면 답변 말미에
   "혹시 이런 경험 있으세요?" 4지선다 4개 삽입. 답변 본문과 구분선.`;
 
-export const QNA_SYSTEM = `${INTERPRET_SYSTEM}${QNA_SUFFIX}`;
-
+// 함수형 — 매 호출마다 .md 재로드 (핫리로드 지원)
 export function getQnaSystem(tone?: ToneType): string {
   return `${getInterpretSystem(tone)}${QNA_SUFFIX}`;
 }
