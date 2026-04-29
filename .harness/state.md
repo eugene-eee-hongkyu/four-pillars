@@ -1,5 +1,3 @@
-완료. 전체 state.md:
-
 # state.md — 현재 상태 요약
 
 > `/worklog` 명령으로 갱신한다.
@@ -8,17 +6,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 22:11
-## 마지막 업데이트: 2026-04-29 22:11
+## 마지막 실행: 2026-04-29 22:16
+## 마지막 업데이트: 2026-04-29 22:16
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- prompt_checker 도구 셋업 완료 — Phase 3 Supabase 연동 대기
+- prompt_checker 웹 어드민 + .md 핫리로드 + dev 서버 자동 기동 완료 — Phase 3 Supabase 연동 대기
 
 ### 이어서 할 것
 
-1. (선택) 추가 프롬프트(`qna`/`summary`/`hook`) .md 분리 + test.ts 엔드포인트 라우팅 추가
+1. (선택) qna/summary/hook .md 분리 + 어드민에 자동 등장
 2. Phase 3: Supabase credentials 입력 → DB 마이그레이션
 3. Vercel 배포 직전 승인
 
@@ -78,6 +76,9 @@
 - [x] 프롬프트 테스트 방법 결정: CLI 스크립트 + Anthropic Workbench
 - [x] sajutalk/prompts/interpret-daily.md, interpret-premium.md — .md 단일 소스 분리
 - [x] prompt_checker/ — fixtures × prompts 매트릭스 러너 + diff2html 웹뷰어 (커밋 8593a65)
+- [x] 시스템 프롬프트 함수형 변환 (interpret/qna/summary) — .md 핫리로드 지원
+- [x] prompt_checker 웹 어드민 — 편집/저장/실행/SSE/promote 통합 (커밋 762abef)
+- [x] view.ts에서 sajutalk dev 서버 자동 spawn — `npm run view` 한 줄로 모두 기동
 - [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
 - [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
 - [ ] [19/20] production E2E 확인

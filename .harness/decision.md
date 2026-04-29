@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-04-29: prompt_checker 어드민 UI 빌드 (이전 결정 번복)
+
+- **선택**: 웹 어드민 페이지 빌드 (`view.ts`에 편집기 + SSE 실행 + promote 통합)
+- **대안 검토**:
+  - CLI 단독 (이전 결정): 터미널 + 브라우저 왔다갔다 — 사용자가 컨텍스트 스위치 비효율 지적
+  - 어드민 UI 추가: 한 화면에서 편집 → 실행 → diff → 키퍼. 단, 이전 어드민 거절 시 우려한 sync drift는 .md 파일을 직접 수정하므로 발생 안 함 (단일 소스 유지)
+- **선택 이유**: sync drift 우려는 별도 DB/state를 가진 어드민에 해당. 우리 어드민은 `sajutalk/prompts/*.md`를 직접 read/write하므로 단일 소스 유지. 인프라 (HTTP 서버·diff2html·promote)는 이미 `view.ts`에 있어 1.5~2시간 작업으로 통합 가능. 사용자 요청 명시적.
+- **영향 범위**: `prompt_checker/scripts/view.ts` 전면 재작성 (~590줄). `lib/prompts/interpret.ts/qna.ts/summary.ts` 함수형 변환 (.md 핫리로드 지원 — 어드민 저장 즉시 다음 실행에 반영).
+- **되돌리는 방법**: `view.ts`를 git revert로 이전 단순 뷰어 버전으로 복원 + interpret.ts/qna.ts/summary.ts 함수형을 상수형으로 재변환. CLI(`test.ts`, `promote.ts`)는 그대로 사용 가능.
+
+---
+
+## 2026-04-29: 시스템 프롬프트 함수형 변환 (모듈 상수 → 함수)
+
+- **선택**: `INTERPRET_SYSTEM_DAILY/PREMIUM` 등 module-level 상수를 모두 `getXxx()` 함수로 변환. 매 호출마다 `fs.readFileSync` 재실행.
+- **대안 검토**:
+  - 모듈 상수 유지 + dev 서버 매번 재시작: 매 .md 수정마다 Ctrl+C → npm run dev 반복 — 어드민 UX 망가짐
+  - Next.js HMR 의존: webpack은 fs.readFileSync 동적 path를 추적 안 함. 작동 보장 X
+  - 함수형 + 매 호출 읽기 (선택): 단순함, 항상 최신 .md. dev에서 약간의 디스크 I/O 추가 (무시 수준). prod에서는 .md가 변하지 않으므로 동일 동작
+- **선택 이유**: 어드민에서 저장 직후 실행이 의도대로 되려면 핫리로드 필수. Next.js HMR 우회보다 함수 호출이 명시적·안정적. 디스크 캐시 덕분에 성능 영향 극히 미미.
+- **영향 범위**: `lib/prompts/interpret.ts` (DAILY/PREMIUM 함수화), `lib/prompts/qna.ts` (QNA_SYSTEM 상수 제거), `lib/prompts/summary.ts` (SUMMARY_SYSTEM 상수 제거 + getSummarySystem 신규), `app/api/summary/route.ts` (호출부 수정).
+- **되돌리는 방법**: 상수형으로 되돌리되 prod 배포 전 .md를 빌드 시점에 inline (예: build script에서 .md → ts 생성). 또는 dev 서버 재시작 워크플로우로 회귀.
+
+---
+
+## 2026-04-29: view.ts에서 sajutalk dev 서버 자동 기동 (concurrently 대신 spawn)
+
+- **선택**: `view.ts`가 직접 `child_process.spawn`으로 sajutalk dev 서버 기동. 이미 실행 중이면 재사용.
+- **대안 검토**:
+  - 사용자가 두 터미널 직접 관리 (이전): `cd sajutalk && npm run dev` + `cd prompt_checker && npm run view` 별도 — 사용자가 단일 명령 요청
+  - `concurrently` 패키지 사용: 두 명령 병렬 실행. 단점: 새 의존성 (~50KB), wait-on 추가 필요 (또 다른 의존성)
+  - `view.ts`에서 spawn (선택): 의존성 0. ready 폴링으로 Next.js 준비 후 어드민 시작. SIGINT 핸들러로 자식 정리
+- **선택 이유**: 의존성 없이 60줄로 처리. 이미 실행 중인 dev 서버 자동 감지·재사용 (사용자가 별도 터미널에서 미리 띄워둔 케이스도 정상 동작). 종료 시 cascade kill로 좀비 프로세스 방지.
+- **영향 범위**: `prompt_checker/scripts/view.ts` (~70줄 추가 — ensureSajutalkServer, shutdown 핸들러). README 갱신.
+- **되돌리는 방법**: `ensureSajutalkServer()` 호출 제거하면 이전처럼 사용자가 별도 터미널 관리 필요. 또는 concurrently로 교체 (의존성 + wait-on 추가).
+
+---
+
 ## 2026-04-29: 시스템 프롬프트를 .md 파일로 분리 (단일 소스)
 
 - **선택**: `INTERPRET_SYSTEM_DAILY`, `INTERPRET_SYSTEM_PREMIUM`을 `sajutalk/prompts/*.md`로 분리, `lib/prompts/interpret.ts`는 `fs.readFileSync(process.cwd()/prompts/...)`로 읽음.
