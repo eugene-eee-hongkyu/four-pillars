@@ -15,7 +15,9 @@
       "mcp__chrome-devtools__new_page",
       "mcp__chrome-devtools__list_console_messages",
       "mcp__chrome-devtools__list_network_requests",
-      "mcp__chrome-devtools__wait_for"
+      "mcp__chrome-devtools__wait_for",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_close"
     ],
     "deny": [
       "Read(./.env)",

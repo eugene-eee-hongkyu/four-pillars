@@ -413,7 +413,7 @@ export default function ScreenResult() {
     <>
       <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
       <main style={{ minHeight: '100vh', background: C.bg, color: C.textPrimary, fontFamily: '"Pretendard", -apple-system, BlinkMacSystemFont, sans-serif', WebkitFontSmoothing: 'antialiased' }}>
-        <div style={{ maxWidth: 375, margin: '0 auto', paddingLeft: 16, paddingRight: 16, paddingBottom: 48, paddingTop: 56 }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', paddingLeft: 16, paddingRight: 16, paddingBottom: 48, paddingTop: 56 }}>
 
           {/* 액션 버튼 */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

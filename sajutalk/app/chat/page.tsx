@@ -752,24 +752,29 @@ export default function ScreenChat() {
           position: 'sticky', top: 0, zIndex: 20,
           background: 'rgba(15,15,36,0.85)', backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.indigoBorder}`,
-          padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <div style={{ fontFamily: cormorant, fontSize: 22, fontWeight: 500, color: T.starWhite, letterSpacing: '0.02em' }}>
-            사주톡
+          <div style={{
+            maxWidth: 640, margin: '0 auto', padding: '14px 18px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ fontFamily: cormorant, fontSize: 22, fontWeight: 500, color: T.starWhite, letterSpacing: '0.02em' }}>
+              사주톡
+            </div>
+            {toneLabel && (
+              <div style={{
+                border: `1px solid ${T.indigoBorder}`, borderRadius: 999, padding: '4px 10px',
+                fontFamily: pretendard, fontSize: 11, color: T.mutedLavender, letterSpacing: '0.02em',
+              }}>{toneLabel}</div>
+            )}
           </div>
-          {toneLabel && (
-            <div style={{
-              border: `1px solid ${T.indigoBorder}`, borderRadius: 999, padding: '4px 10px',
-              fontFamily: pretendard, fontSize: 11, color: T.mutedLavender, letterSpacing: '0.02em',
-            }}>{toneLabel}</div>
-          )}
         </header>
 
         {/* 메시지 영역 */}
         <div className="chat-scroll" style={{
-          flex: 1, overflowY: 'auto', padding: '20px 16px 8px',
+          flex: 1, overflowY: 'auto',
           backgroundImage: `radial-gradient(circle at 20% -10%, rgba(184,166,217,0.06) 0%, transparent 40%), radial-gradient(circle at 90% 100%, rgba(42,42,77,0.6) 0%, transparent 50%)`,
         }}>
+          <div style={{ maxWidth: 640, margin: '0 auto', padding: '20px 16px 8px' }}>
 
           {/* 상태 A 배너 */}
           {state.phase === 'A' && (
@@ -895,45 +900,52 @@ export default function ScreenChat() {
 
           {/* 화면 5 — 부모 생시 요청 */}
           {state.phase === 'DONE' && state.showParentRequest && <ParentRequestBanner />}
+          </div>
         </div>
 
         {/* 입력 독 */}
         {state.phase !== 'DONE' ? (
           <div style={{
-            flexShrink: 0, padding: '10px 14px 16px',
+            flexShrink: 0,
             background: T.midnight, borderTop: `1px solid ${T.indigoBorder}`,
           }}>
-            {state.phase === 'C' && (
-              <div style={{ fontFamily: pretendard, fontSize: 13, color: isLast ? T.softCoral : T.dustyLavender, letterSpacing: '0.02em', marginBottom: 8 }}>
-                {isLast ? '마지막 질문' : `질문 ${remaining}번 남음`}
-              </div>
-            )}
-            <ChatInput
-              value={inputValue}
-              onChange={setInputValue}
-              onSend={sendQuestion}
-              disabled={inputDisabled}
-            />
-            {showDoneButton && (
-              <button
-                onClick={() => dispatch({ type: 'DONE_EARLY' })}
-                style={{
-                  display: 'block', marginTop: 8, fontFamily: pretendard, fontSize: 11,
-                  color: T.mutedLavender, letterSpacing: '0.04em', textDecoration: 'underline',
-                  textUnderlineOffset: 3, cursor: 'pointer', background: 'transparent', border: 'none',
-                  padding: 0,
-                }}
-              >이제 됐어요</button>
-            )}
+            <div style={{ maxWidth: 640, margin: '0 auto', padding: '10px 14px 16px' }}>
+              {state.phase === 'C' && (
+                <div style={{ fontFamily: pretendard, fontSize: 13, color: isLast ? T.softCoral : T.dustyLavender, letterSpacing: '0.02em', marginBottom: 8 }}>
+                  {isLast ? '마지막 질문' : `질문 ${remaining}번 남음`}
+                </div>
+              )}
+              <ChatInput
+                value={inputValue}
+                onChange={setInputValue}
+                onSend={sendQuestion}
+                disabled={inputDisabled}
+              />
+              {showDoneButton && (
+                <button
+                  onClick={() => dispatch({ type: 'DONE_EARLY' })}
+                  style={{
+                    display: 'block', marginTop: 8, fontFamily: pretendard, fontSize: 11,
+                    color: T.mutedLavender, letterSpacing: '0.04em', textDecoration: 'underline',
+                    textUnderlineOffset: 3, cursor: 'pointer', background: 'transparent', border: 'none',
+                    padding: 0,
+                  }}
+                >이제 됐어요</button>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{
-            flexShrink: 0, padding: '14px', background: T.midnight,
-            borderTop: `1px solid ${T.indigoBorder}`, textAlign: 'center',
-            fontFamily: cormorant, fontStyle: 'italic', fontSize: 13,
-            color: T.mutedLavender, letterSpacing: '0.04em', opacity: 0.7,
+            flexShrink: 0, background: T.midnight,
+            borderTop: `1px solid ${T.indigoBorder}`,
           }}>
-            대화가 마무리되었어요
+            <div style={{
+              maxWidth: 640, margin: '0 auto', padding: '14px', textAlign: 'center',
+              fontFamily: cormorant, fontStyle: 'italic', fontSize: 13,
+              color: T.mutedLavender, letterSpacing: '0.04em', opacity: 0.7,
+            }}>
+              대화가 마무리되었어요
+            </div>
           </div>
         )}
       </main>

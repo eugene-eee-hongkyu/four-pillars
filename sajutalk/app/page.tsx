@@ -355,7 +355,7 @@ export default function ScreenBirthInput() {
 
       <div style={{
         position: 'relative',
-        maxWidth: 360,
+        maxWidth: 640,
         margin: '0 auto',
         padding: '36px 22px 48px',
       }}>

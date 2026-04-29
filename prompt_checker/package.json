@@ -1,0 +1,24 @@
+{
+  "name": "prompt-checker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsx scripts/test.ts",
+    "promote": "tsx scripts/promote.ts",
+    "view": "tsx scripts/view.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@fullstackfamily/manseryeok": "*",
+    "diff": "^5.2.0",
+    "diff2html": "^3.4.48",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.2.1",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
