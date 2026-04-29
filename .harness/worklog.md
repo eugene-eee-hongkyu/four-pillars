@@ -4,6 +4,19 @@
 
 ---
 
+워크로그 항목 추가 완료.
+
+
+## Session 2026-04-30 00:20 — 워크로그·의사결정 정리 및 커밋
+
+### 작업 요약
+- worklog.md, state.md, decision.md 업데이트
+- decision.md에 3건 추가: 어드민 빌드 방식, 함수형 변환, dev 서버 자동 spawn
+- 이전 세션(prompt_checker 웹 어드민 + .md 핫리로드 + dev 서버 자동 기동) 기록 정리 후 git commit/push
+- 실제 코딩 작업 없이 문서 기록만 수행한 세션
+
+---
+
 ## Session 2026-04-29 22:16 — prompt_checker 웹 어드민 구축 + .md 핫리로드 + dev 서버 자동 기동
 
 ### 작업 요약
