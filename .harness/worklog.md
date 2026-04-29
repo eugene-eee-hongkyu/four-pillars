@@ -4,6 +4,20 @@
 
 ---
 
+## Session 2026-04-29 10:40 — 앱 코드 커밋·푸시 + 프롬프트 구조 조회
+
+### 작업 요약
+- `sajutalk/app/page.tsx`, `sajutalk/app/chat/page.tsx` 커밋 및 푸시 (`3e78d9c`)
+- 캘리브레이션 입력 `maxLength={60}` → 길이 제한 없음으로 변경된 배경 설명
+- 생활상담형(`daily`) 시스템 프롬프트 + 실제 AI 입력 프롬프트 전체 조회
+  - manse API 호출(이홍규·1976/01/03·23시)로 실제 데이터 획득 후 완성된 user message 재현
+
+### 다음 액션
+- Phase 3: Supabase credentials 입력 → DB 마이그레이션
+- Vercel 배포 직전 승인
+
+---
+
 ## Session 2026-04-29 10:19 — 첫화면 dawn-mood 디자인 적용 + 캘리브레이션 입력 제한 해제
 
 ### 작업 요약
