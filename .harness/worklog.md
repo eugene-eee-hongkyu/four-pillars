@@ -4,6 +4,17 @@
 
 ---
 
+worklog에 추가했습니다.
+
+
+## Session 2026-04-29 22:11 — view.ts sajutalk dev 서버 자동 기동 확인
+
+### 작업 요약
+- `prompt_checker/scripts/view.ts`에 sajutalk dev 서버 자동 기동 로직이 이미 구현되어 있음을 확인
+- `cd prompt_checker && npm run view` 한 줄이면 뷰어 + dev 서버 모두 기동 — 터미널 2개 불필요
+
+---
+
 ## Session 2026-04-29 20:11 — prompt_checker 도구 셋업 + 프롬프트 .md 분리
 
 ### 작업 요약
