@@ -12,21 +12,21 @@
 
 ### 현재 집중
 
-- prompt_checker 웹 어드민 + .md 핫리로드 + dev 서버 자동 기동 완료 — Phase 3 Supabase 연동 대기
+- production 배포 완료 (https://four-pillars-two.vercel.app/) — 10명 지인 테스트 시작 가능
 
 ### 이어서 할 것
 
-1. (선택) qna/summary/hook .md 분리 + 어드민에 자동 등장
-2. Phase 3: Supabase credentials 입력 → DB 마이그레이션
-3. Vercel 배포 직전 승인
+1. 10명 지인 테스트 (CONTEXT.md 검증 축 — 긴 해석 후 3번 질문 + 정리까지 완주)
+2. (선택) qna/summary/hook .md 분리 + 어드민에 자동 등장
+3. 완료 보고 생성
 
 ### 막힌 것
 
-- Supabase credentials 미입력 → /api/session만 영향 (나머지 API 정상)
+- 없음
 
 ### 사람 판단 필요
 
-- Vercel 배포 직전 승인 (Phase 3 진입 시)
+- 없음
 
 ### 백로그 요약
 
@@ -79,8 +79,8 @@
 - [x] 시스템 프롬프트 함수형 변환 (interpret/qna/summary) — .md 핫리로드 지원
 - [x] prompt_checker 웹 어드민 — 편집/저장/실행/SSE/promote 통합 (커밋 762abef)
 - [x] view.ts에서 sajutalk dev 서버 자동 spawn — `npm run view` 한 줄로 모두 기동
-- [ ] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration
-- [ ] [18/20] Vercel 배포 (§9 [트리거 4] 발동 예정)
-- [ ] [19/20] production E2E 확인
+- [x] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration (project: dnnibzpxswbqauzvuyjh, Seoul)
+- [x] [18/20] Vercel 배포 — https://four-pillars-two.vercel.app/
+- [x] [19/20] production E2E 확인
 - [ ] [20/20] 완료 보고 생성
 - [ ] 10명 지인 테스트
