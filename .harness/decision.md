@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-05-05: prompt_checker 기본 보기 모드 — "결과만"으로 변경 (diff는 토글)
+
+- **선택**: 어드민 결과 패널 기본 모드를 `current-only` (마크다운 렌더링)로. 기존 [좌우 비교] / [한 줄 diff]는 토글 버튼으로 유지. 마크다운은 `marked` CDN으로 클라이언트 렌더링.
+- **대안 검토**:
+  - 기존 default(좌우 비교): 모든 변경마다 좌우 분할 diff 표시 — LLM 변이성으로 빨강/초록이 도배되어 진짜 신호 식별이 어려움
+  - 결과만 default + diff 토글 (선택): 일상 반복은 그냥 읽기, 큰 변경 후 회귀 체크할 때만 diff. 노이즈 제거
+  - diff 완전 제거: 회귀 체크 케이스(섹션 삭제·톤 자체 변경)에서 여전히 유용 → 토글로 보존
+- **선택 이유**: 사용자가 "어차피 같은 프롬프트도 매번 다른 결과가 나와서 diff 노이즈만 됨" 지적. LLM 출력은 비결정적이라 단어 1~2개 다듬는 미세 튜닝에선 진짜 변경 vs 변이성을 diff 색깔로 구분 불가능. 그냥 읽고 판단하는 게 빠름. 큰 구조 변경(섹션 추가/삭제, 톤 전환) 회귀 체크는 토글로 살림.
+- **영향 범위**: `prompt_checker/scripts/view.ts` — `buildDiffHtml` → `buildViewContent` 리팩터, `ViewFormat` 타입 추가, `/api/diff`가 mode에 따라 text/plain (raw md) 또는 text/html (diff) 반환. HTML 측 `<script src=marked>` CDN, `.md-render` CSS, `[결과만]` 버튼 default. SSE 점 누적 버그도 같이 수정 (raw chunk forward).
+- **되돌리는 방법**: `let diffMode = 'side-by-side'`로 기본값 복귀 + `[결과만]` 버튼 제거. 또는 git revert 이번 커밋.
+
+---
+
+## 2026-05-05: Vercel `outputFileTracingIncludes`로 prompts/*.md 명시 포함
+
+- **선택**: `next.config.mjs`에 `experimental.outputFileTracingIncludes` 추가하여 `/api/**/*` 람다 번들에 `./prompts/**/*` 포함.
+- **대안 검토**:
+  - 정적 path 사용 (`fs.readFileSync('./prompts/interpret-daily.md', 'utf8')`): Next.js 정적 분석이 추적 가능. 단점: 프롬프트마다 별도 import 라인 필요, 동적 호출 불가
+  - DB(Supabase)에 프롬프트 저장 + 매 요청 fetch: 가장 동적이지만 cold start latency + cache 관리 + 단일 소스(.md) 장점 상실
+  - `outputFileTracingIncludes` 명시 (선택): 코드 변경 0, 함수형(매 호출 fs.readFileSync) 패턴 유지, prod·dev·prompt_checker 모두 같은 .md 사용
+- **선택 이유**: Next.js 정적 분석이 `process.cwd()` + 동적 path를 추적 못 해 deploy 시 .md가 람다에서 누락 → ENOENT. 명시 포함이 가장 단순. Vercel deploy 후 `/api/interpret` HTTP 200으로 검증 완료.
+- **영향 범위**: `sajutalk/next.config.mjs` (10줄 추가). 빌드 시 lambda 번들에 .md 포함, cold start 영향 거의 없음.
+- **되돌리는 방법**: `next.config.mjs`에서 해당 블록 제거. 단, Vercel deploy에서 즉시 ENOENT 재발생.
+
+---
+
 ## 2026-04-29: prompt_checker 어드민 UI 빌드 (이전 결정 번복)
 
 - **선택**: 웹 어드민 페이지 빌드 (`view.ts`에 편집기 + SSE 실행 + promote 통합)

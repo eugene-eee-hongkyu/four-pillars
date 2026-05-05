@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-04-30 08:50
-## 마지막 업데이트: 2026-04-29 22:16
+## 마지막 실행: 2026-05-05 18:22
+## 마지막 업데이트: 2026-05-05 18:22
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- production 배포 완료 (https://four-pillars-two.vercel.app/) — 10명 지인 테스트 시작 가능
+- 사주톡 MVP production 배포 + 1차 완료 보고 발행 — 10명 지인 테스트 진입 단계
 
 ### 이어서 할 것
 
-1. 10명 지인 테스트 (CONTEXT.md 검증 축 — 긴 해석 후 3번 질문 + 정리까지 완주)
-2. (선택) qna/summary/hook .md 분리 + 어드민에 자동 등장
-3. 완료 보고 생성
+1. 10명 지인 테스트 진행 (CONTEXT.md 검증 축 — 긴 해석 후 3번 질문 + 정리까지 완주율)
+2. 테스트 결과 분석 → v2 완료 보고 → Go/Pivot/Kill 판단
+3. (선택) prompt_checker로 프롬프트 회귀·튜닝 (개별 fixture 1개씩 빠른 반복)
 
 ### 막힌 것
 
@@ -26,11 +26,11 @@
 
 ### 사람 판단 필요
 
-- 없음
+- 없음 (production live, 다음은 사용자 테스트 단계)
 
 ### 백로그 요약
 
-- 대기 중: 4개
+- 대기 중: 2개
 - 최근 추가: 2026-04-25 — daily 톤 회귀 테스트
 
 ### 진행 상황
@@ -72,7 +72,7 @@
 - [x] app/page.tsx, result/page.tsx, chat/page.tsx — dawn-mood dark 디자인
 - [x] chat 자동 스크롤 완전 제거
 - [x] [17/20] 수동 E2E localhost 확인 완료
-- [x] 전체 화면 폭 max-width 640px 통일 (page.tsx, result/page.tsx, chat/page.tsx)
+- [x] 전체 화면 폭 max-width 640px 통일
 - [x] 프롬프트 테스트 방법 결정: CLI 스크립트 + Anthropic Workbench
 - [x] sajutalk/prompts/interpret-daily.md, interpret-premium.md — .md 단일 소스 분리
 - [x] prompt_checker/ — fixtures × prompts 매트릭스 러너 + diff2html 웹뷰어 (커밋 8593a65)
@@ -82,5 +82,8 @@
 - [x] [4~6/20] .env.local 작성 + Supabase 연동 + DB migration (project: dnnibzpxswbqauzvuyjh, Seoul)
 - [x] [18/20] Vercel 배포 — https://four-pillars-two.vercel.app/
 - [x] [19/20] production E2E 확인
-- [ ] [20/20] 완료 보고 생성
+- [x] [20/20] 완료 보고 v1 (`docs/06_완료보고_사주톡_v1.md`, 커밋 6fab25f)
+- [x] prompt_checker SSE 점 누적 버그 수정 (raw chunk forward + 자동 줄바꿈 CSS)
+- [x] prompt_checker "결과만" 기본 모드 추가 (marked CDN, 마크다운 렌더링)
 - [ ] 10명 지인 테스트
+- [ ] v2 완료 보고 (10명 결과 통합 후)

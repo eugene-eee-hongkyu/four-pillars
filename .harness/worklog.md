@@ -4,6 +4,37 @@
 
 ---
 
+## Session 2026-05-05 18:22 — Phase 3 Supabase 연동 + Vercel 프로덕션 배포 + 1차 완료 보고 + prompt_checker UX 개선
+
+### 작업 요약
+- **Phase 3 Supabase 연동·DB 마이그레이션** 완료
+  - 프로젝트 `four-pillars` (id: `dnnibzpxswbqauzvuyjh`, Seoul ap-northeast-2)
+  - `sajutalk/supabase/migrations/001_initial.sql` 작성·적용 — sessions/conversations/qna_turns + RLS deny-by-default + updated_at 트리거 + FK cascade
+  - `.env.local` 4개 변수 (ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL/ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
+  - `/api/session` POST/GET 로컬 + 프로덕션 검증 통과 (테스트 row 정리 완료)
+- **Vercel 프로덕션 배포 완료** — https://four-pillars-two.vercel.app/ (커밋 `0eb6dc1`)
+  - Framework Preset "Other" → "Next.js" 수정 (No Output Directory 에러 해결)
+  - `.env.local`의 NEXT_PUBLIC_SUPABASE_URL에 잘못 포함된 `/rest/v1` 제거 (`/rest/v1/rest/v1/sessions` 중복 path 문제)
+  - `next.config.mjs`에 `outputFileTracingIncludes` 추가 — `prompts/*.md`를 lambda 번들에 포함시킴 (런타임 fs.readFileSync 정적 분석 누락 대응)
+  - Vercel preflight: api/manse/session/interpret 4종 production HTTP 200 확인
+- **1차 MVP 완료 보고** 작성 (`docs/06_완료보고_사주톡_v1.md`, 커밋 `6fab25f`)
+  - §5 빌드 순서 20/20 전 단계 완료
+  - §10 검증 결과: 만세력 10/10, 시나리오 1·2 PASS
+  - 추가 차별화: 점수 엔진·캘리브레이션 훅·prompt_checker·dawn-mood 디자인
+- **prompt_checker UX 3건 개선**
+  - SSE 스트리밍 점 누적 버그 — chunk를 줄별로 분해해 SSE 메시지로 보내던 것을 raw chunk forward로 변경. 브라우저도 `\n` 자동 추가 제거 → `스트리밍: ........` 한 줄 누적
+  - 진행 패널 자동 줄바꿈 — `word-break: break-all + overflow-wrap: anywhere` 추가
+  - **"결과만 보기" 기본 모드 신설** — marked CDN으로 markdown 렌더링. [결과만] / [좌우 비교] / [한 줄 diff] 토글, default가 [결과만]. LLM 변이성으로 인한 노이즈 제거 (사용자 지적: "어차피 같은 프롬프트도 매번 다른 결과가 나와서 diff 노이즈만 됨")
+
+### 실패한 시도
+- `.env.local` 자동 sed 수정 시도 — `.env*.local` 파일은 .claude 보안 정책 deny 목록에 포함되어 있어 read/write 모두 막힘. 사용자 직접 수정 요청
+
+### 다음 액션
+- 10명 지인 테스트 (CONTEXT.md 검증 축 — 긴 해석 후 3번 질문 + 정리까지 완주율)
+- 테스트 결과 후 v2 완료 보고 → Go/Pivot/Kill 판단
+
+---
+
 ## Session 2026-04-30 08:50 — 백그라운드 admin 명령 태스크 중단
 
 ### 작업 요약
