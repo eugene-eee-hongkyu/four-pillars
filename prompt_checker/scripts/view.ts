@@ -137,16 +137,26 @@ function listEntries(): Entry[] {
   });
 }
 
-function buildDiffHtml(entry: Entry, format: 'side-by-side' | 'line-by-line'): string {
+type ViewFormat = 'current-only' | 'side-by-side' | 'line-by-line';
+
+// current-only 모드는 raw markdown 텍스트 반환 (브라우저에서 marked로 렌더링).
+// side-by-side / line-by-line은 diff HTML 반환.
+function buildViewContent(entry: Entry, format: ViewFormat): { contentType: string; body: string } {
   if (!entry.hasCurrent) {
-    return `<div class="empty">현재 결과 없음 — 실행 필요</div>`;
+    return { contentType: 'text/html; charset=utf-8', body: `<div class="empty">현재 결과 없음 — 실행 필요</div>` };
+  }
+  if (format === 'current-only') {
+    return { contentType: 'text/plain; charset=utf-8', body: entry.current! };
   }
   if (!entry.hasKeeper) {
-    return `<div class="no-keeper">
-      <div class="no-keeper-header">키퍼 없음 — 현재 결과만 표시</div>
-      <pre>${escapeHtml(entry.current!)}</pre>
-      <div class="hint">이 결과를 기준으로 삼으려면 위의 [🟢 키퍼로] 버튼 클릭.</div>
-    </div>`;
+    return {
+      contentType: 'text/html; charset=utf-8',
+      body: `<div class="no-keeper">
+        <div class="no-keeper-header">키퍼 없음 — 현재 결과만 표시</div>
+        <pre>${escapeHtml(entry.current!)}</pre>
+        <div class="hint">이 결과를 기준으로 삼으려면 위의 [🟢 키퍼로] 버튼 클릭.</div>
+      </div>`,
+    };
   }
   const patch = createTwoFilesPatch(
     `keepers/${entry.key}.md`,
@@ -154,11 +164,8 @@ function buildDiffHtml(entry: Entry, format: 'side-by-side' | 'line-by-line'): s
     entry.keeper!,
     entry.current!,
   );
-  return diff2html(patch, {
-    drawFileList: false,
-    matching: 'lines',
-    outputFormat: format,
-  }) as string;
+  const html = diff2html(patch, { drawFileList: false, matching: 'lines', outputFormat: format }) as string;
+  return { contentType: 'text/html; charset=utf-8', body: html };
 }
 
 function promotePair(key: string): boolean {
@@ -185,6 +192,7 @@ function buildIndexHtml(): string {
 <meta charset="utf-8" />
 <title>prompt_checker</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f5f5f7; }
@@ -204,7 +212,7 @@ function buildIndexHtml(): string {
   .panel-body { padding: 16px; }
   textarea#editor { width: 100%; min-height: 380px; font-family: 'SF Mono', Menlo, monospace; font-size: 13px; line-height: 1.6; padding: 12px; border: 1px solid #e5e5e9; border-radius: 6px; resize: vertical; outline: none; }
   textarea#editor:focus { border-color: #007aff; }
-  #progress { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; padding: 12px 16px; background: #1a1a1a; color: #a8d8a8; min-height: 60px; max-height: 240px; overflow-y: auto; border-radius: 6px; white-space: pre-wrap; }
+  #progress { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; padding: 12px 16px; background: #1a1a1a; color: #a8d8a8; min-height: 60px; max-height: 240px; overflow-y: auto; overflow-x: hidden; border-radius: 6px; white-space: pre-wrap; word-break: break-all; overflow-wrap: anywhere; }
   #progress.hidden { display: none; }
   .case-tabs { display: flex; gap: 4px; padding: 0 16px; border-bottom: 1px solid #e5e5e9; flex-wrap: wrap; background: #fafafa; }
   .case-tabs button { padding: 8px 14px; border: none; background: transparent; cursor: pointer; font-size: 12px; color: #6e6e73; border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -218,6 +226,19 @@ function buildIndexHtml(): string {
   .case-toolbar button.promote { background: #34c759; color: #fff; border-color: #34c759; }
   .case-toolbar button.promote:hover { background: #2aa84a; }
   #diff { padding: 16px; min-height: 200px; max-height: 70vh; overflow: auto; }
+  .md-render { font-size: 14px; line-height: 1.7; color: #1a1a1a; max-width: 720px; margin: 0 auto; }
+  .md-render h1 { font-size: 22px; margin: 24px 0 12px; }
+  .md-render h2 { font-size: 18px; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e5e9; }
+  .md-render h3 { font-size: 15px; margin: 18px 0 8px; }
+  .md-render p { margin: 8px 0 14px; }
+  .md-render ul, .md-render ol { margin: 8px 0 14px; padding-left: 24px; }
+  .md-render li { margin: 4px 0; }
+  .md-render hr { border: none; border-top: 1px solid #e5e5e9; margin: 20px 0; }
+  .md-render strong { color: #1a1a1a; font-weight: 600; }
+  .md-render code { background: #f5f5f7; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  .md-render table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 13px; }
+  .md-render th, .md-render td { border: 1px solid #d2d2d7; padding: 8px 12px; text-align: left; }
+  .md-render th { background: #f5f5f7; font-weight: 600; }
   .empty, .no-keeper { padding: 40px; text-align: center; color: #6e6e73; }
   .no-keeper { text-align: left; }
   .no-keeper-header { font-weight: 600; color: #ff9500; margin-bottom: 16px; }
@@ -264,7 +285,8 @@ function buildIndexHtml(): string {
     <div class="case-toolbar" id="case-toolbar" style="display:none;">
       <span class="meta" id="case-meta"></span>
       <button id="btn-promote" class="promote">🟢 이 결과를 키퍼로</button>
-      <button id="btn-side" class="active">좌우 비교</button>
+      <button id="btn-current" class="active">결과만</button>
+      <button id="btn-side">좌우 비교</button>
       <button id="btn-line">한 줄 diff</button>
     </div>
     <div id="diff"><div class="empty">아직 실행한 결과가 없습니다 — 위에서 [▶ 저장 후 실행]을 눌러주세요.</div></div>
@@ -279,7 +301,7 @@ const FIXTURES = ${JSON.stringify(fixtures)};
 let entries = [];
 let currentPromptName = PROMPTS[0] || '';
 let currentCaseIdx = 0;
-let diffMode = 'side-by-side';
+let diffMode = 'current-only';
 let originalContent = '';
 
 function $(id) { return document.getElementById(id); }
@@ -356,7 +378,13 @@ async function renderDiff() {
   $('btn-promote').disabled = !e.hasCurrent;
   Array.from($('case-tabs').children).forEach((el, i) => el.classList.toggle('active', i === currentCaseIdx));
   const res = await fetch('/api/diff?key=' + encodeURIComponent(e.key) + '&format=' + diffMode);
-  $('diff').innerHTML = await res.text();
+  const text = await res.text();
+  if (diffMode === 'current-only') {
+    // raw markdown → marked로 렌더링
+    $('diff').innerHTML = '<div class="md-render">' + (window.marked ? window.marked.parse(text) : text) + '</div>';
+  } else {
+    $('diff').innerHTML = text;
+  }
 }
 
 // 이벤트
@@ -394,7 +422,10 @@ $('btn-run').addEventListener('click', async () => {
   const url = '/api/run?prompt=' + encodeURIComponent(currentPromptName) + (fixture ? '&fixture=' + encodeURIComponent(fixture) : '');
   const evt = new EventSource(url);
   evt.onmessage = (e) => {
-    progress.textContent += e.data + '\\n';
+    // SSE는 다중 라인 data를 \\n으로 합쳐서 e.data로 전달함.
+    // 자식 프로세스가 . 만 쓴 경우 e.data === '.' → 현재 줄에 누적.
+    // newline 포함 (예: '완료\\n')은 그대로 보존.
+    progress.textContent += e.data;
     progress.scrollTop = progress.scrollHeight;
   };
   evt.addEventListener('done', async () => {
@@ -424,18 +455,16 @@ $('btn-promote').addEventListener('click', async () => {
   else toast('키퍼 저장 실패', 'error');
 });
 
-$('btn-side').addEventListener('click', () => {
-  diffMode = 'side-by-side';
-  $('btn-side').classList.add('active');
-  $('btn-line').classList.remove('active');
+function setMode(newMode) {
+  diffMode = newMode;
+  ['btn-current', 'btn-side', 'btn-line'].forEach(id => $(id).classList.remove('active'));
+  const map = { 'current-only': 'btn-current', 'side-by-side': 'btn-side', 'line-by-line': 'btn-line' };
+  $(map[newMode]).classList.add('active');
   renderDiff();
-});
-$('btn-line').addEventListener('click', () => {
-  diffMode = 'line-by-line';
-  $('btn-line').classList.add('active');
-  $('btn-side').classList.remove('active');
-  renderDiff();
-});
+}
+$('btn-current').addEventListener('click', () => setMode('current-only'));
+$('btn-side').addEventListener('click', () => setMode('side-by-side'));
+$('btn-line').addEventListener('click', () => setMode('line-by-line'));
 
 // 초기 로드
 loadPrompt(currentPromptName).then(refreshEntries);
@@ -461,20 +490,24 @@ function streamRun(req: http.IncomingMessage, res: http.ServerResponse) {
   if (fixture) args.push('--fixture', fixture);
   const child = spawn('npx', ['tsx', ...args], { cwd: ROOT, env: process.env });
 
-  const send = (line: string) => res.write(`data: ${line}\n\n`);
+  // 자식 프로세스 stdout/stderr 청크를 그대로 SSE로 forward.
+  // chunk 내 newline은 SSE multi-line `data:` 인코딩으로 보존 → 브라우저가 원본 그대로 누적.
+  // (점 한 줄에 . 누적되는 형태 유지)
+  const sendRaw = (chunk: string) => {
+    if (!chunk) return;
+    const encoded = chunk.split('\n').map(l => `data: ${l}`).join('\n');
+    res.write(encoded + '\n\n');
+  };
 
-  child.stdout.on('data', (data: Buffer) => {
-    data.toString('utf8').split('\n').forEach(line => {
-      if (line.trim()) send(line);
-    });
-  });
+  child.stdout.on('data', (data: Buffer) => sendRaw(data.toString('utf8')));
   child.stderr.on('data', (data: Buffer) => {
-    data.toString('utf8').split('\n').forEach(line => {
-      if (line.trim()) send(`[err] ${line}`);
-    });
+    // stderr는 줄별로 [err] prefix
+    const text = data.toString('utf8');
+    const prefixed = text.split('\n').map(l => l ? `[err] ${l}` : l).join('\n');
+    sendRaw(prefixed);
   });
   child.on('close', (code) => {
-    send(`(종료 코드: ${code ?? '?'})`);
+    sendRaw(`\n(종료 코드: ${code ?? '?'})\n`);
     res.write('event: done\ndata: ok\n\n');
     res.end();
   });
@@ -547,14 +580,15 @@ async function main() {
         return;
       }
 
-      // diff HTML
+      // 결과 콘텐츠 (current-only / side-by-side / line-by-line)
       if (method === 'GET' && url.pathname === '/api/diff') {
         const key = url.searchParams.get('key')!;
-        const format = (url.searchParams.get('format') as 'side-by-side' | 'line-by-line') ?? 'side-by-side';
+        const format = (url.searchParams.get('format') as ViewFormat) ?? 'current-only';
         const entry = listEntries().find(e => e.key === key);
         if (!entry) { res.writeHead(404); res.end('not found'); return; }
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(buildDiffHtml(entry, format));
+        const { contentType, body } = buildViewContent(entry, format);
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(body);
         return;
       }
 
