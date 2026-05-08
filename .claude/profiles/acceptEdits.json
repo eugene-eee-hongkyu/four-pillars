@@ -553,6 +553,9 @@
       "Bash(* || *)",
       "Bash(* | *)",
       "Bash(* > /dev/tcp/*)",
+      "Bash(rm -rf .harness*)",
+      "Bash(mv .harness*)",
+      "Bash(aws ec2 run-instances*)",
       "Bash(* `*` *)",
       "Bash(* $(* *)"
     ]
