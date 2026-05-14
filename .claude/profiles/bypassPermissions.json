@@ -71,7 +71,9 @@
       "Edit(.claude/settings.local.json)",
       "Bash(rm -rf .git*)",
       "Bash(rm -rf .claude*)",
-      "Bash(rm -rf .harness*)"
+      "Bash(rm -rf .harness*)",
+      "Bash(aws logs delete-log-group*)",
+      "Bash(aws logs delete-* *)"
     ],
     "defaultMode": "bypassPermissions"
   }
