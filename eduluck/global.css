@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* DESIGN v1.1 §6-a inline keyword highlight */
+.keyword {
+  color: #D4A574;
+  font-weight: 700;
+}

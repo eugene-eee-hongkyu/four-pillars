@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "eduluck",
+    "slug": "eduluck",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "eduluck",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#FBF8F1",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "world.iskra.eduluck"
+    },
+    "android": {
+      "package": "world.iskra.eduluck",
+      "adaptiveIcon": {
+        "backgroundColor": "#FBF8F1"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "server",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

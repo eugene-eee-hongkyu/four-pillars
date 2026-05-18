@@ -1,0 +1,45 @@
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# Env (루트 .gitignore의 .env*도 적용됨, 이중 보호)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Dependencies
+node_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
