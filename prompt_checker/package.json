@@ -6,14 +6,20 @@
   "scripts": {
     "test": "tsx scripts/test.ts",
     "promote": "tsx scripts/promote.ts",
-    "view": "tsx scripts/view.ts"
+    "view": "tsx scripts/view.ts",
+    "validate-manse": "tsx scripts/validate-manse.ts",
+    "validate-dst": "tsx scripts/validate-dst.ts",
+    "validate-solar-terms": "tsx scripts/validate-solar-terms.ts",
+    "validate-engine": "tsx scripts/validate-engine.ts",
+    "validate-all": "tsx scripts/validate-dst.ts && tsx scripts/validate-solar-terms.ts && tsx scripts/validate-engine.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
     "@fullstackfamily/manseryeok": "*",
     "diff": "^5.2.0",
     "diff2html": "^3.4.48",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "lunar-typescript": "^1.8.6"
   },
   "devDependencies": {
     "@types/diff": "^5.2.1",
