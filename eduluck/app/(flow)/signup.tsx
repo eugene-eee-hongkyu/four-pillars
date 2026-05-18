@@ -38,8 +38,8 @@ export default function Signup() {
   };
 
   const handleVerify = async () => {
-    if (otp.length !== 6) {
-      setError('6자리 코드를 입력해주세요');
+    if (otp.length < 6 || otp.length > 10) {
+      setError('인증 코드를 입력해주세요');
       return;
     }
     setLoading(true);
@@ -84,10 +84,10 @@ export default function Signup() {
         ) : (
           <>
             <Input
-              label="6자리 인증 코드"
+              label="인증 코드"
               value={otp}
               onChangeText={setOtp}
-              placeholder="123456"
+              placeholder="이메일로 받은 코드"
               type="number"
               hint="이메일을 확인해주세요 (~10분 후 만료)"
             />
@@ -102,7 +102,7 @@ export default function Signup() {
 
       {otpSent && (
         <StickyCTA>
-          <Button onPress={handleVerify} loading={loading} disabled={otp.length !== 6}>
+          <Button onPress={handleVerify} loading={loading} disabled={otp.length < 6 || otp.length > 10}>
             가입 완료
           </Button>
         </StickyCTA>
