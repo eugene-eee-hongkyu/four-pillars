@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-18 13:50
-## 마지막 업데이트: 2026-05-06 15:59
+## 마지막 실행: 2026-05-18 14:24
+## 마지막 업데이트: 2026-05-18 14:24
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 사주톡 MVP production 배포 + 1차 완료 보고 발행 — 10명 지인 테스트 진입 단계
+- 사주톡 만세력 정밀 보정 production 배포 완료 → 학운(eduluck) 피벗 기획 도착 대기
 
 ### 이어서 할 것
 
-1. 10명 지인 테스트 진행 (CONTEXT.md 검증 축 — 긴 해석 후 3번 질문 + 정리까지 완주율)
-2. 테스트 결과 분석 → v2 완료 보고 → Go/Pivot/Kill 판단
-3. (선택) prompt_checker로 프롬프트 회귀·튜닝 (개별 fixture 1개씩 빠른 반복)
+1. 학운 기획서(claude.ai 작성) 도착 → `eduluck/` 디렉토리 + A-0~A-2 문서 작성
+2. 학운 빌드 진입 (사주톡 인프라·보정된 manse 엔진 재사용)
+3. 사주톡 10명 지인 테스트 계속 진행 (보정된 만세력 위에서)
 
 ### 막힌 것
 
@@ -26,12 +26,12 @@
 
 ### 사람 판단 필요
 
-- 없음
+- 학운 기획 도착 시 사주톡과 코드 공유 방식 결정 (npm 패키지화 vs 디렉토리 sibling)
 
 ### 백로그 요약
 
-- 대기 중: 2개
-- 최근 추가: 2026-04-25 — daily 톤 회귀 테스트
+- 대기 중: 3개
+- 최근 추가: 2026-05-06 — 10명 지인 테스트 및 v2 검증
 
 ### 진행 상황
 
@@ -83,7 +83,14 @@
 - [x] [18/20] Vercel 배포 — https://four-pillars-two.vercel.app/
 - [x] [19/20] production E2E 확인
 - [x] [20/20] 완료 보고 v1 (`docs/06_완료보고_사주톡_v1.md`, 커밋 6fab25f)
-- [x] prompt_checker SSE 점 누적 버그 수정 (raw chunk forward + 자동 줄바꿈 CSS)
-- [x] prompt_checker "결과만" 기본 모드 추가 (marked CDN, 마크다운 렌더링)
-- [ ] 10명 지인 테스트
+- [x] prompt_checker SSE 점 누적 버그 수정 + 자동 줄바꿈 + "결과만" 기본 모드
+- [x] 만세력 4대 변수 검증 (자시/진태양시/DST/절기) — 2개 결함 발견
+- [x] **lib/manse/dst.ts** — 한국 DST 자동 보정 (16/16 통과)
+- [x] **lib/manse/solar-terms.ts** — 절기 분 단위 KST 기반 년·월주 자체 계산 (12/12)
+- [x] **engine.ts** wrapper 통합 (12/12) + verify.spec.ts 갱신
+- [x] prompt_checker 검증 스크립트 4종 (validate-dst/solar-terms/engine/manse)
+- [x] 사주톡 production 즉시 배포 (B → A 번복, 커밋 b1f6eaa + 69efdf4)
+- [x] production 보정 반영 검증 (2024-02-04 17:00 → 계묘 을축, 1988-08-15 DST 적용)
+- [ ] 학운(eduluck) 프로젝트 셋업 — 기획 도착 대기
+- [ ] 10명 지인 테스트 (보정된 만세력 위에서 진행 중)
 - [ ] v2 완료 보고 (10명 결과 통합 후)
