@@ -8,7 +8,7 @@
  * 홀수 시간(시주 경계)은 보정 후 시주가 달라질 수 있으므로 제외.
  */
 import { test, expect } from '@playwright/test';
-import { calculateSaju } from '@fullstackfamily/manseryeok';
+import { computeManse } from './engine';
 
 interface TestCase {
   year: number;
@@ -33,18 +33,22 @@ const TEST_CASES: TestCase[] = [
 ];
 
 function getLibResult(tc: TestCase) {
-  const raw = calculateSaju(tc.year, tc.month, tc.day, tc.hour, 0);
+  // DST + 절기 보정 포함된 통합 engine 사용
+  const r = computeManse({
+    year: tc.year, month: tc.month, day: tc.day,
+    hour: tc.hour, minute: 0, gender: tc.gender,
+  });
   return {
-    year: raw.yearPillar,
-    month: raw.monthPillar,
-    day: raw.dayPillar,
-    hour: raw.hourPillar,
+    year: r.yearPillar,
+    month: r.monthPillar,
+    day: r.dayPillar,
+    hour: r.hourPillar,
   };
 }
 
 async function extractPillars(page: Parameters<Parameters<typeof test>[2]>[0]['page']) {
   const chars: string[] = await page.evaluate(() => {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const stemRegex = /^[갑을병정무기경신임계][甲乙丙丁戊己庚辛壬癸]$/;
     const branchRegex = /^[자축인묘진사오미신유술해][子丑寅卯辰巳午未申酉戌亥]$/;
     const found: string[] = [];

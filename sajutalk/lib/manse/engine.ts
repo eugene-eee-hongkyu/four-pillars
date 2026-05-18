@@ -6,6 +6,8 @@ import { calcYongsin, type YongsinResult } from './yongsin';
 import { calcAllJijanggan, type AllJijanggan } from './jijanggan';
 import { calcHapchunh, type HapchunhResult } from './hapchunh';
 import { calcScores, type ScoreResult } from './score';
+import { applyDstCorrection } from './dst';
+import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
 
 export interface ManseInput {
   year: number;
@@ -39,12 +41,37 @@ export interface ManseResult {
 }
 
 export function computeManse(input: ManseInput): ManseResult {
-  const { year, month, day, gender } = input;
-  const hour = input.hour ?? 12;
-  const minute = input.minute ?? 0;
+  const { gender } = input;
+  const inputHour = input.hour ?? 12;
+  const inputMinute = input.minute ?? 0;
   const timeUnknown = input.hour === undefined;
 
-  const raw = calculateSaju(year, month, day, hour, minute);
+  // 1. DST 보정 — 표시시각 → KST 표준시
+  const dst = applyDstCorrection(input.year, input.month, input.day, inputHour, inputMinute);
+  const year = dst.year;
+  const month = dst.month;
+  const day = dst.day;
+  const hour = dst.hour;
+  const minute = dst.minute;
+
+  // 2. 라이브러리 호출 (DST 보정된 KST 시각)
+  // 라이브러리가 내부에서 진태양시 -32분 보정 적용
+  const rawLib = calculateSaju(year, month, day, hour, minute);
+
+  // 3. 년주·월주 자체 계산 (절기 분 단위 KST 기준).
+  //    라이브러리는 절기를 일 단위로 처리해 절기 당일 출생자의 년·월주가 부정확하므로 교체.
+  const myYearPillar = calcYearPillar(year, month, day, hour, minute);
+  const myMonthPillar = calcMonthPillar(year, month, day, hour, minute);
+
+  // 4. 라이브러리 결과의 년주·월주만 교체. 일주·시주는 라이브러리 그대로 (검증됨).
+  const raw = {
+    ...rawLib,
+    yearPillar: myYearPillar.pillar,
+    monthPillar: myMonthPillar.pillar,
+    yearPillarHanja: pillarToHanja(myYearPillar.pillar),
+    monthPillarHanja: pillarToHanja(myMonthPillar.pillar),
+  };
+
   const yearStem = splitPillar(raw.yearPillar).stem;
   const dayStem = splitPillar(raw.dayPillar).stem;
   const hourPillar = timeUnknown ? null : raw.hourPillar;
