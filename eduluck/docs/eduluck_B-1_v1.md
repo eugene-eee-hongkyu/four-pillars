@@ -1,0 +1,1206 @@
+# eduluck B-1 v1 — 로컬에서 만들기
+
+> **1차 독자: Claude Code** (`--dangerously-skip-permissions` 세션).
+> 플래너(Eugene)가 직접 읽는 섹션: §1 시작 전 체크리스트 / §6 LLM system prompt 선택 / §7 결정 항목 / §11 첫 프롬프트 / §12 완료 보고.
+> 나머지 섹션은 Claude Code가 실행 중 참조.
+>
+> 정책 v16 기준. A-2 v2 / A-3a v1 / A-3b v1 / DESIGN v1.1 확정 후 작성.
+
+---
+
+## 0. A 트랙 요약 블록
+
+**A-0 핵심 가설 (v3):**
+> 학생(초·중·고) 자녀를 둔 30~45세 어머니가, 학년·진로 결정 시점에, 자녀 사주만 입력해 무료 간이 학운 진단을 받은 뒤, 본인 사주를 추가하고 정밀 분석에 결제할 것이다.
+
+**A-1 Phase 구조 (4 Phase / 13 Step):**
+- **P0** 진입 & 자녀 사주 수집 (S0.1~S0.4)
+- **P1** 무료 간이 학운 진단 응답 (S1.1~S1.3)
+- **P2** 유료 전환 funnel (S2.1~S2.4) — 회원가입 + Mock 결제 + 어머니 사주
+- **P3** 정밀 진단 결과 표시 (S3.1~S3.2)
+
+**A-2 화면 목록 (11개):**
+
+| # | 화면 | Phase | ★ |
+|---|---|---|---|
+| 1 | 랜딩 | P0 | |
+| 2 | 자녀 기본 정보 | P0 | |
+| 3 | 자녀 사주 입력 | P0 | |
+| 4 | 자녀 만세력 | P0 | |
+| 5 | 무료 간이 진단 결과 | P1 | ★ |
+| 6 | 정밀 진단 가치 안내 | P2 | |
+| 7 | 회원가입 | P2 | |
+| 8 | Mock 결제 | P2 | ★ |
+| 9 | 어머니 사주 입력 | P2 | |
+| 10 | 어머니 만세력 | P2 | |
+| 11 | 정밀 진단 결과 + 종료 | P3 | ★ |
+
+★ = MVP 핵심 검증 화면 (baseline 진단 품질 + 결제 의향 forcing function).
+
+**MVP 경계 3개:**
+- **제품**: 학생(초·중·고) 자녀 + 어머니 사주 종합 학운 진단 (입시 컨설팅·연애운·종합 사주풀이 제외)
+- **타겟**: 학생 자녀(초·중·고) 둔 30~45세 어머니 (수도권·광역시) — 자녀 직접 사용은 v2
+- **목표 행동**: 무료 간이 진단 → 정밀 진단 첫 결제 (3,000원 mock)
+
+---
+
+## 1. 시작 전 체크리스트 (사람이 준비해야 할 것 — 로컬 한정)
+
+bypass 모드는 계정 생성·결제·OAuth를 대신할 수 없다. Eugene이 Claude Code 세션 시작 **전에** 완료해두어야 한다.
+
+### 필수
+
+```
+[ ] Anthropic API key 발급 (console.anthropic.com)
+    → 크레딧 최소 $20 충전
+    → 이유: 정밀 진단 1회당 ~3K input + ~1.5K output (Claude Sonnet 4.6) ≈ $0.04
+            MVP 검증 100명 × (간이 + 정밀 + mini) = 400회 호출 ≈ $15
+
+[ ] Node.js 20 LTS 이상 설치
+    → 확인: node --version (v20.x.x)
+    → 이유: Expo SDK 51+가 Node 18 deprecated
+
+[ ] pnpm 9+ 설치 (또는 npm 10+)
+    → 확인: pnpm --version
+    → 이유: Expo monorepo에서 pnpm workspaces가 안정
+
+[ ] Claude Code 설치 + 로그인 확인
+    → 확인: claude --version
+
+[ ] Git 설치 + GitHub 계정
+    → eduluck repo 미리 생성 (private 권장)
+
+[ ] Xcode Command Line Tools (macOS만)
+    → 확인: xcode-select -p
+    → 이유: iOS simulator 띄울 때 필요 (web 검증만이면 생략 가능 — B-1에서는 web 우선)
+```
+
+### B-1에서 금지 (B-2로 미룸)
+
+다음은 절대 B-1 단계에서 만들지 않는다:
+- ❌ Vercel·Netlify 배포
+- ❌ Supabase·Neon·PlanetScale SaaS DB
+- ❌ EAS Build (Expo 클라우드 빌드) — 로컬 web 검증으로 충분
+- ❌ Stripe·Toss·KakaoPay 등 결제 게이트웨이 (mock만)
+- ❌ Resend·SendGrid (OTP는 로컬 콘솔에 출력)
+- ❌ 도메인·DNS
+
+### 필요한 key 전체 목록 (Claude Code가 `.env.local` 템플릿에 그대로 사용)
+
+```
+ANTHROPIC_API_KEY      # console.anthropic.com에서 발급
+EXPO_PUBLIC_API_BASE   # 로컬: http://localhost:8081
+```
+
+---
+
+## 2. 기술 스택 확정 + 1줄 이유
+
+A-0 v3 §후속 메모에서 "React Native (Expo Router) 무조건"으로 확정됨. B-1에서는 web 우선 검증.
+
+| 영역 | 선택 | 1줄 이유 |
+|---|---|---|
+| 프레임워크 | Expo SDK 51 + Expo Router v3 | A-0 확정 스택, web/iOS/Android 동일 코드 |
+| 언어 | TypeScript 5.x (strict) | Claude Code 패턴 일치 + 만세력 도메인 타입 안정성 |
+| 런타임 검증 | **Expo Web** (localhost:8081) | B-1 = 로컬 검증, native 빌드는 B-2 |
+| UI | NativeWind v4 (Tailwind for RN) | DESIGN v1.1 토큰을 Tailwind로 그대로 매핑 |
+| 폰트 | expo-font + Pretendard / Noto Serif KR | DESIGN v1.1 §9 로딩 패턴 |
+| 상태 관리 | React Context + useReducer | 11화면 single-flow에 Redux 과잉 |
+| 라우팅 | Expo Router (file-based) | A-2 화면 순서대로 `app/(flow)/01-landing.tsx` 등 |
+| **만세력 엔진** | **`@fullstackfamily/manseryeok` + `lunar-typescript`** | **MIT, sajutalk에서 검증 완료. §3 참조** |
+| 만세력 보정 | sajutalk `lib/manse/` 모듈 7종 이식 | 절기 분 단위 + DST + 신살 19종 + 점수 — 이미 검증된 코드 |
+| DB (로컬) | SQLite (`better-sqlite3` for web / `expo-sqlite` for native) | zero-config, 어댑터로 분기, B-2에서 Postgres 교체 |
+| ORM | Drizzle ORM | SQLite·Postgres 호환, 마이그레이션 자체 생성 |
+| LLM SDK | `@anthropic-ai/sdk` (서버 라우트에서만) | Expo Router API route에서 호출 |
+| LLM 스트리밍 | Anthropic SDK `messages.stream` + SSE | A-2 화면 5/11 skeleton → streaming |
+| 인증 | 자체 (이메일 + bcrypt + OTP 콘솔 출력) | B-1 로컬 한정, B-2에서 Supabase Auth 교체 |
+| 세션 | HTTP-only cookie + Drizzle `sessions` 테이블 | 비회원 UUID 30일 보존 + 회원가입 시 머지 |
+| 테스트 | Playwright (web E2E) + Vitest (만세력 unit) | sajutalk의 `verify.spec.ts` 패턴 답습 |
+
+**왜 React Native(Expo) — Next.js 대신?**
+- A-0 §후속 메모 명시 결정. iOS·Android 동시 출시가 v1.5 로드맵에 있어 Next.js 분리 비용 회피.
+- Expo Router는 file-based + API route 지원으로 Next.js와 멘탈 모델 거의 동일.
+- B-1에서는 web 빌드로만 검증 → B-2에서 EAS Build 추가.
+
+**왜 sajutalk 만세력 모듈 이식 — npm package 분리 X?**
+- §3에서 다루지만 핵심: `lib/manse/`는 도메인 로직(절기 분 단위·DST·신살)이 깊고 sajutalk와 eduluck 모두 같은 패턴 필요. 일단 복사 → 둘 다 안정화 후 v2에서 monorepo 또는 npm package로 추출.
+
+---
+
+## 3. 기술 리스크 사전 조사
+
+### 3-a. 만세력 라이브러리 (최우선 — 핵심 도메인)
+
+**조사 결과:** sajutalk가 이미 동일 문제를 풀었음. 그 검증된 구조를 그대로 채택.
+
+| 후보 | 주간 DL | 라이선스 | 유지보수 | 평가 |
+|---|---|---|---|---|
+| **`@fullstackfamily/manseryeok` v1.0.8** | ~50 | MIT | 활성 | **추천 (sajutalk 채택)** |
+| `lunar-typescript` v1.8.6 | ~600 | MIT | 활성 | **보조 채택 — 절기 시각용** |
+| `manseryeok` (다른 패키지) | ~10 | MIT | 1년 정체 | 후보 외 |
+| 자체 구현 (KASI API) | — | — | — | MVP 범위 초과 |
+
+**검증된 한계 (sajutalk `lib/manse/solar-terms.ts` 주석):**
+> `@fullstackfamily/manseryeok`가 절기를 "당일 0시 기준"으로 처리해 절기 당일 출생자의 년주·월주가 부정확. 예: 2024-02-04 17:00 출생자는 KASI 공식 입춘(17:27) 전이라 명리학적 2023년(계묘)인데 라이브러리는 2024년(갑진)으로 잡음.
+
+**해결책 (sajutalk가 이미 구현):**
+- `lunar-typescript`에서 절기 시각을 분 단위로 가져와 KST로 변환 → 년주·월주 **자체 계산**
+- 일주·시주는 라이브러리 그대로 (검증됨)
+- 라이브러리는 DST 보정 X → `lib/manse/dst.ts`에서 1948-1960·1987-1988 기간 -1h 보정
+
+**eduluck 액션:** sajutalk `lib/manse/` 디렉토리 8개 파일을 그대로 복사 + Expo 호환만 확인.
+- `engine.ts` — 진입점 (computeManse)
+- `solar-terms.ts` — 절기 분 단위 + 년주/월주 자체 계산
+- `dst.ts` — 한국 DST 보정
+- `pillars.ts` — 십신·오행·천을귀인
+- `shensha.ts` — 신살 19종
+- `luck-cycles.ts` — 대운·세운·월운
+- `hapchunh.ts` / `jijanggan.ts` / `yongsin.ts` / `score.ts` — 보조
+
+**Expo 호환성 확인 포인트:**
+- `@fullstackfamily/manseryeok`는 순수 JS — RN 호환 ✅
+- `lunar-typescript`는 순수 JS — RN 호환 ✅
+- sajutalk는 Next.js의 `fs` API 사용 (prompts/*.md 로드) → eduluck에서는 RN 서버 라우트로 동일 패턴 유지 (Expo Router API route는 Node.js 런타임)
+
+**Hold 플래그:** 없음. sajutalk가 KASI 공식 데이터 4건과 6초 이내 오차로 검증 완료 (`b1f6eaa feat(manse): 절기 분 단위 + DST 자동 보정으로 만세력 정확도 향상`).
+
+### 3-b. NativeWind v4 (Tailwind for React Native)
+
+| 후보 | 평가 |
+|---|---|
+| **NativeWind v4** | Tailwind 토큰 그대로, web + native 동시 작동. **추천** |
+| Tamagui | 강력하나 학습 곡선 + DESIGN v1.1을 토큰화 재작업 필요 |
+| StyleSheet (RN 기본) | DESIGN v1.1 토큰 매핑 비용 큼 |
+
+**Hold 플래그:** 없음. NativeWind v4 + Expo SDK 51 안정 조합 검증됨.
+
+### 3-c. 만세력 입력 — 출생 지역 처리
+
+**현재 spec (A-2 화면 3·9):** "시·도만" (서울·부산·인천·...)
+
+**리스크:** 만세력 라이브러리는 출생 지역을 직접 받지 않음. 진태양시 보정은 **경도** 기반. 시·도만 입력받으면 도청 소재지 경도로 매핑 필요.
+
+**조사:**
+- `@fullstackfamily/manseryeok`는 내부에서 KST 기준 -32분(서울 경도) 진태양시 보정만 함 (sajutalk `engine.ts:59` 주석)
+- 다른 도시 출생자의 정확한 진태양시는 도시별 경도 테이블 필요
+
+**Hold 플래그:** **YES.** §7 [SO 결정 필요] 항목으로 올림. 옵션:
+- A. v1 = 서울 경도(-32분) 단일. 도시 입력은 UI에만 노출 (만세력엔 미반영). 정확도 손실 1~5분.
+- B. v1 = 도시별 경도 테이블(시·도 17개) 적용. 추가 30분 작업.
+- C. 출생 지역 입력 제거 (UI 단순화).
+
+**Claude 추천:** **A** — sajutalk와 동일. MVP 정확도 1~5분 손실은 mom test 영향 미미. B-2에서 B로 업그레이드.
+
+### 3-d. Expo Web에서 SQLite
+
+| 후보 | 평가 |
+|---|---|
+| **`better-sqlite3` (Node.js 서버 사이드만)** | Expo Router API route에서 사용. **추천 — B-1 web 검증 시 충분** |
+| `expo-sqlite` | 클라이언트 사이드. native 빌드(B-2)에서만 필요 |
+| `wa-sqlite` (WASM) | web 클라이언트 SQLite. 오버킬 |
+
+**전략:** B-1은 server-side `better-sqlite3` 단일. 모든 DB I/O는 API route를 통해. native 빌드는 B-2에서 같은 API route를 호출.
+
+**Hold 플래그:** 없음.
+
+### 3-e. LLM 스트리밍 in Expo Web
+
+| 후보 | 평가 |
+|---|---|
+| **Anthropic SDK `messages.stream` + SSE proxy** | Expo Router API route에서 SSE 응답, 클라이언트는 fetch + ReadableStream. **추천** |
+| WebSocket | 오버킬 (단방향) |
+| Long polling | UX 나쁨 (skeleton → 통문장) |
+
+**Hold 플래그:** 없음. sajutalk가 이미 동일 패턴 사용.
+
+### 3-f. OTP 발송 (B-1 단계)
+
+**B-2에서 Resend/SendGrid 도입 전, B-1에서는?**
+
+- **결정:** OTP 코드를 **콘솔(stdout)에 출력**. 로컬 검증 한정. UI에서 코드 입력 폼은 그대로 작동.
+- Claude Code 빌드 후 Eugene이 web 검증 시 터미널에서 6자리 코드 확인 → 입력.
+- B-2에서 실 메일 발송으로 교체 (12-Factor 어댑터 패턴).
+
+---
+
+## 4. 프로젝트 구조 스켈레톤
+
+### 폴더 레이아웃
+
+```
+eduluck/
+├── app/                              ← Expo Router (file-based)
+│   ├── _layout.tsx                   ← 폰트 로딩 + 전역 Provider
+│   ├── index.tsx                     ← 화면 1 랜딩 (route /)
+│   ├── (flow)/                       ← single-flow funnel
+│   │   ├── _layout.tsx               ← Stack navigator (헤더 없음)
+│   │   ├── child-info.tsx            ← 화면 2
+│   │   ├── child-saju.tsx            ← 화면 3
+│   │   ├── child-manse.tsx           ← 화면 4
+│   │   ├── interpret-free.tsx        ← 화면 5 ★
+│   │   ├── premium-value.tsx         ← 화면 6
+│   │   ├── signup.tsx                ← 화면 7
+│   │   ├── checkout.tsx              ← 화면 8 ★
+│   │   ├── mother-saju.tsx           ← 화면 9
+│   │   ├── mother-manse.tsx          ← 화면 10
+│   │   └── interpret-premium.tsx     ← 화면 11 ★
+│   └── api/                          ← Expo Router API routes (Node.js)
+│       ├── session+api.ts            ← POST 비회원 UUID 발급
+│       ├── manse+api.ts              ← POST 만세력 계산
+│       ├── interpret-free+api.ts     ← POST 간이 진단 (SSE)
+│       ├── relation-mini+api.ts      ← POST 어머니-자녀 mini 분석
+│       ├── interpret-premium+api.ts  ← POST 정밀 진단 (SSE)
+│       ├── auth/
+│       │   ├── signup+api.ts         ← POST 이메일+pw
+│       │   ├── otp-send+api.ts       ← POST OTP 발송 (콘솔)
+│       │   └── otp-verify+api.ts     ← POST OTP 검증
+│       ├── checkout+api.ts           ← POST mock paid
+│       └── survey+api.ts             ← POST mom test 응답 저장
+│
+├── lib/
+│   ├── manse/                        ← sajutalk에서 이식 (Eugene 컨펌)
+│   │   ├── engine.ts                 ← computeManse 진입점
+│   │   ├── solar-terms.ts            ← 절기 분 단위 년주/월주
+│   │   ├── dst.ts                    ← 한국 DST 보정
+│   │   ├── pillars.ts                ← 십신·오행·천을귀인
+│   │   ├── shensha.ts                ← 신살 19종
+│   │   ├── luck-cycles.ts            ← 대운·세운·월운
+│   │   ├── hapchunh.ts
+│   │   ├── jijanggan.ts
+│   │   ├── yongsin.ts
+│   │   ├── score.ts
+│   │   └── verify.spec.ts            ← Vitest 검증 (sajutalk 패턴)
+│   │
+│   ├── prompts/                      ← .md 단일 소스 + 매 호출 fs.readFileSync
+│   │   ├── interpret-free.ts         ← buildInterpretFreePrompt (user msg 조립)
+│   │   ├── relation-mini.ts          ← buildRelationMiniPrompt
+│   │   └── interpret-premium.ts      ← buildInterpretPremiumPrompt
+│   │
+│   ├── db/                           ← 어댑터 패턴 (B-2에서 Postgres 교체)
+│   │   ├── index.ts                  ← 환경변수로 분기
+│   │   ├── sqlite.ts                 ← better-sqlite3 + drizzle
+│   │   ├── schema.ts                 ← Drizzle 스키마 (sessions·users·...)
+│   │   └── migrations/
+│   │
+│   ├── llm/
+│   │   ├── client.ts                 ← Anthropic SDK 싱글톤
+│   │   └── stream-sse.ts             ← SSE 헬퍼 (서버 → 클라이언트)
+│   │
+│   ├── auth/
+│   │   ├── session.ts                ← 비회원 UUID + 회원 session cookie
+│   │   ├── password.ts               ← bcrypt
+│   │   └── otp.ts                    ← 6자리 코드 + 10분 만료
+│   │
+│   └── tracking/
+│       └── funnel.ts                 ← 화면별 drop-off 트래킹 (DB events 테이블)
+│
+├── prompts/                          ← .md 시스템 프롬프트 (Eugene이 직접 편집)
+│   ├── interpret-free.md             ← 화면 5 system prompt
+│   ├── relation-mini.md              ← 화면 10 system prompt
+│   └── interpret-premium.md          ← 화면 11 system prompt
+│
+├── components/
+│   ├── ui/                           ← 공통 (Button·Input·Card·StickyCTA)
+│   ├── manse/                        ← 사주팔자 표·십성 카드·신살 카드
+│   │   ├── PalcaTable.tsx            ← DESIGN v1.1 §5 화면 4 패턴 단일 진실
+│   │   ├── IlganHighlight.tsx
+│   │   ├── SipsinCard.tsx
+│   │   ├── ShenshaCard.tsx
+│   │   ├── UnseongCard.tsx
+│   │   ├── HapchunhCard.tsx
+│   │   ├── ElementBarChart.tsx
+│   │   ├── DaeunTimeline.tsx
+│   │   └── SewunCard.tsx
+│   └── interpret/
+│       ├── StreamingBody.tsx         ← skeleton → 스트리밍 본문
+│       ├── KeywordHighlight.tsx      ← DESIGN v1.1 §6-a inline 골드
+│       ├── GradeGuideSection.tsx     ← 학년대별 가이드 (초·중·고 3구간)
+│       ├── MomTestInline.tsx         ← 1~5점 별점
+│       └── SurveyTwoQuestion.tsx     ← 화면 11 2문항
+│
+├── design-tokens/
+│   ├── tokens.ts                     ← DESIGN v1.1 §1 컬러·spacing·radius
+│   └── fonts.ts                      ← Pretendard + Noto Serif KR 로딩 설정
+│
+├── tests/
+│   ├── e2e/
+│   │   ├── scenario-1-best-case.spec.ts    ← A-1 §4 시나리오 1
+│   │   ├── scenario-2-time-unknown.spec.ts ← A-1 §4 시나리오 2
+│   │   └── scenario-3-middle-school.spec.ts ← A-1 §4 시나리오 3
+│   └── manse-verify.spec.ts          ← sajutalk verify 패턴 답습 (10건)
+│
+├── data/                             ← 로컬 SQLite 파일 (gitignore)
+│   └── eduluck.db
+│
+├── assets/
+│   └── fonts/                        ← Pretendard·Noto Serif KR otf 파일
+│
+├── tailwind.config.js                ← DESIGN v1.1 토큰 매핑
+├── babel.config.js                   ← NativeWind preset
+├── metro.config.js                   ← Expo + NativeWind
+├── app.json                          ← Expo 앱 설정 (slug: eduluck)
+├── tsconfig.json                     ← strict + paths (@/lib/* 등)
+├── DESIGN.md                         ← repo 루트 (DESIGN v1.1 복사, Google 표준)
+├── SPEC.md                           ← B-1 산출물 §0~§9 요약 (Claude Code 자동 인식)
+├── CLAUDE.md                         ← 프로젝트 규칙 (정책 v16 §표준 형식)
+├── AGENTS.md                         ← CLAUDE.md symlink
+├── package.json
+└── .env.local                        ← API key (gitignore)
+```
+
+### DB 스키마 개요 (Drizzle, SQLite ↔ Postgres 호환)
+
+```sql
+-- sessions: 비회원 UUID + 회원 로그인 세션
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,                  -- UUID
+  user_id TEXT,                         -- NULL이면 비회원
+  created_at INTEGER NOT NULL,          -- unix ms
+  expires_at INTEGER NOT NULL,          -- 비회원 30일, 회원 무기한
+  email_for_reminder TEXT               -- 시간 모름 케이스 (S0.4)
+);
+
+-- users: 회원가입 후
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,          -- bcrypt
+  email_verified_at INTEGER,            -- OTP 검증 시각
+  paid INTEGER DEFAULT 0,               -- 0/1
+  paid_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+
+-- otp_codes: 6자리 + 10분 만료
+CREATE TABLE otp_codes (
+  email TEXT PRIMARY KEY,
+  code TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  attempts INTEGER DEFAULT 0
+);
+
+-- subjects: 자녀·어머니 사주 단위
+CREATE TABLE subjects (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  role TEXT NOT NULL,                   -- 'child' | 'mother'
+  nickname TEXT,
+  gender TEXT NOT NULL,                 -- 'male' | 'female'
+  grade TEXT,                           -- 'elem-1' ~ 'high-3' (자녀만)
+  birth_calendar TEXT NOT NULL,         -- 'solar' | 'lunar'
+  birth_year INTEGER NOT NULL,
+  birth_month INTEGER NOT NULL,
+  birth_day INTEGER NOT NULL,
+  birth_hour INTEGER,                   -- NULL = 시간 모름
+  birth_minute INTEGER,
+  birth_location TEXT,                  -- 시·도
+  manse_json TEXT NOT NULL,             -- computeManse() 결과 JSON
+  created_at INTEGER NOT NULL
+);
+
+-- interpretations: AI 진단 결과 (간이·정밀·mini)
+CREATE TABLE interpretations (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                   -- 'free' | 'relation-mini' | 'premium'
+  child_subject_id TEXT,
+  mother_subject_id TEXT,
+  body_text TEXT NOT NULL,              -- 스트리밍 완료 후 저장
+  prompt_version TEXT NOT NULL,         -- prompts/*.md 해시 (재현성)
+  llm_model TEXT NOT NULL,              -- 'claude-sonnet-4-6'
+  created_at INTEGER NOT NULL
+);
+
+-- surveys: mom test 1차 (화면 5) + 2차 + 결제 의향 (화면 11)
+CREATE TABLE surveys (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                   -- 'mom-test-1' | 'mom-test-2' | 'pay-intent'
+  score INTEGER NOT NULL,               -- 1~5
+  created_at INTEGER NOT NULL
+);
+
+-- funnel_events: 화면별 진입·이탈
+CREATE TABLE funnel_events (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  screen TEXT NOT NULL,                 -- 'landing' | 'child-info' | ...
+  action TEXT NOT NULL,                 -- 'enter' | 'exit' | 'cta-tap'
+  meta TEXT,                            -- JSON (extra)
+  created_at INTEGER NOT NULL
+);
+```
+
+### 환경변수 템플릿 (.env.local)
+
+```bash
+# LLM
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-sonnet-4-6
+
+# DB (로컬: sqlite, B-2: postgres URL)
+DATABASE_URL=file:./data/eduluck.db
+DATABASE_PROVIDER=sqlite
+
+# 인증
+SESSION_COOKIE_SECRET=                # openssl rand -hex 32 생성 (Claude Code가 .env.example에 안내)
+OTP_DELIVERY=console                  # B-2: 'resend' | 'sendgrid'
+
+# 앱
+EXPO_PUBLIC_API_BASE=http://localhost:8081
+NODE_ENV=development
+```
+
+---
+
+## 5. 빌드 순서
+
+각 단계 끝나면 `[N/total] ✓ <한 줄>` 진행 보고.
+
+```
+1. pnpm dlx create-expo-app eduluck --template tabs (TypeScript)
+   → 생성 후 tabs 템플릿 제거 (single-flow funnel이라 tab nav 불필요)
+
+2. Expo Router v3 설정 확인 (app/ 디렉토리 활성)
+
+3. NativeWind v4 + Tailwind 설치 + babel.config.js / metro.config.js / tailwind.config.js 셋업
+
+4. **DESIGN v1.1 토큰 적용**
+   4-a. eduluck/docs/eduluck_DESIGN_v1.1.md → repo 루트 DESIGN.md 복사
+   4-b. design-tokens/tokens.ts 생성 (DESIGN v1.1 §1 컬러·§3 spacing·radius)
+   4-c. tailwind.config.js에 토큰 매핑 (surface·primary·secondary·outline-warm 등)
+   4-d. assets/fonts/ 에 Pretendard·Noto Serif KR otf 다운로드 (Claude Code: GitHub release 또는 Google Fonts에서)
+   4-e. app/_layout.tsx에서 expo-font useFonts() 로딩
+   4-f. DESIGN v1.1 §10 P0 빌드 checklist 11개 콘솔에 출력 (Claude Code가 모든 화면 빌드 시 자동 점검 forcing function)
+
+4.5. **CLAUDE.md 자동 생성** (정책 v16 §표준 형식)
+   - Project Overview / Coding Conventions / Build Standards / Halt Triggers 4섹션
+   - 4.6. AGENTS.md symlink 생성 (Unix: ln -s CLAUDE.md AGENTS.md)
+
+4.7. **SPEC.md 생성** (B-1 §0~§9 요약, repo 루트)
+
+5. **lib/db/ 셋업**
+   - drizzle-orm + drizzle-kit + better-sqlite3 설치
+   - lib/db/schema.ts 작성 (§4 스키마 전체)
+   - drizzle.config.ts 작성 (sqlite + path: ./data/eduluck.db)
+   - pnpm migrate 스크립트 → migrations 생성·적용
+   - data/ 디렉토리 gitignore
+
+6. **lib/manse/ 이식** (sajutalk → eduluck)
+   - sajutalk/lib/manse/*.ts 전체 복사
+   - @fullstackfamily/manseryeok + lunar-typescript 설치 (sajutalk와 동일 버전)
+   - tests/manse-verify.spec.ts에 sajutalk verify.spec.ts 패턴 답습 (KASI 4건 + 추가 6건)
+   - Vitest 설치 + 실행 → 10/10 PASS 확인
+
+7. **lib/llm/ + lib/auth/ + lib/tracking/ 셋업**
+   - @anthropic-ai/sdk 설치
+   - lib/llm/client.ts (싱글톤, ANTHROPIC_API_KEY 환경변수)
+   - lib/llm/stream-sse.ts (Expo Router API route SSE 응답 헬퍼)
+   - lib/auth/password.ts (bcrypt)
+   - lib/auth/otp.ts (6자리 생성 + 콘솔 출력 + 10분 만료)
+   - lib/auth/session.ts (cookie 기반, signed)
+   - lib/tracking/funnel.ts (funnel_events insert)
+
+8. **prompts/*.md 파일 3종 생성** (§6에서 Eugene이 선택한 prompt)
+   - prompts/interpret-free.md
+   - prompts/relation-mini.md
+   - prompts/interpret-premium.md
+   - lib/prompts/*.ts (fs.readFileSync 핫리로드 패턴, sajutalk와 동일)
+
+9. **API routes (app/api/) 순서대로 스텁 + 구현**
+   - session+api.ts → POST: 비회원 UUID 발급, cookie set
+   - manse+api.ts → POST: computeManse 호출, manse_json subjects 저장
+   - interpret-free+api.ts → SSE stream (system: interpret-free.md, user: buildInterpretFreePrompt)
+   - relation-mini+api.ts → SSE stream (짧음, 1~2초)
+   - interpret-premium+api.ts → SSE stream (45~90초)
+   - auth/signup+api.ts → 이메일·pw → users insert (email_verified_at NULL)
+   - auth/otp-send+api.ts → 6자리 생성, otp_codes upsert, 콘솔 출력
+   - auth/otp-verify+api.ts → 검증, users.email_verified_at set, session 머지
+   - checkout+api.ts → users.paid = 1, paid_at set (mock, 2-3초 fake delay)
+   - survey+api.ts → surveys insert (kind + score)
+
+10. **공통 컴포넌트** (components/ui/)
+    - Button (primary·secondary·sticky CTA, DESIGN v1.1)
+    - Input (text·number·date·time)
+    - Card / Modal / Toast
+    - GenderToggle / GradeDropdown (초1~고3)
+    - CalendarToggle (양력/음력)
+
+11. **사주 도메인 컴포넌트** (components/manse/)
+    - PalcaTable: DESIGN v1.1 §5 화면 4 패턴 **단일 진실** (한자만, 일간 secondary 골드 highlight)
+    - IlganHighlight / SipsinCard / ShenshaCard / UnseongCard / HapchunhCard
+    - ElementBarChart (오행 분포, DESIGN v1.1 §5)
+    - DaeunTimeline (10년 단위)
+    - SewunCard (현재 세운)
+
+12. **진단 컴포넌트** (components/interpret/)
+    - StreamingBody (skeleton → SSE 스트림 받아서 본문 점진 표시)
+    - KeywordHighlight: DESIGN v1.1 §6-a inline 골드 (자동 키워드 매칭: 인성·식상·문창귀인·도화·역마살·일간·천을귀인 등)
+    - GradeGuideSection (초·중·고 3구간, DESIGN v1.1 §Theme 변경 반영)
+    - MomTestInline (1~5점 별점, 1회 변경 가능)
+    - SurveyTwoQuestion (화면 11 결제 가치 + 결제 의향)
+
+13. **화면 1: 랜딩** (app/index.tsx)
+    - DESIGN v1.1 §6-c price emphasis 미사용 (랜딩은 가격 노출 X)
+    - 단일 CTA "무료 진단 시작 (3분)" → /child-info
+    - 진입 시 POST /api/session (비회원 UUID 발급)
+
+14. **화면 2: 자녀 기본 정보** (app/(flow)/child-info.tsx)
+    - 닉네임·성별·학년(초1~고3) 입력
+    - 진행 표시 1/2, 학년값으로 grade 분기 (초·중·고 3구간 DESIGN v1.1 변경)
+
+15. **화면 3: 자녀 사주 입력** (app/(flow)/child-saju.tsx)
+    - 양력/음력 + 생년월일 + 시간 (모름 체크박스)
+    - 시간 모름 체크 → 모달 (이메일 1개 선택 입력)
+    - 출생 지역 시·도 드롭다운 (§3-c 결정에 따라 v1=서울 경도 단일이면 만세력에는 미반영)
+    - CTA "만세력 보기" → POST /api/manse → /child-manse
+
+16. **화면 4: 자녀 만세력** (app/(flow)/child-manse.tsx)
+    - PalcaTable + IlganHighlight + SipsinCard + ShenshaCard + UnseongCard + HapchunhCard + ElementBarChart + DaeunTimeline + SewunCard
+    - DESIGN v1.1 §5 단일 진실
+    - 용어 가이드 펼침 토글
+    - CTA "학운 진단 받기" → /interpret-free
+
+17. **화면 5 ★: 무료 간이 진단** (app/(flow)/interpret-free.tsx)
+    - 진입 시 GET SSE /api/interpret-free (간이 prompt + 자녀 만세력 + 학년 톤)
+    - StreamingBody (skeleton 15~25초 → A4 0.5p ~15~20문장)
+    - 미니 학운 흐름 차트 (간단한 곡선)
+    - MomTestInline (S1.3 1차)
+    - sticky CTA "어머니 사주 추가로 더 자세히 · 3,000원" → /premium-value
+
+18. **화면 6: 정밀 진단 가치 안내** (app/(flow)/premium-value.tsx)
+    - DESIGN v1.1 §6-d comparison card 2-column
+    - DESIGN v1.1 §6-c price emphasis (3,000원 1회)
+    - blur 미리보기 (단순 CSS blur 또는 일부만 노출)
+    - CTA "회원가입하고 결제하기" → /signup
+
+19. **화면 7: 회원가입** (app/(flow)/signup.tsx)
+    - 이메일·비밀번호 입력 → "인증코드 받기" 탭 → POST /api/auth/otp-send (콘솔에 6자리 출력)
+    - OTP 6자리 입력 폼 → POST /api/auth/otp-verify
+    - 검증 성공 시 비회원 세션을 회원 계정에 머지 → /checkout
+
+20. **화면 8 ★: Mock 결제** (app/(flow)/checkout.tsx)
+    - **prefilled placeholder** (DESIGN v1.1 §10 P0 #3): "1234-5678-9012-3456" / "12/27" / "•••" / "홍길동"
+    - 약관 prechecked
+    - [3,000원 결제하기] → 2-3초 fake spinner → mock 안내 모달 → 확인 → POST /api/checkout (users.paid = 1) → /mother-saju
+
+21. **화면 9: 어머니 사주 입력** (app/(flow)/mother-saju.tsx)
+    - DESIGN v1.1 §6-b success header "결제가 완료됐어요!" (paid 직후 첫 화면 only)
+    - DESIGN v1.1 §10 P0 #7: 시간 모름 체크박스 (화면 3 동일 패턴, 어머니에도 필수)
+    - CTA "어머니 만세력 보기" → POST /api/manse → /mother-manse
+
+22. **화면 10: 어머니 만세력** (app/(flow)/mother-manse.tsx)
+    - 화면 4와 동일 PalcaTable + 보조 카드 (DESIGN v1.1 §5 패턴 통일 — §10 P0 #2)
+    - 진입 후 GET SSE /api/relation-mini (1~2초 mini AI 호출, 자녀-어머니 관계 1~2줄)
+    - **DESIGN v1.1 §10 P0 #4: "AI 분석 완료" 배지 금지** → "분석 완료" 또는 제거
+    - CTA "정밀 진단 받기" → /interpret-premium
+
+23. **화면 11 ★: 정밀 진단 결과 + 종료** (app/(flow)/interpret-premium.tsx)
+    - 진입 시 GET SSE /api/interpret-premium (정밀 prompt + 자녀 만세력 + 어머니 만세력 + 학년 톤)
+    - StreamingBody (skeleton 45~90초 → A4 1p ~30~40문장)
+    - 종합 분석 + GradeGuideSection (초·중·고 3구간) + 어머니-자녀 합 시기 + 종합 조언 + (고등) 전공·학교 예측
+    - SurveyTwoQuestion **DESIGN v1.1 §10 P0 #1 spec대로**:
+      - Q1: "정밀 진단이 결제할 만한 가치였나요?"
+      - Q2: "실제로 결제했다면 하시겠나요?"
+    - [진단 종료] / [결과 다시 보기]
+
+24. **모든 화면 공통 정리** (DESIGN v1.1 §10 P0 일괄 점검)
+    - ⚙️ 설정 아이콘 0개 (모든 화면) — §10 P0 #6
+    - 영문 라벨 0개 (BIRTH DATE·THE HERITAGE LABEL 등 모두 한글) — §10 P0 #5
+    - "AI" 단어 노출 0개 (배지·라벨·본문 포함) — §10 P0 #4
+    - KeywordHighlight 적용 (화면 5·11 본문) — §10 P0 #8
+    - Success header (화면 9만) / Price emphasis (화면 6·8)
+
+25. **funnel 트래킹 적용**
+    - 모든 화면 진입 시 POST /api/track (action=enter)
+    - sticky CTA 탭 시 (action=cta-tap)
+    - mom test 미응답 + 이탈 (action=exit, meta={momTestAnswered: false})
+
+26. **localhost:8081에서 시나리오 E2E 검증** (§10 단계 1)
+    - tests/e2e/scenario-1-best-case.spec.ts (초3 어머니 best case)
+    - tests/e2e/scenario-2-time-unknown.spec.ts (초1 시간 모름)
+    - tests/e2e/scenario-3-middle-school.spec.ts (중2 어머니)
+    - 모두 PASS 확인
+
+27. **포터빌리티 13개 체크리스트 자동 검증** (§10 단계 2)
+
+28. **§12 완료 보고 생성**
+```
+
+---
+
+## 6. LLM system prompt 초안 (복수, Eugene 선택)
+
+A-1 v4 §후속 메모 "톤·깊이 참조"의 Eugene 샘플 reading 톤 마커가 직접 입력. 세 종류 prompt (간이·mini·정밀) 각각 2~3개 초안.
+
+### 6-a. 간이 진단 prompt (화면 5, A4 0.5페이지 ~15~20문장)
+
+**초안 A — TV 역술가 친근체 (사주톡 패턴 답습)**
+
+```
+당신은 학생 자녀를 둔 어머니와 일대일로 상담하는 한국의 사주 학운 전문가다.
+경력 20년, 부드럽고 친근한 존댓말로 어머니와 마주 앉아 풀이한다.
+
+[톤 마커]
+- 친근한 대화체 어미: "나와요", "보여요", "맞아요"
+- 사주 용어를 그대로 쓰되 즉시 평이한 풀이를 붙인다. 예: "역마살이 드니 인내가 어렵다"
+- 사주 분석을 즉시 실행 가능한 액션 가이드로 변환한다 (학원 선택, 친구 관계, 훈육 방식 등)
+- "AI" 단어 절대 사용 금지. 자신을 "사주", "이 명조" 같은 표현으로 지칭
+
+[분량]
+A4 0.5페이지 분량, 한국어 자연 호흡 기준 15~20문장.
+
+[학년대별 톤 분기]
+- 초등(1~6): 학습 습관·강점 식별, 학원·과목 우선, 친구 관계, 사춘기 진입 대비
+- 중(1~3): 진로 분기(특목고·일반고·영재), 과목 우선순위, 친구·연애 영향
+- 고(1~3): 입시 전략·과 선택, 진로 결정 (전공·학교 예측은 정밀 진단에만)
+
+[구조]
+1. 일간 소개 (이 아이의 본질, 2~3문장)
+2. 강점 (사주 + 학년대별 액션, 4~5문장)
+3. 약점·주의 (4~5문장)
+4. 현재 운기 (대운·세운, 3~4문장)
+5. 어머니 액션 가이드 (2~3문장)
+
+[금지]
+- 결제 유도 문구 ("정밀 분석에서 더 자세히" 등). 결제 CTA는 UI가 담당.
+- 점수·% 수치
+- 부정적 단정 ("이 아이는 공부 못 한다" 등). 가능성과 환경 설계로 풀이.
+```
+
+**초안 B — 학구적 풀이체 (대학교수 톤)**
+
+```
+당신은 한국 명리학 전공 교수다. 학부모 상담 시 학구적이면서 부드러운 톤으로 풀이한다.
+
+[톤 마커]
+- "~로 사료됩니다", "~의 기운이 강하게 나타납니다", "~을 권합니다"
+- 사주 용어 + 명리 출처 가벼운 언급 ("자평진전의 ~", "적천수의 ~")
+- 분석 후 액션 가이드는 학습 환경·진로 설계 중심
+
+[분량·구조·금지] 초안 A와 동일
+```
+
+**초안 C — 동네 언니체 (편한 친구 톤)**
+
+```
+당신은 사주 잘 보는 동네 언니다. 학부모 친구에게 편안하게 풀어주듯 풀이한다.
+
+[톤 마커]
+- "~인 거 같아", "~할 거야", "~해보세요" (반말과 존댓말 자연 혼용 X — 존댓말 일관)
+- 사주 용어를 일상어로 즉시 풀이 ("인성이 강하다 = 책 읽고 흡수하는 힘이 강해요")
+- 친근감 강조 → 학부모가 "맘카페에서 추천받은 친언니" 같은 감정
+
+[분량·구조·금지] 초안 A와 동일
+```
+
+**Claude 추천: A**
+
+**이유:**
+1. A-1 v4 §후속 메모 "Eugene 샘플 reading 톤 마커" 그대로 매칭 — "역마살이 드니" 같은 사주 용어 그대로 + 즉시 풀이.
+2. A-2 §0-b "AI 단어 노출 자제" 정책과 정합 (TV 역술가는 자신을 "이 명조"로 지칭).
+3. 사주톡(이직·연애 컨설팅)에서도 동일 톤이 검증되어 patterns/anti-patterns 학습 자산이 공유됨.
+
+### 6-b. 어머니-자녀 mini 관계 분석 prompt (화면 10, 1~2문장)
+
+**초안 A — 골격형 (짧고 강한 hook)**
+
+```
+당신은 [6-a와 동일 페르소나].
+
+[작업]
+자녀와 어머니의 사주를 비교하여 학업·진로 관점에서 두 사람의 합 관계를 1~2문장으로 요약한다.
+이 분석은 화면에 1~2초 후 표시되며 "정밀 진단 받기" CTA를 누르도록 유도하는 hook이다.
+
+[구조]
+- 1번째 문장: 어머니 사주 일간/십성이 자녀 사주에 어떻게 작용하는지 한 줄
+- 2번째 문장 (선택): 신살 cross-reference (예: "민서 천을귀인이 어머니 일간과 일치")
+
+[금지]
+- 결제 유도 명시 ("정밀 진단에서 더 자세히" 등)
+- 부정적 단정
+- 결론 ("좋다/나쁘다")
+```
+
+**초안 B — 풀이형 (긴 2~3문장)**
+
+(생략 — 초안 A가 더 명확함)
+
+**Claude 추천: A**
+
+**이유:**
+1. A-2 §0-b "별도 짧은 호출"로 분리한 의도 = 정밀 진단 본 호출과 분리한 anticipation hook.
+2. 1~2초 응답을 목표로 하므로 prompt 자체가 짧고 출력 길이 제약 명확.
+3. CTA 유도는 UI가 담당, prompt는 정보만.
+
+### 6-c. 정밀 진단 prompt (화면 11, A4 1페이지 ~30~40문장)
+
+**초안 A — 종합 풀이형 (Eugene 샘플 분량 기준)**
+
+```
+당신은 [6-a와 동일 페르소나].
+
+[작업]
+자녀와 어머니의 사주를 종합하여 학년·진로·어머니 관여 전략을 풀이한다.
+
+[분량]
+A4 1페이지 분량, ~30~40문장. Eugene 샘플 reading 분량 기준.
+
+[구조 — 반드시 이 순서]
+1. 종합 분석 (5~7문장)
+   - 자녀 일간 + 어머니 일간의 합 관계 핵심
+   - 자녀의 사주 핵심 (인성·식상·신살 강조)
+2. 학년대별 가이드 (3구간 — DESIGN v1.1 §Theme 변경 반영)
+   - 초등 (지금 또는 다가오는 시기): 학원·학군지·과목 우선, 친구 관계 기초
+   - 중: 진로 분기·과목 우선·친구·연애 영향
+   - 고: 입시 전략·과 선택·진로 결정
+   각 4~6문장
+3. 어머니-자녀 합 시기 (5~7문장)
+   - 명리적으로 어머니의 직접 관여가 가장 효과적인 시점 (대운·세운 기반)
+   - 외부 학원 vs 어머니 직접 학습 비중
+4. 종합 조언 (3~5문장 — 번호 매김)
+5. (고등 학년인 경우만) 전공·학교 예측 (3~5문장)
+   - "경영·경제 / 중앙대 보임" 같은 구체 결과
+   - 단정 어조 약화 ("~경향이 보입니다")
+
+[톤 마커]
+- 6-a와 동일
+- "(지금)" 마크로 현재 시점 강조 (예: "초고학년(지금)")
+
+[Eugene 샘플 reading 직접 참조 톤]
+- 부모-자녀 합 분석: "아빠 역마살 닮음", "어머니가 잡아주면 이뤄짐"
+- 시기별 변화: "초고학년 진입 전 미리 만들어주면 좋습니다"
+- 학원 선택: "외부 학원에 전적으로 맡기기보다 함께 정리/복습하는 패턴"
+
+[금지]
+- "AI" 단어
+- 점수·% 수치
+- 결제 유도 ("결제 잘 하셨어요" 등)
+```
+
+**초안 B — 압축형 (1페이지 내 4섹션만)**
+
+(생략 — Eugene 분량 캘리브레이션 spec 위반)
+
+**Claude 추천: A**
+
+**이유:**
+1. A-2 §4 화면 11 wireframe + A-1 v4 §후속 메모 분량 spec(A4 1페이지 ~30~40문장)과 정확 매칭.
+2. (고등 학년인 경우만) 전공·학교 예측은 A-2 spec — 초·중에 노출 시 추측 강함, prompt 분기 명시.
+3. 어머니-자녀 합 시기 = 결제 영수증 효과 (A-2 §4 화면 11 4-b), prompt 구조에 강제.
+
+---
+
+## 7. 플래너 결정 항목 [SO 결정 필요]
+
+옵션 + 추천 + 이유 (정책 v16 원칙 5).
+
+### [SO 결정 필요] 1: §6-a 간이 진단 prompt 선택
+- 옵션 A: TV 역술가 친근체 (사주톡 패턴) — Eugene 샘플과 톤 마커 정확 매칭
+- 옵션 B: 학구적 풀이체 — 학부모 신뢰감 ↑, 친근감 ↓
+- 옵션 C: 동네 언니체 — 친근감 ↑↑, 사주 정통성 ↓
+- **Claude 추천: A**
+- **이유:** A-1 v4 후속 메모 Eugene 샘플 톤 마커가 A. 사주톡 prompts 학습 자산 재사용.
+
+### [SO 결정 필요] 2: §6-b mini 관계 분석 prompt 선택
+- 옵션 A: 골격형 (1~2문장 짧고 강한 hook)
+- 옵션 B: 풀이형 (2~3문장)
+- **Claude 추천: A**
+- **이유:** A-2 §0-b "별도 호출 = anticipation hook" 의도 일치.
+
+### [SO 결정 필요] 3: §6-c 정밀 진단 prompt 선택
+- 옵션 A: 종합 풀이형 (분량 spec 정확 매칭)
+- 옵션 B: 압축형 — Eugene 분량 spec 위반
+- **Claude 추천: A**
+- **이유:** A-1 v4 분량 캘리브레이션 spec 준수.
+
+### [SO 결정 필요] 4: 출생 지역 진태양시 보정 (§3-c Hold 해소)
+- 옵션 A: v1 = 서울 경도(-32분) 단일. 시·도 입력은 UI에만 노출, 만세력 미반영.
+- 옵션 B: v1 = 시·도 17개 경도 테이블 적용 (추가 30분).
+- 옵션 C: 출생 지역 입력 제거.
+- **Claude 추천: A**
+- **이유:** sajutalk와 동일. 정확도 손실 1~5분은 mom test 영향 미미. B-2에서 B로 업그레이드.
+
+### [SO 결정 필요] 5: 시간 모름 처리 방식 (A-3b §3 P2 #9 보류 사항)
+- 옵션 A: 시(時)주 비우고 진단 + 면책 — A-2 spec 명시
+- 옵션 B: 자시(23:30~01:29) 기본값 산출 — Stitch 화면 3 안내
+- **Claude 추천: A**
+- **이유:** A-2 spec 명문. 자녀 사주를 임의로 추정해 진단하면 정확도 위장. 비움 + 면책이 정직.
+
+### [SO 결정 필요] 6: 만세력 모듈 이식 vs npm package 추출
+- 옵션 A: sajutalk → eduluck 그대로 복사 (B-1 즉시 가능)
+- 옵션 B: pnpm workspace monorepo로 통합 후 공유 (B-1 + 30분~1시간)
+- 옵션 C: 별도 npm package로 추출 (B-1 + 2~3시간)
+- **Claude 추천: A**
+- **이유:** B-1 = 로컬 검증 단계. 양 프로젝트 모두 안정화 후 B-2에서 monorepo/package 결정.
+
+---
+
+## 8. Claude Code 재량 범위
+
+다음은 묻지 말고 혼자 결정:
+
+- UI 컴포넌트 세부 (NativeWind 클래스 조합, padding 숫자 등)
+- 파일·폴더 이름 세부 (§4 구조 안에서)
+- color hex 미세 조정 (DESIGN v1.1 토큰 안에서)
+- 에러 UI 문구 (MVP 수준)
+- git commit 메시지 (CLAUDE.md commit 스타일 참조)
+- 의존성 minor/patch 버전 (major는 §2 고정)
+- 주석 스타일
+- 단위 테스트 작성 여부 (E2E는 §10, 단위는 재량)
+- 로컬 SQLite 파일 위치 (`./data/` 안에서)
+- Drizzle 마이그레이션 파일명
+- API route 응답 JSON 필드명 (단, DB 스키마는 §4 고정)
+- 임시 변수명·중간 헬퍼 함수
+- console.log 진행 출력 포맷
+- assets/fonts/ 다운로드 URL (Pretendard·Noto Serif KR는 공식 출처면 OK)
+- Vitest config 세부
+- 학년 한글 표시 ("초3" vs "초등학교 3학년" — UI 일관성만 유지)
+
+---
+
+## 9. bypass 멈춤 트리거
+
+### B-1 기본 4개
+
+1. **API key가 코드에 하드코딩될 위험** — 모든 외부 API key는 환경변수만. 테스트 코드에서도 mock 또는 env로.
+2. **`.git/`·`.env`·`node_modules/`·`data/eduluck.db` 외 파일 삭제** — 사용자 데이터 의도치 않은 삭제 방지.
+3. **재시도 상한 도달** (§9.5) — 같은 실패 3회 반복.
+4. **시나리오 PASS 안 됨에도 "성공" 선언하려 할 때** — §10 단계 1 검증 결과 위조 방지.
+
+### eduluck 프로젝트별 추가 5개
+
+5. **DESIGN v1.1 §10 P0 checklist 11개 중 하나라도 빌드 종료 시점에 미충족이면 정지.** Claude Code가 자동 점검 후 §12 완료 보고에 명시. (Eugene이 의도적으로 후순위 결정 시만 진행.)
+6. **만세력 검증 (tests/manse-verify.spec.ts) 10건 중 FAIL이 있으면 정지.** Eugene·명리 전문가 확인 필요. sajutalk verify와 동일 케이스 + eduluck 추가 케이스.
+7. **prompts/*.md 파일 내용을 Claude Code가 임의 수정하려 할 때.** §6 Eugene 선택본만 사용. 톤·구조 변경은 Eugene 결정.
+8. **mock 결제 코드에 실 결제 게이트웨이 호출(@toss/payments, @stripe/stripe-js 등) 추가하려 할 때.** B-1 = mock 한정. B-2 영역.
+9. **자녀 사주 입력에 부모 학력 또는 아버지 사주 필수 필드 추가하려 할 때.** A-0 v3 §5 명시 배제 항목 (아버지 사주·부모 학교 = 완전 옵션, MVP 미포함).
+
+### 멈출 때 형식
+
+```
+[멈춤] §9 트리거 <N>
+이유: <한 줄>
+시도한 것: <목록>
+Eugene 결정 필요: <A|B|C 옵션>
+```
+
+---
+
+## 9.5. 실패·재시도 상한
+
+**디폴트:**
+- 같은 명령 3회 실패 → 정지
+- 같은 의존성 설치 3회 실패 → 정지
+- 같은 만세력 verify 케이스 3회 FAIL → 정지
+- 같은 E2E 시나리오 3회 FAIL → 정지
+
+**예외:**
+- 네트워크 일시 오류는 5회까지 (지수 백오프 1s → 2s → 4s → 8s → 16s)
+- LLM API rate limit (429)는 5회까지 (지수 백오프)
+
+**정지 시 보고 형식:**
+```
+[정지] §9.5 재시도 상한
+시도한 것:
+  1. <명령>
+  2. <명령>
+  3. <명령>
+실패 양상: <공통 증상>
+추측 원인: <Claude Code의 추정>
+Eugene 의견 필요
+```
+
+---
+
+## 10. 검증 방법 — 시나리오 PASS + 포터빌리티 13개 체크
+
+### 단계 1: 시나리오 E2E (Playwright on Expo Web, localhost:8081)
+
+A-1 v4 §4 시나리오 3개를 자동 E2E로 통과.
+
+```
+[검증 1] A-1 시나리오 1: 초3 자녀 둔 35세 어머니 (Best case)
+실행: tests/e2e/scenario-1-best-case.spec.ts (Playwright)
+PASS 조건:
+  - 화면 1 → 11 끝까지 통과 (각 화면 transition 성공)
+  - 화면 5 본문 ~15~20문장 출력 (정규식 카운트 ≥ 13)
+  - 화면 5 mom test 별점 5점 입력 → surveys 테이블 insert 확인
+  - 화면 7 OTP 콘솔 출력 → 자동 캡처 → 입력
+  - 화면 8 fake delay 2-3초 + mock 모달 확인 → users.paid = 1
+  - 화면 11 본문 ~30~40문장 (정규식 카운트 ≥ 28)
+  - 화면 11 mom test 5점 + 결제 의향 5점 → surveys insert
+  - 화면 11 funnel_events 마지막 row가 'survey-complete'
+  - 총 소요 < 5분 (스트리밍 포함)
+
+[검증 2] A-1 시나리오 2: 초1 자녀 + 시간 모름
+실행: tests/e2e/scenario-2-time-unknown.spec.ts
+PASS 조건:
+  - 화면 3에서 시간 모름 체크 → 모달 자동 오픈
+  - 모달에 이메일 입력 → 닫고 진행
+  - sessions.email_for_reminder 컬럼에 이메일 저장 확인
+  - 화면 4 만세력 표에 시주 = "—" 표시 (hourPillar = null)
+  - 화면 5 본문에서 시주 관련 표현 자제 (LLM 면책 톤)
+  - 진단 종료 정상 (E2E flow 100%)
+
+[검증 3] A-1 시나리오 3: 중2 자녀 (Mid-grade)
+실행: tests/e2e/scenario-3-middle-school.spec.ts
+PASS 조건:
+  - 학년 = "중2" 선택 → child-info 진행
+  - 화면 5 본문에 중학년 키워드 노출 (정규식: /(특목고|일반고|진로|과목|친구)/)
+  - 화면 11 GradeGuideSection에 중·고 섹션 모두 노출 (초 섹션은 과거형)
+  - 화면 11 본문에 "(고등 학년인 경우)" 전공·학교 예측은 미노출 (학년 = 중2)
+```
+
+**수동 vs Playwright 결정:** Claude 디폴트 = Playwright. LLM 스트리밍이 들어가는 시나리오 1·3은 출력 변동성 있으나 PASS 조건이 "분량 카운트 + 키워드 정규식"이라 안정. 시나리오 2는 분기 검증이라 Playwright가 더 효율.
+
+### 단계 2: 포터빌리티 13개 체크리스트
+
+빌드 완료 시점에 Claude Code가 자동 점검. 결과를 §12 완료 보고 표에 기록.
+
+```
+[1] 코드베이스 (1 codebase, many deploys)
+    검증: git remote -v → 단일 origin. 환경별 브랜치 0개 (main만)
+
+[2] 의존성 명시·격리
+    검증: 깨끗한 디렉토리에서 pnpm install + pnpm migrate + pnpm dev 한 번에 성공
+
+[3] 환경변수 분리
+    검증: grep -rE "(sk-ant-|sk-[a-zA-Z0-9]{40,})" lib/ app/ → 0건
+    grep -rE "https?://[^/]*anthropic\.com" lib/ app/ → 0건 (SDK가 알아서 처리)
+
+[4] 백업 서비스 어댑터
+    검증: lib/db/index.ts가 환경변수로 분기 (sqlite|postgres). DB 호출이 모두 이 모듈 경유.
+    grep "new Database(" lib/ app/ → lib/db/sqlite.ts 1곳만
+
+[5] 빌드/릴리스/실행 분리
+    검증: pnpm build로 .expo/ 빌드 산출물 생성 → 다른 디렉토리에서 환경변수만으로 실행 가능
+
+[6] 무상태 프로세스
+    검증: grep -rE "(let|var)\s+\w+\s*:\s*Map<" lib/ → 모듈 레벨 mutable Map 0개
+    (서버 인스턴스 간 공유 메모리 없음)
+
+[7] 포트 바인딩
+    검증: PORT=8082 pnpm dev → 8082에서 실행 가능
+
+[8] 동시성
+    검증: grep -rE "setInterval|setTimeout.*60.*60.*1000" lib/ app/ → 인메모리 스케줄러 0개
+
+[9] 빠른 시작·정상 종료
+    검증: time pnpm dev → "Ready" 표시까지 10초 이내
+    SIGTERM 보내면 graceful shutdown (Drizzle close, 진행 중 SSE flush)
+
+[10] 개발-운영 동등성
+    검증: package.json dependencies에 sqlite 외 DB driver 없음 + lib/db/postgres.ts placeholder 존재
+    LLM 호출이 환경변수 ANTHROPIC_API_KEY만 의존 (로컬·인프라 동일 엔드포인트)
+
+[11] 로그를 이벤트 스트림으로
+    검증: grep -rE "fs\.(write|append)FileSync.*\.log" lib/ app/ → 0건
+    모든 진행 출력이 console.log/error만 사용
+
+[12] 관리 작업 일회성
+    검증: package.json scripts에 "migrate", "seed" 존재
+    pnpm migrate / pnpm seed 단독 실행 가능 (서버 실행 중 아닐 때)
+
+[13] 서버리스 런타임 호환성
+    검증: grep -rE "fs\.write" lib/ app/ → 0건 또는 모두 /tmp 또는 환경변수 경로
+    Expo Router API route 응답이 ReadableStream 호환 (Edge Runtime 가정)
+    글로벌 변수에 사용자 데이터 캐시 0건
+```
+
+**결과 형식:**
+```
+| # | 항목 | PASS/FAIL | 이슈 |
+|---|------|-----------|------|
+| 1 | 코드베이스 | PASS | - |
+| 2 | 의존성 명시 | PASS | - |
+| ... | ... | ... | ... |
+```
+
+**FAIL 처리:** §12 완료 보고에 명시. Eugene 판단으로 (a) Claude Code 수정 지시 또는 (b) FAIL 인지하고 B-2 진입.
+
+---
+
+## 11. Claude Code 첫 프롬프트 템플릿
+
+```
+eduluck MVP를 로컬에서 만든다.
+
+[컨텍스트] 다음 파일을 순서대로 읽고 실행 계획을 수립한다:
+1. eduluck/docs/eduluck_A-0_v3.md      ← 핵심 가설 + 타겟 + MVP 경계
+2. eduluck/docs/eduluck_A-1_v4.md      ← Phase 구조 13 Step + 시나리오 3개 + 톤 마커
+3. eduluck/docs/eduluck_A-2_v2.md      ← 11화면 풀 스펙 (wireframe·UX·인터랙션·상태)
+4. eduluck/docs/eduluck_A-3a_v1.md     ← Warm Heritage 디자인 컨셉 결정 컨텍스트
+5. eduluck/docs/eduluck_A-3b_v1.md     ← P0 checklist + 보강 사항
+6. eduluck/docs/eduluck_DESIGN_v1.1.md ← 확정 디자인 시스템 (토큰·컴포넌트·금지 항목)
+7. eduluck/docs/eduluck_B-1_v1.md      ← 이 빌드 지침서 (유일한 실행 지침)
+
+[참조 자원]
+sajutalk/lib/manse/ 디렉토리는 이미 검증된 만세력 모듈이다. §6 빌드 순서 6번에서 그대로 복사.
+
+[동작 모드]
+--dangerously-skip-permissions
+B-1 §8 재량 범위 안에서는 스스로 결정.
+B-1 §9 멈춤 트리거 해당 시 정지하고 Eugene 호출.
+B-1 §9.5 재시도 상한 넘으면 정지.
+
+[목표]
+B-1 §10 검증 통과:
+1. 시나리오 1·2·3 E2E PASS (localhost:8081 Expo Web)
+2. 포터빌리티 13개 체크 결과 기록
+3. 만세력 verify 10/10 PASS
+
+[제약]
+- 인프라 SaaS (Vercel·Supabase·EAS Cloud Build 등) 사용 금지
+- 모든 외부 의존은 로컬 + Anthropic API뿐
+- OTP는 콘솔 출력 (B-2에서 실 메일 교체)
+- 결제는 mock (B-2에서 실 게이트웨이 교체)
+- DESIGN v1.1 §10 P0 checklist 11개는 모든 화면 빌드 시 자동 점검 forcing
+
+[시작]
+B-1 §5 빌드 순서대로 실행. 각 단계 끝나면 "[N/28] ✓ <한 줄>" 진행 보고.
+§12 완료 보고 포맷에 맞춰 최종 정리.
+```
+
+---
+
+## 12. 완료 보고 포맷
+
+Claude Code가 세션 끝에 다음 마크다운을 남긴다.
+
+```markdown
+# eduluck MVP 로컬 빌드 완료 보고
+
+## 최종 산출물
+- 로컬 실행 명령: `pnpm dev` (Expo Web, localhost:8081)
+- 시나리오 PASS 확인 가능
+- GitHub repo: <URL>
+- 빌드 소요 시간: <h>시간
+
+## 완료된 것 (§5 빌드 순서 28개)
+- [ ] 1. Expo Router 셋업
+- [ ] 2. NativeWind 셋업
+- [ ] 3. DESIGN v1.1 토큰 적용
+- [ ] 4.5. CLAUDE.md + AGENTS.md
+- [ ] 4.7. SPEC.md
+- [ ] 5. Drizzle + SQLite
+- [ ] 6. 만세력 모듈 이식 + verify 10/10 PASS
+- [ ] 7. LLM + auth + tracking
+- [ ] 8. prompts/*.md 3종 생성
+- [ ] 9. API routes 10종 구현
+- [ ] 10. 공통 컴포넌트
+- [ ] 11. 사주 도메인 컴포넌트
+- [ ] 12. 진단 컴포넌트
+- [ ] 13~23. 화면 1~11 구현
+- [ ] 24. DESIGN v1.1 P0 11개 일괄 점검
+- [ ] 25. funnel 트래킹 적용
+- [ ] 26. E2E 시나리오 1·2·3 PASS
+- [ ] 27. 포터빌리티 13개 체크
+- [ ] 28. 본 완료 보고 작성
+
+## DESIGN v1.1 §10 P0 Checklist 결과
+- [ ] 헤딩 Noto Serif KR 600-700 모든 화면 적용
+- [ ] 사주팔자 표 = 화면 4 패턴 단일 (화면 10 동일)
+- [ ] 화면 8 카드 번호 "1234-5678-9012-3456" (마스킹 X)
+- [ ] 화면 11 mom test 2차 spec대로 2문항
+- [ ] 화면 10 "AI 분석 완료" 배지 제거
+- [ ] 모든 화면 한글 라벨
+- [ ] 모든 화면 ⚙️ 설정 아이콘 제거
+- [ ] 화면 9 시간 모름 체크박스
+- [ ] KeywordHighlight 컴포넌트 (화면 5·11 본문)
+- [ ] Success header (화면 9)
+- [ ] Price emphasis (화면 6·8)
+
+총 PASS: __/11
+
+## 시나리오 검증 결과 (§10 단계 1)
+- 시나리오 1 (초3 best case): PASS / FAIL
+  - 관찰 1: 화면 1→11 transition 성공
+  - 관찰 2: 화면 5 본문 X문장 (≥13 PASS)
+  - 관찰 3: 화면 11 본문 X문장 (≥28 PASS)
+  - 관찰 4: surveys 테이블 3 row insert (mom test 1·2·결제 의향)
+- 시나리오 2 (초1 시간 모름): PASS / FAIL
+  - 관찰 1: 시간 모름 모달 자동 오픈
+  - 관찰 2: sessions.email_for_reminder 저장
+  - 관찰 3: 화면 4 시주 = "—" 표시
+- 시나리오 3 (중2 mid-grade): PASS / FAIL
+  - 관찰 1: 중학년 키워드 노출
+  - 관찰 2: GradeGuideSection 중·고 노출
+  - 관찰 3: 전공·학교 예측 미노출
+
+## 만세력 검증 결과 (verify.spec.ts)
+- 10/10 PASS 또는 N/10
+- FAIL 케이스 (있으면): 케이스 + 예상 vs 실제
+
+## 포터빌리티 13개 체크 결과 (§10 단계 2)
+| # | 항목 | PASS/FAIL | 이슈 |
+|---|------|-----------|------|
+| 1 | 코드베이스 | PASS | - |
+| 2 | 의존성 명시 | PASS | - |
+| 3 | 환경변수 분리 | PASS | - |
+| 4 | 백업 서비스 어댑터 | PASS | - |
+| 5 | 빌드/릴리스/실행 분리 | PASS | - |
+| 6 | 무상태 프로세스 | PASS | - |
+| 7 | 포트 바인딩 | PASS | - |
+| 8 | 동시성 | PASS | - |
+| 9 | 빠른 시작·정상 종료 | PASS | - |
+| 10 | 개발-운영 동등성 | PASS | - |
+| 11 | 로그 이벤트 스트림 | PASS | - |
+| 12 | 관리 작업 일회성 | PASS | - |
+| 13 | 서버리스 호환성 | PASS | - |
+
+총 PASS: __/13
+
+## 미완료 / 제한 사항
+- 무엇이 안 됐는가
+- 부분 구현된 것 (예: native 빌드 미수행 = B-2 영역)
+
+## 발생한 이슈
+- §9.5 상한 걸린 지점 (있으면)
+- 재시도로 해결한 것
+- §9 멈춤 트리거 발동 횟수 + 해결
+
+## 다음 세션 필요한 것 (B-2 진입 전)
+- Eugene 결정 필요한 남은 지점
+- FAIL 항목 영향 분석
+- 추가 작업 리스트
+
+## 리소스 사용
+- LLM API 크레딧: 추정 $X (호출 횟수 × 토큰)
+- SQLite DB 용량: ./data/eduluck.db Y KB
+- node_modules 용량: Z MB
+```
+
+---
+
+## 13. Kill / Go / Hold 판정
+
+**Go** — Claude Code bypass 세션 진입.
+
+**근거 3줄:**
+1. **만세력 도메인 리스크가 sajutalk에서 이미 해결됨.** §3-a `@fullstackfamily/manseryeok` + `lunar-typescript` + 자체 절기·DST 보정 모듈이 KASI 공식과 6초 이내 오차로 검증됨. 이식만 하면 됨.
+2. **11개 화면 spec + DESIGN v1.1 토큰·컴포넌트·P0 checklist 11개가 모두 forcing function으로 박혀 있음.** 빌드 도구 디폴트로 빠질 여지 최소.
+3. **MVP 검증 가설(baseline 진단 품질 + 결제 의향) 측정 forcing이 명확.** §10 시나리오 E2E의 PASS 조건이 mom test 점수 + 분량 카운트 + surveys insert로 자동 측정 가능.
+
+**Hold 조건 (Go 보류):**
+- §1 시작 전 체크리스트 미완료 (Anthropic API key 또는 Node 20+ 미설치)
+- §7 [SO 결정 필요] 1·2·3·4·5·6 중 하나라도 미답
+- sajutalk `lib/manse/` 디렉토리 부재 또는 손상
+
+위 셋 중 하나라도 미해결이면 Go 불가.
+
+---
+
+## Claude의 적대적 압박 — Kill할 이유 세 가지
+
+1. **B-1 빌드의 핵심 forcing function인 DESIGN v1.1 P0 checklist 11개가 Claude Code 빌드 중 실제로 자동 점검될지 미검증.** §5 빌드 순서 24번에서 "일괄 점검"으로 명시했으나 실행 메커니즘은 Claude Code가 모든 화면 코드에 grep을 돌려 확인하는 수준. 11개 중 "Inline keyword highlight 컴포넌트 적용" 같은 항목은 코드 grep만으로 검증 어려움 (실 렌더 시각 확인 필요). 결과적으로 §12 완료 보고에 "PASS"로 적혀도 실제 화면에서 P0 위반이 남아 있을 가능성. **Hold 권고: §5 24번을 Playwright 시각 검증(screenshot diff)으로 강화해야 진짜 forcing.** 또는 화면별 컴포넌트 unit test에 P0 항목을 assertion으로 박기.
+
+2. **만세력 모듈 이식이 Expo 환경에서 실제 작동할지 미검증 — 특히 `fs.readFileSync` 패턴.** sajutalk는 Next.js이고 prompts/*.md를 Node.js `fs`로 매 호출 로드한다 (`lib/prompts/interpret.ts:13`). eduluck도 동일 패턴을 §5 8번에서 채택했지만 **Expo Router API route의 런타임이 Node.js인지 Edge Runtime인지 환경별 차이가 있을 수 있음**. Edge면 `fs` 사용 불가 → prompt 로드 방식 재설계 필요. §3-a에서 "Expo Router API route는 Node.js 런타임"으로 단정했으나 실제 SDK 51 동작 검증 안 됨. **빌드 초반에 prompts/*.md fs 읽기 1건만 검증하는 smoke test 필요.**
+
+3. **§9 멈춤 트리거 #5 (DESIGN v1.1 P0 미충족 시 정지) + #6 (만세력 verify FAIL 시 정지) 가 Claude Code의 "성공 선언 위조"를 막을 수 있는지 미보증.** Claude Code가 verify 케이스 1개 FAIL을 "이 케이스는 라이브러리 한계로 알려진 것이라 PASS 처리"라고 자체 합리화할 가능성이 있음. sajutalk 케이스에서 라이브러리 한계가 실제로 있어 자체 보정한 전례가 있어 더 위험. **B-1에 verify 케이스의 정답이 무엇인지 명시적으로 박혀 있어야 (예: "1990-05-15 12:00 출생자 = 庚午년 辛巳월 庚午일 壬午시") Claude Code가 합리화 못 함**. tests/manse-verify.spec.ts에 10개 케이스의 expected 값을 sajutalk에서 가져와 박는 작업이 §5 6번에 명시되어야 함.
+
+---
+
+## 변경 이력
+
+- **v1** (2026-05-18) — eduluck 최초 B-1. 정책 v16 기준. A-0 v3 / A-1 v4 / A-2 v2 / A-3a v1 / A-3b v1 / DESIGN v1.1 모두 입력 반영. 만세력 도메인은 sajutalk `lib/manse/` 8개 파일 이식(`@fullstackfamily/manseryeok` + `lunar-typescript` + 절기 분 단위 + DST 자동 보정). Expo SDK 51 + Expo Router + NativeWind v4 + Drizzle ORM + better-sqlite3 + Anthropic SDK 스택 확정. DESIGN v1.1 §10 P0 checklist 11개를 §9 멈춤 트리거에 forcing function으로 박음. §10 시나리오 3개 E2E(Playwright) + 만세력 verify 10건 + 포터빌리티 13개 체크. Go 판정 — Claude Code bypass 세션 진입 권고. Kill 이유 3개 — DESIGN P0 자동 점검 메커니즘 약함·Expo 런타임 `fs` 호환성 미검증·만세력 verify 정답 명시 필요.
