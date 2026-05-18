@@ -4,6 +4,90 @@
 
 ---
 
+## Session 2026-05-18 23:01 — eduluck MVP 빌드 (Phase 1~9 완료, Vercel 작동)
+
+### 작업 요약
+
+**기획·문서 (이전 세션 산출)**
+- A-0 v3 / A-1 v4 / A-2 v2 / A-3a v1 / A-3b v1 / DESIGN v1.1 모두 확정 (eduluck/docs/)
+- B-1 v1 (로컬) → v2 (Vercel·Supabase 즉시 채택) 작성 + handoff README
+
+**Phase 0 — Supabase 신규 프로젝트** (Eugene 작업)
+- `eduluck` project (ap-northeast-2, ACTIVE_HEALTHY)
+- API key 3종 + Anthropic·SESSION_COOKIE_SECRET .env.local 채움
+
+**Phase 1 — Expo 부트스트랩 + 만세력 이식 (자율)**
+- Expo SDK 51 + Expo Router v3 + NativeWind 4.1.23 + TypeScript strict
+- DESIGN v1.1 토큰 → tailwind.config.js
+- sajutalk lib/manse 11개 파일 이식
+- **Vitest manse-verify 12/12 PASS** (prompt_checker 검증된 정답 그대로)
+
+**Phase 2 — Supabase migrations + RLS (MCP 자율)**
+- 6 tables + 11 RLS 정책 + `current_session_id` helper (search_path 고정)
+- `get_advisors security` = 0건
+
+**Phase 3 — lib/* 인프라**
+- lib/llm (Anthropic 싱글톤 + SSE 헬퍼)
+- lib/session/anonymous (localStorage UUID, sajutalk 답습)
+- lib/supabase {client,server}.ts (service_role 서버 한정 forcing)
+- lib/prompts 3종 (interpret-free·relation-mini·interpret-premium)
+- lib/tracking/funnel
+
+**Phase 4 — API routes 8종 + curl 검증**
+- session·manse·subjects·interpret-free·relation-mini·interpret-premium·checkout·survey·track
+- curl 5종 200 OK + DB 4 row 검증 (sessions·subjects·surveys·funnel_events)
+
+**Phase 5 — UI 10종 + 화면 11개 + 시각 검증**
+- 공통 UI 10종 (Button·Input·Card·StickyCTA·Modal·Toast·GenderToggle·CalendarToggle·GradeDropdown·LocationDropdown)
+- 사주 도메인 PalcaTable (DESIGN v1.1 §5 단일 진실)
+- 진단 컴포넌트 (StreamingBody·KeywordHighlight)
+- Flow Context (sessionId·child·mother·subject·interpret 전역)
+- 화면 1~11 모두 구현 (랜딩→자녀 정보→자녀 사주→자녀 만세력→무료 진단→정밀 가치→signup→checkout→어머니 사주→어머니 만세력→정밀 진단)
+- Chrome DevTools MCP 시각 검증 (375x812 모바일): 화면 1·2·3·4 정상
+- DESIGN v1.1 §10 P0 11/11 PASS (grep + 시각 점검)
+
+**Phase 6 — Playwright E2E 시나리오 1·2·3 모두 PASS**
+- 시나리오 1 (초3 best case): 20s, 본문 13문장
+- 시나리오 2 (초1 시간 모름): 12s, 시주 placeholder
+- 시나리오 3 (중2 mid-grade): 21s, 학년대별 키워드 + 전공 예측 미노출
+
+**Phase 7 — Vercel deploy (Eugene + 자율)**
+- vercel link + production env 9종 push
+- 빌드 troubleshooting: favicon Crc → PIL valid PNG / NativeWind 4.0→4.1 / vercel.json outputDirectory 충돌
+- **404 → SPA 모드 (web.output: single) + SPA rewrites 으로 frontend OK**
+- **404 → Vercel Functions로 API routes 9종 옮김 (api/*.ts) — 화면 transition 작동 확인**
+
+**Phase 8 — 완료 보고**
+- eduluck/COMPLETION_REPORT.md (B-1 v2 §12 포맷)
+- eduluck/PHASE_7_REPORT.md (Vercel 트러블슈팅)
+- eduluck/SETUP.md (Eugene 셋업 가이드)
+
+**Phase 9 — Vercel Functions 추가 (Eugene 결정: A안)**
+- eduluck/api/*.ts 9종 (app/api/+api.ts 와 동일 코드, import 경로 ../lib/)
+- prompts/*.md fs.readFileSync → inline string (Vercel bundle 호환)
+- scripts/sync-api-to-vercel.sh: build:web 전 자동 sync (app/api/ ground truth)
+- vercel.json rewrites에 /api 제외
+- Eugene 확인: 화면 전환 작동
+
+### 실패한 시도
+
+- **vercel CLI env add preview**: stdin interactive 처리 미흡 → production만 set, preview는 dashboard 수동
+- **Expo SDK 51 web.output: "server"**: Vercel Build Output API v3 자동 변환 미숙 → 404 → SPA 전환
+- **favicon 1x1 base64 PNG**: Jimp가 Crc error 거부 → Python PIL로 32x32 valid PNG 재생성
+
+### 결정사항 (decision.md 별도 항목)
+
+- 옵션 A (Vercel Functions) 채택 — Next.js 분리/SDK 53 업그레이드 대신
+- prompt fs.readFileSync → inline string (수동 sync) — Vercel bundle 호환 우선
+
+### 다음 액션
+
+1. Eugene 종단 검증 (화면 5 SSE → 7 OTP 메일 → 8 결제 → 11 정밀 진단) — 막히는 지점 보고
+2. 화면 11 정밀 진단 cutoff 발생 시 Pro $20/월 업그레이드 결정 (Hobby 60s timeout)
+3. v1.5 결정: 외부 100명 테스트 전 custom SMTP (Supabase 기본 spam 위험) + Deployment Protection 해제 + 도메인
+
+---
+
 ## Session 2026-05-18 15:59 — 만세력 검증 보정 & 학운 준비 프로세스 정비
 
 ### 작업 요약

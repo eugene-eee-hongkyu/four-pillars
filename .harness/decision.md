@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-18: eduluck API routes Vercel 작동 방식 — A안 (Vercel Functions) 채택
+
+- **선택**: A안 — eduluck/api/*.ts 폴더 추가 (Vercel 표준 functions 형식). 기존 app/api/+api.ts 코드 그대로 sync.
+- **대안 검토**:
+  - A안 (Vercel Functions, 선택): 코드 거의 그대로. 1~2시간. import 경로만 @/lib/ → ../lib/. Vercel Hobby 60s timeout 리스크.
+  - B안 (localhost demo + v1.5에 백엔드 상용화): 작업 0. MVP mom test 10명만 Eugene 노트북에서. 외부 100명은 v1.5.
+  - C안 (Next.js 별도 분리): sajutalk 검증된 패턴. 2~3시간. CORS 필요. monorepo 추가 project.
+  - D안 (Expo SDK 53 upgrade): RN 0.74 → 0.76 + NativeWind 재설정 + node 22 검증. 3~4시간 + 회귀 리스크.
+- **선택 이유**: (1) 작업량 최소 — 기존 코드 sed로 import 경로만 변환 + scripts/sync 자동화. (2) sajutalk 패턴 답습 가능 — Vercel functions는 표준. (3) Vercel Hobby 60s timeout은 정밀 진단(45~90초)에만 위험 — 발생 시 Pro $20/월 추가 결정. (4) prompts fs.readFileSync는 inline string으로 변경 (수동 sync 비용은 작음 — Eugene이 .md 편집 후 .ts에 복사).
+- **영향 범위**: eduluck/api/ 9 파일 신규. eduluck/lib/prompts/*.ts inline. vercel.json rewrites /api 제외. dev (expo start)는 app/api/ 사용, prod (Vercel)는 api/ 사용.
+- **되돌리는 방법**: api/ 디렉토리 삭제 + vercel.json rewrites 원복. lib/prompts/*.ts fs.readFileSync 복원. dev는 영향 없음.
+
+
 ## 2026-05-18 (재결정): 사주톡 만세력 보정 즉시 배포 (A안 채택, B안 번복)
 
 - **선택**: A안 — 보정된 engine.ts를 사주톡 production에도 즉시 배포
