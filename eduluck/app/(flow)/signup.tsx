@@ -28,10 +28,16 @@ export default function Signup() {
     try {
       const sb = getSupabaseClient();
       const { error: e } = await sb.auth.signInWithOtp({ email });
-      if (e) throw new Error(e.message);
+      if (e) {
+        // rate limit·기타 발송 에러 — 이전 코드 가지고 있으면 입력 가능하도록 폼은 열어둔다
+        setError(e.message + ' (이미 받은 코드가 있으면 입력하세요)');
+        setOtpSent(true);
+        return;
+      }
       setOtpSent(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'unknown error');
+      setOtpSent(true);
     } finally {
       setLoading(false);
     }
