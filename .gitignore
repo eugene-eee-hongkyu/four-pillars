@@ -20,3 +20,4 @@ screen*.png
 
 # Next.js 빌드 아티팩트 (sajutalk/ 외 위치)
 .next/
+.dev-screenshots/

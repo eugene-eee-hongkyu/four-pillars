@@ -1,24 +1,75 @@
-// 화면 1: 랜딩 (placeholder — Phase 5에서 full 구현)
-import { View, Text, Pressable } from 'react-native';
+// 화면 1: 랜딩 — 단일 CTA "무료 진단 시작" → 세션 발급 + /child-info
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button } from '@/components/ui/Button';
+import { StickyCTA } from '@/components/ui/StickyCTA';
+import { Toast } from '@/components/ui/Toast';
+import { useFlow } from '@/lib/flow/context';
 
 export default function Landing() {
   const router = useRouter();
+  const { setSessionId } = useFlow();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // 진입 시 funnel 트래킹은 세션 발급 후
+  useEffect(() => {
+    void fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: 'pre-session', screen: 'landing', action: 'enter' }),
+      keepalive: true,
+    }).catch(() => {});
+  }, []);
+
+  const handleStart = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/session', { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      const { sessionId } = await res.json();
+      setSessionId(sessionId);
+      // 진입 추적
+      void fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, screen: 'landing', action: 'cta-tap' }),
+      });
+      router.push('/(flow)/child-info');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View className="flex-1 items-center justify-center bg-surface p-container-padding">
-      <Text className="font-heading-bold text-display-lg text-text-pri mb-4">eduluck</Text>
-      <Text className="font-body text-body-lg text-text-sub text-center mb-12">
-        우리 아이 학운,{'\n'}사주로 봅니다
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/(flow)/child-info')}
-        className="bg-primary px-8 py-4 rounded-md"
+    <View className="flex-1 bg-surface">
+      <ScrollView
+        contentContainerClassName="flex-1 items-center justify-center px-container-padding gap-6"
       >
-        <Text className="font-body-bold text-label-lg text-surface-container-low">
-          무료 진단 시작 (3분)
+        <Text className="font-heading-bold text-display-lg text-text-pri">eduluck</Text>
+        <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed">
+          우리 아이 학운,{'\n'}사주로 봅니다
         </Text>
-      </Pressable>
+        <View className="gap-2 mt-4">
+          <Text className="font-body text-body-md text-text-sub text-center">◆ 학년대별 흐름·강점</Text>
+          <Text className="font-body text-body-md text-text-sub text-center">◆ 어머니 사주 합 분석</Text>
+        </View>
+        {error && (
+          <View className="w-full max-w-md">
+            <Toast kind="error" message={`시작 실패: ${error}`} />
+          </View>
+        )}
+      </ScrollView>
+
+      <StickyCTA>
+        <Button onPress={handleStart} loading={loading}>
+          무료 진단 시작 (3분)
+        </Button>
+      </StickyCTA>
     </View>
   );
 }
