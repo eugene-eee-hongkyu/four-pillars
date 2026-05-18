@@ -13,15 +13,8 @@ export default function Landing() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 진입 시 funnel 트래킹은 세션 발급 후
-  useEffect(() => {
-    void fetch('/api/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: 'pre-session', screen: 'landing', action: 'enter' }),
-      keepalive: true,
-    }).catch(() => {});
-  }, []);
+  // 진입 트래킹은 세션 발급 후 cta-tap 시점에 함께 보냄 (pre-session UUID 오염 회피)
+  useEffect(() => {}, []);
 
   const handleStart = async () => {
     setLoading(true);
