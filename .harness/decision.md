@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-05-19: jaeho 개인정보 git history 제거 방식 — filter-repo (history rewrite)
+
+- **선택**: `git filter-repo --path ... --invert-paths` 3회 (jaeho-test 디렉토리 + test-jaeho.sh + test-jaeho-2.sh) + force push
+- **대안 검토**:
+  - **A (선택) filter-repo + force push**: history에서 완전 제거. 안전. force push 필요(협업자 없으면 무관).
+  - B (tombstone commit): 현재 commit에서 삭제 + .gitignore. 과거 commit 열람 가능 → 개인정보 잔존.
+  - C (그대로 두기): 이미 _private/로 이동 + gitignore됨. public repo 우려.
+- **선택 이유**: (1) 이름·생년월일시 등 미성년자 개인정보 잔존 우려, (2) 협업자 0명이라 force push 영향 미미, (3) filter-repo가 자동 백업(`.git/filter-repo/`)을 만들어 롤백 가능.
+- **영향 범위**: 모든 commit hash가 재작성됨 (be4f266 → 7cbf98a). origin remote 자동 제거 → 수동 재추가 필요. upstream tracking(`branch.main.remote`) 동시 손실 → `git branch --set-upstream-to=origin/main main`로 복구. 다른 clone이 있으면 `fetch + reset --hard origin/main` 필요.
+- **되돌리는 방법**: `.git/filter-repo/commit-map` 백업 보유 — 원본 hash를 알고 있으면 `git reset --hard <원본_hash>` 후 다시 force push. 완전 안전망은 GitHub Events API의 PushEvent 또는 별도 mirror clone.
+
+
+## 2026-05-19: 격국·12운성·납음 데이터 — 모듈 추가 vs LLM 자체 계산 → LLM 자체 계산 채택
+
+- **선택**: `ManseResult`에 격국·12운성·납음 필드를 추가하지 않고, system prompt에 "반드시 명시" 강제 + `ilganLabel()` 일간 표기만 user message에 명확히 노출 → LLM(Sonnet 4.6)이 4기둥+일간으로 자체 계산
+- **대안 검토**:
+  - **A (선택) LLM 자체 계산**: 즉시 적용 가능, 코드 변경 최소. 정확도는 LLM 명리 지식 의존.
+  - B (계산 모듈 추가): `lib/manse/`에 gyeokguk/unsung/napum 3개 모듈 + 테스트 + ManseResult 확장 + buildPrompt에 주입. 정확도 확정·deterministic. 작업 1~2 세션.
+- **선택 이유**: (1) v3 PROMPT.md가 동일 경로(prompt 강제)로 100/100 달성한 선례, (2) Sonnet 4.6의 명리 기본 지식이 격국·12운성·납음 계산에 충분, (3) production 첫 출력 검증 후 부정확하면 그때 모듈화해도 늦지 않음, (4) 14섹션·75~95문장 구조 적용이 더 시급한 가치.
+- **영향 범위**: `eduluck/lib/prompts/interpret-premium.ts`만 변경 (ilganLabel·gradeSpec 헬퍼 추가, system prompt v3로 교체). user message에 일간/오행/지장간 월령 명시. ManseResult 미변경.
+- **되돌리는 방법**: 정확도 검증 실패 시 `lib/manse/gyeokguk.ts`·`unsung.ts`·`napum.ts` 추가 후 ManseResult 확장. 현재 prompt는 그대로 유지(LLM이 받은 데이터만 풍부해짐).
+
+
 ## 2026-05-19: 정밀 진단(화면 11) 모델 — Sonnet 4.6 + v3 prompt 채택
 
 - **선택**: Sonnet 4.6 + jaeho-test/v3/PROMPT.md (75~95문장, 14 섹션, 격국·12운성·납음, 전공·중·고·대 구체 명시)

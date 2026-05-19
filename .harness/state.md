@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-19 10:12
-## 마지막 업데이트: 2026-05-19 10:12
+## 마지막 실행: 2026-05-19 10:33
+## 마지막 업데이트: 2026-05-19 10:33
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- eduluck 종단 검증 완료 + UX 옵션 B 10건 적용 + 로고 컨셉 B + 정밀 진단 prompt v3 100점 달성 → mom test 검증 단계 진입 대기
+- production prompt 3종 v3(100점) spec 적용 완료 (premium·free·mini) → 다른 사주로 출력 검증 + mom test 진입 대기
 
 ### 이어서 할 것
 
-1. v3 PROMPT.md를 prompts/interpret-premium.md에 반영 (어머니 사주 + 합 시기 + 학년 4구간 분기 추가)
-2. Eugene mom test 10명 검증 (정밀 진단 4점 평균 도달 시 Sonnet 4.6 유지)
-3. v1.5 결정: custom SMTP + 도메인 + Vercel Pro $20/월 + Deployment Protection 해제
+1. 다른 사주(jaeho 외) 1건으로 premium 출력 눈 검증 — 격국·12운성·납음 LLM 자체 계산 정확도 확인
+2. Eugene mom test 10명 검증 (production URL, v3 spec 적용된 premium)
+3. premium 출력 토큰 ~2배 → API 비용·응답 시간 모니터링 (느려지면 streaming UX 또는 토큰 압축)
 
 ### 막힌 것
 
@@ -29,6 +29,7 @@
 - 정밀 진단 60s timeout 시 Vercel Pro 업그레이드 ($20/월)
 - mom test 10명 결과 후 Sonnet 4.6 유지 vs Opus 혼합 결정
 - custom SMTP (Resend) 도입 시기 — 외부 100명 검증 전 필수
+- premium 격국·12운성·납음 LLM 자체 계산 정확도 부족 시 `lib/manse/`에 계산 모듈 추가 결정
 
 ### 백로그 요약
 
@@ -45,7 +46,9 @@
 - [x] **UX 옵션 B 10건** (Group 1: 에러·진행표시·헤딩·SSE 메시지·시간모름 / Group 2: 랜딩 신호·만세력 가이드·결제 mock·TOC·별점 분리)
 - [x] **로고 컨셉 B 적용** (4기둥 그리드, favicon·icon·splash·og-image PNG 5종 + Logo.tsx)
 - [x] **정밀 진단 prompt v3 — Sonnet 4.6 100/100** (격국·12운성·납음·전공·중고대 specific)
-- [ ] v3 PROMPT를 prompts/interpret-premium.md에 반영 + 어머니 사주 섹션 추가
+- [x] **jaeho 개인정보 git history 제거** (filter-repo + force push, upstream tracking 복구)
+- [x] **production prompt 3종 v3 spec 적용** (premium 14섹션·학년 4분기·어머니 사주 / free·mini 톤 시그니처 흡수)
+- [ ] 다른 사주로 premium 출력 1건 눈 검증 (격국·12운성·납음 정확도)
 - [ ] Eugene mom test 10명 검증 (production URL)
 - [ ] 화면 11 cutoff 시 Vercel Pro 결정
 - [ ] v1.5: custom SMTP, Deployment Protection 해제, 도메인

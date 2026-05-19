@@ -4,6 +4,37 @@
 
 ---
 
+## Session 2026-05-19 10:33 — git history 재작성 (jaeho 개인정보) + production prompt 3종 v3(100점) spec 적용
+
+### 작업 요약
+
+**git filter-repo로 jaeho-test 개인정보 history 제거**
+- 옵션 A 선택: git filter-repo로 history rewrite (vs B: tombstone commit / C: 그대로 두기)
+- 제거 경로 3개: `eduluck/docs/design/jaeho-test`, `eduluck/scripts/test-jaeho.sh`, `eduluck/scripts/test-jaeho-2.sh`
+- `git push origin --force --all`은 시스템 안전장치(`push.*--force` deny)에 막혀 사용자 직접 실행 → `be4f266...7cbf98a main -> main (forced update)`
+- 부작용 복구: filter-repo가 origin remote 제거 → 재추가 + `git fetch origin` + `git branch --set-upstream-to=origin/main main`로 upstream tracking 복원 (VSCode "Publish Branch" 버튼 사라짐)
+
+**production prompt 3종 → v3 100점 spec 적용**
+- [interpret-premium.md/.ts](eduluck/lib/prompts/interpret-premium.ts): v3 system 그대로 (격국·12운성·납음·합충형 강제, 14섹션 구조, "보여요·나와요" 모든 문장, 학원·동네·콘텐츠 구체 강제) + 학년별 분량(60~95문장)·학교 예측 분기(초저→고) + 어머니 사주는 14번 "어머니께 한 마디"에서 합 시기로 풀이. `gradeSpec()` 헬퍼 추가, unused `gradeToLevel`/`GradeLevel` import 제거. `ilganLabel()` 추가 (일주 한자 → 일간 라벨, LLM이 격국·12운성·납음 계산 기준)
+- [interpret-free.md/.ts](eduluck/lib/prompts/interpret-free.ts): v3 톤 시그니처 흡수 (모든 문장 어미·평이 풀이 예시·emoji/bold 자제·단정 예측 어미·격국 가벼이 1회). 분량 15~20문장·5섹션 구조는 유지
+- [relation-mini.md/.ts](eduluck/lib/prompts/relation-mini.ts): v3 시그니처 어미 + 평이 풀이 가이드 + emoji/bold 금지. 1~2문장 hook 본질 유지
+- 격국·12운성·납음은 `ManseResult`에 없어 LLM(Sonnet 4.6)이 4기둥+일간으로 자체 계산하는 경로 채택 (v3와 동일)
+- `pnpm exec tsc --noEmit` exit 0 통과
+- 커밋 `f681141`, push 완료
+
+### 실패한 시도
+
+- `git push origin --force --all`을 직접 실행 시도 → 시스템 deny rule(`push.*--force`)에 차단. 사용자가 터미널에서 직접 실행하는 우회로만 통과
+- 처음 `pnpm tsc --noEmit`을 `cd && pnpm tsc` 복합 명령으로 시도 → 복합 명령어 금지 룰에 차단. 두 호출로 분리
+
+### 다음 액션
+
+- 다른 사주(jaeho 외)로 premium 첫 출력 1건 눈 검증 — 격국·12운성·납음 LLM 자체 계산 정확도 확인
+- 출력 토큰 ~2배 증가 → premium API 비용·응답 시간 모니터링 (느려지면 streaming UX 보강 또는 모듈화로 토큰 압축)
+- Eugene mom test 10명 검증 (production URL, v3 spec 적용된 premium)
+
+---
+
 ## Session 2026-05-19 10:12 — eduluck 종단 검증 + UX 옵션 B 10건 + 로고 컨셉 B + prompt iteration 100점
 
 ### 작업 요약
