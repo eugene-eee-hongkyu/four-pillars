@@ -3,51 +3,78 @@
 // system prompt inline (Vercel functions bundle 호환).
 
 import type { ManseResult } from '@/lib/manse/engine';
-import { gradeToLevel, type GradeLevel } from './interpret-free';
 
 export function getInterpretPremiumSystem(): string {
   return INTERPRET_PREMIUM_SYSTEM;
 }
 
-const INTERPRET_PREMIUM_SYSTEM = `당신은 학생 자녀를 둔 어머니와 일대일로 상담하는 한국의 사주 학운 전문가다.
+const INTERPRET_PREMIUM_SYSTEM = `당신은 한국의 사주 명리 학운 전문가입니다.
+경력 30년, 학부모 상담 다수, 정·재계·연예인 어머님들이 자녀 학운 풀이로 이름을 받아 가시는 분으로 평판이 나 있습니다.
 
-## 작업
-자녀와 어머니의 사주를 종합하여 학년·진로·어머니 관여 전략을 풀이한다.
+## 톤·어미 — 매우 중요
+- "X 보여요", "Y 나와요" 어미를 모든 문장에 자연스럽게 섞으세요 (Eugene 샘플 reading 시그니처)
+- 친근한 존댓말 ("어머니께", "○○는~")
+- 사주 용어는 즉시 평이한 풀이 곁들임 (예: "병화(밝은 햇빛 같은 본질)")
+- markdown 헤더는 사용하되 emoji와 굵게 강조는 자제 (톤이 흐트러집니다)
+- "이뤄진다 나와요", "잘 자란다 나와요" 같은 단정적 예측 어미 자연 사용
 
-## 분량
-A4 1페이지 분량, ~30~40문장 (Eugene 샘플 reading 기준).
+## 분량 (학년대별 차등)
+- 초저(1~3): 60~80문장, A4 1.5~2p
+- 초고(4~6): 65~85문장, A4 2p
+- 중(1~3): 70~90문장, A4 2~2.5p
+- 고(1~3): 75~95문장, A4 2~3p
 
-## 구조 (반드시 이 순서)
-1. 종합 분석 (5~7문장)
-   - 자녀 일간 + 어머니 일간의 합 관계 핵심
-   - 자녀의 사주 핵심 (인성·식상·신살 강조)
-2. 학년대별 가이드 (3구간 — 초·중·고)
-   - 초등 (지금 또는 다가오는 시기): 학원·학군지·과목 우선
-   - 중: 진로 분기·과목 우선·친구·연애 영향
-   - 고: 입시 전략·과 선택·진로 결정
-   각 4~6문장
-3. 어머니-자녀 합 시기 (5~7문장)
-   - 명리적으로 어머니의 직접 관여가 가장 효과적인 시점 (대운·세운 기반)
-   - 외부 학원 vs 어머니 직접 학습 비중
-4. 종합 조언 (3~5문장, 번호 매김)
-5. (고등 학년인 경우만) 전공·학교 예측 (3~5문장)
-   - "경영·경제 / 중앙대 보임" 같은 구체 결과
-   - 단정 어조 약화 ("~경향이 보입니다")
+## 명리 정통 깊이 — 반드시 활용
+1. **격국(格局)**: 월령(월지)을 기준으로 격국 명시. 예: "월지 사화(巳火)에 일간 병화(丙火) 같은 글자 = 비견격(比肩格)"
+2. **12운성(運星)**: 일간 기준 각 지지의 12운성 (장생·목욕·관대·건록·제왕·쇠·병·사·묘·절·태·양)
+3. **신살 풀이의 깊이**: 단순 나열이 아니라 학습·진로에 어떻게 작용하는지 풀이
+4. **합·충·형·해 모두 명시**: 풀이에 자연스럽게 녹이되, 각 작용을 구분
+5. **납음오행(納音五行)**: 일주 납음. 본질 풀이에 추가
+6. **공망의 시기별 작용**: 공망이 언제 어떻게 작용하는지
 
-## 톤 마커
-- interpret-free와 동일
-- "(지금)" 마크로 현재 시점 강조
+## 구조 — 반드시 이 순서, 14 섹션
+1. 시작 ("○○ 볼게요" 친근 인사 + 영어 이름 권유)
+2. 본질 (일간 + 격국 + 납음, 6~8문장)
+3. 강점 (사주 + 학년 액션, 6~8문장)
+4. 약점·주의 (5~7문장)
+5. 환경 설계 (학군지·집·방·색·식물·구체 동네명, 6~8문장)
+6. 훈육 가이드 (학습 푸시·자율성·인내·훈육 톤·체벌 가이드, 6~8문장)
+7. 친구·또래 (구설수·경쟁심·공부 친구, 5~7문장)
+8. 학원·선생님 (스펙·성별·구체 학원 브랜드 추천, 5~7문장)
+9. 현재~앞으로의 흐름 (대운·세운 + 12운성 변화, 6~8문장)
+10. 국가·해외 운 (사주 수 기운·역마 + 구체 국가, 3~5문장)
+11. 직업·진로 흐름 (전공 후 어떤 직업·일터에서 빛나는지, 4~6문장)
+12. **전공 볼게요** ("전공 볼게요" 인사로 시작. 사주 기반 1순위·2순위·이공계 대안 모두 명시, 4~6문장)
+13. **학교 볼게요** ("학교 볼게요" 인사로 시작. 학년 분기에 따라 구체 학교명 명시 + 1~2개는 "스치나 막혀요" 미묘한 표현 활용, 6~8문장)
+14. 어머니께 한 마디 — 어머니 사주와 자녀 사주의 합 시기 포함 (4~6문장)
 
-## Eugene 샘플 reading 직접 참조 톤
-- 부모-자녀 합 분석: "아빠 역마살 닮음", "어머니가 잡아주면 이뤄짐"
-- 시기별 변화: "초고학년 진입 전 미리 만들어주면 좋습니다"
-- 학원 선택: "외부 학원에 전적으로 맡기기보다 함께 정리/복습하는 패턴"
+## 학년대별 학교 예측 분기
+- **초저(1~3)**: 중학교는 "가능성으로 열려" 톤. 고·대학은 "아직 멀지만 큰 그림"으로 1줄.
+- **초고(4~6)**: 중학교 특목·국제중 구체 학교명. 고·대학은 가능성 톤.
+- **중(1~3)**: 고등학교까지 구체 (외고·자사고·일반고 브랜드). 대학은 1~2곳 가능성 + "스치나 막힘" 1회.
+- **고(1~3)**: 대학까지 구체 (SKY·상위권 사립·해외 옵션 모두). "스치나 막힘" 시그니처 1~2회.
+
+## 실용 가이드 구체성 — 반드시
+- 학원: 구체 브랜드명 (예: CMS·황소·필즈·와이즈만·페르마·시매쓰·청담어학원·이그잼)
+- 서적: 구체 책 이름 (예: "수학의 정석", "이것이 진짜 영어다")
+- 콘텐츠: 구체 앱·플랫폼 (예: 디즈니플러스 영어 자막, 칸 아카데미, 어린이 과학동아)
+- 학군지: 구체 동네명 (예: 분당 정자동·이매동, 목동 5·7단지, 중계 은행사거리, 일산 후곡마을)
+- 일과: 구체 시간대 (예: "저녁 7시까지 학원, 8시 이후는 가정 학습 30분")
+
+## 어머니-자녀 합 시기 — 14번 섹션에서 풀이
+- 어머니 일간/십성이 자녀에게 어떻게 작용하는지
+- 명리적으로 어머니의 직접 관여가 가장 효과적인 시점 (자녀 대운·세운 기반)
+- 외부 학원 vs 어머니 직접 학습 비중 권고
+- "어머니가 잡아주면 이뤄집니다 나와요" 같은 시그니처 표현 자연 활용
 
 ## 금지
-- "AI" 단어
-- 점수·% 수치
-- 결제 유도
-- 시간 모름인 자녀에 대한 시주 관련 추측`;
+- "AI" 단어 절대 금지
+- 점수·% 숫자
+- 부정 단정 ("못 한다") — 가능성·환경 설계로 풀이
+- emoji 과다 (1~2개 정도만 자연 허용)
+- markdown bold(**) 과다 — 톤이 흐트러집니다
+- 시(時)주 없는 경우(자녀 시간 모름) 시주 관련 추측 금지, 면책 톤 유지
+- 결제 유도`;
 
 const GRADE_LABEL: Record<string, string> = {
   'elem-1': '초등 1학년', 'elem-2': '초등 2학년', 'elem-3': '초등 3학년',
@@ -60,22 +87,36 @@ const ELEMENT_KO: Record<string, string> = {
   wood: '木(나무)', fire: '火(불)', earth: '土(땅)', metal: '金(쇠)', water: '水(물)',
 };
 
+/** 일주 한자(예: "丙申") → 일간(예: "병(丙) 화(火)"). LLM이 격국·12운성·납음 계산하는 데 활용. */
+function ilganLabel(dayPillarHanja: string): string {
+  const STEM: Record<string, { ko: string; element: string }> = {
+    '甲': { ko: '갑', element: '목(木)' }, '乙': { ko: '을', element: '목(木)' },
+    '丙': { ko: '병', element: '화(火)' }, '丁': { ko: '정', element: '화(火)' },
+    '戊': { ko: '무', element: '토(土)' }, '己': { ko: '기', element: '토(土)' },
+    '庚': { ko: '경', element: '금(金)' }, '辛': { ko: '신', element: '금(金)' },
+    '壬': { ko: '임', element: '수(水)' }, '癸': { ko: '계', element: '수(水)' },
+  };
+  const ch = dayPillarHanja.charAt(0);
+  const s = STEM[ch];
+  return s ? `${s.ko}(${ch}) ${s.element}` : dayPillarHanja;
+}
+
 function manseSummary(m: ManseResult): string[] {
   const ec = m.elementCounts;
-  const total = Object.values(ec).reduce((s, v) => s + v, 0);
   const elemLines = (Object.entries(ec) as [string, number][])
     .map(([el, cnt]) => `${ELEMENT_KO[el] ?? el} ${cnt}`)
-    .join(' / ');
+    .join(' · ');
   const missing = (Object.entries(ec) as [string, number][])
     .filter(([, cnt]) => cnt === 0)
     .map(([el]) => ELEMENT_KO[el] ?? el);
 
   return [
     `4기둥: 년 ${m.yearPillar}(${m.yearPillarHanja}) · 월 ${m.monthPillar}(${m.monthPillarHanja}) · 일 ${m.dayPillar}(${m.dayPillarHanja}) · 시 ${m.hourPillar ? `${m.hourPillar}(${m.hourPillarHanja})` : '미상'}`,
+    `일간: ${ilganLabel(m.dayPillarHanja)}  ← 격국·12운성·납음 계산 기준`,
     `오행: ${elemLines}`,
-    `부재: ${missing.length > 0 ? missing.join(', ') : '없음'}`,
-    `지장간 월령: ${m.jijanggan.monthPillar.join(', ') || '—'}`,
-    `합충형해: ${m.hapchunh.summary || '없음'}`,
+    `부재(완전 부재 = 보완 절실): ${missing.length > 0 ? missing.join(', ') : '없음'}`,
+    `지장간 월령(월주): ${m.jijanggan.monthPillar.join(', ') || '—'}`,
+    `합·충·형·해: ${m.hapchunh.summary || '없음'}`,
     `신살 강조: ${m.shensha.strong.join(', ') || '없음'}`,
     `신살 (년/월/일/시): ${m.shensha.yearPillar.join(',') || '-'} / ${m.shensha.monthPillar.join(',') || '-'} / ${m.shensha.dayPillar.join(',') || '-'} / ${m.shensha.hourPillar.join(',') || '-'}`,
     `용신 방향: ${m.yongsin.reasoning || '정보 없음'}`,
@@ -93,12 +134,37 @@ export interface InterpretPremiumContext {
   motherManse: ManseResult;
 }
 
+/** 학년 → (분량 문장 범위, 학교 예측 분기 가이드 문장) */
+function gradeSpec(grade: string): { sentenceRange: string; schoolGuide: string } {
+  if (grade === 'elem-1' || grade === 'elem-2' || grade === 'elem-3') {
+    return {
+      sentenceRange: '60~80문장 (A4 1.5~2p)',
+      schoolGuide: '초저학년 — 중학교는 "가능성으로 열려" 톤으로 1~2문장, 고·대학은 "아직 멀지만 큰 그림" 1줄.',
+    };
+  }
+  if (grade.startsWith('elem')) {
+    return {
+      sentenceRange: '65~85문장 (A4 2p)',
+      schoolGuide: '초고학년 — 중학교 특목·국제중 구체 학교명 (영훈국제중·대원국제중 등). 고·대학은 가능성 톤.',
+    };
+  }
+  if (grade.startsWith('middle')) {
+    return {
+      sentenceRange: '70~90문장 (A4 2~2.5p)',
+      schoolGuide: '중학 — 고등학교까지 구체 (외고: 대원·한영·청심국제 / 자사고: 민사·하나·상산 / 일반고). 대학은 1~2곳 가능성 + "스치나 막힘" 시그니처 1회.',
+    };
+  }
+  return {
+    sentenceRange: '75~95문장 (A4 2~3p)',
+    schoolGuide: '고등 — 대학까지 구체 (SKY · 상위권 사립: 서강·성균·한양·중앙·이대·경희 · 해외: UBC·리버럴아츠). "○○대학 살짝 스치나 막힘" 시그니처 1~2회.',
+  };
+}
+
 export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): string {
   const today = new Date().toISOString().slice(0, 10);
   const age = new Date().getFullYear() - ctx.childBirthYear + 1;
   const gradeLabel = GRADE_LABEL[ctx.grade] ?? ctx.grade;
-  const gradeLevel: GradeLevel = gradeToLevel(ctx.grade);
-  const isHigh = gradeLevel === 'high';
+  const spec = gradeSpec(ctx.grade);
 
   const c = ctx.childManse;
   const m = ctx.motherManse;
@@ -109,28 +175,28 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
   const cSewunStr = cSewun ? `${cSewun.year}년 ${cSewun.stem}${cSewun.branch}(${cSewun.stemSipsin})` : '—';
 
   const lines = [
-    `[분석 기준일]: ${today}`,
+    `[분석 기준일] ${today}`,
     ``,
     `[자녀 ${ctx.childNickname}]`,
-    `${ctx.childGender === 'female' ? '여' : '남'} / ${gradeLabel} / ${age}세 / ${ctx.childBirthYear}-${String(ctx.childBirthMonth).padStart(2, '0')}-${String(ctx.childBirthDay).padStart(2, '0')}`,
+    `${ctx.childGender === 'female' ? '여' : '남'} / ${gradeLabel} / 만 ${age - 1}세(${age}살) / ${ctx.childBirthYear}-${String(ctx.childBirthMonth).padStart(2, '0')}-${String(ctx.childBirthDay).padStart(2, '0')}`,
     ...manseSummary(c).map(s => '  ' + s),
     `  현재 대운: ${cDaeunStr}`,
     `  현재 세운: ${cSewunStr}`,
     ``,
-    `[어머니]`,
+    `[어머니 사주] — 14번 섹션 "어머니께 한 마디"에서 자녀와의 합 시기로 풀이`,
     ...manseSummary(m).map(s => '  ' + s),
     ``,
-    `[학년대별 톤 분기]`,
-    gradeLevel === 'elem'
-      ? '초등: 학원·학군지·과목 우선, 친구 관계 기초, 사춘기 대비. 전공·학교 예측 금지.'
-      : gradeLevel === 'middle'
-      ? '중학: 진로 분기·과목 우선·친구·연애 영향. 전공·학교 예측은 보류.'
-      : '고등: 입시 전략·과 선택. (정밀에만) 전공·학교 예측 가능 — "~경향이 보입니다" 톤.',
+    `[학년대별 분량·학교 예측]`,
+    `분량: ${spec.sentenceRange}`,
+    spec.schoolGuide,
     ``,
     `[작업]`,
-    `system prompt 구조 5섹션(종합 분석 → 학년대별 가이드 3구간 → 어머니-자녀 합 시기 → 종합 조언 → ${isHigh ? '전공·학교 예측' : '(고등 아님 → 전공·학교 예측 생략)'})을 반드시 이 순서로.`,
-    `분량: A4 1페이지 ~30~40문장. "AI" 단어 사용 금지. 시(時)주 없는 경우 시주 추측 금지.`,
-  ];
+    `${ctx.childNickname}의 정밀 학운을 어머니께 풀어주세요.`,
+    `system prompt 14 섹션 순서 준수 / 격국·12운성·납음·합충형 모두 활용 / 학년대별 학교 예측 분기 따라 구체 학교명 명시.`,
+    `"보여요"·"나와요" 어미를 모든 문장에 자연 + 사주 용어는 평이한 풀이 곁들임.`,
+    `어머니 사주는 14번 마지막 섹션에서 자녀-어머니 합 시기·관여 비중으로 녹여 풀이.`,
+    c.hourPillar ? `` : `시(時)주 미입력 — 시주 관련 추측 금지, 면책 톤 유지.`,
+  ].filter(Boolean);
 
   return lines.join('\n');
 }
