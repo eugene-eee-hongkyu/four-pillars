@@ -2,6 +2,7 @@
 // system prompt inline (Vercel functions bundle 호환).
 
 import type { ManseResult } from '@/lib/manse/engine';
+import { getStemSipsin, splitPillar } from '@/lib/manse/pillars';
 
 export function getRelationMiniSystem(): string {
   return RELATION_MINI_SYSTEM;
@@ -40,16 +41,23 @@ export function buildRelationMiniPrompt(ctx: RelationMiniContext): string {
   const c = ctx.childManse;
   const m = ctx.motherManse;
 
+  const childIlgan = splitPillar(c.dayPillar).stem;
+  const motherIlgan = splitPillar(m.dayPillar).stem;
+  const motherEffect = getStemSipsin(childIlgan, motherIlgan);
+
   return [
     `[자녀 ${ctx.childNickname}]`,
-    `일주: ${c.dayPillar}(${c.dayPillarHanja})`,
+    `일주: ${c.dayPillar}(${c.dayPillarHanja})  · 일간: ${childIlgan}`,
     `신살 강조: ${c.shensha.strong.join(', ') || '없음'}`,
     ``,
     `[어머니]`,
-    `일주: ${m.dayPillar}(${m.dayPillarHanja})`,
+    `일주: ${m.dayPillar}(${m.dayPillarHanja})  · 일간: ${motherIlgan}`,
     `신살 강조: ${m.shensha.strong.join(', ') || '없음'}`,
     ``,
+    `[어머니→자녀 십성 작용]`,
+    `${motherIlgan} → ${childIlgan} 기준: ${motherEffect || '—'}`,
+    ``,
     `[작업]`,
-    `어머니 일간/십성이 자녀에게 어떻게 작용하는지 1~2문장. system prompt 구조 준수. 결론·판단 금지.`,
+    `위 십성 작용을 1~2문장으로 풀이. "보여요/나와요" 어미 자연. 결론·판단 금지.`,
   ].join('\n');
 }

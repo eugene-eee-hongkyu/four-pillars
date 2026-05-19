@@ -3,6 +3,7 @@
 // system prompt inline (Vercel functions bundle 호환).
 
 import type { ManseResult } from '@/lib/manse/engine';
+import { getStemSipsin, splitPillar } from '@/lib/manse/pillars';
 
 export function getInterpretPremiumSystem(): string {
   return INTERPRET_PREMIUM_SYSTEM;
@@ -110,17 +111,42 @@ function manseSummary(m: ManseResult): string[] {
     .filter(([, cnt]) => cnt === 0)
     .map(([el]) => ELEMENT_KO[el] ?? el);
 
+  // 12운성 — 각 지지의 일간 기준 운성 (계산값 그대로 주입)
+  const unsungLine = [
+    `년지 ${m.unsung.yearPillar.branch}=${m.unsung.yearPillar.stage}`,
+    `월지 ${m.unsung.monthPillar.branch}=${m.unsung.monthPillar.stage}`,
+    `일지 ${m.unsung.dayPillar.branch}=${m.unsung.dayPillar.stage}`,
+    m.unsung.hourPillar ? `시지 ${m.unsung.hourPillar.branch}=${m.unsung.hourPillar.stage}` : null,
+  ].filter(Boolean).join(' · ');
+
+  // 학운 3종 비중 (모듈 계산값)
+  const c = m.sipsin.counts;
+  const hagunCore = `인성 ${c.insung} · 관성 ${c.gwansung} · 식상 ${c.siksang} · 비겁 ${c.bigeop} · 재성 ${c.jaesung}` +
+    (m.sipsin.isGwaninSangsaeng ? ' [관인상생 ✓]' : ' [관인상생 ✗]');
+
   return [
     `4기둥: 년 ${m.yearPillar}(${m.yearPillarHanja}) · 월 ${m.monthPillar}(${m.monthPillarHanja}) · 일 ${m.dayPillar}(${m.dayPillarHanja}) · 시 ${m.hourPillar ? `${m.hourPillar}(${m.hourPillarHanja})` : '미상'}`,
-    `일간: ${ilganLabel(m.dayPillarHanja)}  ← 격국·12운성·납음 계산 기준`,
+    `일간: ${ilganLabel(m.dayPillarHanja)}`,
+    `격국: ${m.gyeokguk.name} (월령 본기 ${m.gyeokguk.monthMainStem})`,
+    `12운성 (일간 기준): ${unsungLine}`,
+    `납음 (일주): ${m.napum.dayPillar.nameKo}(${m.napum.dayPillar.name}) — ${m.napum.dayPillar.hint}`,
     `오행: ${elemLines}`,
     `부재(완전 부재 = 보완 절실): ${missing.length > 0 ? missing.join(', ') : '없음'}`,
     `지장간 월령(월주): ${m.jijanggan.monthPillar.join(', ') || '—'}`,
     `합·충·형·해: ${m.hapchunh.summary || '없음'}`,
+    `학운 3종 (십성 비중): ${hagunCore}`,
     `신살 강조: ${m.shensha.strong.join(', ') || '없음'}`,
     `신살 (년/월/일/시): ${m.shensha.yearPillar.join(',') || '-'} / ${m.shensha.monthPillar.join(',') || '-'} / ${m.shensha.dayPillar.join(',') || '-'} / ${m.shensha.hourPillar.join(',') || '-'}`,
     `용신 방향: ${m.yongsin.reasoning || '정보 없음'}`,
   ];
+}
+
+/** 어머니 일간이 자녀에게 어떤 십성으로 작용하는지 한 줄. */
+function motherChildSyncLine(child: ManseResult, mother: ManseResult): string {
+  const childIlgan = splitPillar(child.dayPillar).stem;
+  const motherIlgan = splitPillar(mother.dayPillar).stem;
+  const effect = getStemSipsin(childIlgan, motherIlgan);
+  return `어머니 일간(${motherIlgan}) → 자녀 일간(${childIlgan}) 기준 십성: ${effect || '—'}`;
 }
 
 export interface InterpretPremiumContext {
@@ -185,6 +211,7 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     ``,
     `[어머니 사주] — 14번 섹션 "어머니께 한 마디"에서 자녀와의 합 시기로 풀이`,
     ...manseSummary(m).map(s => '  ' + s),
+    `  ${motherChildSyncLine(c, m)}`,
     ``,
     `[학년대별 분량·학교 예측]`,
     `분량: ${spec.sentenceRange}`,
