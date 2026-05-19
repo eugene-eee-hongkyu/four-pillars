@@ -269,8 +269,63 @@ export interface FinalTierResult {
   parentAdjustBreakdown: string[];
   /** 최종 추천 티어 범위 (베이스 ± 조정, 한도 ±2). 사주 베이스 절반 이상 뒤집지 않음. */
   finalTierRange: [number, number];
+  /** 점수 기반 confidence — 같은 단계 안에서도 점수에 따라 강도 다름 */
+  confidence: 'certain' | 'likely' | 'reach';
+  /** 핵심 추천 티어 (1, 2, 3, ...). finalTierRange[0] 또는 +1. */
+  primaryTier: number;
+  /** 안정권 티어 (primaryTier + 1) */
+  safetyTier: number;
+  /** LLM 풀이용 한 줄 confidence 표현: "확실한 1티어" / "1티어 가능 + 2티어 안정" / "1티어 도전 + 2티어 안정" */
+  confidenceLabel: string;
   /** LLM 풀이용 한 줄 요약 */
   oneLineSummary: string;
+}
+
+/** 점수 + 최종 티어 범위로부터 confidence + primary/safety 티어 산출.
+ *  같은 단계 안에서도 점수에 따라 certain/likely/reach 분리. */
+function calcConfidence(score: number, finalTierRange: [number, number]): {
+  confidence: 'certain' | 'likely' | 'reach';
+  primaryTier: number;
+  safetyTier: number;
+  label: string;
+} {
+  const primaryTier = finalTierRange[0]; // 핵심 추천 = 단계 상단 (낮은 숫자가 위)
+  // 안정권: 범위 내 다음 티어. range가 [1,1] 등 단일이면 +1.
+  const safetyTier = finalTierRange[1] === finalTierRange[0]
+    ? Math.min(primaryTier + 1, 12)
+    : finalTierRange[1];
+
+  // 단계별 점수 구간 (cutoff과 동일)
+  // 매우 강 ≥10 / 강 7~9 / 중상 4~6 / 중 2~3 / 중하 0~1 / 약상 -1~-2 / 약중 -3~-4 / 약하 -5~-6
+  let confidence: 'certain' | 'likely' | 'reach';
+
+  if (score >= 13) confidence = 'certain';           // 매우 강 상단
+  else if (score >= 11) confidence = 'likely';       // 매우 강 중간
+  else if (score === 10) confidence = 'reach';       // 매우 강 하단
+  else if (score === 9) confidence = 'certain';      // 강 상단
+  else if (score === 8) confidence = 'likely';       // 강 중간
+  else if (score === 7) confidence = 'reach';        // 강 하단
+  else if (score === 6) confidence = 'certain';      // 중상 상단
+  else if (score === 5) confidence = 'likely';       // 중상 중간
+  else if (score === 4) confidence = 'reach';        // 중상 하단
+  else if (score === 3) confidence = 'certain';      // 중 상단
+  else if (score === 2) confidence = 'reach';        // 중 하단
+  else if (score === 1) confidence = 'certain';      // 중하 상단
+  else if (score === 0) confidence = 'reach';        // 중하 하단
+  else if (score === -1) confidence = 'certain';     // 약상 상단
+  else if (score === -2) confidence = 'reach';       // 약상 하단
+  else confidence = 'reach';                          // 그 이하는 모두 reach (범위로 풀이)
+
+  let label: string;
+  if (confidence === 'certain') {
+    label = `확실한 ${primaryTier}티어`;
+  } else if (confidence === 'likely') {
+    label = `${primaryTier}티어 가능 + ${safetyTier}티어 안정`;
+  } else {
+    label = `${primaryTier}티어 도전 + ${safetyTier}티어 안정`;
+  }
+
+  return { confidence, primaryTier, safetyTier, label };
 }
 
 /** 현재 대운·세운의 십성으로 학운 시기 강약 평가.
@@ -333,10 +388,13 @@ export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResul
     hi = gradeInfo.baseTierRange[1];
   }
 
+  // confidence 산출 — 부모 환경 조정 후 finalTierRange 기준
+  const conf = calcConfidence(hagunScore, [lo, hi]);
+
   const summary =
     `학운 단계 ${gradeInfo.label} (점수 ${hagunScore}) → 베이스 ${gradeInfo.baseTier}, ` +
     `부모 환경 변수 조정 ${parentAdj.total >= 0 ? '+' : ''}${parentAdj.total} → ` +
-    `최종 추천 티어 ${lo === hi ? `${lo}티어` : `${lo}~${hi}티어`}`;
+    `최종 추천 티어 ${lo === hi ? `${lo}티어` : `${lo}~${hi}티어`} (${conf.label})`;
 
   return {
     hagunScore,
@@ -347,6 +405,10 @@ export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResul
     parentAdjust: parentAdj.total,
     parentAdjustBreakdown: parentAdj.breakdown,
     finalTierRange: [lo, hi],
+    confidence: conf.confidence,
+    primaryTier: conf.primaryTier,
+    safetyTier: conf.safetyTier,
+    confidenceLabel: conf.label,
     oneLineSummary: summary,
   };
 }
