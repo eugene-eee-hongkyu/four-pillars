@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-19 22:43
-## 마지막 업데이트: 2026-05-19 22:43
+## 마지막 실행: 2026-05-20
+## 마지막 업데이트: 2026-05-20
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Phase H 13→6 스텝 UX 단순화 완료 (가족 통합 입력 + signup·checkout 우회 + 학력 제거) → prod 배포 후 시각 검증 + mom test 10명 단계 진입 대기
+- 가독성 Phase 1 완료 (문창귀인 노출 + 미니/정밀 prompt + InterpretBody) → v4-readability self-test 75.8/100, 어미 4/20 미달 발견 → v5 prompt 보강 대기
 
 ### 이어서 할 것
 
-1. prod 배포 후 6스텝 흐름 시각 검증 (가족 입력 토글·가족 만세력 inline 카드·premium-value 직접 라우팅)
-2. Eugene mom test 10명 진행 — 6스텝 단순 흐름 + 별점 평가로 가치·결제 의향 측정
-3. mom test 결과로 알고리즘 cutoff·confidence 구간 미세 조정
+1. v5 prompt 보강 — 어미 비율 수치화 (25~40%) + 단락 분리 absolute + 짧은 문장 위치 명시 + 두괄식 명시 → 5회 재평가로 86+ 목표
+2. prod 배포 후 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증 (TL;DR 카드·헤더 부제·시그니처 카드·골드 신살 뱃지)
+3. Eugene mom test 10명 진행 — 6스텝 + 가독성 개선 본문
 
 ### 막힌 것
 
@@ -53,8 +53,10 @@
 - [x] **외부 학술·전문가 의견 검증** (KCI·명리학자·입시 컨설팅 분류)
 - [x] **Self-test 인프라** (scripts/eval-jaeho.ts·eval-calibration.ts + tsx)
 - [x] **Phase H 13→6 스텝 UX 단순화** (가족 통합 입력 + signup·checkout 우회 + 학력 제거)
-- [ ] prod 배포 후 6스텝 흐름 시각 검증
-- [ ] Eugene mom test 10명 검증 (6스텝 단순 흐름)
+- [x] **가독성 Phase 1** — 문창귀인 노출 hotfix + 미니/정밀 가독성 prompt + InterpretBody (TL;DR·헤더 부제·시그니처)
+- [ ] **가독성 Phase 2 (v5 prompt 보강)** — 어미 비율 수치화 + 단락 absolute + 짧은 문장 위치 명시 + 두괄식 명시 → 5회 재평가 86+
+- [ ] prod 배포 후 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증
+- [ ] Eugene mom test 10명 검증 (6스텝 + 가독성 개선 본문)
 - [ ] mom test 결과로 cutoff·confidence 구간 미세 조정 + 알고리즘 분포 편향 조정 여부
 - [ ] 외부 100명 검증 단계: custom SMTP·도메인·Deployment Protection 해제·signup·checkout·부모 학력 재도입
 - [ ] 사주톡 10명 지인 테스트 계속 진행
