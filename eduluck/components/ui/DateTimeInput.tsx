@@ -11,6 +11,7 @@
 //   - 분 단위 시간 picker 자체 지원
 //   - 검증 강제 (잘못된 날짜 거부)
 
+import type React from 'react';
 import { Platform, View, Text, TextInput } from 'react-native';
 import { colors } from '@/design-tokens/tokens';
 
@@ -31,21 +32,24 @@ interface Props {
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
-const inputStyle = {
-  paddingTop: 12,
-  paddingBottom: 12,
-  paddingLeft: 16,
-  paddingRight: 16,
+// raw <input> 전용 CSS (React Native style이 아니라 React.CSSProperties)
+const inputStyle: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  height: 48,
+  padding: '0 16px',
+  margin: 0,
   borderRadius: 8,
   backgroundColor: colors.surfaceContainerLow,
-  borderWidth: 1,
-  borderColor: colors.outlineWarm,
+  border: `1px solid ${colors.outlineWarm}`,
   fontSize: 16,
-  lineHeight: 28,
+  lineHeight: '48px',
   color: colors.textPri,
   fontFamily: 'inherit',
-  width: '100%',
-  boxSizing: 'border-box' as const,
+  boxSizing: 'border-box',
+  outline: 'none',
+  appearance: 'none',
+  WebkitAppearance: 'none',
 };
 
 export function DateTimeInput({
