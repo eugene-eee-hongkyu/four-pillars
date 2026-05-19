@@ -8,14 +8,14 @@
 ## 1. 가져갈 파일 (총 12개)
 
 ### 🎨 디자인 시스템 — 필수, repo 루트
-- `eduluck_DESIGN_v1.1.md` → **DESIGN.md로 rename** (Claude Code·Cursor 자동 인식 파일명)
+- `docs/design/DESIGN_v1.1.md` → **DESIGN.md로 rename** (Claude Code·Cursor 자동 인식 파일명)
 
 ### 📋 A 트랙 문서 — 필수, `docs/` 폴더
-- `eduluck_A-0_v3.md` (비전·핵심 가설)
-- `eduluck_A-1_v4.md` (프로세스·13 Step·시나리오·톤 마커)
-- `eduluck_A-2_v2.md` (화면 11개 풀 spec)
-- `eduluck_A-3a_v1.md` (디자인 컨셉 결정)
-- `eduluck_A-3b_v1.md` (전체 적용 + **P0 checklist 11종**)
+- `docs/plan/A-0_v3.md` (비전·핵심 가설)
+- `docs/plan/A-1_v4.md` (프로세스·13 Step·시나리오·톤 마커)
+- `docs/plan/A-2_v2.md` (화면 11개 풀 spec)
+- `docs/plan/A-3a_v1.md` (디자인 컨셉 결정)
+- `docs/plan/A-3b_v1.md` (전체 적용 + **P0 checklist 11종**)
 
 ### 🖼 Stitch 결과 — 참조용, `docs/stitch_reference/`
 - `stitch_eduluck_saju_interface_concepts.zip` (압축 풀어서 11개 화면 `screen.png` + `code.html`)
@@ -24,7 +24,7 @@
 - `08_가이드_Claude_Design과_Stitch_v1_1.md`
 
 ### 📄 이 파일
-- `eduluck_handoff_README.md`
+- `docs/build/handoff_README.md`
 
 ---
 

@@ -1,7 +1,7 @@
 # SPEC.md — eduluck MVP 빌드 사양
 
 > 본 파일은 Claude Code·Cursor 자동 인식. B-1 v2 §0~§9 요약본.
-> 풀 스펙: `eduluck/docs/eduluck_B-1_v2.md`
+> 풀 스펙: `eduluck/docs/build/B-1_v2.md`
 
 ## 프로젝트
 
@@ -56,11 +56,11 @@ eduluck/
 
 `sessions`·`user_profiles`·`subjects`·`interpretations`·`surveys`·`funnel_events`
 
-상세: `eduluck/docs/eduluck_B-1_v2.md` §4
+상세: `eduluck/docs/build/B-1_v2.md` §4
 
 ## Halt Triggers (B-1 v2 §9 — 12개)
 
-루트 `CLAUDE.md` + `eduluck/docs/eduluck_B-1_v2.md` §9 참조. 핵심:
+루트 `CLAUDE.md` + `eduluck/docs/build/B-1_v2.md` §9 참조. 핵심:
 - API key 코드 하드코딩 금지
 - `SUPABASE_SERVICE_ROLE_KEY` 클라이언트 코드 import 금지
 - public 테이블 RLS 미설정 → 정지
@@ -70,7 +70,7 @@ eduluck/
 
 ## DESIGN v1.1 §10 P0 Checklist
 
-빌드 종료 시점 자동 점검 forcing. 상세: `eduluck/docs/eduluck_DESIGN_v1.1.md` §10.
+빌드 종료 시점 자동 점검 forcing. 상세: `eduluck/docs/design/DESIGN_v1.1.md` §10.
 
 ## 진행 상황
 

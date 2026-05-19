@@ -1,7 +1,7 @@
 # eduluck A-3b v1 — 전체 화면 디자인 시스템 적용
 
 > 정책 v16 기준. 1차 독자: Eugene (외주 기획자). A-3a v1 / DESIGN v1 확정 후 작성.
-> 페어 산출물: `eduluck_DESIGN_v1.1.md` (보강된 디자인 시스템)
+> 페어 산출물: `docs/design/DESIGN_v1.1.md` (보강된 디자인 시스템)
 
 ---
 
@@ -213,10 +213,10 @@
 ### Handoff bundle 정리
 
 B-1 빌드 입력:
-- `eduluck_DESIGN_v1.1.md` (보강된 시스템)
-- `eduluck_A-2_v2.md` (화면 spec 11종)
-- `eduluck_A-3a_v1.md` (디자인 결정 컨텍스트)
-- `eduluck_A-3b_v1.md` (P0 checklist + 보강 사항)
+- `docs/design/DESIGN_v1.1.md` (보강된 시스템)
+- `docs/plan/A-2_v2.md` (화면 spec 11종)
+- `docs/plan/A-3a_v1.md` (디자인 결정 컨텍스트)
+- `docs/plan/A-3b_v1.md` (P0 checklist + 보강 사항)
 - Stitch zip (`stitch_eduluck_saju_interface_concepts.zip`) — 11개 screen.png + code.html (Tailwind reference)
 
 ### B-1 빌드 가이드 (CLAUDE.md) 핵심
