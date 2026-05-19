@@ -47,3 +47,6 @@ node_modules/
 .vscode/
 .idea/
 .vercel
+
+# 개인 정보·내부 prompt 평가 (개인 사주 데이터 포함)
+_private/
