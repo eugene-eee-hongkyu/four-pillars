@@ -8,6 +8,8 @@ interface ParentEducation {
   level: 'high' | 'college' | 'university' | 'graduate' | 'none' | null;
   schoolName: string | null;
   major: string | null;
+  /** 학교 티어 (1-10·'college'·'high'·null=미매칭). 자동 lookup 또는 수동 dropdown 선택값. */
+  schoolTier?: number | 'college' | 'high' | null;
 }
 
 interface Body {

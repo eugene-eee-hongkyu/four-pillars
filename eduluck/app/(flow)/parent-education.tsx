@@ -1,7 +1,7 @@
 // 화면 12: 부모 학력·전공 (옵션 — 스킵 가능)
 // 어머니·아빠 각각 학력 레벨 + 학교명 + 전공 입력. 모두 옵션이고 1개만 입력해도 OK.
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Input } from '@/components/ui/Input';
@@ -12,6 +12,11 @@ import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { colors } from '@/design-tokens/tokens';
+import {
+  lookupSchoolTier,
+  TIER_DROPDOWN_OPTIONS,
+  type SchoolTier,
+} from '@/lib/manse/university-tier';
 
 type EduLevel = 'high' | 'college' | 'university' | 'graduate' | 'none';
 
@@ -23,6 +28,18 @@ const LEVEL_OPTIONS: Array<{ value: EduLevel; label: string }> = [
   { value: 'none', label: '미입력' },
 ];
 
+/** 티어 표시용 한 줄 라벨. */
+function tierToLabel(tier: SchoolTier | null | undefined): string {
+  if (!tier || tier === 'unknown') return '';
+  if (tier === 'college') return '전문대';
+  if (tier === 'high') return '고졸';
+  if (tier >= 1 && tier <= 2) return '1-2티어';
+  if (tier >= 3 && tier <= 5) return '3-5티어';
+  if (tier >= 6 && tier <= 7) return '6-7티어';
+  if (tier >= 8 && tier <= 10) return '8-10티어';
+  return '';
+}
+
 interface SectionProps {
   title: string;
   level: EduLevel | null;
@@ -31,9 +48,19 @@ interface SectionProps {
   onSchoolName: (s: string) => void;
   major: string;
   onMajor: (s: string) => void;
+  manualTier: SchoolTier | null;
+  onManualTier: (t: SchoolTier) => void;
 }
 
-function ParentEduSection({ title, level, onLevel, schoolName, onSchoolName, major, onMajor }: SectionProps) {
+function ParentEduSection({
+  title, level, onLevel, schoolName, onSchoolName, major, onMajor, manualTier, onManualTier,
+}: SectionProps) {
+  // 학교명 + 학과명으로 자동 티어 추정
+  const autoTier = useMemo(() => lookupSchoolTier(schoolName || null, major || null), [schoolName, major]);
+  // 자동 매칭 성공 시 자동 티어 사용. 실패('unknown') 또는 사용자 수동 선택 시 manualTier 사용.
+  const effectiveTier: SchoolTier = manualTier ?? autoTier;
+  const showDropdown = (level && level !== 'none' && level !== 'high') && autoTier === 'unknown';
+
   return (
     <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-3">
       <Text className="font-body-bold text-body-md text-text-pri">{title}</Text>
@@ -74,6 +101,43 @@ function ParentEduSection({ title, level, onLevel, schoolName, onSchoolName, maj
             onChangeText={onMajor}
             placeholder="예: 법학과, 컴퓨터공학, 간호학과"
           />
+          {/* 자동 매칭 성공: 라벨 표시 */}
+          {autoTier !== 'unknown' && (
+            <Text className="font-body text-label-sm" style={{ color: colors.secondary }}>
+              자동 매칭: {tierToLabel(autoTier)}
+            </Text>
+          )}
+          {/* 자동 매칭 실패: dropdown 폴백 */}
+          {showDropdown && (
+            <View className="gap-2 mt-1">
+              <Text className="font-body text-label-sm text-text-sub">
+                학교를 자동으로 찾지 못했어요. 직접 선택해주세요.
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {TIER_DROPDOWN_OPTIONS.map((opt) => {
+                  const selected = manualTier === opt.value;
+                  return (
+                    <Pressable
+                      key={String(opt.value)}
+                      onPress={() => onManualTier(opt.value)}
+                      className="px-3 py-2 rounded-md border"
+                      style={{
+                        backgroundColor: selected ? colors.secondaryContainer : 'transparent',
+                        borderColor: selected ? colors.secondary : colors.outlineWarm,
+                      }}
+                    >
+                      <Text
+                        className="font-body text-label-sm"
+                        style={{ color: selected ? colors.secondary : colors.textPri }}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </View>
       )}
     </View>
@@ -92,9 +156,11 @@ export default function ParentEducation() {
   const [motherLevel, setMotherLevel] = useState<EduLevel | null>(state.motherEducation.level as EduLevel | null);
   const [motherSchool, setMotherSchool] = useState(state.motherEducation.schoolName ?? '');
   const [motherMajor, setMotherMajor] = useState(state.motherEducation.major ?? '');
+  const [motherManualTier, setMotherManualTier] = useState<SchoolTier | null>(state.motherEducation.schoolTier ?? null);
   const [fatherLevel, setFatherLevel] = useState<EduLevel | null>(state.fatherEducation.level as EduLevel | null);
   const [fatherSchool, setFatherSchool] = useState(state.fatherEducation.schoolName ?? '');
   const [fatherMajor, setFatherMajor] = useState(state.fatherEducation.major ?? '');
+  const [fatherManualTier, setFatherManualTier] = useState<SchoolTier | null>(state.fatherEducation.schoolTier ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,24 +171,44 @@ export default function ParentEducation() {
     setSubmitting(true);
     setError(null);
     try {
-      // state에 저장
-      patchMotherEducation({ level: motherLevel, schoolName: motherSchool || null, major: motherMajor || null });
-      patchFatherEducation({ level: fatherLevel, schoolName: fatherSchool || null, major: fatherMajor || null });
+      // 학교 티어 결정: 수동 선택 우선, 없으면 자동 lookup
+      const motherTier = motherManualTier ?? lookupSchoolTier(motherSchool || null, motherMajor || null);
+      const fatherTier = fatherManualTier ?? lookupSchoolTier(fatherSchool || null, fatherMajor || null);
+
+      // state에 저장 (티어 포함)
+      patchMotherEducation({
+        level: motherLevel,
+        schoolName: motherSchool || null,
+        major: motherMajor || null,
+        schoolTier: motherTier === 'unknown' ? null : motherTier,
+      });
+      patchFatherEducation({
+        level: fatherLevel,
+        schoolName: fatherSchool || null,
+        major: fatherMajor || null,
+        schoolTier: fatherTier === 'unknown' ? null : fatherTier,
+      });
 
       // DB에 저장 — 입력된 부모만
       const body: {
         motherSubjectId?: string;
-        motherEducation?: { level: EduLevel | null; schoolName: string | null; major: string | null };
+        motherEducation?: { level: EduLevel | null; schoolName: string | null; major: string | null; schoolTier: SchoolTier | null };
         fatherSubjectId?: string;
-        fatherEducation?: { level: EduLevel | null; schoolName: string | null; major: string | null };
+        fatherEducation?: { level: EduLevel | null; schoolName: string | null; major: string | null; schoolTier: SchoolTier | null };
       } = {};
       if (motherEnabled && motherLevel) {
         body.motherSubjectId = state.motherSubjectId!;
-        body.motherEducation = { level: motherLevel, schoolName: motherSchool || null, major: motherMajor || null };
+        body.motherEducation = {
+          level: motherLevel, schoolName: motherSchool || null, major: motherMajor || null,
+          schoolTier: motherTier === 'unknown' ? null : motherTier,
+        };
       }
       if (fatherEnabled && fatherLevel) {
         body.fatherSubjectId = state.fatherSubjectId!;
-        body.fatherEducation = { level: fatherLevel, schoolName: fatherSchool || null, major: fatherMajor || null };
+        body.fatherEducation = {
+          level: fatherLevel, schoolName: fatherSchool || null, major: fatherMajor || null,
+          schoolTier: fatherTier === 'unknown' ? null : fatherTier,
+        };
       }
       if (body.motherEducation || body.fatherEducation) {
         const res = await fetch('/api/parent-education', {
@@ -166,6 +252,8 @@ export default function ParentEducation() {
             onSchoolName={setMotherSchool}
             major={motherMajor}
             onMajor={setMotherMajor}
+            manualTier={motherManualTier}
+            onManualTier={setMotherManualTier}
           />
         ) : (
           <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low">
@@ -184,6 +272,8 @@ export default function ParentEducation() {
             onSchoolName={setFatherSchool}
             major={fatherMajor}
             onMajor={setFatherMajor}
+            manualTier={fatherManualTier}
+            onManualTier={setFatherManualTier}
           />
         ) : (
           <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low">

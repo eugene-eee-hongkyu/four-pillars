@@ -69,8 +69,9 @@ export async function POST(request: Request) {
     model: ANTHROPIC_MODEL,
     // 정밀 진단 14섹션 75-95문장 한국어 ≈ 4500-5500 tokens 필요. 4096이면 §8 쯤에서 잘림.
     max_tokens: 8192,
-    // 0.7로 낮춰 일관성 ↑ (default 1.0이면 평이 풀이·대학 범위 등 가이드 따르는 정도가 호출마다 흔들림)
-    temperature: 0.7,
+    // 0.5로 추가 낮춤 — 학운 티어는 코드에서 결정성 계산해 user message에 주입(hagun-tier.ts).
+    // 풀이의 자연스러움은 살리되 권유 범위는 가능한 한 결정적으로.
+    temperature: 0.5,
     system,
     messages: [{ role: 'user', content: userMsg }],
   });

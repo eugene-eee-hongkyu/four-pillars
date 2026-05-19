@@ -74,6 +74,8 @@ export interface ParentEducation {
   level: 'high' | 'college' | 'university' | 'graduate' | 'none' | null;
   schoolName: string | null;
   major: string | null;
+  /** 학교 티어 (1-10·'college'·'high'·'unknown'). 학교명 자동 lookup 또는 사용자 dropdown 선택. */
+  schoolTier?: number | 'college' | 'high' | 'unknown' | null;
 }
 
 export interface FlowState {

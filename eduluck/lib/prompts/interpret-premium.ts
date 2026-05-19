@@ -259,10 +259,10 @@ export interface InterpretPremiumContext {
   motherManse: ManseResult | null;
   /** 아빠 사주 — 옵션 */
   fatherManse: ManseResult | null;
-  /** 부모 학력·전공 — 옵션 */
+  /** 부모 학력·전공 — 옵션. schoolTier는 자동 lookup 또는 수동 dropdown 선택값. */
   parentEducation?: {
-    mother?: { level: string | null; schoolName: string | null; major: string | null } | null;
-    father?: { level: string | null; schoolName: string | null; major: string | null } | null;
+    mother?: { level: string | null; schoolName: string | null; major: string | null; schoolTier?: number | 'college' | 'high' | 'unknown' | null } | null;
+    father?: { level: string | null; schoolName: string | null; major: string | null; schoolTier?: number | 'college' | 'high' | 'unknown' | null } | null;
   };
 }
 

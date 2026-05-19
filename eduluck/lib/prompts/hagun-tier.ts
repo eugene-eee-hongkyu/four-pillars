@@ -7,6 +7,7 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
+import { lookupSchoolTier, tierToParentWeight, type SchoolTier } from '../manse/university-tier';
 
 export type HagunGrade =
   | 'very-strong' | 'strong' | 'upper-mid'
@@ -89,12 +90,29 @@ function scoreToGrade(score: number): HagunGradeInfo {
   return HAGUN_GRADE_TABLE[8]; // very-weak
 }
 
+interface ParentEducationInput {
+  level: string | null;
+  schoolName?: string | null;
+  major?: string | null;
+  /** 사용자가 dropdown으로 수동 선택한 티어 (자동 lookup이 실패했을 때만 채워짐). */
+  schoolTier?: SchoolTier | null;
+}
+
 interface ParentTierAdjustInput {
   childManse: ManseResult;
   motherManse: ManseResult | null;
   fatherManse: ManseResult | null;
-  motherEducation: { level: string | null } | null | undefined;
-  fatherEducation: { level: string | null } | null | undefined;
+  motherEducation: ParentEducationInput | null | undefined;
+  fatherEducation: ParentEducationInput | null | undefined;
+}
+
+function resolveParentTier(edu: ParentEducationInput | null | undefined): SchoolTier {
+  if (!edu) return 'unknown';
+  if (edu.level === 'high') return 'high';
+  // 1순위: 사용자 수동 선택
+  if (edu.schoolTier) return edu.schoolTier;
+  // 2순위: 학교명/학과명 자동 lookup
+  return lookupSchoolTier(edu.schoolName ?? null, edu.major ?? null);
 }
 
 interface ParentTierAdjustResult {
@@ -138,26 +156,18 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
     }
   }
 
-  // 부모 학력 (둘 중 높은 쪽 기준)
-  const motherLevel = input.motherEducation?.level;
-  const fatherLevel = input.fatherEducation?.level;
-  const eduScore = (lv: string | null | undefined): number => {
-    if (lv === 'graduate' || lv === 'university') return 2; // 4년제·대학원 (단순화: 입력 학교명까지 보면 더 정확하지만 일단)
-    if (lv === 'college') return 1; // 전문대
-    if (lv === 'high') return 0;
-    return -1; // null·none·미입력
-  };
-  const maxEdu = Math.max(eduScore(motherLevel), eduScore(fatherLevel));
-  if (maxEdu === 2) {
-    total += 1;
-    breakdown.push(`부모 학력 4년제/대학원 +1`);
-  } else if (maxEdu === 1) {
-    breakdown.push(`부모 학력 전문대 0`);
-  } else if (maxEdu === 0) {
-    total -= 1;
-    breakdown.push(`부모 학력 고졸 -1`);
+  // 부모 학력 — 학교 티어 기반으로 정직하게 (둘 중 높은 쪽)
+  // 사용자 피드백 2026-05-19: "4년제" 단일 +1은 부정확. 부모가 1-2티어여야 +1.
+  const motherTier = resolveParentTier(input.motherEducation);
+  const fatherTier = resolveParentTier(input.fatherEducation);
+  const motherWeight = tierToParentWeight(motherTier, input.motherEducation?.level as 'high' | 'college' | 'university' | 'graduate' | 'none' | null | undefined);
+  const fatherWeight = tierToParentWeight(fatherTier, input.fatherEducation?.level as 'high' | 'college' | 'university' | 'graduate' | 'none' | null | undefined);
+  const bestWeight = Math.max(motherWeight, fatherWeight);
+  total += bestWeight;
+  if (bestWeight !== 0) {
+    breakdown.push(`부모 학력 (둘 중 높은 쪽 티어: ${motherWeight >= fatherWeight ? motherTier : fatherTier}) ${bestWeight >= 0 ? '+' : ''}${bestWeight}`);
   } else {
-    breakdown.push(`부모 학력 미입력 0 (중립 처리)`);
+    breakdown.push(`부모 학력 0 (미입력 또는 6~7티어)`);
   }
 
   // 한도 ±2
