@@ -299,7 +299,8 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
   // 매우 강 ≥10 / 강 7~9 / 중상 4~6 / 중 2~3 / 중하 0~1 / 약상 -1~-2 / 약중 -3~-4 / 약하 -5~-6
   let confidence: 'certain' | 'likely' | 'reach';
 
-  if (score >= 13) confidence = 'certain';           // 매우 강 상단
+  if (score >= 15) confidence = 'certain';           // 매우 강 최상위 (의대·서울대 최상위 학과 등)
+  else if (score >= 13) confidence = 'certain';      // 매우 강 상단 (확실한 1티어)
   else if (score >= 11) confidence = 'likely';       // 매우 강 중간
   else if (score === 10) confidence = 'reach';       // 매우 강 하단
   else if (score === 9) confidence = 'certain';      // 강 상단
@@ -317,7 +318,10 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
   else confidence = 'reach';                          // 그 이하는 모두 reach (범위로 풀이)
 
   let label: string;
-  if (confidence === 'certain') {
+  if (confidence === 'certain' && score >= 15 && primaryTier === 1) {
+    // 매우 강 최상위 — 의대·서울대 최상위 학과·KAIST·POSTECH 명시 가능 영역
+    label = `확실한 1티어 최상위`;
+  } else if (confidence === 'certain') {
     label = `확실한 ${primaryTier}티어`;
   } else if (confidence === 'likely') {
     label = `${primaryTier}티어 가능 + ${safetyTier}티어 안정`;
