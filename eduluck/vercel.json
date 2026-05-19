@@ -5,5 +5,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/((?!_expo|assets|favicon|api).*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/interpret-premium.js": { "maxDuration": 60 },
+    "api/interpret-free.js": { "maxDuration": 60 },
+    "api/relation-mini.js": { "maxDuration": 30 }
+  }
 }

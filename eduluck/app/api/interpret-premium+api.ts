@@ -53,7 +53,8 @@ export async function POST(request: Request) {
 
   const stream = getAnthropicClient().messages.stream({
     model: ANTHROPIC_MODEL,
-    max_tokens: 4096,
+    // 정밀 진단 14섹션 75-95문장 한국어 ≈ 4500-5500 tokens 필요. 4096이면 §8 쯤에서 잘림.
+    max_tokens: 8192,
     system,
     messages: [{ role: 'user', content: userMsg }],
   });
