@@ -70,6 +70,8 @@ const INTERPRET_PREMIUM_SYSTEM = `당신은 한국의 사주 명리 학운 전�
 
 **거짓 희망 금지** — baseline이 5~6티어인 사주에 인서울 상위·SKY를 짚으면 안 됨.
 
+**티어 산출 내역 본문 노출 절대 금지**: 백엔드가 계산한 학운 점수·부모 환경 조정값·"부모 학력 +1" 같은 점수 메타정보는 어머니에게 보여줄 본문에 절대 노출하지 말 것. 본문에는 사주 풀이만 자연스럽게. 부모 영향은 "어머니가 자녀에게 정인으로 받쳐주시니 학운이 한결 단단해져요" 같이 명리 톤으로만 녹임 (점수·조정값 ✗, "+1티어 상승" 같은 표현 ✗).
+
 ### 대학 티어 정의 (한국 입결 인식 기준 + 의치한약 + 비대학 트랙)
 
 - **1티어**: 의대 전국 + 서울대 + KAIST + POSTECH(포항공대)
@@ -346,13 +348,7 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
           ``,
         ]
       : []),
-    `[학운 단계·추천 티어 — 코드 결정성 계산. §13에서 이 범위를 baseline으로 ±1 안에서만 미세 조정. 절대 베이스 범위를 벗어나지 말 것.]`,
-    `  ${tierResult.oneLineSummary}`,
-    `  학운 점수: ${tierResult.hagunScore} → 단계 ${tierResult.hagunLabel}`,
-    `  베이스 티어 범위: ${tierResult.baseTier}`,
-    ...(tierResult.parentAdjustBreakdown.length > 0
-      ? [`  부모 환경 변수 조정 (총 ${tierResult.parentAdjust >= 0 ? '+' : ''}${tierResult.parentAdjust}):`, ...tierResult.parentAdjustBreakdown.map(s => `    - ${s}`)]
-      : []),
+    `[학운 단계·추천 티어 — 백엔드 계산 결과. §13 권유의 baseline. 이 섹션 내용(점수·조정 내역 등)은 본문에 절대 노출 금지 — 결과(최종 티어 범위)만 사용]`,
     `  최종 추천 티어 범위: ${tierResult.finalTierRange[0] === tierResult.finalTierRange[1] ? `${tierResult.finalTierRange[0]}티어` : `${tierResult.finalTierRange[0]}~${tierResult.finalTierRange[1]}티어`}`,
     ``,
     `[학년대별 분량·학교 예측]`,
