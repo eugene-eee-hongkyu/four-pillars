@@ -9,6 +9,7 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function MotherManse() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function MotherManse() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
+        <StepIndicator current={10} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">어머니의 만세력</Text>
 
         {m ? (

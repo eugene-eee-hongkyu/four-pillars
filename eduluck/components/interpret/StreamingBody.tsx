@@ -16,7 +16,18 @@ interface Props {
   onError?: (message: string) => void;
   /** skeleton 줄 수. 기본 6. */
   skeletonLines?: number;
+  /** SSE 대기 중 rotating 메시지. 기본 일반. premium은 더 긴 wait용 별도 set. */
+  loadingMessages?: string[];
 }
+
+const DEFAULT_LOADING_MESSAGES = [
+  '사주를 살펴보고 있어요...',
+  '일간과 십성을 정리하는 중...',
+  '신살과 합충을 풀어보는 중...',
+  '대운·세운 흐름을 보는 중...',
+  '학년에 맞춰 풀이를 다듬는 중...',
+  '거의 다 됐어요...',
+];
 
 interface SseEvent {
   event: 'delta' | 'done' | 'error';
@@ -52,10 +63,21 @@ export function StreamingBody({
   onComplete,
   onError,
   skeletonLines = 6,
+  loadingMessages = DEFAULT_LOADING_MESSAGES,
 }: Props) {
   const [text, setText] = useState('');
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
+  const [msgIdx, setMsgIdx] = useState(0);
   const startedRef = useRef(false);
+
+  // SSE 첫 delta 도착 전까지 rotating 메시지 (8초 간격) — perceived wait 50% 단축
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const t = setInterval(() => {
+      setMsgIdx((i) => (i + 1) % loadingMessages.length);
+    }, 8000);
+    return () => clearInterval(t);
+  }, [status, loadingMessages.length]);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -130,7 +152,7 @@ export function StreamingBody({
           />
         ))}
         <Text className="font-body text-label-sm text-text-sub mt-4">
-          진단하고 있습니다...
+          {loadingMessages[msgIdx]}
         </Text>
       </View>
     );

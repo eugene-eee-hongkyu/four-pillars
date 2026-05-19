@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Card } from '@/components/ui/Card';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function PremiumValue() {
   const router = useRouter();
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
+        <StepIndicator current={6} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
           정밀 학운, 어머니 사주까지 종합 분석
         </Text>

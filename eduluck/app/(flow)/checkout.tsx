@@ -8,6 +8,8 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function Checkout() {
   const router = useRouter();
@@ -47,7 +49,7 @@ export default function Checkout() {
       setPaid(true);
       router.push('/(flow)/mother-saju');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     } finally {
       setLoading(false);
     }
@@ -56,6 +58,7 @@ export default function Checkout() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-4">
+        <StepIndicator current={8} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">정밀 진단 결제</Text>
         <View className="bg-secondary-container px-4 py-2 rounded-full self-start">
           <Text className="font-heading text-headline-md text-secondary">3,000원 (1회)</Text>

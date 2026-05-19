@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
 import { useFlow } from '@/lib/flow/context';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function ChildManse() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function ChildManse() {
       <ScrollView
         contentContainerClassName="px-container-padding pt-12 pb-32 gap-6"
       >
+        <StepIndicator current={4} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
           {state.child.nickname || '아이'}의 만세력
         </Text>

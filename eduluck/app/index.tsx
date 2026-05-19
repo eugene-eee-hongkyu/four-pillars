@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
 
 export default function Landing() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function Landing() {
       });
       router.push('/(flow)/child-info');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     } finally {
       setLoading(false);
     }

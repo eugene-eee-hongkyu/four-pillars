@@ -7,6 +7,8 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 function StarRow({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
@@ -54,14 +56,15 @@ export default function InterpretPremium() {
       ]);
       setSubmitted(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     }
   };
 
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-32 gap-6">
-        <View className="px-container-padding">
+        <View className="px-container-padding gap-2">
+          <StepIndicator current={11} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             {state.child.nickname || '아이'}의 정밀 학운
           </Text>

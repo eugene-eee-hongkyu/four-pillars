@@ -8,6 +8,7 @@ import { GradeDropdown } from '@/components/ui/GradeDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { useFlow } from '@/lib/flow/context';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function ChildInfo() {
   const router = useRouter();
@@ -32,12 +33,10 @@ export default function ChildInfo() {
       <ScrollView
         contentContainerClassName="px-container-padding pt-12 pb-32 gap-6"
       >
-        <View className="gap-2">
-          <Text className="font-body text-label-sm text-text-sub">1 / 2</Text>
-          <Text className="font-heading-bold text-headline-lg text-text-pri">
-            우리 아이 정보
-          </Text>
-        </View>
+        <StepIndicator current={2} />
+        <Text className="font-heading-bold text-headline-lg text-text-pri">
+          우리 아이 정보
+        </Text>
 
         <Input
           label="닉네임"

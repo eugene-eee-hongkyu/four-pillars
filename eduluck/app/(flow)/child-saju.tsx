@@ -14,6 +14,8 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 function parseDate(input: string): { y: number; m: number; d: number } | null {
   const m = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -116,7 +118,7 @@ export default function ChildSaju() {
       setChildSubject(data.subjectId, data.manse);
       router.push('/(flow)/child-manse');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     } finally {
       setSubmitting(false);
     }
@@ -127,12 +129,10 @@ export default function ChildSaju() {
       <ScrollView
         contentContainerClassName="px-container-padding pt-12 pb-32 gap-6"
       >
-        <View className="gap-2">
-          <Text className="font-body text-label-sm text-text-sub">2 / 2</Text>
-          <Text className="font-heading-bold text-headline-lg text-text-pri">
-            {state.child.nickname || '아이'}의 생년월일시
-          </Text>
-        </View>
+        <StepIndicator current={3} />
+        <Text className="font-heading-bold text-headline-lg text-text-pri">
+          {state.child.nickname || '아이'}의 생년월일시
+        </Text>
 
         <View className="gap-2">
           <Text className="font-body-bold text-label-sm text-text-pri">달력</Text>
@@ -197,10 +197,13 @@ export default function ChildSaju() {
       </StickyCTA>
 
       <Modal visible={showUnknownModal} onClose={() => setShowUnknownModal(false)}>
-        <Text className="font-heading text-headline-md text-text-pri mb-4">시간 모름 안내</Text>
-        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
-          시간을 모르면 시(時)주를 비우고 진단합니다.{'\n'}정확도가 약간 떨어질 수 있어요.{'\n'}{'\n'}
-          시간 확인 후 다시 보고 싶으면 이메일을 남겨주세요 (선택).
+        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간을 모르세요?</Text>
+        <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
+          괜찮아요. 시(時)주를 비우고 나머지 3기둥(년·월·일)으로 풀이합니다.{'\n'}
+          정확도는 약간 떨어지지만 학년·진로 큰 흐름은 충분히 보여요.
+        </Text>
+        <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
+          나중에 친정 어머니께 시간 확인하셨으면, 이메일 남겨주시면 1주일 안에 다시 진단할 수 있는 링크를 보내드려요.
         </Text>
         <Input
           value={reminderEmail}

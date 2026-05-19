@@ -18,6 +18,8 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function Signup() {
   const router = useRouter();
@@ -84,7 +86,7 @@ export default function Signup() {
       setUserId(signUpRes.data.user.id);
       router.replace('/(flow)/checkout');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     } finally {
       setLoading(false);
     }
@@ -101,6 +103,7 @@ export default function Signup() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
+        <StepIndicator current={7} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
           진단을 받기 위해 계정을 만들어주세요
         </Text>

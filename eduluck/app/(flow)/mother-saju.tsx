@@ -12,6 +12,8 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
+import { translateError } from '@/lib/errors/translate';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 function parseDate(s: string) {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -69,7 +71,7 @@ export default function MotherSaju() {
       setMotherSubject(data.subjectId, data.manse);
       router.push('/(flow)/mother-manse');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'unknown error');
+      setError(translateError(e instanceof Error ? e.message : null));
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +85,8 @@ export default function MotherSaju() {
           <Text className="font-heading text-headline-md text-primary">결제가 완료됐어요!</Text>
         </View>
 
-        <Text className="font-heading-bold text-headline-lg text-text-pri mt-4">
+        <StepIndicator current={9} />
+        <Text className="font-heading-bold text-headline-lg text-text-pri mt-2">
           어머니의 사주를 입력해주세요
         </Text>
 
@@ -142,9 +145,10 @@ export default function MotherSaju() {
       </StickyCTA>
 
       <Modal visible={showUnknown} onClose={() => setShowUnknown(false)}>
-        <Text className="font-heading text-headline-md text-text-pri mb-4">시간 모름 안내</Text>
-        <Text className="font-body text-body-md text-text-pri mb-6">
-          시간을 모르면 시(時)주를 비우고 진단합니다.{'\n'}정확도가 약간 떨어질 수 있어요.
+        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간을 모르세요?</Text>
+        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
+          괜찮아요. 시(時)주를 비우고 나머지 3기둥(년·월·일)으로 풀이합니다.{'\n'}
+          어머니-자녀 합 분석의 큰 흐름은 충분히 보여요.
         </Text>
         <Button onPress={() => setShowUnknown(false)}>확인하고 진행</Button>
       </Modal>

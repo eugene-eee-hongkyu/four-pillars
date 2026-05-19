@@ -40,9 +40,9 @@ module.exports = {
       },
       fontSize: {
         // DESIGN v1.1 §2 typography scale
-        'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.02em' }],
-        'headline-lg': ['28px', { lineHeight: '36px' }],
-        'headline-md': ['22px', { lineHeight: '30px' }],
+        'display-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.02em' }],
+        'headline-lg': ['24px', { lineHeight: '32px' }],
+        'headline-md': ['20px', { lineHeight: '28px' }],
         'body-lg': ['16px', { lineHeight: '28px' }],
         'body-md': ['14px', { lineHeight: '24px' }],
         'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.05em' }],

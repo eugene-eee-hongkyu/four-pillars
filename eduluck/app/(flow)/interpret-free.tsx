@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
+import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function InterpretFree() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export default function InterpretFree() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-32 gap-4">
-        <View className="px-container-padding">
+        <View className="px-container-padding gap-2">
+          <StepIndicator current={5} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             {state.child.nickname || '아이'}의 학운
           </Text>
