@@ -14,6 +14,7 @@ import { OhaengBar } from '@/components/manse/OhaengBar';
 import { DaeunStrip } from '@/components/manse/DaeunStrip';
 import { SewunMarker } from '@/components/manse/SewunMarker';
 import { MotherChildSyncCard } from '@/components/manse/MotherChildSyncCard';
+import { hydrateManse } from '@/lib/manse/hydrate';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -22,8 +23,8 @@ export default function MotherManse() {
   const router = useRouter();
   const { state } = useFlow();
   const [showPro, setShowPro] = useState(false);
-  const m = state.motherManse;
-  const childM = state.childManse;
+  const m = state.motherManse ? hydrateManse(state.motherManse) : null;
+  const childM = state.childManse ? hydrateManse(state.childManse) : null;
   const childName = state.child.nickname || '아이';
 
   return (

@@ -15,6 +15,7 @@ import { HagunCoreCard } from '@/components/manse/HagunCoreCard';
 import { GongbuGuiCard } from '@/components/manse/GongbuGuiCard';
 import { HagunUnsungCard } from '@/components/manse/HagunUnsungCard';
 import { HagunGuideCard } from '@/components/manse/HagunGuideCard';
+import { hydrateManse } from '@/lib/manse/hydrate';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 
@@ -22,7 +23,7 @@ export default function ChildManse() {
   const router = useRouter();
   const { state } = useFlow();
   const [showPro, setShowPro] = useState(false);
-  const m = state.childManse;
+  const m = state.childManse ? hydrateManse(state.childManse) : null;
   const name = state.child.nickname || '아이';
 
   return (

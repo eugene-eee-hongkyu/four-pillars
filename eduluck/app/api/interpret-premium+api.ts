@@ -8,6 +8,7 @@ import {
   buildInterpretPremiumPrompt,
   type InterpretPremiumContext,
 } from '@/lib/prompts/interpret-premium';
+import { hydrateManse } from '@/lib/manse/hydrate';
 import { getSupabaseServer } from '@/lib/supabase/server';
 
 interface Body {
@@ -43,8 +44,8 @@ export async function POST(request: Request) {
     childBirthYear: child.birth_year,
     childBirthMonth: child.birth_month,
     childBirthDay: child.birth_day,
-    childManse: child.manse_json,
-    motherManse: mother.manse_json,
+    childManse: hydrateManse(child.manse_json),
+    motherManse: hydrateManse(mother.manse_json),
   };
 
   const system = getInterpretPremiumSystem();
