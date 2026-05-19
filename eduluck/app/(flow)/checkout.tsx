@@ -1,4 +1,7 @@
-// 화면 8 ★: Mock 결제 — prefilled 카드 placeholder (DESIGN v1.1 §10 P0 #3)
+// 화면 8 ★: Mock 결제 — 체험판 명시 + 신뢰 anchor
+// prefilled 카드 정보는 유지(검증 의도 — 카드 입력 friction noise 제거).
+// 그러나 상단 체험판 배지 + 안내 박스 시각 강화로 학부모 의심 해소.
+
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -14,7 +17,7 @@ import { StepIndicator } from '@/components/ui/StepIndicator';
 export default function Checkout() {
   const router = useRouter();
   const { state, setPaid } = useFlow();
-  const [cardNumber, setCardNumber] = useState('1234-5678-9012-3456');  // §10 P0 #3 마스킹 X
+  const [cardNumber, setCardNumber] = useState('1234-5678-9012-3456');  // §10 P0 #3
   const [expiry, setExpiry] = useState('12/27');
   const [cvc, setCvc] = useState('•••');
   const [cardHolder, setCardHolder] = useState('홍길동');
@@ -30,7 +33,6 @@ export default function Checkout() {
     }
     setLoading(true);
     setError(null);
-    // 2~3초 fake spinner
     await new Promise(r => setTimeout(r, 2500));
     setLoading(false);
     setShowModal(true);
@@ -59,9 +61,32 @@ export default function Checkout() {
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-4">
         <StepIndicator current={8} />
-        <Text className="font-heading-bold text-headline-lg text-text-pri">정밀 진단 결제</Text>
-        <View className="bg-secondary-container px-4 py-2 rounded-full self-start">
+
+        {/* 체험판 배지 — 학부모 의심 해소 */}
+        <View className="bg-secondary-container px-3 py-1 rounded-full self-start">
+          <Text className="font-body-bold text-label-sm text-secondary">
+            🎟 MVP 체험판 · 실제 청구 X
+          </Text>
+        </View>
+
+        <Text className="font-heading-bold text-headline-lg text-text-pri">
+          정밀 진단 결제
+        </Text>
+
+        <View className="bg-surface-container-low px-4 py-3 rounded-md border border-outline-warm self-start">
           <Text className="font-heading text-headline-md text-secondary">3,000원 (1회)</Text>
+        </View>
+
+        {/* 신뢰 강화 안내 — 시각 무게 ↑ (이전 회색 → 골드 박스) */}
+        <View className="bg-secondary-container/60 p-card-padding rounded-md border border-secondary/30 mt-2">
+          <Text className="font-body-bold text-body-md text-text-pri mb-2">
+            ℹ 안심하세요 — MVP 검증용 체험 결제입니다
+          </Text>
+          <Text className="font-body text-body-md text-text-sub leading-relaxed">
+            아래 카드 정보는 예시값이 미리 채워져 있어요.{'\n'}
+            "결제하기" 누르셔도 실제 청구되지 않습니다.{'\n'}
+            검증 목적: "어머니께서 이 가격이면 진짜 결제할 만한가?" 응답을 듣기 위함입니다.
+          </Text>
         </View>
 
         <Text className="font-body text-label-sm text-text-sub mt-4">카드 정보 (예시 입력됨)</Text>
@@ -88,29 +113,27 @@ export default function Checkout() {
           <Text className="font-body text-body-md text-text-pri">결제 약관에 동의</Text>
         </Pressable>
 
-        <View className="bg-secondary-container/40 p-3 rounded-md border border-outline-warm mt-4">
-          <Text className="font-body text-label-sm text-text-sub">
-            ⓘ MVP 검증을 위한 mock 결제입니다. 카드 정보는 placeholder이며 실제 청구되지 않습니다.
-          </Text>
-        </View>
-
         {error && <Toast kind="error" message={error} />}
+
+        {/* 문의 anchor */}
+        <Text className="font-body text-label-sm text-text-sub text-center mt-4">
+          문의: eugene.eee@iskra.world
+        </Text>
       </ScrollView>
 
       <StickyCTA>
         <Button onPress={handlePay} loading={loading} disabled={!agree}>
-          3,000원 결제하기
+          3,000원 체험 결제하기
         </Button>
       </StickyCTA>
 
       <Modal visible={showModal} onClose={() => {}} dismissOnBackdrop={false}>
-        <Text className="font-heading text-headline-md text-text-pri mb-3">💡 안내</Text>
+        <Text className="font-heading text-headline-md text-text-pri mb-3">결제 완료 (체험판)</Text>
         <Text className="font-body text-body-md text-text-pri leading-relaxed mb-6">
-          이 결제는 MVP 검증용 mock입니다.{'\n'}
-          입력된 카드 정보는 예시이며 실제 청구되지 않습니다.{'\n'}{'\n'}
-          확인 후 정밀 진단을 보여드립니다.
+          실제 청구는 되지 않았어요.{'\n'}
+          이제 어머니 사주를 입력하시면 정밀 진단을 보여드릴게요.
         </Text>
-        <Button onPress={handleConfirmMock} loading={loading}>확인하고 진행</Button>
+        <Button onPress={handleConfirmMock} loading={loading}>정밀 진단 보러 가기</Button>
       </Modal>
     </View>
   );

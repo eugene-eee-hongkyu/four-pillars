@@ -1,4 +1,4 @@
-// 화면 4: 자녀 만세력 (placeholder — Phase 5-C 풀 구현)
+// 화면 4: 자녀 만세력 — 친절 가이드 + saju 용어 펼침
 import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
@@ -11,6 +11,7 @@ export default function ChildManse() {
   const router = useRouter();
   const { state } = useFlow();
   const m = state.childManse;
+  const name = state.child.nickname || '아이';
 
   return (
     <View className="flex-1 bg-surface">
@@ -19,21 +20,45 @@ export default function ChildManse() {
       >
         <StepIndicator current={4} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
-          {state.child.nickname || '아이'}의 만세력
+          {name}의 만세력
         </Text>
+
         {m ? (
           <>
+            {/* 친절 가이드 — saju 모르는 어머니 부담 ↓ */}
+            <View className="bg-secondary-container/50 p-card-padding rounded-md border border-outline-warm">
+              <Text className="font-body text-body-md text-text-pri leading-relaxed">
+                {name}의 본질을 나타내는 핵심 글자 4개예요. 가운데 황금색이 <Text className="font-body-bold text-primary">일간(日干)</Text>으로 가장 중요한 본질이고, 나머지 세 기둥과 관계를 따져 학운을 풀이합니다.
+              </Text>
+            </View>
+
             <PalcaTable
               yearPillarHanja={m.yearPillarHanja}
               monthPillarHanja={m.monthPillarHanja}
               dayPillarHanja={m.dayPillarHanja}
               hourPillarHanja={m.hourPillarHanja}
             />
-            <Text className="font-body text-body-md text-text-sub">
-              일간: {m.dayPillar[0]} / 신살 강조: {m.shensha.strong.join(', ') || '없음'}
-            </Text>
-            <Text className="font-body text-label-sm text-text-sub">
-              (Phase 5-C에서 십성·신살·12운성·합충·오행·대운 카드 추가 예정)
+
+            <View className="bg-surface-container-low p-card-padding rounded-md border border-outline-warm gap-3">
+              <View>
+                <Text className="font-body-bold text-label-sm text-text-sub">일간</Text>
+                <Text className="font-body text-body-md text-text-pri">{m.dayPillar[0]} ({m.dayPillarHanja[0]}) — {name}의 본질</Text>
+              </View>
+              {m.shensha.strong.length > 0 && (
+                <View>
+                  <Text className="font-body-bold text-label-sm text-text-sub">강조되는 기운</Text>
+                  <Text className="font-body text-body-md text-text-pri">
+                    {m.shensha.strong.join(', ')}
+                  </Text>
+                  <Text className="font-body text-label-sm text-text-sub mt-1">
+                    학업·진로에 영향을 주는 핵심 신살이에요.
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <Text className="font-body text-label-sm text-text-sub text-center">
+              위 정보를 토대로 학년에 맞춰 풀이를 드릴게요.
             </Text>
           </>
         ) : (
