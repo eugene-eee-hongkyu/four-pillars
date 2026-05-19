@@ -7,8 +7,8 @@
     { "source": "/((?!_expo|assets|favicon|api).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/interpret-premium.js": { "maxDuration": 300 },
-    "api/interpret-free.js": { "maxDuration": 120 },
-    "api/relation-mini.js": { "maxDuration": 60 }
+    "api/interpret-premium.ts": { "maxDuration": 300 },
+    "api/interpret-free.ts": { "maxDuration": 120 },
+    "api/relation-mini.ts": { "maxDuration": 60 }
   }
 }
