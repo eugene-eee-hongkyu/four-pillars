@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
+import { manseToPalcaPillars } from '@/components/manse/palca-mapper';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 
@@ -32,12 +33,7 @@ export default function ChildManse() {
               </Text>
             </View>
 
-            <PalcaTable
-              yearPillarHanja={m.yearPillarHanja}
-              monthPillarHanja={m.monthPillarHanja}
-              dayPillarHanja={m.dayPillarHanja}
-              hourPillarHanja={m.hourPillarHanja}
-            />
+            <PalcaTable {...manseToPalcaPillars(m)} />
 
             <View className="bg-surface-container-low p-card-padding rounded-md border border-outline-warm gap-3">
               <View>

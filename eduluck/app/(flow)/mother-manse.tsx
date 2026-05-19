@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
+import { manseToPalcaPillars } from '@/components/manse/palca-mapper';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -23,12 +24,7 @@ export default function MotherManse() {
         <Text className="font-heading-bold text-headline-lg text-text-pri">어머니의 만세력</Text>
 
         {m ? (
-          <PalcaTable
-            yearPillarHanja={m.yearPillarHanja}
-            monthPillarHanja={m.monthPillarHanja}
-            dayPillarHanja={m.dayPillarHanja}
-            hourPillarHanja={m.hourPillarHanja}
-          />
+          <PalcaTable {...manseToPalcaPillars(m)} />
         ) : (
           <Text className="font-body text-body-md text-text-sub">만세력 데이터가 없어요.</Text>
         )}
