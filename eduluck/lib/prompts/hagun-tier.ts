@@ -129,6 +129,34 @@ function scoreHagun(m: ManseResult): number {
     score -= 2;
   }
 
+  // 신왕신약(身旺身弱) 통합 평가 — 명리 종합 분석 표준 (sajustudy 등 합의)
+  // 신왕: 일간이 강해 식상·재성·관성을 다스릴 힘 ↑ → 학업 발현
+  // 신약: 일간이 약해 관성·재성에 휘둘림 → 학업 흔들림
+  const sinwangScore =
+    (c.bigeop + c.insung) - (c.siksang + c.jaesung + c.gwansung / 2)
+    + (STRONG_UNSUNG.has(m.unsung.monthPillar.stage) ? 2 : WEAK_UNSUNG.has(m.unsung.monthPillar.stage) ? -1 : 0)
+    + (STRONG_UNSUNG.has(m.unsung.dayPillar.stage) ? 2 : WEAK_UNSUNG.has(m.unsung.dayPillar.stage) ? -1 : 0);
+  if (sinwangScore >= 3) score += 1;       // 신왕
+  else if (sinwangScore <= -3) score -= 1; // 신약
+
+  // 청소년기 대운(6~22세) 학업 친화 점수 — 자녀 학운에 결정적 변수
+  // 인성·관성 대운 = 학문·시험 ↑ / 재성 대운 = 학업 견제 / 비겁·식상 = 중립
+  // 부모 사주는 청소년기 대운이 luckCycles에 없을 수 있음 (현재 시점 기준 7개 저장) — 0점 자동 처리
+  const SCHOLAR_LUCK = new Set(['정인', '편인', '정관', '편관']);
+  const HEADWIND_LUCK = new Set(['정재', '편재']);
+  let youthLuck = 0;
+  for (const d of m.luckCycles.daeun) {
+    if (d.age < 6 || d.age > 22) continue;
+    if (SCHOLAR_LUCK.has(d.stemSipsin)) youthLuck += 1;
+    else if (HEADWIND_LUCK.has(d.stemSipsin)) youthLuck -= 1;
+    if (SCHOLAR_LUCK.has(d.branchSipsin)) youthLuck += 1;
+    else if (HEADWIND_LUCK.has(d.branchSipsin)) youthLuck -= 1;
+  }
+  if (youthLuck >= 3) score += 2;
+  else if (youthLuck >= 1) score += 1;
+  else if (youthLuck <= -3) score -= 2;
+  else if (youthLuck <= -1) score -= 1;
+
   return score;
 }
 
