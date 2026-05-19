@@ -1,16 +1,22 @@
 // 화면 4: 자녀 만세력 — 친절 가이드 + saju 용어 펼침
-import { View, Text, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
 import { manseToPalcaPillars } from '@/components/manse/palca-mapper';
+import { ManseFooter } from '@/components/manse/ManseFooter';
+import { OhaengBar } from '@/components/manse/OhaengBar';
+import { DaeunStrip } from '@/components/manse/DaeunStrip';
+import { SewunMarker } from '@/components/manse/SewunMarker';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 
 export default function ChildManse() {
   const router = useRouter();
   const { state } = useFlow();
+  const [showPro, setShowPro] = useState(false);
   const m = state.childManse;
   const name = state.child.nickname || '아이';
 
@@ -52,6 +58,28 @@ export default function ChildManse() {
                 </View>
               )}
             </View>
+
+            {/* 정통 만세력 토글 — 명리 검증 가능한 상세 정보 */}
+            <Pressable
+              onPress={() => setShowPro(!showPro)}
+              className="flex-row items-center justify-between px-card-padding py-3 rounded-md border border-outline-warm bg-surface-container-low"
+            >
+              <Text className="font-body-bold text-label-md text-text-pri">
+                정통 만세력 자세히 보기
+              </Text>
+              <Text className="font-body text-label-md text-text-sub">
+                {showPro ? '▴ 접기' : '▾ 펼치기'}
+              </Text>
+            </Pressable>
+
+            {showPro && (
+              <View className="gap-4">
+                <ManseFooter manse={m} />
+                <OhaengBar counts={m.elementCounts} />
+                <DaeunStrip daeun={m.luckCycles.daeun} />
+                <SewunMarker sewun={m.luckCycles.sewun} />
+              </View>
+            )}
 
             <Text className="font-body text-label-sm text-text-sub text-center">
               위 정보를 토대로 학년에 맞춰 풀이를 드릴게요.

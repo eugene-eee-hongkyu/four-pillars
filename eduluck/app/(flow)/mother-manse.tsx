@@ -2,12 +2,17 @@
 // DESIGN v1.1 §10 P0 #2: 사주팔자 표 = 화면 4 패턴 단일 (PalcaTable 재사용)
 // DESIGN v1.1 §10 P0 #4: "AI 분석 완료" 배지 금지 → "분석 완료" 또는 제거
 
-import { View, Text, ScrollView } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
 import { manseToPalcaPillars } from '@/components/manse/palca-mapper';
+import { ManseFooter } from '@/components/manse/ManseFooter';
+import { OhaengBar } from '@/components/manse/OhaengBar';
+import { DaeunStrip } from '@/components/manse/DaeunStrip';
+import { SewunMarker } from '@/components/manse/SewunMarker';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -15,6 +20,7 @@ import { StepIndicator } from '@/components/ui/StepIndicator';
 export default function MotherManse() {
   const router = useRouter();
   const { state } = useFlow();
+  const [showPro, setShowPro] = useState(false);
   const m = state.motherManse;
 
   return (
@@ -24,7 +30,30 @@ export default function MotherManse() {
         <Text className="font-heading-bold text-headline-lg text-text-pri">어머니의 만세력</Text>
 
         {m ? (
-          <PalcaTable {...manseToPalcaPillars(m)} />
+          <>
+            <PalcaTable {...manseToPalcaPillars(m)} />
+
+            <Pressable
+              onPress={() => setShowPro(!showPro)}
+              className="flex-row items-center justify-between px-card-padding py-3 rounded-md border border-outline-warm bg-surface-container-low"
+            >
+              <Text className="font-body-bold text-label-md text-text-pri">
+                정통 만세력 자세히 보기
+              </Text>
+              <Text className="font-body text-label-md text-text-sub">
+                {showPro ? '▴ 접기' : '▾ 펼치기'}
+              </Text>
+            </Pressable>
+
+            {showPro && (
+              <View className="gap-4">
+                <ManseFooter manse={m} />
+                <OhaengBar counts={m.elementCounts} />
+                <DaeunStrip daeun={m.luckCycles.daeun} />
+                <SewunMarker sewun={m.luckCycles.sewun} />
+              </View>
+            )}
+          </>
         ) : (
           <Text className="font-body text-body-md text-text-sub">만세력 데이터가 없어요.</Text>
         )}
