@@ -6,34 +6,35 @@
 
 ---
 
-## 마지막 실행: 2026-05-19 10:33
-## 마지막 업데이트: 2026-05-19 10:33
+## 마지막 실행: 2026-05-19 15:59
+## 마지막 업데이트: 2026-05-19 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- production prompt 3종 v3(100점) spec 적용 완료 (premium·free·mini) → 다른 사주로 출력 검증 + mom test 진입 대기
+- 정밀 진단 prompt v3 production 배포 완료 (Phase A~F + hydrateManse() 핫픽스) → §1~§14 전체 출력 검증 중
 
 ### 이어서 할 것
 
-1. 다른 사주(jaeho 외) 1건으로 premium 출력 눈 검증 — 격국·12운성·납음 LLM 자체 계산 정확도 확인
-2. Eugene mom test 10명 검증 (production URL, v3 spec 적용된 premium)
-3. premium 출력 토큰 ~2배 → API 비용·응답 시간 모니터링 (느려지면 streaming UX 또는 토큰 압축)
+1. 정밀 진단 §1~§14 전체 출력 검증 (prod 1회 호출로 확인)
+2. 다른 사주로 premium 출력 1건 눈 검증 — 격국·12운성·납음 LLM 자체 계산 정확도 확인
+3. Eugene mom test 10명 검증 (production URL, v3 spec 적용된 premium)
 
 ### 막힌 것
 
 - 없음
 
-### 사람 판단 필요
+### 사람 판断 필요
 
-- 정밀 진단 60s timeout 시 Vercel Pro 업그레이드 ($20/월)
 - mom test 10명 결과 후 Sonnet 4.6 유지 vs Opus 혼합 결정
 - custom SMTP (Resend) 도입 시기 — 외부 100명 검증 전 필수
-- premium 격국·12운성·납음 LLM 자체 계산 정확도 부족 시 `lib/manse/`에 계산 모듈 추가 결정
+- premium 격국·12운성·납음 LLM 자체 계산 정확도 부족 시 `lib/manse/` 계산 모듈 추가 결정
+- 화면 11 cutoff 시 Vercel Pro 여부 (maxDuration 확장으로 임시 해결)
 
 ### 백로그 요약
 
-- 대기 중: 2개
+- 진행 중: 3개
+- 대기 중: 1개
 - 최근 추가: 2026-04-25 — daily 톤 회귀 테스트
 
 ### 진행 상황
@@ -48,9 +49,10 @@
 - [x] **정밀 진단 prompt v3 — Sonnet 4.6 100/100** (격국·12운성·납음·전공·중고대 specific)
 - [x] **jaeho 개인정보 git history 제거** (filter-repo + force push, upstream tracking 복구)
 - [x] **production prompt 3종 v3 spec 적용** (premium 14섹션·학년 4분기·어머니 사주 / free·mini 톤 시그니처 흡수)
+- [x] **Phase A~F 배포 + hydrateManse() 핫픽스** (legacy manse_json 호환성 + path alias resolve 해결)
+- [ ] 정밀 진단 §1~§14 전체 출력 검증 (1회 prod 호출)
 - [ ] 다른 사주로 premium 출력 1건 눈 검증 (격국·12운성·납음 정확도)
 - [ ] Eugene mom test 10명 검증 (production URL)
-- [ ] 화면 11 cutoff 시 Vercel Pro 결정
 - [ ] v1.5: custom SMTP, Deployment Protection 해제, 도메인
 - [ ] 사주톡 10명 지인 테스트 계속 진행 (보정된 만세력 위에서)
 - [ ] sajutalk v2 완료 보고 (10명 결과 통합 후)

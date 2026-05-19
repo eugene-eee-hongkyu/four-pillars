@@ -4,6 +4,26 @@
 
 ---
 
+## Session 2026-05-19 15:59 — 학운 명리 Phase A~F 완료 및 운영 안정성 핫픽스
+
+### 작업 요약
+- **Phase A~F 전 단계 완료**: sipsin·unsung·gyeokguk·napum 계산 모듈, PalcaTable 라벨, 명식판 확장, 학운 카드 4종, LLM 프롬프트 데이터 주입, 학습 가이드
+- **hydrateManse() 스키마 마이그레이션**: 과거 manse_json 데이터 호환성 처리로 500 에러 해결 (API 3개)
+- **Module resolve 문제 해결**: @/ path alias 대신 상대경로로 변경 (c0b63e7)
+- **정밀 진단 성능 최적화**: max_tokens 4096→8192, Vercel maxDuration 제약 완전 해제, functions glob .js→.ts 수정 (589042d)
+- **mother-saju.tsx state persist 추가**: patchMother 콜 + useState prefill (9752401)
+- **학원 브랜드명 정책 적용**: 직접 명시 금지, 계열·접근 방식으로만 묘사 (40b1e56)
+
+### 실패한 시도
+- Prod endpoint 10초 간격 무한 polling → Vercel anomaly 트리거 (14분 지속), background task 2개 중단
+- vercel.json glob 패턴 오류로 빌드 실패 2회
+
+### 다음 액션
+- 정밀 진단 §1~§14 끝까지 출력 검증 (현재 배포 완료 대기 중)
+- dev server 시각·상호작용 전체 흐름 검증 (모바일 가독성·간격)
+- mom test 10명 검증으로 LLM 정확도 측정
+
+
 ## Session 2026-05-19 10:33 — git history 재작성 (jaeho 개인정보) + production prompt 3종 v3(100점) spec 적용
 
 ### 작업 요약
