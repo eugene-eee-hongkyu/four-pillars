@@ -10,6 +10,10 @@ import { ManseFooter } from '@/components/manse/ManseFooter';
 import { OhaengBar } from '@/components/manse/OhaengBar';
 import { DaeunStrip } from '@/components/manse/DaeunStrip';
 import { SewunMarker } from '@/components/manse/SewunMarker';
+import { EssenceCard } from '@/components/manse/EssenceCard';
+import { HagunCoreCard } from '@/components/manse/HagunCoreCard';
+import { GongbuGuiCard } from '@/components/manse/GongbuGuiCard';
+import { HagunUnsungCard } from '@/components/manse/HagunUnsungCard';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 
@@ -41,23 +45,11 @@ export default function ChildManse() {
 
             <PalcaTable {...manseToPalcaPillars(m)} />
 
-            <View className="bg-surface-container-low p-card-padding rounded-md border border-outline-warm gap-3">
-              <View>
-                <Text className="font-body-bold text-label-sm text-text-sub">일간</Text>
-                <Text className="font-body text-body-md text-text-pri">{m.dayPillar[0]} ({m.dayPillarHanja[0]}) — {name}의 본질</Text>
-              </View>
-              {m.shensha.strong.length > 0 && (
-                <View>
-                  <Text className="font-body-bold text-label-sm text-text-sub">강조되는 기운</Text>
-                  <Text className="font-body text-body-md text-text-pri">
-                    {m.shensha.strong.join(', ')}
-                  </Text>
-                  <Text className="font-body text-label-sm text-text-sub mt-1">
-                    학업·진로에 영향을 주는 핵심 신살이에요.
-                  </Text>
-                </View>
-              )}
-            </View>
+            {/* 학운 핵심 카드 4종 — 정통 명리 풀이를 어머니가 즉시 알아볼 수 있게 */}
+            <EssenceCard manse={m} nickname={name} />
+            <HagunCoreCard manse={m} />
+            <GongbuGuiCard manse={m} />
+            <HagunUnsungCard manse={m} />
 
             {/* 정통 만세력 토글 — 명리 검증 가능한 상세 정보 */}
             <Pressable

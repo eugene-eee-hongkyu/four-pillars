@@ -13,6 +13,7 @@ import { ManseFooter } from '@/components/manse/ManseFooter';
 import { OhaengBar } from '@/components/manse/OhaengBar';
 import { DaeunStrip } from '@/components/manse/DaeunStrip';
 import { SewunMarker } from '@/components/manse/SewunMarker';
+import { MotherChildSyncCard } from '@/components/manse/MotherChildSyncCard';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -22,6 +23,8 @@ export default function MotherManse() {
   const { state } = useFlow();
   const [showPro, setShowPro] = useState(false);
   const m = state.motherManse;
+  const childM = state.childManse;
+  const childName = state.child.nickname || '아이';
 
   return (
     <View className="flex-1 bg-surface">
@@ -32,6 +35,15 @@ export default function MotherManse() {
         {m ? (
           <>
             <PalcaTable {...manseToPalcaPillars(m)} />
+
+            {/* 어머니-자녀 합 카드 — 자녀 만세력 있을 때만 */}
+            {childM && (
+              <MotherChildSyncCard
+                childManse={childM}
+                motherManse={m}
+                childNickname={childName}
+              />
+            )}
 
             <Pressable
               onPress={() => setShowPro(!showPro)}
