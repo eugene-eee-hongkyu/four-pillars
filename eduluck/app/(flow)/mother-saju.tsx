@@ -29,9 +29,24 @@ function parseTime(s: string) {
 export default function MotherSaju() {
   const router = useRouter();
   const { state, patchMother, setMotherSubject } = useFlow();
-  const [dateStr, setDateStr] = useState('');
-  const [timeStr, setTimeStr] = useState('');
-  const [timeUnknown, setTimeUnknown] = useState(false);
+  const [dateStr, setDateStr] = useState<string>(() => {
+    const m = state.mother;
+    if (m.birthYear && m.birthMonth && m.birthDay) {
+      return `${m.birthYear}-${String(m.birthMonth).padStart(2, '0')}-${String(m.birthDay).padStart(2, '0')}`;
+    }
+    return '';
+  });
+  const [timeStr, setTimeStr] = useState<string>(() => {
+    const m = state.mother;
+    if (m.birthHour !== null && m.birthMinute !== null) {
+      return `${String(m.birthHour).padStart(2, '0')}:${String(m.birthMinute).padStart(2, '0')}`;
+    }
+    return '';
+  });
+  const [timeUnknown, setTimeUnknown] = useState<boolean>(() => {
+    const m = state.mother;
+    return m.birthYear !== null && m.birthHour === null;
+  });
   const [showUnknown, setShowUnknown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +64,14 @@ export default function MotherSaju() {
     setSubmitting(true);
     setError(null);
     try {
+      // 다음 세션 진입 시 prefill되도록 state.mother에 save (자녀 패턴과 동일)
+      patchMother({
+        birthYear: parsedDate.y,
+        birthMonth: parsedDate.m,
+        birthDay: parsedDate.d,
+        birthHour: timeUnknown ? null : parsedTime?.h ?? null,
+        birthMinute: timeUnknown ? null : parsedTime?.m ?? null,
+      });
       const body = {
         sessionId: state.sessionId,
         role: 'mother' as const,
