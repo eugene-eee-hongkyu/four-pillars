@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
+import { Logo } from '@/components/ui/Logo';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
 
@@ -44,6 +45,7 @@ export default function Landing() {
       <ScrollView
         contentContainerClassName="flex-1 items-center justify-center px-container-padding gap-6"
       >
+        <Logo size={88} />
         <Text className="font-heading-bold text-display-lg text-text-pri">eduluck</Text>
         <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed">
           우리 아이 학운,{'\n'}사주로 봅니다
