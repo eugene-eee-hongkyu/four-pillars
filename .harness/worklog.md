@@ -4,6 +4,72 @@
 
 ---
 
+## Session 2026-05-19 10:12 — eduluck 종단 검증 + UX 옵션 B 10건 + 로고 컨셉 B + prompt iteration 100점
+
+### 작업 요약
+
+**Eugene 종단 검증 + 즉시 fix**
+- 화면 7 signup OTP 8자리 호환 (Supabase project setting)
+- Supabase rate limit 시 OTP 입력 폼 열어두기 (이전 코드 시도용)
+- FlowProvider state localStorage persist (페이지 새로고침 시 sessionId·child·mother 보존)
+- OTP 메일 발송 폐기 → 이메일+비번 즉시 가입 + 자동 로그인 (signInWithPassword → 실패 시 signUp 폴백)
+- Supabase Email Template "Confirm email" OFF 안내
+- 화면 11 "결과 다시 보기" 버튼 제거 (single session UX 무의미)
+
+**docs/ 재구성**
+- eduluck/SETUP·COMPLETION·PHASE_7 → docs/{SETUP, reports/}
+- docs/eduluck_X.md → docs/{plan,build,design,reports}/X.md (eduluck_ prefix 제거)
+- 중복 08_가이드_..._v1_1.md 삭제 (ref/와 동일)
+- README.md 신규 (루트, overview + 문서 트리)
+- sed 일괄 cross-ref 갱신 + scripts/reorganize-docs.sh
+
+**UX 옵션 B — Quick Wins 5 + 중요 fix 5 = 10건**
+- #1 lib/errors/translate.ts (영문 에러 → 한글, EXACT dict + PATTERN regex + raw fallback)
+- #2 components/ui/StepIndicator (dots + "N/11", 화면 2~11 통일)
+- #3 헤딩 모바일 최적화 (display-lg 40→32, headline-lg 28→24)
+- #4 StreamingBody rotating 메시지 (8초 간격 6개, perceived wait 50% ↓)
+- #5 시간 모름 모달 친근 + 이메일 컨텍스트 명확
+- #6 랜딩 정밀 진단 blur 미리보기 + 3 bullet + anchor
+- #7 만세력 화면 친절 가이드 ("{name}의 본질" 박스 + 일간·신살 카드)
+- #8 결제 mock UX 개선 ("🎟 MVP 체험판" 배지 + 골드 안내 박스 + 문의 anchor)
+- #9 정밀 진단 mini TOC (4 섹션 anchor)
+- #10 정밀 진단 별점 시점 분리 (step 1 → 답 → step 2 → 답)
+
+**디자인·UX 리뷰 + 로고 컨셉 B 적용**
+- docs/design/DESIGN_UX_REVIEW.md (3 페르소나 23 이슈 + Quick Wins 5 + 중요 fix 5)
+- docs/design/LOGO_PROPOSALS.md (3 컨셉 A·B·C + SVG mockup)
+- Eugene 컨셉 B 선택 → 사주 4기둥 그리드 (일간 골드)
+- scripts/gen-logo.py (PIL): favicon 32, icon 1024, adaptive-icon, splash, og-image 1200×630
+- components/ui/Logo.tsx (react-native-svg)
+- app/index.tsx 랜딩에 Logo size=88 추가
+- app.json icon·splash·adaptiveIcon 경로 명시
+
+**모델 비교 — jaeho test (Opus 4.7 vs Sonnet 4.6)**
+- 만세력: 2016-05-14 08:48 남 → 병신·계사·병신·임진 (일간 병화, 신살 건록·문창귀인, 오행 화3금2수2토1목0, 용신 木)
+- v1 (15~20문장): Opus 89 / Sonnet 82
+- v2 (45~70문장 + 전공·학교): Opus 90 / Sonnet 92
+- v3 (75~95문장 + 격국·12운성·납음 + 14 섹션 + 구체 학원/동네/식물 + 중·고·대 specific + "서울대 스치나 막힘" 시그니처): **Sonnet 4.6 100/100 ⭐** (Opus 4.7 90)
+- 1 iteration 만에 만점 달성 (6 iter 중)
+- 디렉토리 재구성: jaeho-test/{v1,v2,v3}/
+
+**Vercel 트러블슈팅**
+- localhost dev NativeWind color-scheme 에러 (production은 OK) → production URL 사용
+- Vercel env에 EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY 추가 (Expo Web bundle은 EXPO_PUBLIC_ 접두사만 inject)
+- 모델 변경: claude-sonnet-4-5-20250929 → claude-opus-4-7 (Eugene env 직접 set), 권장은 sonnet-4-6
+
+### 실패한 시도
+- favicon base64 1x1 PNG: Jimp Crc error → Python PIL 32x32로 재생성
+- Sonnet v2 max_tokens 4096 → truncated → 8000으로 재호출
+- vercel CLI env add: stdin interactive 처리 미흡 → production만 set, preview는 dashboard 수동
+- awk import 자동 추가: 첫줄 주석이라 매칭 실패 → 6 파일 직접 Edit
+
+### 다음 액션
+1. v3 PROMPT.md를 prompts/interpret-premium.md에 반영 (어머니 사주 + 합 시기 섹션 추가, 학년 분기 4구간 자동 처리)
+2. Eugene mom test 10명 검증 진행 (정밀 진단 4점 평균 도달 시 Sonnet 4.6 유지 / 미달 시 Opus 혼합)
+3. v1.5 결정: custom SMTP (Resend) + 도메인 + Vercel Pro $20/월 (정밀 90s timeout) + Deployment Protection 해제
+
+---
+
 ## Session 2026-05-18 23:01 — eduluck MVP 빌드 (Phase 1~9 완료, Vercel 작동)
 
 ### 작업 요약

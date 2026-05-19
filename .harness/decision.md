@@ -4,6 +4,41 @@
 
 ---
 
+## 2026-05-19: 정밀 진단(화면 11) 모델 — Sonnet 4.6 + v3 prompt 채택
+
+- **선택**: Sonnet 4.6 + jaeho-test/v3/PROMPT.md (75~95문장, 14 섹션, 격국·12운성·납음, 전공·중·고·대 구체 명시)
+- **대안 검토**:
+  - Opus 4.7 v3 (90점): 톤 시그니처 "보여요·나와요" 14회 (Sonnet 83회 대비 1/6). 비용 5배. 학교 specific은 Sonnet과 유사.
+  - Sonnet 4.6 v2 (92점): 13 섹션, 격국·12운성 누락.
+  - Sonnet 4.6 v3 (100점, 선택): 격국·12운성·납음 강제 + 톤 시그니처 자연 + 학원·동네·식물 모두 구체.
+- **선택 이유**: (1) 명리 전문가 페르소나 100/100 만점, (2) Opus 대비 비용 1/5, (3) "보여요·나와요" 어미 자연·markdown emoji/bold 자제로 Eugene 샘플 reading 시그니처 정확 답습, (4) 1 iteration 만에 만점 도달 — 추가 튜닝 비용 없음.
+- **영향 범위**: prompts/interpret-premium.md를 v3 system prompt로 교체 예정. user message는 어머니 사주 + 어머니-자녀 합 섹션 추가 (현재 v3는 자녀 단독). lib/prompts/interpret-premium.ts buildPrompt 함수 학년 4구간 분기 확장.
+- **되돌리는 방법**: prompts/interpret-premium.md 이전 버전 복원. Opus로 모델 변경은 .env.local ANTHROPIC_MODEL만 변경.
+
+
+## 2026-05-19: 로고 컨셉 — B (사주 4기둥 그리드) 채택
+
+- **선택**: 컨셉 B — 2×2 그리드 (3 청회 + 1 골드 = 일간 강조)
+- **대안 검토**:
+  - A (한자「運」): saju 정통성 신호 강함. 한자 거부감·글로벌 확장 제한.
+  - **B (4기둥 그리드, 선택)**: brand core(만세력) + PalcaTable 시각 일관 + favicon 16~24px 가독 + 한자 거부감 없음.
+  - C (새싹+별): 학부모 친근. saju 차별화 약함.
+- **선택 이유**: (1) DESIGN v1.1 §5 PalcaTable 컴포넌트와 같은 시각 언어, (2) 만세력 정확도 차별점과 직접 연결, (3) 2026 Neo-Minimalism 트렌드 부합, (4) responsive (favicon·app icon·OG image 모두 동일 기하학 작동).
+- **영향 범위**: eduluck/assets/{favicon, icon, adaptive-icon, splash, og-image}.png 신규. components/ui/Logo.tsx (react-native-svg). app/index.tsx 랜딩에 표시. app.json icon·splash·adaptiveIcon 경로 명시.
+- **되돌리는 방법**: scripts/gen-logo.py 코드 수정 → 다른 컨셉 PNG 재생성. Logo.tsx SVG 좌표 변경. (rollback은 git revert).
+
+
+## 2026-05-19: 회원가입 방식 — OTP 메일 폐기 + 이메일·비번 즉시 가입 + 자동 로그인
+
+- **선택**: signInWithPassword 먼저 → 실패 시 signUp 자동 폴백. 진입 시 sb.auth.getUser()로 자동 로그인 체크.
+- **대안 검토**:
+  - OTP 메일: Supabase 무료 hourly 3~4건 rate limit + spam 위험 + OTP 길이(6/8) 호환 + reload 시 다시 OTP. 학부모 UX 마찰 큼.
+  - **이메일·비번 (선택)**: 1 폼·1 버튼 "계속하기" + cookie persist로 reload 자동 복원. 마찰 최소.
+- **선택 이유**: MVP rate limit 막힘 실제 경험 + 학부모 OTP 메일 spam 분류 위험 + reload 시 OTP 다시 받는 UX 부담.
+- **영향 범위**: app/(flow)/signup.tsx 재작성. Supabase Dashboard에 "Confirm email" OFF 필수 (Eugene 작업).
+- **되돌리는 방법**: signInWithPassword·signUp 제거 → signInWithOtp + verifyOtp 복원.
+
+
 ## 2026-05-18: eduluck API routes Vercel 작동 방식 — A안 (Vercel Functions) 채택
 
 - **선택**: A안 — eduluck/api/*.ts 폴더 추가 (Vercel 표준 functions 형식). 기존 app/api/+api.ts 코드 그대로 sync.
