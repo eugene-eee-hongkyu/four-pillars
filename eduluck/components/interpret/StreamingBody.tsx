@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { KeywordHighlight } from './KeywordHighlight';
+import { InterpretBody } from './InterpretBody';
 
 interface Props {
   /** POST endpoint. body를 함께 전달 */
@@ -170,7 +170,7 @@ export function StreamingBody({
 
   return (
     <ScrollView className="p-card-padding" contentContainerClassName="gap-4">
-      <KeywordHighlight text={text} />
+      <InterpretBody text={text} />
     </ScrollView>
   );
 }

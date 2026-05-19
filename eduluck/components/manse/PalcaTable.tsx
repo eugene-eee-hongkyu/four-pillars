@@ -126,7 +126,7 @@ function PillarCell({ pillar, label, highlight }: PillarCellProps) {
         {pillar.jijanggan.join('·') || '—'}
       </Text>
 
-      {/* 신살 배지 — 공망 제외 (이미 ◌으로 표시) */}
+      {/* 신살 배지 — 공망 제외 (이미 ◌으로 표시). 4귀인은 골드 채움 + 볼드로 강조. */}
       <View className="flex-row flex-wrap justify-center gap-1 mt-2">
         {pillar.shensha
           .filter(s => s !== '공망')
@@ -135,16 +135,16 @@ function PillarCell({ pillar, label, highlight }: PillarCellProps) {
             return (
               <View
                 key={`${s}-${i}`}
-                className="px-1 py-0.5 rounded"
+                className="px-1.5 py-0.5 rounded"
                 style={
                   isGui
-                    ? { backgroundColor: colors.secondaryContainer }
+                    ? { backgroundColor: colors.secondaryContainer, borderWidth: 1, borderColor: colors.secondary }
                     : { borderWidth: 1, borderColor: colors.outlineWarm }
                 }
               >
                 <Text
-                  className="font-body"
-                  style={{ fontSize: 10, color: isGui ? colors.secondary : colors.textSub }}
+                  className={isGui ? 'font-body-bold' : 'font-body'}
+                  style={{ fontSize: 11, color: isGui ? colors.secondary : colors.textSub, fontWeight: isGui ? '700' : '400' }}
                 >
                   {s}
                 </Text>
