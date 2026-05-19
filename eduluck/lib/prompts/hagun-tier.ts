@@ -38,6 +38,12 @@ const STRONG_UNSUNG = new Set(['장생', '관대', '건록', '제왕']);
 const WEAK_UNSUNG = new Set(['병', '사', '묘', '절', '태']);
 const HAGUN_GUI = new Set(['문창귀인', '학당귀인', '문곡귀인', '천을귀인']);
 
+/** 학자형 격국 (학문·시험 친화). 명리 합의: 인성·관성·식신·건록 계열. */
+const SCHOLAR_GYEOKGUK = new Set(['정관격', '정인격', '편인격', '식신격', '건록격']);
+
+/** 학운 친화 납음 — "잠재형/빛 발하는 구조"의 납음. */
+const SCHOLAR_NAPUM = new Set(['산하화', '해중금', '검봉금', '천중수', '간하수', '대림목', '송백목', '천상화']);
+
 function scoreHagun(m: ManseResult): number {
   const c = m.sipsin.counts;
   let score = 0;
@@ -56,20 +62,40 @@ function scoreHagun(m: ManseResult): number {
   else if (c.gwansung === 1) score += 1;
   else score -= 1;
 
-  // 공부 4귀인 unique 개수
+  // 공부 4귀인 — 실제 출현 count (unique 대신). 중복 등장은 명리에서 더 강한 시그널.
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
     ...m.shensha.dayPillar, ...m.shensha.hourPillar,
   ];
-  const guiUnique = new Set(allShensha.filter(s => HAGUN_GUI.has(s))).size;
-  if (guiUnique >= 2) score += 2;
-  else if (guiUnique === 1) score += 1;
+  const guiCount = allShensha.filter(s => HAGUN_GUI.has(s)).length;
+  if (guiCount >= 3) score += 3;
+  else if (guiCount === 2) score += 2;
+  else if (guiCount === 1) score += 1;
 
   // 12운성 학운 자리 — 월지 + 일지
   if (STRONG_UNSUNG.has(m.unsung.monthPillar.stage)) score += 1;
   else if (WEAK_UNSUNG.has(m.unsung.monthPillar.stage)) score -= 1;
   if (STRONG_UNSUNG.has(m.unsung.dayPillar.stage)) score += 1;
   else if (WEAK_UNSUNG.has(m.unsung.dayPillar.stage)) score -= 1;
+
+  // 학자형 격국 보너스 (정관·정인·편인·식신·건록격은 학문 친화)
+  if (SCHOLAR_GYEOKGUK.has(m.gyeokguk.name)) score += 2;
+
+  // 학운 친화 납음 (산하화·해중금 등 — 잠재형/빛 발하는 구조)
+  if (m.napum.dayPillar.nameKo && SCHOLAR_NAPUM.has(m.napum.dayPillar.nameKo)) score += 1;
+
+  // 학운 삼합 — hapchunh.summary에 "삼합"·"수국"·"화국"·"금국"·"목국" 포함 시 학운 기운 결집
+  const hapSummary = m.hapchunh.summary ?? '';
+  if (/삼합|수국|화국|금국|목국/.test(hapSummary)) score += 2;
+
+  // 관인상생 유연화: 인성 0이지만 강한 학운 시그널(삼합 + 관성≥2 + 4귀인 ≥1) 모두 있으면
+  // 명리에서 합·삼합이 인성 자리를 간접 보완 — 추가 +2
+  if (
+    c.insung === 0 && c.gwansung >= 2 && guiCount >= 1 &&
+    /삼합|수국|화국|금국|목국/.test(hapSummary)
+  ) {
+    score += 2;
+  }
 
   // 식상·재성·비겁 강세 — 학문 외 트랙 시그널 (학운 점수에서는 약간 감점)
   const nonScholarStrong = (c.siksang >= 2 ? 1 : 0) + (c.jaesung >= 3 ? 1 : 0) + (c.bigeop >= 3 ? 1 : 0);
