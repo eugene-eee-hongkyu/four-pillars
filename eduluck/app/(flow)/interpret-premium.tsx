@@ -108,14 +108,7 @@ export default function InterpretPremium() {
 
       {submitted && (
         <StickyCTA>
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Button variant="secondary" onPress={() => router.replace('/')}>진단 종료</Button>
-            </View>
-            <View className="flex-1">
-              <Button onPress={() => router.replace('/(flow)/interpret-premium')}>결과 다시 보기</Button>
-            </View>
-          </View>
+          <Button onPress={() => router.replace('/')}>진단 종료</Button>
         </StickyCTA>
       )}
     </View>
