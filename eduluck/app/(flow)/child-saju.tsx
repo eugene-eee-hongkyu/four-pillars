@@ -7,6 +7,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarToggle } from '@/components/ui/CalendarToggle';
 import { Input } from '@/components/ui/Input';
+import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
@@ -141,27 +142,25 @@ export default function ChildSaju() {
           />
         </View>
 
-        <Input
+        <DateTimeInput
           label="생년월일"
           value={dateStr}
-          onChangeText={setDateStr}
-          placeholder="2017-09-15"
+          onChange={setDateStr}
           type="date"
-          hint="형식: YYYY-MM-DD"
+          hint="달력에서 선택하거나 직접 입력"
         />
 
         <View className="gap-2">
-          <Input
+          <DateTimeInput
             label="출생 시간"
             value={timeStr}
-            onChangeText={(t) => {
+            onChange={(t) => {
               setTimeStr(t);
               if (t.length > 0) setTimeUnknown(false);
             }}
-            placeholder="14:30"
             type="time"
-            hint="형식: HH:MM (24시간)"
-            editable={!timeUnknown}
+            hint="시간·분 단위 (모르면 아래 체크)"
+            disabled={timeUnknown}
           />
           <Pressable
             accessibilityRole="checkbox"

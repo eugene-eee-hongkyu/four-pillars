@@ -5,6 +5,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarToggle } from '@/components/ui/CalendarToggle';
 import { Input } from '@/components/ui/Input';
+import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
@@ -91,21 +92,21 @@ export default function MotherSaju() {
           onChange={(c) => patchMother({ birthCalendar: c })}
         />
 
-        <Input
+        <DateTimeInput
           label="생년월일"
           value={dateStr}
-          onChangeText={setDateStr}
-          placeholder="1989-03-22"
+          onChange={setDateStr}
           type="date"
+          hint="달력에서 선택하거나 직접 입력"
         />
 
-        <Input
+        <DateTimeInput
           label="출생 시간"
           value={timeStr}
-          onChangeText={(t) => { setTimeStr(t); if (t) setTimeUnknown(false); }}
-          placeholder="06:15"
+          onChange={(t) => { setTimeStr(t); if (t) setTimeUnknown(false); }}
           type="time"
-          editable={!timeUnknown}
+          hint="시간·분 단위 (모르면 아래 체크)"
+          disabled={timeUnknown}
         />
         <Pressable
           accessibilityRole="checkbox"
