@@ -9,6 +9,7 @@ import {
   buildInterpretFreePrompt,
   type InterpretFreeContext,
 } from '../lib/prompts/interpret-free';
+import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
 
 interface Body {
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     birthYear: child.birth_year,
     birthMonth: child.birth_month,
     birthDay: child.birth_day,
-    childManse: child.manse_json,
+    childManse: hydrateManse(child.manse_json),
   };
 
   const system = getInterpretFreeSystem();

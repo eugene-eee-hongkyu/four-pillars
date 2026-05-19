@@ -7,7 +7,7 @@ import { getSupabaseServer } from '@/lib/supabase/server';
 
 interface Body {
   sessionId: string;
-  role: 'child' | 'mother';
+  role: 'child' | 'mother' | 'father';
   nickname?: string;
   gender: 'male' | 'female';
   grade?: string;                          // 'elem-1' ~ 'high-3' (자녀만)

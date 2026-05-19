@@ -1,5 +1,6 @@
-// POST /api/interpret-premium — 정밀 진단 SSE (자녀 + 어머니)
-// body: { sessionId, childSubjectId, motherSubjectId }
+// POST /api/interpret-premium — 정밀 진단 SSE
+// body: { sessionId, childSubjectId, motherSubjectId?, fatherSubjectId? }
+// 어머니·아빠는 모두 옵션. 자녀만 필수.
 
 import { getAnthropicClient, ANTHROPIC_MODEL } from '@/lib/llm/client';
 import { sseResponse } from '@/lib/llm/stream-sse';
@@ -14,7 +15,8 @@ import { getSupabaseServer } from '@/lib/supabase/server';
 interface Body {
   sessionId: string;
   childSubjectId: string;
-  motherSubjectId: string;
+  motherSubjectId?: string | null;
+  fatherSubjectId?: string | null;
 }
 
 export async function POST(request: Request) {
@@ -25,17 +27,22 @@ export async function POST(request: Request) {
     return Response.json({ error: 'invalid json' }, { status: 400 });
   }
 
-  if (!body.sessionId || !body.childSubjectId || !body.motherSubjectId) {
-    return Response.json({ error: 'missing required fields' }, { status: 400 });
+  if (!body.sessionId || !body.childSubjectId) {
+    return Response.json({ error: 'missing required fields (sessionId/childSubjectId)' }, { status: 400 });
   }
 
   const sb = getSupabaseServer();
   const { data: child } = await sb.from('subjects').select('*').eq('id', body.childSubjectId).single();
-  const { data: mother } = await sb.from('subjects').select('*').eq('id', body.motherSubjectId).single();
-
-  if (!child || !mother) {
-    return Response.json({ error: 'subjects not found' }, { status: 404 });
+  if (!child) {
+    return Response.json({ error: 'child subject not found' }, { status: 404 });
   }
+
+  const { data: mother } = body.motherSubjectId
+    ? await sb.from('subjects').select('*').eq('id', body.motherSubjectId).single()
+    : { data: null };
+  const { data: father } = body.fatherSubjectId
+    ? await sb.from('subjects').select('*').eq('id', body.fatherSubjectId).single()
+    : { data: null };
 
   const ctx: InterpretPremiumContext = {
     childNickname: child.nickname ?? '아이',
@@ -45,7 +52,14 @@ export async function POST(request: Request) {
     childBirthMonth: child.birth_month,
     childBirthDay: child.birth_day,
     childManse: hydrateManse(child.manse_json),
-    motherManse: hydrateManse(mother.manse_json),
+    motherManse: mother ? hydrateManse(mother.manse_json) : null,
+    fatherManse: father ? hydrateManse(father.manse_json) : null,
+    parentEducation: (mother?.education_json || father?.education_json)
+      ? {
+          mother: mother?.education_json ?? null,
+          father: father?.education_json ?? null,
+        }
+      : undefined,
   };
 
   const system = getInterpretPremiumSystem();
@@ -71,9 +85,9 @@ export async function POST(request: Request) {
         session_id: body.sessionId,
         kind: 'premium',
         child_subject_id: body.childSubjectId,
-        mother_subject_id: body.motherSubjectId,
+        mother_subject_id: body.motherSubjectId ?? null,
         body_text: bodyText,
-        prompt_version: 'interpret-premium-v1',
+        prompt_version: 'interpret-premium-v2',
         llm_model: ANTHROPIC_MODEL,
       });
     } catch (e) {

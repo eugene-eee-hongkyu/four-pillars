@@ -49,7 +49,8 @@ const INTERPRET_PREMIUM_SYSTEM = `당신은 한국의 사주 명리 학운 전�
 11. 직업·진로 흐름 (전공 후 어떤 직업·일터에서 빛나는지, 4~6문장)
 12. **전공 볼게요** ("전공 볼게요" 인사로 시작. 사주 기반 1순위·2순위·이공계 대안 모두 명시, 4~6문장)
 13. **학교 볼게요** ("학교 볼게요" 인사로 시작. 학년 분기에 따라 구체 학교명 명시 + 1~2개는 "스치나 막혀요" 미묘한 표현 활용, 6~8문장)
-14. 어머니께 한 마디 — 어머니 사주와 자녀 사주의 합 시기 포함 (4~6문장)
+14. 어머니께 한 마디 — 어머니 사주와 자녀 사주의 합 시기 포함 (4~6문장).
+    **어머니 사주 미입력 시 → "○○에게 한 마디" 톤으로 자동 전환** (자녀 본인에게 직접 권유, 4~6문장). 어머니-자녀 합 풀이 생략.
 
 ## 학년대별 학교 예측 분기
 - **초저(1~3)**: 중학교는 "가능성으로 열려" 톤. 고·대학은 "아직 멀지만 큰 그림"으로 1줄.
@@ -109,11 +110,22 @@ const INTERPRET_PREMIUM_SYSTEM = `당신은 한국의 사주 명리 학운 전�
 - 학군지: 구체 동네명 (예: 분당 정자동·이매동, 목동 5·7단지, 중계 은행사거리, 일산 후곡마을)
 - 일과: 구체 시간대 (예: "저녁 7시까지 학원, 8시 이후는 가정 학습 30분")
 
-## 어머니-자녀 합 시기 — 14번 섹션에서 풀이
+## 어머니-자녀 합 시기 — 14번 섹션에서 풀이 (어머니 사주 입력된 경우만)
 - 어머니 일간/십성이 자녀에게 어떻게 작용하는지
 - 명리적으로 어머니의 직접 관여가 가장 효과적인 시점 (자녀 대운·세운 기반)
 - 외부 학원 vs 어머니 직접 학습 비중 권고
 - "어머니가 잡아주면 이뤄집니다 나와요" 같은 시그니처 표현 자연 활용
+- **어머니 사주 미입력 시 → 이 섹션 생략. §14는 자녀 본인에게 직접 한 마디 톤으로 전환.**
+
+## 아빠 사주 — 옵션 (입력된 경우에만 보조 풀이)
+- 아빠 사주가 입력되면 §11(직업·진로) 또는 §14에서 아빠 일간이 자녀에게 어떤 십성으로 작용하는지 한 줄 보조 풀이
+- 명리에서 아빠 = 자녀의 편재(아들) 또는 정재(딸) — 자녀의 사회적 자원·물질 환경 변수
+- 아빠 사주 영향은 어머니(인성)보다 가중치 낮음. 보조 풀이 1~2문장 정도
+
+## 부모 학력·전공 — 옵션 (입력된 경우에만 가능 범위 현실감 보강)
+- 부모 학력은 진단의 신뢰성과 자녀에게 가능한 범위를 현실감 있게 그릴 때 보조 정보로 활용
+- 단정적으로 부모 학력 ↔ 자녀 학교 매핑 금지 (사주가 우선). 학력은 환경 변수일 뿐.
+- 예: 부모가 SKY면 자녀 SKY 권유의 신뢰성 ↑, 부모가 지방대면 자녀 지방대 권유가 자연스러움
 
 ## 금지
 - "AI" 단어 절대 금지
@@ -198,6 +210,14 @@ function motherChildSyncLine(child: ManseResult, mother: ManseResult): string {
   return `어머니 일간(${motherIlgan}) → 자녀 일간(${childIlgan}) 기준 십성: ${effect || '—'}`;
 }
 
+/** 아빠 일간이 자녀에게 어떤 십성으로 작용하는지 한 줄. */
+function fatherChildSyncLine(child: ManseResult, father: ManseResult): string {
+  const childIlgan = splitPillar(child.dayPillar).stem;
+  const fatherIlgan = splitPillar(father.dayPillar).stem;
+  const effect = getStemSipsin(childIlgan, fatherIlgan);
+  return `아빠 일간(${fatherIlgan}) → 자녀 일간(${childIlgan}) 기준 십성: ${effect || '—'}`;
+}
+
 export interface InterpretPremiumContext {
   childNickname: string;
   childGender: 'male' | 'female';
@@ -206,7 +226,15 @@ export interface InterpretPremiumContext {
   childBirthMonth: number;
   childBirthDay: number;
   childManse: ManseResult;
-  motherManse: ManseResult;
+  /** 어머니 사주 — 옵션 (어머니 정보 모름·미입력 시 null) */
+  motherManse: ManseResult | null;
+  /** 아빠 사주 — 옵션 */
+  fatherManse: ManseResult | null;
+  /** 부모 학력·전공 — 옵션 */
+  parentEducation?: {
+    mother?: { level: string | null; schoolName: string | null; major: string | null } | null;
+    father?: { level: string | null; schoolName: string | null; major: string | null } | null;
+  };
 }
 
 /** 학년 → (분량 문장 범위, 학교 예측 분기 가이드 문장) */
@@ -258,10 +286,30 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     `  현재 대운: ${cDaeunStr}`,
     `  현재 세운: ${cSewunStr}`,
     ``,
-    `[어머니 사주] — 14번 섹션 "어머니께 한 마디"에서 자녀와의 합 시기로 풀이`,
-    ...manseSummary(m).map(s => '  ' + s),
-    `  ${motherChildSyncLine(c, m)}`,
+    m
+      ? `[어머니 사주] — 14번 섹션 "어머니께 한 마디"에서 자녀와의 합 시기로 풀이`
+      : `[어머니 사주] — 미입력. §14는 자녀 본인에게 한 마디 톤으로 자동 전환. "어머니-자녀 합" 풀이 생략.`,
+    ...(m ? manseSummary(m).map(s => '  ' + s) : []),
+    ...(m ? [`  ${motherChildSyncLine(c, m)}`] : []),
     ``,
+    ctx.fatherManse
+      ? `[아빠 사주] — 옵션 입력. §14 또는 §11(직업·진로 흐름) 등에서 자녀와의 영향(아빠 일간이 자녀에게 어떤 십성으로 작용하는지) 한 줄로 보조 풀이`
+      : `[아빠 사주] — 미입력. 패스.`,
+    ...(ctx.fatherManse ? manseSummary(ctx.fatherManse).map(s => '  ' + s) : []),
+    ...(ctx.fatherManse ? [`  ${fatherChildSyncLine(c, ctx.fatherManse)}`] : []),
+    ``,
+    ...(ctx.parentEducation && (ctx.parentEducation.mother || ctx.parentEducation.father)
+      ? [
+          `[부모 학력·전공] — 옵션 입력. 진단 신뢰성·가능 범위 그릴 때 보조 (예: 어머니가 SKY면 자녀 SKY 권유의 신뢰성, 어머니가 지방대면 자녀 지방대 권유가 자연스러움). 단정적으로 부모 학력 ↔ 자녀 학교 매핑 금지.`,
+          ...(ctx.parentEducation.mother
+            ? [`  어머니: ${ctx.parentEducation.mother.level ?? '—'} / ${ctx.parentEducation.mother.schoolName ?? '—'} / ${ctx.parentEducation.mother.major ?? '—'}`]
+            : []),
+          ...(ctx.parentEducation.father
+            ? [`  아빠: ${ctx.parentEducation.father.level ?? '—'} / ${ctx.parentEducation.father.schoolName ?? '—'} / ${ctx.parentEducation.father.major ?? '—'}`]
+            : []),
+          ``,
+        ]
+      : []),
     `[학년대별 분량·학교 예측]`,
     `분량: ${spec.sentenceRange}`,
     spec.schoolGuide,

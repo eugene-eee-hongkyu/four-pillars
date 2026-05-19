@@ -90,7 +90,7 @@ export default function MotherManse() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => router.push('/(flow)/interpret-premium')}>정밀 진단 받기</Button>
+        <Button onPress={() => router.push('/(flow)/father-saju' as never)}>아빠 정보로 (옵션)</Button>
       </StickyCTA>
     </View>
   );

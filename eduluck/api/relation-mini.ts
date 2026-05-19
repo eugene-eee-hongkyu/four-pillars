@@ -4,6 +4,7 @@
 import { getAnthropicClient, ANTHROPIC_MODEL } from '../lib/llm/client';
 import { sseResponse } from '../lib/llm/stream-sse';
 import { getRelationMiniSystem, buildRelationMiniPrompt } from '../lib/prompts/relation-mini';
+import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
 
 interface Body {
@@ -35,8 +36,8 @@ export async function POST(request: Request) {
   const system = getRelationMiniSystem();
   const userMsg = buildRelationMiniPrompt({
     childNickname: child.nickname ?? '아이',
-    childManse: child.manse_json,
-    motherManse: mother.manse_json,
+    childManse: hydrateManse(child.manse_json),
+    motherManse: hydrateManse(mother.manse_json),
   });
 
   const stream = getAnthropicClient().messages.stream({
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     try {
       const final = await stream.finalMessage();
       const bodyText = final.content
-        .map(b => (b.type === 'text' ? b.text : ''))
+        .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
         .join('');
       await sb.from('interpretations').insert({
         session_id: body.sessionId,

@@ -1,10 +1,9 @@
-// 화면 9: 어머니 사주 입력 — 화면 3 패턴 + 시간 모름 체크박스 (§10 P0 #7)
-//                            + Success header "결제가 완료됐어요!" (§6-b)
+// 화면 11: 아빠 사주 입력 (옵션 — 스킵 가능)
+// mother-saju 패턴 그대로 + 스킵 버튼. 아빠 만세력은 정밀 진단 본문에서 inline 처리 (별도 화면 없음).
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarToggle } from '@/components/ui/CalendarToggle';
-import { Input } from '@/components/ui/Input';
 import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
@@ -26,26 +25,26 @@ function parseTime(s: string) {
   return { h: +m[1], m: +m[2] };
 }
 
-export default function MotherSaju() {
+export default function FatherSaju() {
   const router = useRouter();
-  const { state, patchMother, setMotherSubject, setMotherSkipped } = useFlow();
+  const { state, patchFather, setFatherSubject, setFatherSkipped } = useFlow();
   const [dateStr, setDateStr] = useState<string>(() => {
-    const m = state.mother;
-    if (m.birthYear && m.birthMonth && m.birthDay) {
-      return `${m.birthYear}-${String(m.birthMonth).padStart(2, '0')}-${String(m.birthDay).padStart(2, '0')}`;
+    const f = state.father;
+    if (f.birthYear && f.birthMonth && f.birthDay) {
+      return `${f.birthYear}-${String(f.birthMonth).padStart(2, '0')}-${String(f.birthDay).padStart(2, '0')}`;
     }
     return '';
   });
   const [timeStr, setTimeStr] = useState<string>(() => {
-    const m = state.mother;
-    if (m.birthHour !== null && m.birthMinute !== null) {
-      return `${String(m.birthHour).padStart(2, '0')}:${String(m.birthMinute).padStart(2, '0')}`;
+    const f = state.father;
+    if (f.birthHour !== null && f.birthMinute !== null) {
+      return `${String(f.birthHour).padStart(2, '0')}:${String(f.birthMinute).padStart(2, '0')}`;
     }
     return '';
   });
   const [timeUnknown, setTimeUnknown] = useState<boolean>(() => {
-    const m = state.mother;
-    return m.birthYear !== null && m.birthHour === null;
+    const f = state.father;
+    return f.birthYear !== null && f.birthHour === null;
   });
   const [showUnknown, setShowUnknown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -57,15 +56,14 @@ export default function MotherSaju() {
   const canSubmit =
     parsedDate !== null &&
     (timeUnknown || parsedTime !== null) &&
-    state.mother.birthLocation !== null;
+    state.father.birthLocation !== null;
 
   const handleSubmit = async () => {
     if (!parsedDate || !state.sessionId || !canSubmit) return;
     setSubmitting(true);
     setError(null);
     try {
-      // 다음 세션 진입 시 prefill되도록 state.mother에 save (자녀 패턴과 동일)
-      patchMother({
+      patchFather({
         birthYear: parsedDate.y,
         birthMonth: parsedDate.m,
         birthDay: parsedDate.d,
@@ -74,15 +72,15 @@ export default function MotherSaju() {
       });
       const body = {
         sessionId: state.sessionId,
-        role: 'mother' as const,
-        gender: 'female' as const,
-        birthCalendar: state.mother.birthCalendar,
+        role: 'father' as const,
+        gender: 'male' as const,
+        birthCalendar: state.father.birthCalendar,
         birthYear: parsedDate.y,
         birthMonth: parsedDate.m,
         birthDay: parsedDate.d,
         birthHour: timeUnknown ? undefined : parsedTime?.h,
         birthMinute: timeUnknown ? undefined : parsedTime?.m,
-        birthLocation: state.mother.birthLocation,
+        birthLocation: state.father.birthLocation,
       };
       const res = await fetch('/api/subjects', {
         method: 'POST',
@@ -91,8 +89,8 @@ export default function MotherSaju() {
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      setMotherSubject(data.subjectId, data.manse);
-      router.push('/(flow)/mother-manse');
+      setFatherSubject(data.subjectId, data.manse);
+      router.push('/(flow)/parent-education' as never);
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));
     } finally {
@@ -100,22 +98,25 @@ export default function MotherSaju() {
     }
   };
 
+  const handleSkip = () => {
+    setFatherSkipped();
+    router.push('/(flow)/parent-education' as never);
+  };
+
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-8 pb-32 gap-4">
-        <View className="bg-secondary-container px-4 py-3 rounded-lg border border-secondary/30 flex-row items-center gap-2">
-          <Text className="font-body-bold text-headline-md text-primary">✓</Text>
-          <Text className="font-heading text-headline-md text-primary">결제가 완료됐어요!</Text>
-        </View>
-
-        <StepIndicator current={9} />
+        <StepIndicator current={11} />
         <Text className="font-heading-bold text-headline-lg text-text-pri mt-2">
-          어머니의 사주를 입력해주세요
+          아빠의 사주도 받아볼까요?
+        </Text>
+        <Text className="font-body text-body-md text-text-sub">
+          옵션이에요. 입력하시면 진단이 더 풍성해지지만, 모르시거나 원치 않으시면 건너뛰셔도 좋아요.
         </Text>
 
         <CalendarToggle
-          value={state.mother.birthCalendar}
-          onChange={(c) => patchMother({ birthCalendar: c })}
+          value={state.father.birthCalendar}
+          onChange={(c) => patchFather({ birthCalendar: c })}
         />
 
         <DateTimeInput
@@ -153,8 +154,8 @@ export default function MotherSaju() {
         <View className="gap-2">
           <Text className="font-body-bold text-label-sm text-text-pri">출생 지역</Text>
           <LocationDropdown
-            value={state.mother.birthLocation}
-            onChange={(loc) => patchMother({ birthLocation: loc })}
+            value={state.father.birthLocation}
+            onChange={(loc) => patchFather({ birthLocation: loc })}
           />
         </View>
 
@@ -164,17 +165,11 @@ export default function MotherSaju() {
       <StickyCTA>
         <View className="gap-2">
           <Button onPress={handleSubmit} disabled={!canSubmit} loading={submitting}>
-            어머니 만세력 보기
+            아빠 사주 추가하고 진행
           </Button>
-          <Pressable
-            onPress={() => {
-              setMotherSkipped();
-              router.push('/(flow)/father-saju' as never);
-            }}
-            className="py-2 items-center"
-          >
+          <Pressable onPress={handleSkip} className="py-2 items-center">
             <Text className="font-body text-label-md text-text-sub underline">
-              어머니 정보 없이 진행할게요
+              아빠 정보 없이 진행할게요
             </Text>
           </Pressable>
         </View>
@@ -184,7 +179,7 @@ export default function MotherSaju() {
         <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간을 모르세요?</Text>
         <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
           괜찮아요. 시(時)주를 비우고 나머지 3기둥(년·월·일)으로 풀이합니다.{'\n'}
-          어머니-자녀 합 분석의 큰 흐름은 충분히 보여요.
+          아빠-자녀 영향의 큰 흐름은 충분히 보여요.
         </Text>
         <Button onPress={() => setShowUnknown(false)}>확인하고 진행</Button>
       </Modal>
