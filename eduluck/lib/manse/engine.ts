@@ -6,6 +6,10 @@ import { calcYongsin, type YongsinResult } from './yongsin';
 import { calcAllJijanggan, type AllJijanggan } from './jijanggan';
 import { calcHapchunh, type HapchunhResult } from './hapchunh';
 import { calcScores, type ScoreResult } from './score';
+import { calcSipsin, type SipsinResult } from './sipsin';
+import { calcUnsung, type UnsungResult } from './unsung';
+import { calcGyeokguk, type GyeokgukResult } from './gyeokguk';
+import { calcNapum, type NapumResult } from './napum';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
 
@@ -38,6 +42,10 @@ export interface ManseResult {
   hapchunh: HapchunhResult;
   elementCounts: { wood: number; fire: number; earth: number; metal: number; water: number };
   scores: ScoreResult;
+  sipsin: SipsinResult;
+  unsung: UnsungResult;
+  gyeokguk: GyeokgukResult;
+  napum: NapumResult;
 }
 
 export function computeManse(input: ManseInput): ManseResult {
@@ -123,6 +131,17 @@ export function computeManse(input: ManseInput): ManseResult {
     gender,
   });
 
+  const pillarsInput = {
+    yearPillar: raw.yearPillar,
+    monthPillar: raw.monthPillar,
+    dayPillar: raw.dayPillar,
+    hourPillar,
+  };
+  const sipsin = calcSipsin(pillarsInput);
+  const unsung = calcUnsung(pillarsInput);
+  const gyeokguk = calcGyeokguk({ dayPillar: raw.dayPillar, monthPillar: raw.monthPillar });
+  const napum = calcNapum(pillarsInput);
+
   return {
     yearPillar: raw.yearPillar,
     monthPillar: raw.monthPillar,
@@ -143,6 +162,10 @@ export function computeManse(input: ManseInput): ManseResult {
     hapchunh,
     elementCounts,
     scores,
+    sipsin,
+    unsung,
+    gyeokguk,
+    napum,
   };
 }
 
