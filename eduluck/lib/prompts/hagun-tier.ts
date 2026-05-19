@@ -238,19 +238,8 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
     }
   }
 
-  // 부모 학력 — 학교 티어 기반으로 정직하게 (둘 중 높은 쪽)
-  // 사용자 피드백 2026-05-19: "4년제" 단일 +1은 부정확. 부모가 1-2티어여야 +1.
-  const motherTier = resolveParentTier(input.motherEducation);
-  const fatherTier = resolveParentTier(input.fatherEducation);
-  const motherWeight = tierToParentWeight(motherTier, input.motherEducation?.level as 'high' | 'college' | 'university' | 'graduate' | 'none' | null | undefined);
-  const fatherWeight = tierToParentWeight(fatherTier, input.fatherEducation?.level as 'high' | 'college' | 'university' | 'graduate' | 'none' | null | undefined);
-  const bestWeight = Math.max(motherWeight, fatherWeight);
-  total += bestWeight;
-  if (bestWeight !== 0) {
-    breakdown.push(`부모 학력 (둘 중 높은 쪽 티어: ${motherWeight >= fatherWeight ? motherTier : fatherTier}) ${bestWeight >= 0 ? '+' : ''}${bestWeight}`);
-  } else {
-    breakdown.push(`부모 학력 0 (미입력 또는 6~7티어)`);
-  }
+  // 부모 학력 가중치는 Phase H에서 제거 (mom test 단계 UX 단순화).
+  // university-tier.ts·resolveParentTier·tierToParentWeight 함수는 코드 유지 (향후 재도입 가능).
 
   // 한도 ±2
   if (total > 2) total = 2;

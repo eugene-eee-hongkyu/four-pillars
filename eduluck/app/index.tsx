@@ -32,7 +32,7 @@ export default function Landing() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, screen: 'landing', action: 'cta-tap' }),
       });
-      router.push('/(flow)/child-info');
+      router.push('/(flow)/family-input' as never);
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));
     } finally {

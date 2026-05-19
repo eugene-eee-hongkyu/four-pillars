@@ -15,7 +15,7 @@ export default function InterpretFree() {
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-32 gap-4">
         <View className="px-container-padding gap-2">
-          <StepIndicator current={5} />
+          <StepIndicator current={4} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             {state.child.nickname || '아이'}의 학운
           </Text>

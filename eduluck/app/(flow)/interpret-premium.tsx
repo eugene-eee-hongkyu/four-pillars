@@ -97,7 +97,7 @@ export default function InterpretPremium() {
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-32 gap-6">
         <View className="px-container-padding gap-2">
-          <StepIndicator current={13} />
+          <StepIndicator current={6} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             {state.child.nickname || '아이'}의 정밀 학운
           </Text>

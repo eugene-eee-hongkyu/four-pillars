@@ -1,18 +1,17 @@
-// 13단계 진행 표시 — 화면 상단 작은 dots + "N/13"
-// flow 화면 1~13 통일 (어머니·아빠·부모 학력은 옵션이지만 step 표시는 일관).
-// 사용자가 얼마나 더 가야 하는지 시각 명확.
+// 6단계 진행 표시 — 화면 상단 작은 dots + "N/6" (mom test 단계 — signup·checkout·부모 학력 제거)
+// 1: 랜딩 / 2: 가족 통합 입력 / 3: 가족 만세력 / 4: 무료 진단 / 5: 정밀 가치 / 6: 정밀 진단(+별점)
 
 import { View, Text } from 'react-native';
 import { colors } from '@/design-tokens/tokens';
 
 interface Props {
-  /** 현재 화면 번호 (1~13) */
+  /** 현재 화면 번호 (1~6) */
   current: number;
-  /** 총 화면 수. 기본 13 */
+  /** 총 화면 수. 기본 6 */
   total?: number;
 }
 
-export function StepIndicator({ current, total = 13 }: Props) {
+export function StepIndicator({ current, total = 6 }: Props) {
   return (
     <View className="flex-row items-center gap-2 mb-2">
       <View className="flex-row gap-1">

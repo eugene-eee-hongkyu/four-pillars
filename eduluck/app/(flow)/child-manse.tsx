@@ -1,4 +1,4 @@
-// 화면 4: 자녀 만세력 — 친절 가이드 + saju 용어 펼침
+// 화면 3 (재설계): 가족 만세력 — 자녀 중심 + 어머니·아빠 만세력 카드 + 합 카드 inline
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import { HagunCoreCard } from '@/components/manse/HagunCoreCard';
 import { GongbuGuiCard } from '@/components/manse/GongbuGuiCard';
 import { HagunUnsungCard } from '@/components/manse/HagunUnsungCard';
 import { HagunGuideCard } from '@/components/manse/HagunGuideCard';
+import { MotherChildSyncCard } from '@/components/manse/MotherChildSyncCard';
 import { hydrateManse } from '@/lib/manse/hydrate';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -24,6 +25,8 @@ export default function ChildManse() {
   const { state } = useFlow();
   const [showPro, setShowPro] = useState(false);
   const m = state.childManse ? hydrateManse(state.childManse) : null;
+  const mother = state.motherManse ? hydrateManse(state.motherManse) : null;
+  const father = state.fatherManse ? hydrateManse(state.fatherManse) : null;
   const name = state.child.nickname || '아이';
 
   return (
@@ -31,9 +34,9 @@ export default function ChildManse() {
       <ScrollView
         contentContainerClassName="px-container-padding pt-12 pb-32 gap-6"
       >
-        <StepIndicator current={4} />
+        <StepIndicator current={3} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
-          {name}의 만세력
+          가족 만세력
         </Text>
 
         {m ? (
@@ -72,6 +75,34 @@ export default function ChildManse() {
                 <OhaengBar counts={m.elementCounts} />
                 <DaeunStrip daeun={m.luckCycles.daeun} />
                 <SewunMarker sewun={m.luckCycles.sewun} />
+              </View>
+            )}
+
+            {/* === 어머니 만세력 (있으면) === */}
+            {mother && (
+              <View className="gap-3 mt-2 pt-4 border-t border-outline-warm">
+                <Text className="font-heading text-headline-md text-text-pri">
+                  어머니 만세력
+                </Text>
+                <PalcaTable {...manseToPalcaPillars(mother)} />
+                <MotherChildSyncCard childManse={m} motherManse={mother} childNickname={name} />
+              </View>
+            )}
+
+            {/* === 아빠 만세력 (있으면) === */}
+            {father && (
+              <View className="gap-3 mt-2 pt-4 border-t border-outline-warm">
+                <Text className="font-heading text-headline-md text-text-pri">
+                  아빠 만세력
+                </Text>
+                <PalcaTable {...manseToPalcaPillars(father)} />
+                {/* 아빠-자녀 합 한 줄 hint — 명리 톤 */}
+                <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low">
+                  <Text className="font-body text-label-sm text-text-sub mb-1">아빠와 {name}의 합</Text>
+                  <Text className="font-body text-body-md text-text-pri leading-relaxed">
+                    아빠 사주는 {name}의 사회적 자원·물질 환경 변수예요. 진단에서 보조 풀이로 활용됩니다.
+                  </Text>
+                </View>
               </View>
             )}
 

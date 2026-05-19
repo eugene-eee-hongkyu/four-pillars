@@ -11,7 +11,7 @@ export default function PremiumValue() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
-        <StepIndicator current={6} />
+        <StepIndicator current={5} />
         <Text className="font-heading-bold text-headline-lg text-text-pri">
           정밀 학운, 어머니 사주까지 종합 분석
         </Text>
@@ -43,7 +43,8 @@ export default function PremiumValue() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => router.push('/(flow)/signup')}>회원가입하고 결제하기</Button>
+        {/* mom test 단계: signup·checkout 우회. 외부 검증 단계에 재도입 */}
+        <Button onPress={() => router.push('/(flow)/interpret-premium')}>정밀 진단 받기 (체험판)</Button>
       </StickyCTA>
     </View>
   );
