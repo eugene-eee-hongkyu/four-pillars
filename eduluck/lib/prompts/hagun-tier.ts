@@ -34,8 +34,10 @@ const HAGUN_GRADE_TABLE: HagunGradeInfo[] = [
   { grade: 'non-college', label: '비대학 강',  baseTier: '비대학 트랙', baseTierRange: [12, 12] },
 ];
 
+// unsung.ts와 일관성: STRONG_STAGES + WEAK_STAGES 분류 그대로.
+// (이전 버그: '쇠'를 WEAK에서 누락 — unsung.ts에는 weak로 분류되지만 hagun-tier는 미반영.)
 const STRONG_UNSUNG = new Set(['장생', '관대', '건록', '제왕']);
-const WEAK_UNSUNG = new Set(['병', '사', '묘', '절', '태']);
+const WEAK_UNSUNG = new Set(['쇠', '병', '사', '묘', '절', '태']);
 const HAGUN_GUI = new Set(['문창귀인', '학당귀인', '문곡귀인', '천을귀인']);
 
 /** 학자형 격국 (학문·시험 친화). 명리 합의: 인성·관성·식신·건록 계열. */
@@ -62,7 +64,7 @@ function scoreHagun(m: ManseResult): number {
   else if (c.gwansung === 1) score += 1;
   else score -= 1;
 
-  // 공부 4귀인 — 실제 출현 count (unique 대신). 중복 등장은 명리에서 더 강한 시그널.
+  // 공부 4귀인 — 실제 출현 count (unique 대신). 0회 페널티 추가 (학문 친화 시그널 부재).
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
     ...m.shensha.dayPillar, ...m.shensha.hourPillar,
@@ -71,22 +73,25 @@ function scoreHagun(m: ManseResult): number {
   if (guiCount >= 3) score += 3;
   else if (guiCount === 2) score += 2;
   else if (guiCount === 1) score += 1;
+  else score -= 1; // 0회 — 학문 친화 시그널 부재
 
-  // 12운성 학운 자리 — 월지 + 일지
+  // 12운성 학운 자리 — 월지 + 일지 (일지 가중치 ↑: 학습 자리 핵심)
   if (STRONG_UNSUNG.has(m.unsung.monthPillar.stage)) score += 1;
   else if (WEAK_UNSUNG.has(m.unsung.monthPillar.stage)) score -= 1;
-  if (STRONG_UNSUNG.has(m.unsung.dayPillar.stage)) score += 1;
+  if (STRONG_UNSUNG.has(m.unsung.dayPillar.stage)) score += 2; // 일지 강은 학습 자리 핵심
   else if (WEAK_UNSUNG.has(m.unsung.dayPillar.stage)) score -= 1;
 
   // 학자형 격국 보너스 (정관·정인·편인·식신·건록격은 학문 친화)
-  if (SCHOLAR_GYEOKGUK.has(m.gyeokguk.name)) score += 2;
+  const isScholarGyeokguk = SCHOLAR_GYEOKGUK.has(m.gyeokguk.name);
+  if (isScholarGyeokguk) score += 2;
 
   // 학운 친화 납음 (산하화·해중금 등 — 잠재형/빛 발하는 구조)
   if (m.napum.dayPillar.nameKo && SCHOLAR_NAPUM.has(m.napum.dayPillar.nameKo)) score += 1;
 
   // 학운 삼합 — hapchunh.summary에 "삼합"·"수국"·"화국"·"금국"·"목국" 포함 시 학운 기운 결집
+  // 너무 흔하게 발동되지 않게 +1로 약화 (이전 +2)
   const hapSummary = m.hapchunh.summary ?? '';
-  if (/삼합|수국|화국|금국|목국/.test(hapSummary)) score += 2;
+  if (/삼합|수국|화국|금국|목국/.test(hapSummary)) score += 1;
 
   // 관인상생 유연화: 인성 0이지만 강한 학운 시그널(삼합 + 관성≥2 + 4귀인 ≥1) 모두 있으면
   // 명리에서 합·삼합이 인성 자리를 간접 보완 — 추가 +2
@@ -97,23 +102,46 @@ function scoreHagun(m: ManseResult): number {
     score += 2;
   }
 
-  // 식상·재성·비겁 강세 — 학문 외 트랙 시그널 (학운 점수에서는 약간 감점)
-  const nonScholarStrong = (c.siksang >= 2 ? 1 : 0) + (c.jaesung >= 3 ? 1 : 0) + (c.bigeop >= 3 ? 1 : 0);
-  if (c.insung === 0 && c.gwansung === 0 && nonScholarStrong >= 2) score -= 2;
+  // 자립 학자형 패턴 (정인격·편인격·정관격 + 일지 건록·제왕 + 비겁 ≥ 2)
+  // — POSTECH·서울대 이공계 1티어 패턴. 비겁 강이 자기 주도 학자형으로 작용.
+  const scholarInsungGyeokguk = ['정인격', '편인격', '정관격'].includes(m.gyeokguk.name);
+  const dayStrongUnsung = ['건록', '제왕'].includes(m.unsung.dayPillar.stage);
+  if (scholarInsungGyeokguk && dayStrongUnsung && c.bigeop >= 2) {
+    score += 3;
+  }
+
+  // 학자형 시그널 부재 콤보 — 4귀인 0 + 학자형 격국 ✗ + 일지 weak (학업 자리 모두 부재)
+  if (guiCount === 0 && !isScholarGyeokguk && WEAK_UNSUNG.has(m.unsung.dayPillar.stage)) {
+    score -= 2;
+  }
+
+  // 재극인(財剋印): 재성이 인성을 극해 학업 견제 — 명리에서 매우 흔한 패턴.
+  // 조건: 재성 ≥ 3 AND 재성 ≥ 2 × (인성+1) AND 4귀인 ≤ 1
+  if (c.jaesung >= 3 && c.jaesung >= 2 * (c.insung + 1) && guiCount <= 1) {
+    score -= 2;
+  }
+
+  // 비학문 강세 — 식상·재성·비겁이 압도 + 학자형 격국 아님 → 학업 외 트랙
+  // 조건: 식상+재성+비겁 ≥ 4 AND 인성+관성 ≤ 2 AND 4귀인 ≤ 1 AND 학자형 격국 ✗
+  const nonScholarSum = c.siksang + c.jaesung + c.bigeop;
+  const scholarSum = c.insung + c.gwansung;
+  if (nonScholarSum >= 4 && scholarSum <= 2 && guiCount <= 1 && !isScholarGyeokguk) {
+    score -= 2;
+  }
 
   return score;
 }
 
 function scoreToGrade(score: number): HagunGradeInfo {
-  if (score >= 8) return HAGUN_GRADE_TABLE[0]; // very-strong
-  if (score >= 6) return HAGUN_GRADE_TABLE[1]; // strong
-  if (score >= 4) return HAGUN_GRADE_TABLE[2]; // upper-mid
-  if (score >= 2) return HAGUN_GRADE_TABLE[3]; // mid
-  if (score >= 0) return HAGUN_GRADE_TABLE[4]; // lower-mid
-  if (score >= -2) return HAGUN_GRADE_TABLE[5]; // weak-upper
-  if (score >= -4) return HAGUN_GRADE_TABLE[6]; // weak-mid
-  if (score >= -6) return HAGUN_GRADE_TABLE[7]; // weak-lower
-  return HAGUN_GRADE_TABLE[8]; // very-weak
+  if (score >= 10) return HAGUN_GRADE_TABLE[0]; // very-strong (1~2티어)
+  if (score >= 7) return HAGUN_GRADE_TABLE[1];  // strong (2~3티어)
+  if (score >= 4) return HAGUN_GRADE_TABLE[2];  // upper-mid (3~4티어)
+  if (score >= 2) return HAGUN_GRADE_TABLE[3];  // mid (4~5티어)
+  if (score >= 0) return HAGUN_GRADE_TABLE[4];  // lower-mid (5~6티어)
+  if (score >= -2) return HAGUN_GRADE_TABLE[5]; // weak-upper (6~7티어)
+  if (score >= -4) return HAGUN_GRADE_TABLE[6]; // weak-mid (7~8티어)
+  if (score >= -6) return HAGUN_GRADE_TABLE[7]; // weak-lower (8~10티어)
+  return HAGUN_GRADE_TABLE[8]; // very-weak (전문대·비대학)
 }
 
 interface ParentEducationInput {
