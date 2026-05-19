@@ -1,8 +1,35 @@
 // flow 데이터 (sessionId, child·mother input, subject_id, manse, interpretation) Context
 // 화면 1~11 single-flow 공유. Phase 6에서 회원가입 후에는 user_id도 같이.
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { ManseResult } from '@/lib/manse/engine';
+
+const STORAGE_KEY = 'eduluck.flow.state';
+
+function loadInitial(): FlowState {
+  if (typeof window === 'undefined' || !window.localStorage) return initial;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // deep merge로 schema 변경 안전 처리
+      return {
+        ...initial,
+        ...parsed,
+        child: { ...initial.child, ...(parsed.child ?? {}) },
+        mother: { ...initial.mother, ...(parsed.mother ?? {}) },
+      };
+    }
+  } catch {}
+  return initial;
+}
+
+function persist(state: FlowState): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {}
+}
 
 export interface ChildInput {
   nickname: string;
@@ -98,7 +125,12 @@ interface FlowContextValue {
 const FlowContext = createContext<FlowContextValue | null>(null);
 
 export function FlowProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<FlowState>(initial);
+  const [state, setState] = useState<FlowState>(loadInitial);
+
+  // state 변경 시마다 localStorage persist — 페이지 새로고침 시 화면 1부터 다시 시작 안 해도 됨
+  useEffect(() => {
+    persist(state);
+  }, [state]);
 
   const setSessionId = useCallback((id: string) => setState((s) => ({ ...s, sessionId: id })), []);
   const setUserId = useCallback((id: string) => setState((s) => ({ ...s, userId: id })), []);
