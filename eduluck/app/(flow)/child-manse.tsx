@@ -14,6 +14,7 @@ import { EssenceCard } from '@/components/manse/EssenceCard';
 import { HagunCoreCard } from '@/components/manse/HagunCoreCard';
 import { GongbuGuiCard } from '@/components/manse/GongbuGuiCard';
 import { HagunUnsungCard } from '@/components/manse/HagunUnsungCard';
+import { HagunGuideCard } from '@/components/manse/HagunGuideCard';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 
@@ -72,6 +73,9 @@ export default function ChildManse() {
                 <SewunMarker sewun={m.luckCycles.sewun} />
               </View>
             )}
+
+            {/* 학운 명리 4축 학습 가이드 — 화면 카드들의 명리 근거 */}
+            <HagunGuideCard />
 
             <Text className="font-body text-label-sm text-text-sub text-center">
               위 정보를 토대로 학년에 맞춰 풀이를 드릴게요.
