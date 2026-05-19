@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-05-19: Phase H — 13→6 스텝 UX 단순화 (mom test 단계 마찰 제거)
+
+- **선택**: 가족 통합 입력 화면 신규 + signup·checkout 우회 + 부모 학력 화면 제거. 6스텝 흐름(랜딩 → 가족 입력 → 가족 만세력 → 무료 진단 → 정밀 가치 → 정밀 진단+별점).
+- **대안 검토**:
+  - 현재 13스텝 유지: 사용자 명시 "분리는 너무 불편" 피드백
+  - 가족 통합 + signup만 우회 (학력 유지): 학력 입력 부담 vs ±2 티어 가치 — MVP에서 부담이 큼
+  - 가족 통합 + signup 우회 + 학력 제거 (선택): mom test 단계 최소 마찰. 외부 검증 단계에 학력·signup 재도입.
+- **선택 이유**: 사용자 UX 피드백 명시 + UX 전문가 페르소나 분석 (입력 분산은 결제 후 추가 입력 마찰·자녀-부모 합이 정밀 진단 핵심 가치인데 부모 입력이 결제 뒤). mom test = 검증 단계라 마찰 제거가 conversion 측정 정확성 ↑.
+- **영향 범위**:
+  - 신규: `eduluck/app/(flow)/family-input.tsx`
+  - 확장: `child-manse.tsx` (가족 만세력 inline)
+  - 변경: `index.tsx`, `premium-value.tsx` 라우팅
+  - 제거 (라우팅): child-info, child-saju, mother-saju, mother-manse, father-saju, parent-education, signup, checkout — 파일은 유지(revert 안전망)
+  - StepIndicator total 13 → 6
+  - `hagun-tier.ts` 부모 학력 가중치 제거 (university-tier·resolveParentTier 코드는 유지)
+- **되돌리는 방법**: revert `70ad8e5`. index·premium-value 라우팅 복구하면 옛 13스텝 흐름 그대로 작동 (제거된 화면 파일들 모두 그대로).
+
+
 ## 2026-05-19: 학운 알고리즘을 코드 결정성 계산 영역으로 이관 (LLM 해석 의존 제거)
 
 - **선택**: 학운 단계 판정·베이스 티어·부모 환경 조정·격국 진로 매핑·현재 학운 시기·신왕신약·청소년기 대운·confidence 구간 모두 코드 lookup·점수화로 결정성 산출. LLM은 그 결과를 받아 풀이 자연스러움만 담당.
