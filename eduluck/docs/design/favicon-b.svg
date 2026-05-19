@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 컨셉 B: 사주 4기둥 abstract 그리드 — 일간 위치 골드 강조 -->
+  <rect x="0" y="0" width="32" height="32" rx="6" fill="#FBF8F1"/>
+  <rect x="4"  y="4"  width="11" height="11" rx="2" fill="#4A5568"/>
+  <rect x="17" y="4"  width="11" height="11" rx="2" fill="#D4A574"/>
+  <rect x="4"  y="17" width="11" height="11" rx="2" fill="#4A5568"/>
+  <rect x="17" y="17" width="11" height="11" rx="2" fill="#4A5568"/>
+</svg>

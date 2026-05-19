@@ -1,0 +1,5 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 컨셉 A: 한자 「運」 단독 letter mark -->
+  <circle cx="16" cy="16" r="15" fill="#D4A574"/>
+  <text x="16" y="22" text-anchor="middle" font-family="Noto Serif KR, serif" font-weight="700" font-size="20" fill="#FBF8F1">運</text>
+</svg>

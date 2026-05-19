@@ -1,0 +1,12 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 컨셉 C: 새싹 + 별 -->
+  <rect x="0" y="0" width="32" height="32" rx="6" fill="#FBF8F1"/>
+  <!-- 새싹 stem -->
+  <rect x="15" y="14" width="2" height="14" fill="#4A5568"/>
+  <!-- 좌 잎 -->
+  <path d="M 16 18 Q 8 17 6 11 Q 14 12 16 18 Z" fill="#2D6A4F"/>
+  <!-- 우 잎 -->
+  <path d="M 16 14 Q 24 13 26 7 Q 18 8 16 14 Z" fill="#2D6A4F"/>
+  <!-- 별 -->
+  <path d="M 24 6 L 25 9 L 28 9 L 25.5 11 L 26.5 14 L 24 12 L 21.5 14 L 22.5 11 L 20 9 L 23 9 Z" fill="#D4A574"/>
+</svg>
