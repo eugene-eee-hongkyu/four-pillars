@@ -33,25 +33,36 @@ export async function POST(request: Request) {
     return Response.json({ error: 'subjects not found' }, { status: 404 });
   }
 
-  const system = getRelationMiniSystem();
-  const userMsg = buildRelationMiniPrompt({
-    childNickname: child.nickname ?? '아이',
-    childManse: hydrateManse(child.manse_json),
-    motherManse: hydrateManse(mother.manse_json),
-  });
-
-  const stream = getAnthropicClient().messages.stream({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 256,
-    system,
-    messages: [{ role: 'user', content: userMsg }],
-  });
+  let system: string;
+  let userMsg: string;
+  let stream: ReturnType<ReturnType<typeof getAnthropicClient>['messages']['stream']>;
+  try {
+    system = getRelationMiniSystem();
+    userMsg = buildRelationMiniPrompt({
+      childNickname: child.nickname ?? '아이',
+      childManse: hydrateManse(child.manse_json),
+      motherManse: hydrateManse(mother.manse_json),
+    });
+    stream = getAnthropicClient().messages.stream({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 256,
+      system,
+      messages: [{ role: 'user', content: userMsg }],
+    });
+  } catch (e) {
+    const err = e as Error;
+    console.error('[relation-mini] setup failed', err);
+    return Response.json(
+      { error: err.message, name: err.name, where: 'relation-mini setup' },
+      { status: 500 },
+    );
+  }
 
   void (async () => {
     try {
       const final = await stream.finalMessage();
       const bodyText = final.content
-        .map(b => (b.type === 'text' ? b.text : ''))
+        .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
         .join('');
       await sb.from('interpretations').insert({
         session_id: body.sessionId,

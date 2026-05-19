@@ -48,21 +48,32 @@ export async function POST(request: Request) {
     motherManse: hydrateManse(mother.manse_json),
   };
 
-  const system = getInterpretPremiumSystem();
-  const userMsg = buildInterpretPremiumPrompt(ctx);
-
-  const stream = getAnthropicClient().messages.stream({
-    model: ANTHROPIC_MODEL,
-    max_tokens: 4096,
-    system,
-    messages: [{ role: 'user', content: userMsg }],
-  });
+  let system: string;
+  let userMsg: string;
+  let stream: ReturnType<ReturnType<typeof getAnthropicClient>['messages']['stream']>;
+  try {
+    system = getInterpretPremiumSystem();
+    userMsg = buildInterpretPremiumPrompt(ctx);
+    stream = getAnthropicClient().messages.stream({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 4096,
+      system,
+      messages: [{ role: 'user', content: userMsg }],
+    });
+  } catch (e) {
+    const err = e as Error;
+    console.error('[interpret-premium] setup failed', err);
+    return Response.json(
+      { error: err.message, name: err.name, where: 'interpret-premium setup' },
+      { status: 500 },
+    );
+  }
 
   void (async () => {
     try {
       const final = await stream.finalMessage();
       const bodyText = final.content
-        .map(b => (b.type === 'text' ? b.text : ''))
+        .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
         .join('');
       await sb.from('interpretations').insert({
         session_id: body.sessionId,
