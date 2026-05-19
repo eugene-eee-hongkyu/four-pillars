@@ -4,6 +4,66 @@
 
 ---
 
+## Session 2026-05-19 17:03 — Phase G 옵션화(어머니·아빠·부모학력) + 대학 권유 정직성 정책 + 부모 환경 변수 티어 조정
+
+### 작업 요약
+
+**리서치 + 만세력 UI 설계 문서**
+- 학운 명리 핵심 + 만세력 UI 전문가스러움 [WebSearch 5건 + 명리 전문가 종합] → [docs/design/MANSE_UI_RESEARCH.md](eduluck/docs/design/MANSE_UI_RESEARCH.md) 신규
+- 4축(머리·자리·사람·흐름) + 12 핵심 항목 + 국내 만세력 앱 사례 + Phase A~E 적용 권고
+
+**Phase A~F — 만세력 화면 정통 명식판 전환** (이미 worklog된 부분 압축)
+- A: 계산 모듈 4종 (sipsin·unsung·gyeokguk·napum) + ManseResult 확장
+- B: PalcaTable 정통 명식판 확장 (십성·12운성·지장간·신살·공망)
+- C: 명식판 하단 4종 (ManseFooter·OhaengBar·DaeunStrip·SewunMarker) + Pro Layer 토글
+- D: 학운 카드 5종 (Essence·HagunCore·GongbuGui·HagunUnsung·MotherChildSync)
+- E: 3 prompt에 모듈 계산값 직접 주입
+- F: 학운 명리 4축 학습 가이드 카드 (HagunGuideCard) 화면 4 끝에 추가
+
+**Prod 운영 안정성 핫픽스 (세션 후반 폭풍)**
+- legacy manse_json hydrate (Phase A 스키마 확장 호환성) → 3 API + 2 화면
+- `@/lib/manse/pillars` value import path alias 실패 → 상대경로 수정 (`51919c4`→`c0b63e7`)
+- mother-saju state persist 추가 (자녀 패턴 답습) `9752401`
+- 학원 브랜드명 금지 정책 (`40b1e56`)
+- 정밀 진단 max_tokens 4096→8192, vercel maxDuration Pro 한도 적용 (3차례 빌드 fix → `589042d`)
+- prompt 강화: 평이 풀이 예외 없음 + 대학 범위 짚기 + temperature 0.7 (`74afa52`)
+
+**대학 권유 정직성 정책 — 핵심 패러다임 전환**
+- 강/중/약 3단계 (`d56c08b`) → 학운 10단계 + 1~10티어 + 의치한약 + 전문대·비대학 트랙 (`f0031ea`)
+- "거짓 희망 금지" 명문화 — 학운 약한 사주에 SKY 짚지 않음. "막혀요·멀어요·아닌 자리예요"는 사주 솔직 풀이로 허용 (단정적 부정과 구분).
+
+**Phase G — 가족 정보 옵션화 (13스텝 flow)** (`c5fa3ac`)
+- DB: subjects.role에 'father' 추가 + subjects.education_json 컬럼 (Supabase MCP 마이그레이션)
+- FlowState: father·motherStatus·fatherStatus·motherEducation·fatherEducation·parentEducationStatus 8개 신규 액션
+- 화면 9 mother-saju: 스킵 버튼 추가
+- 화면 10 mother-manse: 다음 → father-saju
+- 화면 11 father-saju (신규): mother-saju 패턴, 스킵 가능
+- 화면 12 parent-education (신규): 어머니·아빠 학력 레벨·학교명·전공 옵션
+- 화면 13 (구 11) interpret-premium: StepIndicator 13/13
+- /api/subjects role 'father' / /api/parent-education 신규 / /api/interpret-premium mother·father 모두 옵션 + education_json 자동 로드
+- interpret-premium prompt: motherManse null 허용, fatherManse·parentEducation 옵션, fatherChildSyncLine 헬퍼, prompt_version v1→v2
+
+**부모 사주·학력 환경 변수 ±1~2단계 티어 조정 메커니즘** (`c77f180`)
+- 어머니-자녀 합 정인·편인 +1 / 정재·편재 -1
+- 아빠-자녀 합 어머니의 절반 가중치
+- 부모 학력 (둘 중 높은 쪽): 1~3티어 +1 / 4~7티어 0 / 8~10·고졸·미입력 -1
+- 조정 한도 총 ±2. 사주 베이스를 절반 이상 뒤집지 않음.
+- 미입력 = 중립. 풀이 본문에 자연 녹임 (예시 명시).
+
+### 실패한 시도
+
+- **Prod polling 사고** — bsn5mepkq background task가 사용자 IP에서 14분간 `/api/relation-mini` 10초 간격 polling → Vercel anomaly alert "Transient 500 errors from single IP". 메모리 저장 (feedback_no_prod_polling.md). 이후 단발 curl + vercel logs로만 디버깅.
+- **vercel.json functions glob 두 번 빌드 실패** — `api/interpret-premium.js`로 잘못 써서 매치 안 됨. `.ts` 확장자로 수정 (`589042d`).
+- **prompt에 `@/lib/manse/pillars` value import** — sync-api-to-vercel.sh가 `app/api/`만 sed 치환하고 `lib/prompts/*.ts`는 그대로 두어 Vercel serverless에서 module resolve 실패 → 상대경로로 변경.
+
+### 다음 액션
+
+1. **학운 약/중 케이스 사주로 prod 검증** — 대학 정직성·부모 환경 변수 조정이 실제로 1~10티어 + 비대학 트랙으로 권유하는지 확인
+2. **13스텝 flow 시각 검증** — dev server 또는 prod에서 어머니 스킵·아빠 스킵·부모학력 입력 모든 경로 흐름 확인
+3. **Eugene mom test 10명 검증** — 모든 최신 정책 반영된 premium으로 (production URL)
+
+---
+
 ## Session 2026-05-19 15:59 — 학운 명리 Phase A~F 완료 및 운영 안정성 핫픽스
 
 ### 작업 요약
