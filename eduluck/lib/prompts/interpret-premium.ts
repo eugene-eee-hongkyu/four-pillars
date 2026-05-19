@@ -4,7 +4,7 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { calculateFinalTier } from './hagun-tier';
+import { calculateFinalTier, calcCurrentLuckPhase } from './hagun-tier';
 
 export function getInterpretPremiumSystem(): string {
   return INTERPRET_PREMIUM_SYSTEM;
@@ -45,10 +45,10 @@ const INTERPRET_PREMIUM_SYSTEM = `당신은 한국의 사주 명리 학운 전�
 6. 훈육 가이드 (학습 푸시·자율성·인내·훈육 톤·체벌 가이드, 6~8문장)
 7. 친구·또래 (구설수·경쟁심·공부 친구, 5~7문장)
 8. 학원·선생님 (스펙·성별·구체 학원 브랜드 추천, 5~7문장)
-9. 현재~앞으로의 흐름 (대운·세운 + 12운성 변화, 6~8문장)
+9. 현재~앞으로의 흐름 (대운·세운 + 12운성 변화, 6~8문장). **user message [현재 학운 시기] baseline을 그대로 사용** — 학운 강/중/약 시기 라벨 매번 흔들리지 않게 코드 결정값 채택.
 10. 국가·해외 운 (사주 수 기운·역마 + 구체 국가, 3~5문장)
 11. 직업·진로 흐름 (전공 후 어떤 직업·일터에서 빛나는지, 4~6문장)
-12. **전공 볼게요** ("전공 볼게요" 인사로 시작. 사주 기반 1순위·2순위·이공계 대안 모두 명시, 4~6문장)
+12. **전공 볼게요** ("전공 볼게요" 인사로 시작. **user message [격국 진로 매핑] baseline을 그대로 사용** — 1순위·2순위·이공계 대안 모두 명시. 격국 lookup 외 자체 추론 ✗. 학부 선택의 미묘함만 사주 풀이로 연결, 4~6문장)
 13. **학교 볼게요** ("학교 볼게요" 인사로 시작. 학년 분기에 따라 구체 학교명 명시 + 1~2개는 "스치나 막혀요" 미묘한 표현 활용, 6~8문장)
 14. 어머니께 한 마디 — 어머니 사주와 자녀 사주의 합 시기 포함 (4~6문장).
     **어머니 사주 미입력 시 → "○○에게 한 마디" 톤으로 자동 전환** (자녀 본인에게 직접 권유, 4~6문장). 어머니-자녀 합 풀이 생략.
@@ -314,6 +314,8 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     motherEducation: ctx.parentEducation?.mother,
     fatherEducation: ctx.parentEducation?.father,
   });
+  // 현재 대운·세운 학운 시기 강약 — §9 운기 흐름 baseline
+  const luckPhase = calcCurrentLuckPhase(c);
 
   const lines = [
     `[분석 기준일] ${today}`,
@@ -350,6 +352,15 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
       : []),
     `[학운 단계·추천 티어 — 백엔드 계산 결과. §13 권유의 baseline. 이 섹션 내용(점수·조정 내역 등)은 본문에 절대 노출 금지 — 결과(최종 티어 범위)만 사용]`,
     `  최종 추천 티어 범위: ${tierResult.finalTierRange[0] === tierResult.finalTierRange[1] ? `${tierResult.finalTierRange[0]}티어` : `${tierResult.finalTierRange[0]}~${tierResult.finalTierRange[1]}티어`}`,
+    ``,
+    `[격국 진로 매핑 — 백엔드 결정성 lookup. §12 "전공 볼게요" 1순위·2순위·이공계 대안의 baseline. 사주 미묘함으로 학부 선택만 자유, 큰 영역은 이대로]`,
+    `  격국: ${c.gyeokguk.name}`,
+    `  1순위 진로: ${c.gyeokguk.careers.primary.join(' · ')}`,
+    `  2순위 진로: ${c.gyeokguk.careers.secondary.join(' · ')}`,
+    `  이공계 대안: ${c.gyeokguk.careers.engineering.join(' · ')}`,
+    ``,
+    `[현재 학운 시기 — 백엔드 결정성. §9 "현재~앞으로의 흐름" baseline. 이 라벨대로 풀이하되 점수·메타 표현은 본문 노출 ✗]`,
+    `  ${luckPhase.oneLineSummary}`,
     ``,
     `[학년대별 분량·학교 예측]`,
     `분량: ${spec.sentenceRange}`,

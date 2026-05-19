@@ -181,6 +181,49 @@ export interface FinalTierResult {
   oneLineSummary: string;
 }
 
+/** 현재 대운·세운의 십성으로 학운 시기 강약 평가.
+ *  명리 합의: 인성/관성 대운 = 학문·시험 ↑, 재성 대운 = 학업 견제, 식상/비겁 = 중립~표현. */
+export interface CurrentLuckPhaseResult {
+  daeunSipsin: string;
+  sewunSipsin: string;
+  /** -1 (약) | 0 (중) | +1 (강) */
+  phaseScore: -1 | 0 | 1;
+  phaseLabel: '학운 강 시기' | '학운 중 시기' | '학운 약 시기 (환경 보강 필요)';
+  /** LLM 풀이용 한 줄 */
+  oneLineSummary: string;
+}
+
+const SCHOLAR_SIPSIN = new Set(['정인', '편인', '정관', '편관']);
+const HEADWIND_SIPSIN = new Set(['정재', '편재']);
+
+export function calcCurrentLuckPhase(m: ManseResult): CurrentLuckPhaseResult {
+  const daeun = m.luckCycles.daeun.find(d => d.isCurrent);
+  const sewun = m.luckCycles.sewun.find(s => s.isCurrent);
+  const daeunSipsin = daeun?.stemSipsin ?? '—';
+  const sewunSipsin = sewun?.stemSipsin ?? '—';
+
+  // 대운 가중치 2 + 세운 가중치 1로 합산
+  let score = 0;
+  if (SCHOLAR_SIPSIN.has(daeunSipsin)) score += 2;
+  else if (HEADWIND_SIPSIN.has(daeunSipsin)) score -= 2;
+  if (SCHOLAR_SIPSIN.has(sewunSipsin)) score += 1;
+  else if (HEADWIND_SIPSIN.has(sewunSipsin)) score -= 1;
+
+  let phaseScore: -1 | 0 | 1;
+  let phaseLabel: CurrentLuckPhaseResult['phaseLabel'];
+  if (score >= 2) { phaseScore = 1; phaseLabel = '학운 강 시기'; }
+  else if (score <= -2) { phaseScore = -1; phaseLabel = '학운 약 시기 (환경 보강 필요)'; }
+  else { phaseScore = 0; phaseLabel = '학운 중 시기'; }
+
+  return {
+    daeunSipsin,
+    sewunSipsin,
+    phaseScore,
+    phaseLabel,
+    oneLineSummary: `현재 대운 십성 ${daeunSipsin}·세운 ${sewunSipsin} → ${phaseLabel}`,
+  };
+}
+
 export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResult {
   const hagunScore = scoreHagun(input.childManse);
   const gradeInfo = scoreToGrade(hagunScore);
