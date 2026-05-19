@@ -48,26 +48,15 @@ export async function POST(request: Request) {
     motherManse: hydrateManse(mother.manse_json),
   };
 
-  let system: string;
-  let userMsg: string;
-  let stream: ReturnType<ReturnType<typeof getAnthropicClient>['messages']['stream']>;
-  try {
-    system = getInterpretPremiumSystem();
-    userMsg = buildInterpretPremiumPrompt(ctx);
-    stream = getAnthropicClient().messages.stream({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 4096,
-      system,
-      messages: [{ role: 'user', content: userMsg }],
-    });
-  } catch (e) {
-    const err = e as Error;
-    console.error('[interpret-premium] setup failed', err);
-    return Response.json(
-      { error: err.message, name: err.name, where: 'interpret-premium setup' },
-      { status: 500 },
-    );
-  }
+  const system = getInterpretPremiumSystem();
+  const userMsg = buildInterpretPremiumPrompt(ctx);
+
+  const stream = getAnthropicClient().messages.stream({
+    model: ANTHROPIC_MODEL,
+    max_tokens: 4096,
+    system,
+    messages: [{ role: 'user', content: userMsg }],
+  });
 
   void (async () => {
     try {

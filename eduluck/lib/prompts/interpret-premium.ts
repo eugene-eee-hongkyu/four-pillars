@@ -3,7 +3,7 @@
 // system prompt inline (Vercel functions bundle 호환).
 
 import type { ManseResult } from '@/lib/manse/engine';
-import { getStemSipsin, splitPillar } from '@/lib/manse/pillars';
+import { getStemSipsin, splitPillar } from '../manse/pillars';
 
 export function getInterpretPremiumSystem(): string {
   return INTERPRET_PREMIUM_SYSTEM;
