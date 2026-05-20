@@ -37,8 +37,8 @@ export default function InterpretFree() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => router.push('/(flow)/premium-value')}>
-          어머니 사주 추가로 더 자세히 · 3,000원
+        <Button onPress={() => router.push('/(flow)/interpret-premium')}>
+          정밀 진단 받기
         </Button>
       </StickyCTA>
     </View>
