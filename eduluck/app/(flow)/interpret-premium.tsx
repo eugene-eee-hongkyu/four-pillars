@@ -42,15 +42,34 @@ function StarRow({ value, onChange }: { value: number; onChange: (n: number) => 
   );
 }
 
-const PREMIUM_LOADING = [
-  '두 분의 사주를 함께 살펴보고 있어요...',
-  '어머니-자녀 합 구조를 분석하는 중...',
-  '학년별 가이드를 정리하는 중...',
-  '합 시기와 운기 흐름을 풀어보는 중...',
-  '종합 조언을 정리하는 중...',
-  '곧 보여드릴게요...',
+// 정밀 진단 14섹션 — skeleton에 미리 노출되는 구조 헤더 (StreamingBody A)
+const PREMIUM_SECTION_HEADERS = [
+  '1. 시작',
+  '2. 본질',
+  '3. 강점',
+  '4. 약점·주의',
+  '5. 환경 설계',
+  '6. 훈육 가이드',
+  '7. 친구·또래',
+  '8. 학원·선생님',
+  '9. 현재~앞으로의 흐름',
+  '10. 국가·해외 운',
+  '11. 직업·진로 흐름',
+  '12. 전공 볼게요',
+  '13. 학교 볼게요',
+  '14. 어머니께 한 마디',
 ];
 
+// 정밀 진단 ~45초 평균 — 시간 기반 단계 라벨 (StreamingBody C)
+const PREMIUM_STAGES = [
+  { at: 0, label: '사주 정리 중' },
+  { at: 8, label: '본질·강점 풀이 중' },
+  { at: 18, label: '환경·훈육 가이드 정리 중' },
+  { at: 28, label: '운기·진로 흐름 풀이 중' },
+  { at: 38, label: '학교·종합 조언 마무리' },
+];
+
+// 진단 완료 후 본문 위 mini TOC (긴 본문 navigation)
 const SECTIONS = ['종합 분석', '학년대별 가이드', '어머니-자녀 합 시기', '종합 조언'];
 
 export default function InterpretPremium() {
@@ -129,8 +148,9 @@ export default function InterpretPremium() {
               motherSubjectId: state.motherSubjectId,
               fatherSubjectId: state.fatherSubjectId,
             }}
-            skeletonLines={12}
-            loadingMessages={PREMIUM_LOADING}
+            sectionHeaders={PREMIUM_SECTION_HEADERS}
+            stages={PREMIUM_STAGES}
+            expectedDurationSec={45}
             onComplete={(text) => { setPremiumInterpretText(text); setStreamDone(true); }}
           />
         ) : null}

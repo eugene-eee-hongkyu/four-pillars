@@ -1,8 +1,13 @@
 // 진단 본문 렌더링 — markdown 헤더·TL;DR·시그니처·단락 여백·키워드 강조 통합.
-// KeywordHighlight를 흡수해 한 단락 안에서 같은 키워드는 첫 등장만 강조 (인플레이션 차단).
+// perception 최적화 v2:
+//   B. TL;DR 카드 도착 시 fade-in + scale 0.96→1 (400ms) — "여기 핵심" 안내
+//   E. 본문 새 블록 mount 시 fade-in 200ms — "글이 살아 움직이는" 느낌
+//
+// 같은 단락 안에서 같은 키워드는 첫 등장만 강조 (인플레이션 차단).
 // 스트리밍 중에도 부분 텍스트를 그대로 파싱하므로 점진 렌더 OK.
 
-import { View, Text } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, Animated } from 'react-native';
 import { Fragment } from 'react';
 import { colors } from '@/design-tokens/tokens';
 
@@ -125,6 +130,57 @@ function ParagraphText({ text }: { text: string }) {
   );
 }
 
+/** mount 시 fade-in 200ms — 본문 새 블록 등장 효과. */
+function FadeInView({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(4)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 220, delay, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 220, delay, useNativeDriver: true }),
+    ]).start();
+  }, [opacity, translateY, delay]);
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
+}
+
+/** TL;DR 도착 시 fade-in + scale 0.96 → 1 (400ms) — "여기 핵심" 강조 진입 효과. */
+function TldrCard({ text }: { text: string }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.96)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, friction: 7, tension: 80, useNativeDriver: true }),
+    ]).start();
+  }, [opacity, scale]);
+  return (
+    <Animated.View
+      style={{
+        opacity,
+        transform: [{ scale }],
+        backgroundColor: colors.secondaryContainer,
+        borderLeftWidth: 4,
+        borderLeftColor: colors.secondary,
+        borderRadius: 6,
+        padding: 14,
+      }}
+    >
+      <Text
+        className="font-body text-label-sm mb-1"
+        style={{ color: colors.secondary, fontWeight: '600' }}
+      >
+        한 줄 요약
+      </Text>
+      <Text
+        className="font-body text-body-lg text-text-pri"
+        style={{ lineHeight: 26, fontWeight: '500' }}
+      >
+        {text}
+      </Text>
+    </Animated.View>
+  );
+}
+
 interface Props {
   text: string;
 }
@@ -137,82 +193,71 @@ export function InterpretBody({ text }: Props) {
 
   return (
     <View className="gap-5">
-      {tldr && (
-        <View
-          className="p-card-padding rounded-md border-l-4"
-          style={{
-            backgroundColor: colors.secondaryContainer,
-            borderLeftColor: colors.secondary,
-          }}
-        >
-          <Text
-            className="font-body text-label-sm mb-1"
-            style={{ color: colors.secondary, fontWeight: '600' }}
-          >
-            한 줄 요약
-          </Text>
-          <Text
-            className="font-body text-body-lg text-text-pri"
-            style={{ lineHeight: 26, fontWeight: '500' }}
-          >
-            {tldr.text}
-          </Text>
-        </View>
-      )}
+      {tldr && <TldrCard text={tldr.text} />}
 
       {body.map((b, i) => {
+        // key는 type + index만 사용. 같은 위치의 같은 type 블록은 텍스트가 누적되어도
+        // 같은 컴포넌트 인스턴스 → fade-in이 mount 시점에 한 번만 발동.
+        const key = `${b.type}-${i}`;
         if (b.type === 'h2') {
           return (
-            <View key={i} className="mt-3 gap-1">
-              <Text className="font-heading-bold text-headline-md text-text-pri">
-                {b.text}
-              </Text>
-              {b.subtitle && (
-                <Text
-                  className="font-body text-label-md"
-                  style={{ color: colors.secondary, fontWeight: '600' }}
-                >
-                  {b.subtitle}
+            <FadeInView key={key}>
+              <View className="mt-3 gap-1">
+                <Text className="font-heading-bold text-headline-md text-text-pri">
+                  {b.text}
                 </Text>
-              )}
-            </View>
+                {b.subtitle && (
+                  <Text
+                    className="font-body text-label-md"
+                    style={{ color: colors.secondary, fontWeight: '600' }}
+                  >
+                    {b.subtitle}
+                  </Text>
+                )}
+              </View>
+            </FadeInView>
           );
         }
         if (b.type === 'h3') {
           return (
-            <Text
-              key={i}
-              className="font-body-bold text-label-md text-text-pri mt-2"
-            >
-              {b.text}
-            </Text>
+            <FadeInView key={key}>
+              <Text className="font-body-bold text-label-md text-text-pri mt-2">
+                {b.text}
+              </Text>
+            </FadeInView>
           );
         }
-        return <ParagraphText key={i} text={b.text} />;
+        return (
+          <FadeInView key={key}>
+            <ParagraphText text={b.text} />
+          </FadeInView>
+        );
       })}
 
       {signature && (
-        <View
-          className="mt-4 p-card-padding rounded-md"
-          style={{
-            backgroundColor: colors.surface,
-            borderWidth: 1,
-            borderColor: colors.secondary,
-          }}
-        >
-          <Text
-            className="font-body text-label-sm mb-1"
-            style={{ color: colors.secondary, fontWeight: '600' }}
+        <FadeInView delay={100}>
+          <View
+            className="mt-4 p-card-padding rounded-md"
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.secondary,
+            }}
           >
-            이 사주의 한 줄
-          </Text>
-          <Text
-            className="font-heading text-headline-sm text-text-pri"
-            style={{ lineHeight: 26 }}
-          >
-            {signature.text}
-          </Text>
-        </View>
+            <Text
+              className="font-body text-label-sm mb-1"
+              style={{ color: colors.secondary, fontWeight: '600' }}
+            >
+              이 사주의 한 줄
+            </Text>
+            <Text
+              className="font-heading text-headline-sm text-text-pri"
+              style={{ lineHeight: 26 }}
+            >
+              {signature.text}
+            </Text>
+          </View>
+        </FadeInView>
       )}
     </View>
   );

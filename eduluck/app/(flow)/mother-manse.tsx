@@ -83,7 +83,6 @@ export default function MotherManse() {
                 childSubjectId: state.childSubjectId,
                 motherSubjectId: state.motherSubjectId,
               }}
-              skeletonLines={2}
             />
           ) : null}
         </View>

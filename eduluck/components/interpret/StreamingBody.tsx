@@ -1,9 +1,22 @@
-// SSE 스트리밍 본문 — skeleton → 텍스트 점진 누적 → 완료
-// 화면 5 (간이, 15~25초) / 화면 11 (정밀, 45~90초) 공통.
+// SSE 스트리밍 본문 — perception 최적화 (UX research v2 적용)
+// 미니/정밀 진단 둘 다 사용. 변경 사항:
+//   A. 구조화 skeleton — 실제 섹션 헤더(예: "1. 본질", "2. 강점" ...)를 미리 노출
+//   C. 시간 기반 단계 라벨 — elapsed time → "사주 정리 중 → 본질 풀이 중" 진행 표시
+//   D. 정직한 progress bar — expectedDurationSec 기반 0~95% 비례 (가짜 100% ✗)
+//
+// 근거: Nielsen "Slow AI", Perplexity intermediate steps, NN/G structural skeleton
 
 import { useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Animated } from 'react-native';
 import { InterpretBody } from './InterpretBody';
+import { colors } from '@/design-tokens/tokens';
+
+export interface StreamingStage {
+  /** 이 단계가 시작되는 elapsed seconds (0부터) */
+  at: number;
+  /** UI에 노출될 단계명 (예: "본질·강점 풀이 중") */
+  label: string;
+}
 
 interface Props {
   /** POST endpoint. body를 함께 전달 */
@@ -14,20 +27,21 @@ interface Props {
   /** 완료 시 fullText 콜백 (DB 저장·UI 활성화용) */
   onComplete?: (fullText: string) => void;
   onError?: (message: string) => void;
-  /** skeleton 줄 수. 기본 6. */
-  skeletonLines?: number;
-  /** SSE 대기 중 rotating 메시지. 기본 일반. premium은 더 긴 wait용 별도 set. */
-  loadingMessages?: string[];
+  /**
+   * 구조화 skeleton에 미리 노출할 섹션 헤더.
+   * 정밀: ['1. 시작', '2. 본질', ..., '14. 어머니께'] (14개)
+   * 미니: ['1. 본질', '2. 강점', '3. 약점·주의', '4. 현재 운기', '5. 어머니께'] (5개)
+   * 짧은 hook(relation-mini 등)에서는 생략 가능 — 간단 skeleton fallback.
+   */
+  sectionHeaders?: string[];
+  /**
+   * 시간 기반 단계 라벨. 첫 항목 at=0 권장. 도착한 단계 = ✓, 현재 단계 = ⋯, 대기 = (회색)
+   * 생략 시 단계 라벨 영역 미표시.
+   */
+  stages?: StreamingStage[];
+  /** 예상 총 응답 시간(초). progress bar 분모. 정밀 ~45, 미니 ~18. 생략 시 progress bar 미표시. */
+  expectedDurationSec?: number;
 }
-
-const DEFAULT_LOADING_MESSAGES = [
-  '사주를 살펴보고 있어요...',
-  '일간과 십성을 정리하는 중...',
-  '신살과 합충을 풀어보는 중...',
-  '대운·세운 흐름을 보는 중...',
-  '학년에 맞춰 풀이를 다듬는 중...',
-  '거의 다 됐어요...',
-];
 
 interface SseEvent {
   event: 'delta' | 'done' | 'error';
@@ -56,28 +70,48 @@ function parseSseChunk(chunk: string): SseEvent[] {
   return events;
 }
 
+/** 시간 기반 progress (0~95%). 95% 이후는 stream 완료 시 100%. */
+function calcProgress(elapsedSec: number, expectedSec: number): number {
+  if (elapsedSec <= 0) return 0;
+  // 0~80% 구간: 선형. 80~95% 구간: 감속 (long tail 자연 처리)
+  const ratio = elapsedSec / expectedSec;
+  if (ratio <= 0.8) return Math.min(80, ratio * 100);
+  // 80% 이후는 천천히 95%까지
+  const tailRatio = Math.min(1, (ratio - 0.8) / 0.4); // 1.0x → 1.2x expectedSec까지 천천히
+  return 80 + tailRatio * 15;
+}
+
+/** elapsed sec 기준 현재 단계 index. */
+function currentStageIndex(elapsedSec: number, stages: StreamingStage[]): number {
+  let idx = 0;
+  for (let i = 0; i < stages.length; i++) {
+    if (elapsedSec >= stages[i].at) idx = i;
+    else break;
+  }
+  return idx;
+}
+
 export function StreamingBody({
   endpoint,
   body,
   headers,
   onComplete,
   onError,
-  skeletonLines = 6,
-  loadingMessages = DEFAULT_LOADING_MESSAGES,
+  sectionHeaders,
+  stages,
+  expectedDurationSec,
 }: Props) {
   const [text, setText] = useState('');
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
-  const [msgIdx, setMsgIdx] = useState(0);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
 
-  // SSE 첫 delta 도착 전까지 rotating 메시지 (8초 간격) — perceived wait 50% 단축
+  // elapsed time 카운터 — 1초마다 갱신 (단계 라벨·progress bar 둘 다 사용)
   useEffect(() => {
-    if (status !== 'loading') return;
-    const t = setInterval(() => {
-      setMsgIdx((i) => (i + 1) % loadingMessages.length);
-    }, 8000);
+    if (status === 'done' || status === 'error') return;
+    const t = setInterval(() => setElapsedSec(s => s + 1), 1000);
     return () => clearInterval(t);
-  }, [status, loadingMessages.length]);
+  }, [status]);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -111,7 +145,6 @@ export function StreamingBody({
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
 
-          // 완성된 SSE 블록(\n\n로 끝)만 처리, 나머지는 buffer에 남김
           const lastSplit = buffer.lastIndexOf('\n\n');
           if (lastSplit === -1) continue;
           const ready = buffer.slice(0, lastSplit + 2);
@@ -141,22 +174,11 @@ export function StreamingBody({
     return () => ac.abort();
   }, [endpoint, body, headers, onComplete, onError]);
 
-  if (status === 'loading' || (status === 'streaming' && !text)) {
-    return (
-      <View className="gap-3 p-card-padding">
-        {Array.from({ length: skeletonLines }).map((_, i) => (
-          <View
-            key={i}
-            className="h-4 rounded-sm bg-outline-warm"
-            style={{ width: `${[90, 70, 85, 60, 80, 50][i % 6]}%` }}
-          />
-        ))}
-        <Text className="font-body text-label-sm text-text-sub mt-4">
-          {loadingMessages[msgIdx]}
-        </Text>
-      </View>
-    );
-  }
+  // 첫 본문이 도착했는지
+  const hasText = text.length > 0;
+  const progress = status === 'done' ? 100 : (expectedDurationSec ? calcProgress(elapsedSec, expectedDurationSec) : 0);
+  const stageIdx = stages ? currentStageIndex(elapsedSec, stages) : 0;
+  const hasProgressUI = !!(expectedDurationSec || stages?.length || sectionHeaders?.length);
 
   if (status === 'error') {
     return (
@@ -168,9 +190,135 @@ export function StreamingBody({
     );
   }
 
+  // 본문 도착 전 — 구조화 skeleton + progress + 단계 라벨
+  if (!hasText) {
+    // sectionHeaders·stages·expectedDuration 모두 없으면 간단 skeleton (relation-mini 등)
+    if (!hasProgressUI) {
+      return (
+        <View className="gap-3 p-card-padding">
+          {[90, 70, 85].map((w, i) => (
+            <View
+              key={i}
+              className="h-3 rounded-sm bg-outline-warm"
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </View>
+      );
+    }
+    return (
+      <View className="gap-4 p-card-padding">
+        {/* === D. progress bar === */}
+        {expectedDurationSec && (
+          <View className="gap-2">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-body text-label-sm text-text-sub">분석 진행</Text>
+              <Text className="font-body text-label-sm text-text-sub">
+                {elapsedSec}초 · 예상 {expectedDurationSec}초
+              </Text>
+            </View>
+            <View className="h-1.5 rounded-full bg-outline-warm overflow-hidden">
+              <View
+                className="h-full rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  backgroundColor: colors.secondary,
+                }}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* === C. 시간 기반 단계 라벨 === */}
+        {stages && stages.length > 0 && (
+          <View className="gap-1.5">
+            {stages.map((stage, i) => {
+              const isDone = i < stageIdx;
+              const isCurrent = i === stageIdx;
+              const marker = isDone ? '✓' : isCurrent ? '⋯' : '○';
+              const color = isDone ? colors.secondary : isCurrent ? colors.textPri : colors.textSub;
+              const weight = isCurrent ? '600' : '400';
+              return (
+                <View key={i} className="flex-row items-center gap-2">
+                  <Text style={{ color, fontWeight: weight, width: 16 }} className="font-body text-label-md">
+                    {marker}
+                  </Text>
+                  <Text
+                    className="font-body text-label-md flex-1"
+                    style={{ color, fontWeight: weight }}
+                  >
+                    {stage.label}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
+        {/* === A. 구조화 skeleton (실제 섹션 윤곽) === */}
+        {sectionHeaders && sectionHeaders.length > 0 && (
+          <View className="mt-3 gap-3 pt-3 border-t border-outline-warm">
+            <Text className="font-body text-label-sm text-text-sub mb-1">진단 구성</Text>
+            {sectionHeaders.map((h, i) => (
+              <SkeletonRow key={i} title={h} />
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // 본문 도착 후 — InterpretBody 렌더 (B·E는 InterpretBody 내부)
   return (
     <ScrollView className="p-card-padding" contentContainerClassName="gap-4">
       <InterpretBody text={text} />
+      {status === 'streaming' && (
+        <View className="flex-row items-center gap-2 mt-2 opacity-70">
+          <PulseDot />
+          <Text className="font-body text-label-sm text-text-sub">
+            {stages?.[stageIdx]?.label ?? '정리 중...'} · {elapsedSec}초
+          </Text>
+        </View>
+      )}
     </ScrollView>
+  );
+}
+
+/** skeleton 한 줄 — 섹션 헤더 + 회색 본문 line. */
+function SkeletonRow({ title }: { title: string }) {
+  return (
+    <View className="gap-1.5">
+      <Text className="font-body-bold text-label-md" style={{ color: colors.textSub }}>
+        {title}
+      </Text>
+      <View className="h-2.5 rounded-sm bg-outline-warm" style={{ width: '85%' }} />
+      <View className="h-2.5 rounded-sm bg-outline-warm" style={{ width: '70%' }} />
+    </View>
+  );
+}
+
+/** 진행 중 표시 점 — 천천히 pulse. */
+function PulseDot() {
+  const opacity = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+  return (
+    <Animated.View
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: colors.secondary,
+        opacity,
+      }}
+    />
   );
 }
