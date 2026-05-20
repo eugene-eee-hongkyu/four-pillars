@@ -5,6 +5,45 @@
 
 ---
 
+## Session 2026-05-20 09:52 — prod skeleton stuck 진단 로그 + 6→5 스텝 단순화 (premium-value 제거)
+
+### 작업 요약
+
+**prod 6/6 정밀 화면 skeleton stuck 진단**
+- 사용자 스크린샷: 6/6 정밀 학운 화면이 skeleton + "두 분의 사주를 함께 살펴보고 있어요..." 첫 로딩 메시지에서 멈춤. SSE delta 도달 안 함.
+- vercel logs 단발 확인: POST /api/interpret-premium 200 응답. duration·error 정보 없음.
+- 단발 curl: 404 (fake IDs) ~1.2s 정상 응답 → 엔드포인트 reachable.
+- 원인 후보: ① Vercel Node.js serverless의 SSE 버퍼링 ② Anthropic 첫 token 지연 ③ CDN edge streaming header 무시.
+- 진단 로그 5점 추가 (api/interpret-premium.ts·lib/llm/stream-sse.ts):
+  - `[premium] start` 함수 진입 + body
+  - `[premium] fetched subjects` supabase fetch ms
+  - `[premium] prompt prepared` system/user 길이
+  - `[premium] first delta` Anthropic 첫 delta ms
+  - `[premium] stream done` 총 시간 + delta 수 + chars
+- 같은 패턴 free 함수에도 적용 (tag='free').
+- v5·v6 prompt push가 vercel auto-deploy 안 트리거됐던 것 확인 (alpha 35m 전 deploy = Phase 1). diag commit으로 강제 redeploy.
+
+**6→5 스텝 단순화 (premium-value 화면 제거)**
+- mom test 단계에서 premium-value(결제 가치 인식 화면)는 마찰만 발생. 가설은 흐름 자체로 검증됨.
+- StepIndicator total 기본값 6 → 5
+- 무료 진단 CTA "어머니 사주 추가로 더 자세히 · 3,000원" → "정밀 진단 받기" + 라우팅 /premium-value → /interpret-premium 직접
+- 정밀 진단 StepIndicator current 6 → 5
+- premium-value.tsx 파일은 유지 (외부 검증 단계 재도입 대비)
+- 새 흐름: 1 랜딩 / 2 가족 입력 / 3 가족 만세력 / 4 무료 / 5 정밀
+
+### 실패한 시도
+
+- 단발 curl로 prod SSE delta 도착 timing 직접 측정 시도 → 유효한 sessionId/childSubjectId 필요해서 우회 (full flow 진행해야 함). 대신 진단 로그 추가로 server-side timing 측정 가능하게.
+
+### 다음 액션
+
+1. 새 deploy에서 6/6 화면 retest → vercel logs로 어느 단계에서 stuck됐는지 확인 (first delta ms·stream done ms)
+2. 원인 확정 후 fix: Vercel Edge runtime 전환 / Anthropic 모델 변경 / 다른 streaming 방식
+3. 5스텝 흐름 시각 검증 (premium-value 제거 후 무료 → 정밀 직접 라우팅 자연성)
+4. Eugene mom test 10명 진행
+
+---
+
 ## Session 2026-05-20 (이어서) — 가독성 Phase 2: v5·v6 prompt 보강 → 92.8/100 (목표 90+ 달성)
 
 ### 작업 요약

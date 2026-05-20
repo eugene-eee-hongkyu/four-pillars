@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-05-20: premium-value 화면 제거 — 6→5 스텝 (mom test 마찰 추가 제거)
+
+- **선택**: 무료 진단(§4) → 정밀 진단(§5) 직접 라우팅. premium-value 화면을 라우팅에서 빼고 파일만 유지.
+- **대안 검토**:
+  - 유지: 결제 가치 인식 단계 — 사용자에게 "이게 왜 가치 있나" 설명. 단 mom test 단계는 결제 우회라 가치 설명 페이지가 흐름만 늘림.
+  - 제거 + 파일 삭제: 외부 검증 단계 재도입 시 다시 만들어야 함. 코드 손실 ↑.
+  - 제거 + 파일 유지 (선택): 라우팅에서만 빠지고 코드 유지. Phase H의 signup·checkout과 같은 패턴.
+- **선택 이유**: mom test는 가설 검증 단계 — premium-value의 "가치 인식 → 결제 진행" 가설을 흐름 자체(가족 사주 추가 후 정밀 진단)로 검증 가능. 추가 화면이 perception delay·이탈만 만듦. 사용자(Eugene)가 "필요 없어 보인다"고 명시.
+- **영향 범위**:
+  - StepIndicator total 기본값 6 → 5 (한 곳 수정으로 전 화면 자동 적용)
+  - interpret-free CTA 라우팅·문구 (결제 가격 표시 제거)
+  - interpret-premium current 6 → 5
+- **되돌리는 방법**: StepIndicator default 6 복원 + interpret-free CTA를 `/(flow)/premium-value`로 되돌림 + interpret-premium current 6. premium-value.tsx 파일 유지로 즉시 재도입 가능.
+
+---
+
 ## 2026-05-19: Phase H — 13→6 스텝 UX 단순화 (mom test 단계 마찰 제거)
 
 - **선택**: 가족 통합 입력 화면 신규 + signup·checkout 우회 + 부모 학력 화면 제거. 6스텝 흐름(랜딩 → 가족 입력 → 가족 만세력 → 무료 진단 → 정밀 가치 → 정밀 진단+별점).

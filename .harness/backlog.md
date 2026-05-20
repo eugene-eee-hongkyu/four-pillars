@@ -4,6 +4,27 @@
 
 ## 대기 중
 
+## 2026-05-20: v7 prompt 보강 (어미 일관성)
+
+- **백로그 이유**: v6 92.8/100 달성으로 1차 목표 충족. mom test 실 사용자 perception 본 후 추가 보강 필요성 판단. 지금 더 만지면 변경 격리 ↓.
+- **할 것**: 어미 시그니처 비율 5회 중 2회만 25%+ 도달 (run-3/4/5 17~22%). v7에서 "각 ## 섹션마다 시그니처 ≥3개, 권장 4~5개" + 더 강한 in-context 예시.
+- **필요한 것**: mom test 10명 결과 (점수 vs 실 사용자 perception 격차 확인). 격차 없으면 92.8로 유지.
+- **이전 검토**: v4 75.8 → v5 84.8 → v6 92.8. A2(명령형) + A3(예시) + C2(마지막 anchor) 효과 확실. 단 어미 일관성만 부분 도달.
+- **관련 파일**: [eduluck/lib/prompts/interpret-premium.ts](../eduluck/lib/prompts/interpret-premium.ts), [interpret-free.ts](../eduluck/lib/prompts/interpret-free.ts), [eduluck/scripts/eval-readability-v4.ts](../eduluck/scripts/eval-readability-v4.ts)
+- **참고**: [_private/prompts-eval/jaeho-test/v6-readability/EVALUATION.md](../eduluck/_private/prompts-eval/jaeho-test/v6-readability/EVALUATION.md) "v6의 남은 약점" 섹션
+
+---
+
+## 2026-05-20: premium-value 외부 검증 단계 재도입
+
+- **백로그 이유**: 외부 100명 검증 = 결제 흐름 활성화 단계. 그때 premium-value(가치 인식)·signup·checkout·부모 학력 모두 복귀.
+- **할 것**: interpret-free CTA를 `/premium-value`로 되돌림 + StepIndicator total 5 → 7+로 변경 + premium-value → signup → checkout → interpret-premium 라우팅 복원.
+- **필요한 것**: mom test 10명 결과 + 외부 검증 단계 진입 결정 + custom SMTP·도메인·Deployment Protection 해제.
+- **이전 검토**: 2026-05-19 Phase H에서 mom test 단계 마찰 제거 위해 우회. 2026-05-20 추가로 premium-value 제거. 파일은 모두 유지 (코드 손실 0).
+- **관련 파일**: [app/(flow)/premium-value.tsx](../eduluck/app/(flow)/premium-value.tsx), [app/(flow)/signup.tsx](../eduluck/app/(flow)/signup.tsx), [app/(flow)/checkout.tsx](../eduluck/app/(flow)/checkout.tsx), [app/(flow)/parent-education.tsx](../eduluck/app/(flow)/parent-education.tsx)
+
+---
+
 ## 2026-04-25: daily 톤 회귀 테스트
 
 - **백로그 이유**: premium 톤 교체 작업 후 daily 톤에 사이드 이펙트 없는지 미확인 상태로 세션 종료
