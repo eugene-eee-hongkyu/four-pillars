@@ -458,6 +458,16 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     `  2순위 진로: ${c.gyeokguk.careers.secondary.join(' · ')}`,
     `  이공계 대안: ${c.gyeokguk.careers.engineering.join(' · ')}`,
     ``,
+    `[예술·디자인 점수 — 백엔드 보정. §12 전공 권유에서 격국 lookup을 보강. 등급별 톤 가이드 그대로 사용. 점수·시그너 이름 본문 노출 ✗]`,
+    `  ${c.artsScore.summary}`,
+    c.artsScore.level === '매우 강'
+      ? `  §12 권유: **격국 lookup보다 예술·디자인 우선**. 추천 분야: ${c.artsScore.recommendedFields.join(' / ')}. 톤: "이 아이는 예술·디자인 자리가 정말 강하게 보여요"·"화개살이 ${c.artsScore.signals.find(s => s.name === '화개살 ≥2')?.matched ? '2개 이상 모여' : '강하게'} 예술가 사주예요". 격국 1순위는 보조로 한 줄.`
+      : c.artsScore.level === '강'
+        ? `  §12 권유: 격국 1순위와 함께 예술·디자인도 명시 — "전공은 ${c.gyeokguk.careers.primary[0]}도 좋고, 디자인·예술 자리도 받쳐줘요". 추천: ${c.artsScore.recommendedFields.join(' / ')}`
+        : c.artsScore.level === '보통'
+          ? `  §12 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능. 메인 진로는 격국 1·2순위.`
+          : `  §12 권유: 격국 lookup만 사용. 예술·디자인 언급 ✗.`,
+    ``,
     `[현재 학운 시기 — 백엔드 결정성. §9 "현재~앞으로의 흐름" baseline. 이 라벨대로 풀이하되 점수·메타 표현은 본문 노출 ✗]`,
     `  ${luckPhase.oneLineSummary}`,
     ``,

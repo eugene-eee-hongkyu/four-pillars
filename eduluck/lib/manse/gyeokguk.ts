@@ -59,7 +59,7 @@ const GYEOKGUK_CAREERS: Record<GyeokgukName, GyeokgukCareers> = {
   정인격: {
     primary: ['학문·교수', '연구원', '교사', '인문학 (철학·문학)'],
     secondary: ['출판·번역', '도서관학', '아카이브·박물관'],
-    engineering: ['이론물리', '수학', '통계학'],
+    engineering: ['컴퓨터공학·소프트웨어', '정보과학·데이터사이언스', '이론물리·수학·통계'],
   },
   편인격: {
     primary: ['의료 (한의학·심리)', '종교학·인류학', '고시·연구직', '기술 자격'],
