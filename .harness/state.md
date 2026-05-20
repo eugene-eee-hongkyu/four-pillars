@@ -6,29 +6,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-20 09:52
-## 마지막 업데이트: 2026-05-20 09:52
+## 마지막 실행: 2026-05-20 15:59
+## 마지막 업데이트: 2026-05-20 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- prod 6/6 정밀 화면 skeleton stuck 진단 로그 배포 + 6→5 스텝 단순화(premium-value 제거) → 새 deploy에서 retest 대기
+- prod 5/5 정밀 화면 skeleton stuck 진단 로그 배포 대기 → deploy 후 retest
 
 ### 이어서 할 것
 
-1. 새 deploy 완료 후 6/6(이제 5/5) 정밀 화면 retest → vercel logs로 first delta·stream done timing 확인 → 원인 확정 (버퍼링 / Anthropic 지연 / CDN)
+1. 새 deploy 완료 후 5/5 정밀 화면 retest → Vercel logs에서 first delta·stream done timing 확인 → 원인 확정
 2. 원인 확정 후 fix (Edge runtime 전환·모델 변경·streaming 방식 변경 중 택1)
 3. 5스텝 흐름 시각 검증 후 Eugene mom test 10명 진행
 
 ### 막힌 것
 
-- 없음 (deploy 대기 중)
+- 없음
 
 ### 사람 판단 필요
 
 - skeleton stuck fix 방향: Edge runtime 전환 시 supabase·anthropic SDK 호환성 검증 필요
 - mom test 결과 후 v7 prompt 보강 vs 92.8 유지 결정 (어미 일관성 5회 중 2회만 25%+ 도달)
-- 외부 100명 검증 단계 진입 시점 (signup·checkout·premium-value·부모 학력 재도입)
+- 외부 100명 검증 단계 진입 시점 (signup·checkout·부모 학력 재도입)
 
 ### 백로그 요약
 
@@ -60,6 +60,6 @@
 - [ ] prod retest 후 skeleton stuck 원인 확정·fix
 - [ ] 5스텝 흐름 시각 검증 후 Eugene mom test 10명
 - [ ] mom test 결과로 v7 prompt 보강 vs 유지 결정
-- [ ] 외부 100명 검증 단계: custom SMTP·도메인·Deployment Protection 해제·signup·checkout·premium-value·부모 학력 재도입
+- [ ] 외부 100명 검증 단계: custom SMTP·도메인·Deployment Protection 해제·signup·checkout·부모 학력 재도입
 - [ ] 사주톡 10명 지인 테스트 계속 진행
 - [ ] sajutalk v2 완료 보고 (10명 결과 통합 후)

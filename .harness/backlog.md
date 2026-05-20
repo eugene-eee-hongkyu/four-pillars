@@ -98,3 +98,19 @@ NONE
 - **할 것**: Vercel 엔드포인트 호출해 정밀 진단 전체 텍스트 검증 (섹션 손실·토큰 컷오프 여부)
 - **필요한 것**: Vercel Pro maxDuration 완전 해제 상태 (현재 적용됨)
 - **이전 검토**: max_tokens 4096→8192, maxDuration 300s, functions glob `.js`→`.ts` 수정 완료
+
+## 2026-05-20: 새 deploy의 5-스텝 흐름 정밀 검증 및 원인 분석
+
+- **백로그 이유**: 현재 skeleton 빌드 실패 원인이 정확히 파악되어야 fix 방향 결정 가능 (Edge runtime / 모델 / streaming 방식 중 어느 것이 문제인지 확인 필요)
+- **할 것**: 
+  1. 새 deploy (premium-value 제거된 5-스텝 버전)에서 5/5 정밀 retest 수행
+  2. Vercel logs에서 first delta·stream done timing 비교 분석
+  3. 원인 확정 후 해당 영역 fix
+  4. 5-스텝 흐름 시각 검증 후 Eugene mom 10명 테스트
+- **필요한 것**: 
+  - Vercel 배포 완료 (premium-value 코드 제거 반영)
+  - Vercel logs 접근 및 timestamp 분석 능력
+  - 원인별 fix 구현 (Edge runtime 최적화 / 모델 변경 / streaming 방식 개선 등)
+- **이전 검토**: 
+  - 6-스텝 흐름을 5-스텝으로 단순화 (premium-value 제거)
+  - skeleton 빌드 실패는 streaming/timing 관련 이슈로 추정
