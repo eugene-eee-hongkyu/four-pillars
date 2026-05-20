@@ -17,7 +17,7 @@ try {
 import { computeManse } from '../lib/manse/engine';
 import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
 
-const REPORT_DIR = '/Users/eugene/Downloads/coding/four-pillars/eduluck/_private/prompts-eval/jaeho-test/v4-readability';
+const REPORT_DIR = process.env.EVAL_DIR ?? '/Users/eugene/Downloads/coding/four-pillars/eduluck/_private/prompts-eval/jaeho-test/v4-readability';
 
 const childManse = computeManse({ year: 2016, month: 5, day: 14, hour: 8, minute: 48, gender: 'male' });
 const ctx = {
