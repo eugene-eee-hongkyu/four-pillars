@@ -20,6 +20,7 @@ interface Body {
 }
 
 export async function POST(request: Request) {
+  const t0 = Date.now();
   let body: Body;
   try {
     body = await request.json();
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
   if (!body.sessionId || !body.childSubjectId) {
     return Response.json({ error: 'missing required fields (sessionId/childSubjectId)' }, { status: 400 });
   }
+
+  console.log('[premium] start', { sessionId: body.sessionId, childId: body.childSubjectId, motherId: body.motherSubjectId, fatherId: body.fatherSubjectId });
 
   const sb = getSupabaseServer();
   const { data: child } = await sb.from('subjects').select('*').eq('id', body.childSubjectId).single();
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
   const { data: father } = body.fatherSubjectId
     ? await sb.from('subjects').select('*').eq('id', body.fatherSubjectId).single()
     : { data: null };
+
+  console.log('[premium] fetched subjects', { t: Date.now() - t0, hasMother: !!mother, hasFather: !!father });
 
   const ctx: InterpretPremiumContext = {
     childNickname: child.nickname ?? '아이',
@@ -64,6 +69,8 @@ export async function POST(request: Request) {
 
   const system = getInterpretPremiumSystem();
   const userMsg = buildInterpretPremiumPrompt(ctx);
+
+  console.log('[premium] prompt prepared', { t: Date.now() - t0, systemLen: system.length, userLen: userMsg.length });
 
   const stream = getAnthropicClient().messages.stream({
     model: ANTHROPIC_MODEL,
@@ -96,5 +103,5 @@ export async function POST(request: Request) {
     }
   })();
 
-  return sseResponse(stream);
+  return sseResponse(stream, 'premium');
 }

@@ -83,5 +83,5 @@ export async function POST(request: Request) {
     }
   })();
 
-  return sseResponse(stream);
+  return sseResponse(stream, 'free');
 }

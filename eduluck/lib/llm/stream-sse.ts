@@ -23,27 +23,37 @@ type MessageStream = ReturnType<Anthropic['messages']['stream']>;
  *   event: error
  *   data: {"message":"..."}
  */
-export function sseResponse(stream: MessageStream): Response {
+export function sseResponse(stream: MessageStream, tag = 'sse'): Response {
   const encoder = new TextEncoder();
+  const startedAt = Date.now();
 
   const body = new ReadableStream({
     async start(controller) {
       let fullText = '';
+      let firstDeltaLoggedAt = 0;
+      let deltaCount = 0;
       try {
         for await (const event of stream) {
           if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             const text = event.delta.text;
             fullText += text;
+            deltaCount++;
+            if (firstDeltaLoggedAt === 0) {
+              firstDeltaLoggedAt = Date.now() - startedAt;
+              console.log(`[${tag}] first delta`, { ms: firstDeltaLoggedAt });
+            }
             controller.enqueue(
               encoder.encode(`event: delta\ndata: ${JSON.stringify({ text })}\n\n`),
             );
           }
         }
+        console.log(`[${tag}] stream done`, { ms: Date.now() - startedAt, deltas: deltaCount, chars: fullText.length });
         controller.enqueue(
           encoder.encode(`event: done\ndata: ${JSON.stringify({ fullText })}\n\n`),
         );
       } catch (e) {
         const message = e instanceof Error ? e.message : 'stream error';
+        console.error(`[${tag}] stream error`, { ms: Date.now() - startedAt, deltas: deltaCount, message });
         controller.enqueue(
           encoder.encode(`event: error\ndata: ${JSON.stringify({ message })}\n\n`),
         );
