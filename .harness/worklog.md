@@ -5,6 +5,53 @@
 
 ---
 
+## Session 2026-05-20 (이어서) — 가독성 Phase 2: v5·v6 prompt 보강 → 92.8/100 (목표 90+ 달성)
+
+### 작업 요약
+
+**v4 self-test 75.8 → v5 보강 (A·B·C·D 4축)**:
+- A 어미 비율 수치화 (시그니처 25~40%, ~예요 ≤35%)
+- B 사주 용어 4개+ 단락 absolute ✗
+- C 짧은 문장 위치 명시 (첫/마지막 = 10~15자)
+- D 두괄식 — 부제와 다른 표현
+
+**v5 self-test 84.8/100** — 마커 30/30, 호흡 21.8, 어미 9.2 ⚠️, 풀이 15/15, 밀도 8.8.
+어미만 9.2로 정체 (목표 16+). 분석: 비율 명시("25~40%")가 LLM에게 추상적 — 한 번에 출력하며 비율 계산 불가.
+
+**v6 보강 (명령형 + in-context 예시)**:
+- A2 "섹션마다 시그니처 어미 ≥3개 필수" 명령형 (free는 2개)
+- A3 부정/긍정 예시 prompt embed — LLM 패턴 mimicking
+- C2 "단락 마지막 = 10~15자 anchor 절대 의무" — 미괄식 강제
+
+**v6 self-test 92.8/100** — 5회 모두 89+ 안정적. run-2 96 최고.
+- 마커 30/30 ⭐, 호흡 23/25, **어미 16.4/20** (v4 4.0 → +12.4), 풀이 15/15 ⭐, 밀도 8.4/10
+- 시그니처 어미 비율 12.7% → 22.0% (75% 회복)
+- ~예요/이에요 41.9% → **30.3%** ✓ (목표 ≤35%)
+- 짧은 문장 ~5% → **19.5%** (C2 가장 극적 효과)
+
+### 의사결정·발견
+
+**"비율 명시 < 명령형 + in-context 예시"** — prompt engineering 핵심 학습.
+- 비율 ("25~40%"): LLM에게 추상적, 한 번에 출력하며 계산 불가
+- 명령형 ("섹션마다 3개"): 따라가기 쉬움. 즉시 적용 가능
+- in-context 부정/긍정 예시: LLM이 패턴 mimicking. 가장 효과적
+
+92.8로 prod 배포 준비 충분 — v7은 mom test 실 사용자 perception 본 후 결정.
+
+### 평가 리포트
+
+- [v4-readability/EVALUATION.md](../eduluck/_private/prompts-eval/jaeho-test/v4-readability/EVALUATION.md) (75.8, 어미 4 미달 진단)
+- [v5-readability/EVALUATION.md](../eduluck/_private/prompts-eval/jaeho-test/v5-readability/EVALUATION.md) (84.8, A·B·C·D 효과)
+- [v6-readability/EVALUATION.md](../eduluck/_private/prompts-eval/jaeho-test/v6-readability/EVALUATION.md) (92.8, A2·A3·C2 최종)
+
+### 다음 액션
+
+1. prod 배포 → 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증 (TL;DR 카드·헤더 부제·짧은 anchor·시그니처 카드·골드 신살 뱃지)
+2. Eugene mom test 10명 — 6스텝 + v6 가독성 본문
+3. mom test 결과로 v7 보강 vs 현재 유지 결정
+
+---
+
 ## Session 2026-05-20 — 가독성 Phase 1: 문창귀인 노출 hotfix + 미니/정밀 분석 가독성 prompt + InterpretBody 컴포넌트
 
 ### 작업 요약

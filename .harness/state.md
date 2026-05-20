@@ -12,13 +12,13 @@
 
 ### 현재 집중
 
-- 가독성 Phase 1 완료 (문창귀인 노출 + 미니/정밀 prompt + InterpretBody) → v4-readability self-test 75.8/100, 어미 4/20 미달 발견 → v5 prompt 보강 대기
+- 가독성 v6 prompt 완료 — self-test 5회 평균 92.8/100 (v4 75.8 → +17.0, 목표 90+ 달성). prod 배포 + mom test 단계 진입 대기
 
 ### 이어서 할 것
 
-1. v5 prompt 보강 — 어미 비율 수치화 (25~40%) + 단락 분리 absolute + 짧은 문장 위치 명시 + 두괄식 명시 → 5회 재평가로 86+ 목표
-2. prod 배포 후 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증 (TL;DR 카드·헤더 부제·시그니처 카드·골드 신살 뱃지)
-3. Eugene mom test 10명 진행 — 6스텝 + 가독성 개선 본문
+1. prod 배포 후 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증 (TL;DR 카드·헤더 부제·짧은 anchor·시그니처 카드·골드 신살 뱃지)
+2. Eugene mom test 10명 — 6스텝 + v6 가독성 본문
+3. mom test 결과로 v7 보강 vs 현재 유지 결정 (어미 일관성 5회 중 2회 25%+ 도달, 나머지 17~22% 근접)
 
 ### 막힌 것
 
@@ -54,9 +54,9 @@
 - [x] **Self-test 인프라** (scripts/eval-jaeho.ts·eval-calibration.ts + tsx)
 - [x] **Phase H 13→6 스텝 UX 단순화** (가족 통합 입력 + signup·checkout 우회 + 학력 제거)
 - [x] **가독성 Phase 1** — 문창귀인 노출 hotfix + 미니/정밀 가독성 prompt + InterpretBody (TL;DR·헤더 부제·시그니처)
-- [ ] **가독성 Phase 2 (v5 prompt 보강)** — 어미 비율 수치화 + 단락 absolute + 짧은 문장 위치 명시 + 두괄식 명시 → 5회 재평가 86+
+- [x] **가독성 Phase 2 (v5·v6 prompt 보강)** — 비율 명시 → 명령형 + in-context 예시 전환 → 92.8/100 (목표 90+ 달성)
 - [ ] prod 배포 후 6스텝 흐름 + 미니/정밀 신 렌더링 시각 검증
-- [ ] Eugene mom test 10명 검증 (6스텝 + 가독성 개선 본문)
+- [ ] Eugene mom test 10명 검증 (6스텝 + v6 가독성 본문)
 - [ ] mom test 결과로 cutoff·confidence 구간 미세 조정 + 알고리즘 분포 편향 조정 여부
 - [ ] 외부 100명 검증 단계: custom SMTP·도메인·Deployment Protection 해제·signup·checkout·부모 학력 재도입
 - [ ] 사주톡 10명 지인 테스트 계속 진행
