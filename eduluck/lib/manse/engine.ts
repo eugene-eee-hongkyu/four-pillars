@@ -10,6 +10,7 @@ import { calcSipsin, type SipsinResult } from './sipsin';
 import { calcUnsung, type UnsungResult } from './unsung';
 import { calcGyeokguk, type GyeokgukResult } from './gyeokguk';
 import { calcNapum, type NapumResult } from './napum';
+import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
 
@@ -46,6 +47,8 @@ export interface ManseResult {
   unsung: UnsungResult;
   gyeokguk: GyeokgukResult;
   napum: NapumResult;
+  /** 해외운 다층 점수 — §10 국가·해외 운 풀이 baseline */
+  abroadScore: AbroadScoreResult;
 }
 
 export function computeManse(input: ManseInput): ManseResult {
@@ -141,6 +144,14 @@ export function computeManse(input: ManseInput): ManseResult {
   const unsung = calcUnsung(pillarsInput);
   const gyeokguk = calcGyeokguk({ dayPillar: raw.dayPillar, monthPillar: raw.monthPillar });
   const napum = calcNapum(pillarsInput);
+  const abroadScore = calcAbroadScore({
+    pillars: pillarsInput,
+    shensha,
+    hapchunh,
+    gyeokguk,
+    elementCounts,
+    luckCycles,
+  });
 
   return {
     yearPillar: raw.yearPillar,
@@ -166,6 +177,7 @@ export function computeManse(input: ManseInput): ManseResult {
     unsung,
     gyeokguk,
     napum,
+    abroadScore,
   };
 }
 
