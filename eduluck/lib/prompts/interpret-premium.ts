@@ -486,6 +486,16 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     `[학년대별 분량·학교 예측]`,
     `분량: ${spec.sentenceRange}`,
     spec.schoolGuide,
+    // 해외운 강 + 학운 매우 강이면 국제 계열·유학·기숙형 학교 우선 분기
+    (c.abroadScore.level === '강' || c.abroadScore.level === '무조건') && (tierResult.hagunLabel === '매우 강' || tierResult.hagunLabel === '강')
+      ? `[국제 계열 강조 분기 — 해외운 ${c.abroadScore.level} + 학운 ${tierResult.hagunLabel}]
+  §13 학교 권유에 **국제중·국제고·기숙사형·유학** 옵션을 메인으로 명시:
+  - 초·중학생: 영훈국제중·대원국제중·청심국제중 등 국제중 / 자사고 기숙형 강조
+  - 고등학생: 민사고·하나고·외대부고 등 기숙·국제 자사고 + 해외 옵션(UBC·미국 리버럴아츠) 메인 트랙
+  - 국내 대학과 해외 옵션 비중을 동등 또는 해외 약간 우선
+  - 톤: "○○이는 국제 계열에서 더 자기 자리를 찾는 자리예요"·"기숙·유학 옵션을 일찍 열어두시면 좋아요"
+  - 액션: "엄마가 영어 환경 일찍 챙겨주시고, 기숙·해외 옵션 같이 보시면 좋을 것 같아요"`
+      : ``,
     ``,
     `[작업]`,
     `${ctx.childNickname}의 정밀 학운을 어머니께 풀어주세요.`,

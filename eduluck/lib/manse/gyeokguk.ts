@@ -94,7 +94,7 @@ const GYEOKGUK_CAREERS: Record<GyeokgukName, GyeokgukCareers> = {
   건록격: {
     primary: ['자기 주도 전문직', '리더십·경영', '정치·공공', '창업'],
     secondary: ['CEO·임원', '정부 고위직', '학자'],
-    engineering: ['응용공학', 'AI·로보틱스', '바이오테크'],
+    engineering: ['컴퓨터공학·소프트웨어', '응용공학·AI·로보틱스', '바이오테크'],
   },
   양인격: {
     primary: ['경영 (강한 리더십)', '체육·스포츠', '군경·검찰', '외과·응급의학'],

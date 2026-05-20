@@ -136,6 +136,29 @@ export function calcAbroadScore(input: CalcInput): AbroadScoreResult {
     reason: `충 ${chungCount}회 — ${chungCount >= 2 ? '한 자리 머물기 어려운 기운, 타향 인연 강함' : '안정적'}`,
   });
 
+  // === 6-b. 형 ≥2회 (+1) — 명리 三刑(사신·인사신·축술미)은 강한 역마 형성 ===
+  // 재호 calibration: 신사형 ×2 + 사신파 ×2 → 다른 사주가 모두 "해외 매우 높음"
+  const hyeongCount = hapchunh.hyeong.length;
+  signals.push({
+    name: '형 ≥2회',
+    weight: 1,
+    matched: hyeongCount >= 2,
+    reason: `형 ${hyeongCount}회 — ${hyeongCount >= 2 ? '내부 마찰·이동 시그너, 외부에서 풀어내야 함' : '형 미약'}`,
+  });
+
+  // === 6-c. 사맹지 글자 ≥2 (+1) — 인·사·신·해 (역마 후보) 다수 ===
+  // 우리 역마살 계산은 "삼합국 역마지"만 보고 단순 등장 개수 못 잡음.
+  // 사주에 사맹지가 2개+ 등장하면 명리적으로 이동·외부 시그너 강함.
+  const outerInChart = branches.filter(b => OUTER_BRANCHES.has(b));
+  // 중복 카운트 (같은 글자 2개 있어도 시그너 강함)
+  const outerCount = outerInChart.length;
+  signals.push({
+    name: '사맹지 글자 ≥2',
+    weight: 1,
+    matched: outerCount >= 2,
+    reason: `사맹지(인·신·사·해) ${outerCount}자 — ${outerCount >= 2 ? '이동·외부 활동 사주 본질' : '안주형'}`,
+  });
+
   // === 7. 공망이 외부 영역(인·신·사·해) (+1) ===
   const outerGongmang = hapchunh.gongmang.filter(g => OUTER_BRANCHES.has(g));
   signals.push({
