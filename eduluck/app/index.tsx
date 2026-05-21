@@ -45,34 +45,28 @@ export default function Landing() {
       <ScrollView
         contentContainerClassName="flex-1 items-center justify-center px-container-padding gap-6"
       >
-        <Logo size={88} />
-        <Text className="font-heading-bold text-display-lg text-text-pri">eduluck</Text>
-        <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed">
-          우리 아이 학운,{'\n'}사주로 봅니다
+        <Logo size={72} />
+        <Text className="font-heading text-headline-md text-text-sub">eduluck</Text>
+
+        {/* 헤드라인 — 강한 단정 카피 (운명+자존) */}
+        <Text className="font-heading-bold text-display-lg text-text-pri text-center leading-tight mt-2">
+          사주에 없는 길은{'\n'}가지 않아도 됩니다
         </Text>
 
-        <View className="gap-3 mt-4 items-center">
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 학년대별 흐름·강점</Text>
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 어머니 사주 합 시기 분석</Text>
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 진로·과목 액션 가이드</Text>
-        </View>
-
-        {/* 정밀 진단 샘플 미리보기 — blur 효과로 anticipation */}
-        <View className="w-full max-w-md mt-8 p-card-padding rounded-lg bg-surface-container-low border border-outline-warm">
-          <Text className="font-body text-label-sm text-text-sub mb-2">▼ 정밀 진단 미리보기</Text>
-          {/* @ts-expect-error — web 전용 filter (RN style 무관, web에서만 blur) */}
-          <Text className="font-body text-body-md text-text-pri leading-relaxed" style={{ filter: 'blur(3px)' }}>
-            민서는 일간 丁火로 인성이 강하고 어머니의 戊土 인성과 강하게 합하는 구조입니다.
-            책 읽기·암기·이해 영역에 자연 강점을 보이며, 어머니의 직접 관여가 학업 성과로 연결되는 사주 배치예요.
-            초고학년(만 11~12세) 시점에 어머니 戊土와 민서 丁火의 합이 가장 강하게 작용합니다...
-          </Text>
-        </View>
-
-        <Text className="font-body text-label-sm text-text-sub text-center mt-4">
-          정확한 만세력 + 학년대별 톤. 무료부터 시작해보세요.
+        {/* 서브헤드 — 어머니 주체성·따뜻함 */}
+        <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed mt-2">
+          정통 만세력으로 보는 학교·전공·학습 시기.{'\n'}
+          엄마가 일찍 알면, 푸시할 곳과 기다릴 곳이 보입니다.
         </Text>
+
+        <View className="gap-3 mt-6 items-center">
+          <Text className="font-body text-body-md text-text-sub text-center">◆ 학년대별 학운 흐름</Text>
+          <Text className="font-body text-body-md text-text-sub text-center">◆ 어머니와의 합·푸시 시기</Text>
+          <Text className="font-body text-body-md text-text-sub text-center">◆ 학원·전공·과목 맞춤 가이드</Text>
+        </View>
+
         {error && (
-          <View className="w-full max-w-md">
+          <View className="w-full max-w-md mt-4">
             <Toast kind="error" message={`시작 실패: ${error}`} />
           </View>
         )}
@@ -80,7 +74,7 @@ export default function Landing() {
 
       <StickyCTA>
         <Button onPress={handleStart} loading={loading}>
-          무료 진단 시작 (3분)
+          무료 진단 시작 (5분)
         </Button>
       </StickyCTA>
     </View>
