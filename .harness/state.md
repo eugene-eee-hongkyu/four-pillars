@@ -6,8 +6,8 @@
 
 ---
 
-## 마지막 실행: 2026-05-21 21:00
-## 마지막 업데이트: 2026-05-21 21:00
+## 마지막 실행: 2026-05-21 19:47
+## 마지막 업데이트: 2026-05-21 19:47
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
@@ -26,8 +26,9 @@
 
 ### 사람 판단 필요
 
-- 의대 sample 받은 후 매핑 방향 (격국 lookup 보강 vs 별도 medical-score 모듈)
+- 의대 sample 받은 후 매핑 방향 (격국 lookup 보강 vs medical-score 추가 임계 조정)
 - 김영진 학교 격차 (5~6 vs 4) — 본인 의지 영역인지 시스템 결함인지 추가 sample 1~2명 더 모이면 결정
+- mom test 후 어머니 사주 재도입 여부 (§14 emotional impact 정성 평가 기반)
 - 외부 100명 검증 단계 진입 시점 (signup·checkout·premium-value·부모 학력 재도입)
 
 ### 백로그 요약
@@ -76,8 +77,8 @@
 - [x] **§14 prompt 강화** — A/B LLM 검증으로 어머니 ✗ §14 859chars (어머니 ✓와 동등) ⭐
 - [ ] prod 배포 후 자녀 단일 입력 + §14 prod 풀이 시각 검증
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증 (임계 조정 vs 현재 유지)
-- [ ] Eugene mom test 10명 — 5스텝 + 새 perception + 공유 입소문
-- [ ] mom test 결과로 v8 prompt 보강 vs 현재 유지 결정
+- [ ] Eugene mom test 10명 — 자녀 단일 입력 + 시간 필수 + 새 §14 + 의약 모듈
+- [ ] mom test 결과로 v8 prompt 보강 vs 현재 유지 결정 + 어머니 사주 재도입 여부 결정
 - [ ] 김영진 격차 — 상관격·관인상생 sample 더 모이면 보강 검토
 - [ ] 외부 100명 검증 단계: signup·checkout·premium-value·부모 학력 재도입
 - [ ] 사주톡 10명 지인 테스트 계속 진행
