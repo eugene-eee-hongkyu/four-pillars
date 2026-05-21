@@ -56,7 +56,7 @@ export default function Landing() {
         {/* 서브헤드 — 어머니 주체성·따뜻함 */}
         <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed mt-2">
           정통 만세력으로 보는 학교·전공·학습 시기.{'\n'}
-          엄마가 일찍 알면, 푸시할 곳과 기다릴 곳이 보입니다.
+          엄마가 일찍 알면, 가야할 길이 보입니다.
         </Text>
 
         <View className="gap-3 mt-6 items-center">

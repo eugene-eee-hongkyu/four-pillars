@@ -85,6 +85,17 @@ function scoreHagun(m: ManseResult): number {
   const isScholarGyeokguk = SCHOLAR_GYEOKGUK.has(m.gyeokguk.name);
   if (isScholarGyeokguk) score += 2;
 
+  // 추진력형 격국 (양인격·건록격·비견격) + 신왕 + 비겁 강 = 자기 의지로 입시 돌파 패턴
+  // 명리 통설: 양인격 등은 학자형 ✗이지만 격국 명확 + 신왕 + 비겁 강이면 추진력으로 안정 학력 형성.
+  // 재원(2008-06-27) calibration: 양인격 + 비겁 5 + sinwangScore 6 → 다른 학운분 "한양대·중앙대" 정합 위해 도입.
+  const sinwangScoreRaw =
+    (c.bigeop + c.insung) - (c.siksang + c.jaesung + c.gwansung / 2)
+    + (STRONG_UNSUNG.has(m.unsung.monthPillar.stage) ? 2 : WEAK_UNSUNG.has(m.unsung.monthPillar.stage) ? -1 : 0)
+    + (STRONG_UNSUNG.has(m.unsung.dayPillar.stage) ? 2 : WEAK_UNSUNG.has(m.unsung.dayPillar.stage) ? -1 : 0);
+  const isPushGyeokguk = ['양인격', '건록격', '비견격'].includes(m.gyeokguk.name);
+  const isPushPattern = isPushGyeokguk && sinwangScoreRaw >= 5 && c.bigeop >= 4;
+  if (isPushPattern) score += 2;
+
   // 학운 친화 납음 (산하화·해중금 등 — 잠재형/빛 발하는 구조)
   if (m.napum.dayPillar.nameKo && SCHOLAR_NAPUM.has(m.napum.dayPillar.nameKo)) score += 1;
 
@@ -111,7 +122,11 @@ function scoreHagun(m: ManseResult): number {
   }
 
   // 학자형 시그널 부재 콤보 — 4귀인 0 + 학자형 격국 ✗ + 일지 weak (학업 자리 모두 부재)
-  if (guiCount === 0 && !isScholarGyeokguk && WEAK_UNSUNG.has(m.unsung.dayPillar.stage)) {
+  // 단 추진력형 패턴(양인격·건록격·비견격 + 신왕 + 비겁 강)은 면제 — 격국 명확 = 잡격이 아님
+  if (
+    guiCount === 0 && !isScholarGyeokguk && WEAK_UNSUNG.has(m.unsung.dayPillar.stage) &&
+    !isPushPattern
+  ) {
     score -= 2;
   }
 
@@ -123,9 +138,13 @@ function scoreHagun(m: ManseResult): number {
 
   // 비학문 강세 — 식상·재성·비겁이 압도 + 학자형 격국 아님 → 학업 외 트랙
   // 조건: 식상+재성+비겁 ≥ 4 AND 인성+관성 ≤ 2 AND 4귀인 ≤ 1 AND 학자형 격국 ✗
+  // 단 추진력형 패턴은 면제 — 양인격·건록격은 격국 본질로 학력 안정 형성 가능
   const nonScholarSum = c.siksang + c.jaesung + c.bigeop;
   const scholarSum = c.insung + c.gwansung;
-  if (nonScholarSum >= 4 && scholarSum <= 2 && guiCount <= 1 && !isScholarGyeokguk) {
+  if (
+    nonScholarSum >= 4 && scholarSum <= 2 && guiCount <= 1 && !isScholarGyeokguk &&
+    !isPushPattern
+  ) {
     score -= 2;
   }
 
@@ -156,6 +175,19 @@ function scoreHagun(m: ManseResult): number {
   else if (youthLuck >= 1) score += 1;
   else if (youthLuck <= -3) score -= 2;
   else if (youthLuck <= -1) score -= 1;
+
+  // 추진력형(양인격·건록격·비견격) + 청소년기 식상 대운 → 표현·논술·자기 주도 학습 동력 +1
+  // 양인격은 식상 대운이 자기 의지로 입시 돌파에 보조. 일반 학자형엔 적용 ✗ (재극 영향 등).
+  if (isPushPattern) {
+    const FOOD_LUCK = new Set(['식신', '상관']);
+    let foodYouth = 0;
+    for (const d of m.luckCycles.daeun) {
+      if (d.age < 6 || d.age > 22) continue;
+      if (FOOD_LUCK.has(d.stemSipsin)) foodYouth += 1;
+      if (FOOD_LUCK.has(d.branchSipsin)) foodYouth += 1;
+    }
+    if (foodYouth >= 2) score += 1;
+  }
 
   return score;
 }
