@@ -49,7 +49,8 @@ export default function Checkout() {
       });
       if (!res.ok) throw new Error(await res.text());
       setPaid(true);
-      router.push('/(flow)/mother-saju');
+      // 부모 사주 입력은 mom test 단계에서 제거됨 — 결제 후 바로 정밀 진단으로
+      router.push('/(flow)/interpret-premium');
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));
     } finally {

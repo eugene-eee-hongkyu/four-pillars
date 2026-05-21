@@ -1,3 +1,7 @@
+// [DEPRECATED — 2026-05-21] 아빠 사주 입력 화면
+// mom test 단계에서 부모 사주 입력 제거. 파일·라우트는 유지 (재도입 대비).
+// 현재 어떤 main flow에서도 진입하지 않음.
+//
 // 화면 11: 아빠 사주 입력 (옵션 — 스킵 가능)
 // mother-saju 패턴 그대로 + 스킵 버튼. 아빠 만세력은 정밀 진단 본문에서 inline 처리 (별도 화면 없음).
 import { useState, useMemo } from 'react';
