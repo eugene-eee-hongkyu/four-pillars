@@ -5,6 +5,52 @@
 
 ---
 
+## Session 2026-05-21 21:00 — 부모 사주 입력 제거 + §14 prompt 강화
+
+### 작업 요약
+
+**의사결정 배경**
+- N=9 calibration: 부모 정보 없이 학운 점수 97.8/100 달성 (parentAdjust 모두 0) — 진단 정확도는 자녀만으로 충분
+- 우려: §14 "어머니께 한 마디" emotional impact가 어머니 사주 없으면 약화될지
+
+**A/B LLM 검증 — scripts/eval-mother-ab.ts 신규**
+- 자녀 01 재원에 motherManse = 04 wife 입력 vs null 두 케이스 LLM 호출
+- 구 prompt 결과: A §14 = 583 chars / B §14 = 335 chars (A의 57%) — 자녀 직접 권유 톤으로 약화
+- §14 prompt 강화 후 재검증: A §14 = 855 / **B §14 = 859 chars** ⭐ 동등
+- B §14에 시그니처 "어머님이 잡아주시면 이뤄지는 자리예요" + 용신 목 기반 환경 ("화분·초록 포인트·공원") + 양인격 받침 ("정면으로 맞서지 마시고, 그래, 그럼 어떻게 하고 싶어? 물어봐 주세요") 모두 풍부 등장
+
+**§14 prompt 강화 (interpret-premium.ts)**
+- 어머니가 메인 청자 + 어머니 사주 미입력 디폴트
+- 자녀 용신 오행 → 어머니가 만들 환경 (목→자연·도서관, 화→밝은 공간 등)
+- 자녀 격국·대운·신살 → 어머니 받침 액션 ("○○이가 ~할 때는 ~해주시고")
+- 시그니처 "어머님이 잡아주시면 이뤄지는 자리" 유지
+- 어머니 사주 ✓ 입력 시 자녀-어머니 합 시기·일간 매핑 한 단락 추가
+
+**UI 변경 (family-input.tsx)**
+- 어머니·아빠 토글 영역 완전 제거 (357줄 → 180줄)
+- 자녀 단일 입력으로 단순화
+- setMotherSkipped·setFatherSkipped는 호환성 유지
+- 헤더 카피: "가족 정보 알려주세요" → "자녀 정보를 알려주세요"
+
+**라우터 정리**
+- checkout.tsx: 결제 후 mother-saju → interpret-premium 직접 이동
+- mother-saju·father-saju·mother-manse·parent-education: 헤더에 deprecate 노트 (파일 유지, 외부 100명 검증 단계 재도입 대비)
+
+**검증**
+- typecheck ✓ / 회귀 11/11 ✓ / A/B LLM 검증 ⭐
+
+### 실패한 시도
+
+- 없음 (단방향 진전)
+
+### 다음 액션
+
+1. UI prod 배포 후 자녀 단일 입력 화면 시각 검증 + §14 prod 풀이 톤 확인
+2. Eugene mom test 10명 진입 — 자녀 단일 입력 + 시간 필수 + N=11 시스템 + 의약 모듈 + 새 §14
+3. mom test 결과로 §14 emotional impact 정성 평가 (어머니 사주 재도입 여부 결정)
+
+---
+
 ## Session 2026-05-21 19:30 — 의약 점수 모듈(medical-score) 도입 + N=9 98점 달성
 
 ### 작업 요약

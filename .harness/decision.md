@@ -6,6 +6,35 @@
 
 ---
 
+## 2026-05-21: 부모 사주 입력 제거 (mom test 단계 단순화)
+
+- **선택**: 초반 mom test 단계에서 어머니·아빠 사주 입력 모두 제거. main flow는 자녀 정보만 받음. §14는 자녀 사주 기반 어머니 서포트 가이드 prompt로 emotional impact 유지.
+- **대안 검토**:
+  - 옵션 A: 완전 제거 (선택) — 자녀만 입력. §14는 자녀 사주 기반 어머니 서포트 액션.
+  - 옵션 B: 옵션 유지 (현재 Phase G 옵션화)
+  - 옵션 C: 어머니만 옵션 유지, 아빠만 제거
+- **선택 이유**:
+  1. **N=9 calibration 결과**: 부모 정보 없이 학운 점수 97.8/100 도달 (parentAdjust 모두 0). 진단 정확도 가설 통과.
+  2. **A/B LLM 검증 결과**: 자녀 01 재원으로 어머니 사주 ✓ vs ✗ 두 케이스 비교.
+     - **새 prompt 적용 전**: B §14 = 335 chars (A의 57%) — 자녀 직접 권유 톤으로 약화
+     - **새 prompt 적용 후**: B §14 = 859 chars (A 855와 동등) ⭐ — "어머님이 잡아주시면 이뤄지는 자리예요" 시그니처·용신 기반 환경 액션·격국 받침 가이드 모두 풍부
+  3. **mom test 가설**: "엄마가 아이를 이해하게 돕는 emotional impact"는 어머니 사주 매개 없이도 자녀 사주만으로 prompt에서 재현 가능
+  4. **입력 마찰 ↓**: mom test 진입 사용자가 자녀 외 어머니·아빠 출생 시간까지 알아야 하는 부담 제거
+- **§14 prompt 강화 (interpret-premium.ts)**:
+  - 어머니가 메인 청자 + 어머니 사주 미입력이 디폴트
+  - 자녀 용신 오행 → 어머니가 만들 환경 (목→자연·도서관, 화→밝은 공간, 토→안정 루틴, 금→정리·논리, 수→독서·사색)
+  - 자녀 격국·대운·신살 → 어머니 받침 액션 ("○○이가 ~할 때는 ~해주시고, ~할 때는 ~해주세요")
+  - 시그니처 표현 "어머님이 잡아주시면 이뤄지는 자리예요" 유지
+  - 어머니 사주 ✓ 입력 시 자녀-어머니 합 시기·일간 십성 매핑 한 단락 추가
+- **영향 범위**:
+  - `app/(flow)/family-input.tsx`: 어머니·아빠 토글 영역 제거, 자녀 단일 입력 단순화 (357줄 → 180줄)
+  - `app/(flow)/checkout.tsx`: 결제 후 mother-saju → interpret-premium 직접 이동
+  - `app/(flow)/mother-saju.tsx`·`father-saju.tsx`·`mother-manse.tsx`·`parent-education.tsx`: deprecate 헤더 노트 (파일·라우트 유지, 외부 100명 검증 단계 재도입 대비)
+  - `lib/prompts/interpret-premium.ts`: §14 system prompt 강화 + user message baseline 정리 (어머니·아빠 미입력 디폴트 표시)
+- **되돌리는 방법**: family-input.tsx 어머니·아빠 토글 복원 + checkout.tsx 라우팅 복원 + interpret-premium.ts §14 prompt 옛 버전 복원 + deprecate 헤더 제거.
+
+---
+
 ## 2026-05-21: 의·약·치·생명과학 점수 모듈(medical-score) 도입
 
 - **선택**: arts-score·abroad-score와 동일 패턴으로 별도 `lib/manse/medical-score.ts` 모듈 신규. 격국 lookup·신살(천의성·백호대살·학당귀인)·십성(관인상생·관성·인성)을 통합한 12점 만점 시그너 합산.
