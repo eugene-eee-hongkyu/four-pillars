@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-21 16:34
-## 마지막 업데이트: 2026-05-21 16:34
+## 마지막 실행: 2026-05-21 18:00
+## 마지막 업데이트: 2026-05-21 18:00
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 정밀 prefetch + 공유 URL + calibration PII 분리 완료 → prod 배포 후 실제 모바일 검증 + 의대 sample 받기 대기
+- N=11 calibration (의사 2명·해외 직장인 2명 추가) + 두흥 ⭐⭐⭐ 격상 + 자녀 시간 필수화 완료 → prod 배포 + mom test 진입 대기
 
 ### 이어서 할 것
 
-1. prod 배포 (Vercel auto-deploy) 후 사용자 실제 모바일 검증 — prefetch hit + 공유 URL 가족 흐름
-2. 사용자 제공 예정 의대 진학자 sample 2개 받기 → 한의대·의대 격국 매핑 보강 (재호 calibration)
-3. Eugene mom test 10명 진입 — 5스텝 + 새 perception 개선 + 공유 입소문
+1. UI prod 배포 (Vercel) 후 자녀 시간 필수화 시각 검증 (모달 거부 흐름)
+2. 사용자 제공 예정 의대 진학자 sample 2개 받기 → 천의성·백호대살·관인상생 통합 의약 모듈 설계 (08·09·10 N=3 기반)
+3. Eugene mom test 10명 진입 — 5스텝 + 시간 필수 + v7 톤 + N=11 시스템
 
 ### 막힌 것
 
@@ -66,9 +66,12 @@
 - [x] **N=7 학운 시스템 ~97/100 점수**
 - [x] **정밀 prefetch (옵션 B)** — 미니 화면 mount 시 정밀 SSE 동시 fetch + cache 분기
 - [x] **공유 URL** — DB migration + /api/share + /share/[token] 페이지 + ShareButton (Web Share API)
-- [x] **calibration sample PII 분리** — _private/data.ts 단일 소스 + 통합 회귀 스크립트 (N=7+)
-- [ ] prod 배포 후 실제 모바일 검증 (prefetch hit + 공유 URL 가족 흐름)
-- [ ] 의대 sample 2개 받기 → 한의대·의대 격국 매핑 보강
+- [x] **calibration sample PII 분리** — _private/data.ts 단일 소스 + 통합 회귀 스크립트
+- [x] **N=11 calibration** — 의사 2명(세형·두흥) + 해외 직장인 2명(소영·희식) 추가
+- [x] **두흥 ⭐⭐⭐ 격상** — 묘유충 = 수능 0점 사고 명리 본질 완벽 매칭 재해석
+- [x] **자녀 시간 필수화** — child-saju + family-input 모달 거부 모드 + canSubmit 차단
+- [ ] prod 배포 후 자녀 시간 필수화 + 모바일 검증
+- [ ] 의대 sample 2개 받기 → 천의성·백호대살·관인상생 의약 모듈 설계 (N=3 기반)
 - [ ] Eugene mom test 10명 — 5스텝 + 새 perception + 공유 입소문
 - [ ] mom test 결과로 v8 prompt 보강 vs 현재 유지 결정
 - [ ] 김영진 격차 — 상관격·관인상생 sample 더 모이면 보강 검토
