@@ -3,12 +3,14 @@
 //  - 본문 위에 sticky mini TOC (4 섹션 anchor) — 긴 본문 navigation
 //  - 별점 시점 분리 (step 1: 결제 가치 → 답변 → step 2: 결제 의향)
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
+import { InterpretBody } from '@/components/interpret/InterpretBody';
+import { ShareButton } from '@/components/interpret/ShareButton';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -112,6 +114,13 @@ export default function InterpretPremium() {
 
   const handleStartSurvey = () => setSurveyStep(1);
 
+  // 캐시 hit (prefetch 완료된 정밀 텍스트) — streamDone 즉시 true로 → 본문 위 TOC + survey CTA 표시
+  useEffect(() => {
+    if (state.premiumInterpretText && !streamDone) {
+      setStreamDone(true);
+    }
+  }, [state.premiumInterpretText, streamDone]);
+
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-32 gap-6">
@@ -139,7 +148,13 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {state.sessionId && state.childSubjectId ? (
+        {/* 캐시 hit — interpret-free 화면에서 prefetch 완료된 경우 즉시 표시.
+            cache 효과로 사용자 wait 0초. mom test perception 가장 큰 개선 포인트. */}
+        {state.premiumInterpretText ? (
+          <View className="p-card-padding gap-4">
+            <InterpretBody text={state.premiumInterpretText} />
+          </View>
+        ) : state.sessionId && state.childSubjectId ? (
           <StreamingBody
             endpoint="/api/interpret-premium"
             body={{
@@ -154,6 +169,16 @@ export default function InterpretPremium() {
             onComplete={(text) => { setPremiumInterpretText(text); setStreamDone(true); }}
           />
         ) : null}
+
+        {/* 공유 버튼 — streamDone 후 (캐시 hit 또는 stream 완료) */}
+        {streamDone && state.sessionId && (
+          <View className="px-container-padding mt-2">
+            <ShareButton
+              sessionId={state.sessionId}
+              nickname={state.child.nickname || '아이'}
+            />
+          </View>
+        )}
 
         {/* survey 시점 분리 — 한 단계씩 */}
         {streamDone && surveyStep === 0 && (
