@@ -4,13 +4,29 @@
 
 ## 대기 중
 
-## 2026-05-20: 추가 calibration sample 5명+ 확보
+## ~~2026-05-20: 추가 calibration sample 5명+ 확보~~ — 2026-05-21 N=7 도달 완료
+
+- **상태**: 완료. 재원·재호·self·wife + 이승희·박정환·김영진 (N=7) → ~97/100 점수 도달.
+
+---
+
+## ~~2026-05-20: 추가 calibration sample 5명+ 확보 (원본)~~
 
 - **백로그 이유**: N=2(40대 어른) + 재호·재원으로 부분 calibration 완료. 5~10명 모이면 패턴 확정 + 임계 미세 조정 가능. 지금 더 만지면 overfitting 위험.
 - **할 것**: 30~50대 시간 아는 사람 또는 시간 모름 케이스 모으기. 학교·전공·해외 거주 결과 명확한 sample. 다양한 격국·진로(의대·인문·고졸·예체능 등) 확보.
 - **필요한 것**: 본인 동의 + 생년월시·실제 결과(학교·전공·진로·해외). _private/ 보관.
 - **이전 검토**: Case 1·2 calibration으로 정인격 SW·정재격 시각디자인 누락 발견 + 즉시 보강. 재호 비교에서 형·사맹지 추가 + 건록격 컴공 + 국제 계열 분기 보강.
 - **관련 파일**: [eduluck/scripts/eval-adult-calibration.ts](../eduluck/scripts/eval-adult-calibration.ts)
+
+---
+
+## 2026-05-21: 통합 회귀 스크립트 (N=7+)
+
+- **백로그 이유**: 현재 calibration 회귀가 3개 스크립트로 분산 (eval-jaewon-abroad·eval-jaeho·eval-adult-calibration·eval-samples-567). 한 번에 7명 회귀 + 점수 산출 통합 필요. mom test 진행 중에는 우선순위 낮음.
+- **할 것**: scripts/eval-all-calibration.ts — 7명 sample 정의 + 모듈별 결과 통합 dump + 가중치 점수 산출. 결과 _private/calibration-report-{date}.md 저장.
+- **필요한 것**: 기존 스크립트 통합. _private/calibration-samples/data.json (또는 ts) 공통 정의.
+- **이전 검토**: N=7 도달 후 통합 가치 ↑. 단 각 sample 자료가 _private라 ts 코드에 직접 박을지 json 분리할지 결정 필요.
+- **관련 파일**: [eduluck/scripts/eval-adult-calibration.ts](../eduluck/scripts/eval-adult-calibration.ts), [eduluck/scripts/eval-samples-567.ts](../eduluck/scripts/eval-samples-567.ts), [eduluck/_private/calibration-samples/README.md](../eduluck/_private/calibration-samples/README.md)
 
 ---
 
