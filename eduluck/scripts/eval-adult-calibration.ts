@@ -1,60 +1,59 @@
 // 40대 어른 calibration — 사주 진단 vs 실제 결과 비교
-// 입력: 사주 (생년월일시·성별) + 실제 결과 (학교·전공·해외·학운 시기)
+// PII는 _private/calibration-samples/data.ts 에만. 이 스크립트는 sample ID로 로드 + 실제 결과만 정의.
 // 출력: 모듈별 일치/부분/빗나감 분석
 
 import { computeManse } from '../lib/manse/engine';
 import { calculateFinalTier, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
+import { getSample, type CalibrationSample } from '../_private/calibration-samples/data';
 
-interface AdultCase {
-  label: string;
-  birth: { year: number; month: number; day: number; hour: number; minute: number; gender: 'male' | 'female' };
-  actual: {
-    university: string;
-    universityTier: number;  // 입학 당시 기준 티어 1~10
-    major: string;
-    majorCategory: 'humanities' | 'social' | 'engineering' | 'natural-science' | 'medical' | 'arts';
-    repeated: boolean;       // 재수 여부
-    targetSchool?: string;   // 목표 학교
-    targetMissed?: boolean;  // 목표 못 닿음 여부
-    careerApplied: boolean;  // 전공 그대로 적용
-    abroad: {
-      yearsAbroad: number;
-      currentlyAbroad: boolean;
-      verdict: '한국 대비 좋음' | '한국 대비 별로' | '비슷함';
-    };
-    wealth?: string;
-    selfMade?: boolean;
-  };
+interface AdultActual {
+  universityTier: number;  // 입학 당시 기준 티어 1~10
+  majorCategory: 'humanities' | 'social' | 'engineering' | 'natural-science' | 'medical' | 'arts';
+  repeated: boolean;
+  targetMissed?: boolean;
+  careerApplied: boolean;
+  abroadVerdict: '한국 대비 좋음' | '한국 대비 별로' | '비슷함' | '무경험';
+  selfMade?: boolean;
 }
 
-const CASE_1: AdultCase = {
-  label: '1976-01-03 23:00 男 — POSTECH 컴공 / 자수성가',
-  birth: { year: 1976, month: 1, day: 3, hour: 23, minute: 0, gender: 'male' },
-  actual: {
-    university: 'POSTECH',
-    universityTier: 1,
-    major: '컴퓨터공학',
-    majorCategory: 'engineering',
-    repeated: true,
-    targetSchool: '서울대',
-    targetMissed: true,  // 서울대 2번 도전, 2번 낙방
-    careerApplied: true,
-    abroad: {
-      yearsAbroad: 4,
-      currentlyAbroad: true,
-      verdict: '한국 대비 별로',
+interface AdultCase {
+  sample: CalibrationSample;
+  actual: AdultActual;
+}
+
+// 실제 결과만 코드에 (PII ✗) — sample 자체는 data.ts에서 로드
+const CASES: AdultCase[] = [
+  {
+    sample: getSample('03-self'),
+    actual: {
+      universityTier: 1,
+      majorCategory: 'engineering',
+      repeated: true,
+      targetMissed: true,  // 서울대 2번 낙방 → POSTECH
+      careerApplied: true,
+      abroadVerdict: '한국 대비 별로',
+      selfMade: true,
     },
-    wealth: '30-40억',
-    selfMade: true,
   },
-};
+  {
+    sample: getSample('04-wife'),
+    actual: {
+      universityTier: 6,
+      majorCategory: 'arts',
+      repeated: false,
+      careerApplied: true,
+      abroadVerdict: '한국 대비 별로',
+    },
+  },
+];
 
 function evaluate(c: AdultCase) {
   console.log(`\n${'='.repeat(70)}`);
-  console.log(`=== ${c.label}`);
+  console.log(`=== ${c.sample.id} (${c.sample.nickname})`);
   console.log('='.repeat(70));
+  if (c.sample.notes) console.log(`(${c.sample.notes})`);
 
-  const m: any = computeManse(c.birth);
+  const m: any = computeManse(c.sample.birth);
 
   // === 사주 기본 ===
   console.log('\n[사주 4기둥]');
@@ -142,73 +141,49 @@ function evaluate(c: AdultCase) {
     : inRange ? '△ ±1티어 안 (양호)' : '✗ 빗나감';
   console.log(`\n1) 학교 티어`);
   console.log(`   시스템 추천: ${recommended[0]}~${recommended[1]}티어`);
-  console.log(`   실제: ${c.actual.university} (${actual}티어)`);
+  console.log(`   실제: ${actual}티어`);
   console.log(`   판정: ${judge1}`);
   if (c.actual.targetMissed) {
-    console.log(`   * ${c.actual.targetSchool} 도전 → 낙방. 사주가 ${c.actual.targetSchool} 티어보다 낮게 잡았는지 확인 필요`);
+    console.log(`   * 목표 학교 낙방 — confidence "도전+안정" 패턴 정합`);
   }
 
   // 2. 전공·격국 매칭 (artsScore 보정 적용)
-  const allCareers = [
-    ...m.gyeokguk.careers.primary,
-    ...m.gyeokguk.careers.secondary,
-    ...m.gyeokguk.careers.engineering,
-  ].join(' / ');
   const isArts = c.actual.majorCategory === 'arts';
   const isEngineering = c.actual.majorCategory === 'engineering';
   const recommendsArts = m.artsScore.level === '강' || m.artsScore.level === '매우 강';
   const recommendsEngineering = m.gyeokguk.careers.engineering.length > 0;
 
   let judge2 = '';
-  if (isArts && recommendsArts) judge2 = `✓ artsScore "${m.artsScore.level}" — 예술 진로 보정 작동 (격국 lookup 보강)`;
-  else if (isArts && !recommendsArts) judge2 = `✗ artsScore "${m.artsScore.level}" — 예술 시그너 못 잡음 (격국만 매핑됨)`;
-  else if (isEngineering && recommendsEngineering) judge2 = '✓ 격국 진로 매핑에 이공계 포함됨';
+  if (isArts && recommendsArts) judge2 = `✓ artsScore "${m.artsScore.level}" — 예술 진로 보정 작동`;
+  else if (isArts && !recommendsArts) judge2 = `✗ artsScore "${m.artsScore.level}" — 예술 시그너 못 잡음`;
+  else if (isEngineering && recommendsEngineering) judge2 = '✓ 격국 이공계 매핑 ✓';
   else judge2 = '✗ 불일치';
   console.log(`\n2) 전공`);
-  console.log(`   시스템 격국 매핑: ${allCareers}`);
+  console.log(`   시스템 격국: ${m.gyeokguk.name}`);
   console.log(`   시스템 artsScore: ${m.artsScore.summary}`);
-  console.log(`   실제: ${c.actual.major} (${c.actual.majorCategory})`);
+  console.log(`   실제 majorCategory: ${c.actual.majorCategory}`);
   console.log(`   판정: ${judge2}`);
 
   // 3. 해외운 매칭
-  const actualVerdict = c.actual.abroad.verdict;
+  const actualVerdict = c.actual.abroadVerdict;
   const systemLevel = m.abroadScore.level;
   let judge3 = '';
-  if (actualVerdict === '한국 대비 좋음' && (systemLevel === '강' || systemLevel === '무조건')) judge3 = '✓ 일치 (해외 강 + 실제 좋음)';
-  else if (actualVerdict === '한국 대비 별로' && (systemLevel === '약' || systemLevel === '보통')) judge3 = '✓ 일치 (해외 약~중 + 실제 별로)';
-  else if (actualVerdict === '비슷함' && systemLevel === '보통') judge3 = '✓ 일치 (해외 보통 + 실제 비슷)';
+  if (actualVerdict === '무경험') judge3 = '— (검증 ✗ — 해외 거주 무경험)';
+  else if (actualVerdict === '한국 대비 좋음' && (systemLevel === '강' || systemLevel === '무조건')) judge3 = '✓ 일치 (해외 강 + 실제 좋음)';
+  else if (actualVerdict === '한국 대비 별로' && (systemLevel === '약' || systemLevel === '보통')) judge3 = '✓ 일치 (해외 약~보통 + 실제 별로 — 환경 ✗ 개인 운기 영역)';
+  else if (actualVerdict === '비슷함' && systemLevel === '보통') judge3 = '✓ 일치';
   else judge3 = `✗ 불일치 (시스템 ${systemLevel} vs 실제 ${actualVerdict})`;
   console.log(`\n3) 해외운`);
   console.log(`   시스템: ${m.abroadScore.summary}`);
-  console.log(`   실제: ${c.actual.abroad.yearsAbroad}년 거주, "${actualVerdict}"`);
+  console.log(`   실제: "${actualVerdict}"`);
   console.log(`   판정: ${judge3}`);
 
-  // 4. 자수성가·재성 (참고용)
+  // 4. 자수성가·재성 (참고)
   if (c.actual.selfMade) {
     console.log(`\n4) 자수성가 (참고)`);
     console.log(`   재성: ${m.sipsin.counts.jaesung} / 식상: ${m.sipsin.counts.siksang} / 비겁: ${m.sipsin.counts.bigeop}`);
-    console.log(`   재산: ${c.actual.wealth}`);
-    console.log(`   * 학운 모듈은 자수성가 진단 ✗. 별도 진단 필요`);
+    console.log(`   * 학운 모듈은 자수성가 진단 ✗. 별도 모듈 후보`);
   }
 }
 
-const CASE_2: AdultCase = {
-  label: '1979-08-05 18:00 女 — 울산대 시각디자인 / 주부 20년 + 디자인 3년',
-  birth: { year: 1979, month: 8, day: 5, hour: 18, minute: 0, gender: 'female' },
-  actual: {
-    university: '울산대',
-    universityTier: 6,  // 입학 당시(1998) 기준 — 지방 거점·중위
-    major: '시각디자인',
-    majorCategory: 'arts',
-    repeated: false,
-    careerApplied: true,  // 디자인 직장 3년 — 짧지만 전공 적용
-    abroad: {
-      yearsAbroad: 4,
-      currentlyAbroad: true,
-      verdict: '한국 대비 별로',
-    },
-  },
-};
-
-evaluate(CASE_1);
-evaluate(CASE_2);
+for (const c of CASES) evaluate(c);

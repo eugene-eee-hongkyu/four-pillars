@@ -22,6 +22,7 @@ try {
 import { computeManse } from '../lib/manse/engine';
 import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
 import { calculateFinalTier, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
+import { getSample } from '../_private/calibration-samples/data';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -29,18 +30,17 @@ const REPORT_DIR = '/tmp/eduluck-eval';
 import { mkdirSync } from 'fs';
 try { mkdirSync(REPORT_DIR, { recursive: true }); } catch {}
 
-// jaeho 사주: 2016-05-14 08:48 남 양력 서울
-const childManse = computeManse({
-  year: 2016, month: 5, day: 14, hour: 8, minute: 48, gender: 'male',
-});
+// Sample 02 (jaeho) — PII는 _private/calibration-samples/data.ts 에만
+const s = getSample('02-jaeho');
+const childManse = computeManse(s.birth);
 
 const ctx = {
-  childNickname: '재호',
-  childGender: 'male' as const,
-  grade: 'elem-3',
-  childBirthYear: 2016,
-  childBirthMonth: 5,
-  childBirthDay: 14,
+  childNickname: s.nickname,
+  childGender: s.birth.gender,
+  grade: s.grade ?? 'elem-3',
+  childBirthYear: s.birth.year,
+  childBirthMonth: s.birth.month,
+  childBirthDay: s.birth.day,
   childManse,
   motherManse: null,
   fatherManse: null,

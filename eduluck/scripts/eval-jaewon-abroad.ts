@@ -1,4 +1,5 @@
-// 재원 사주로 새 abroad-score baseline이 LLM §10에 잘 반영되는지 1회 호출 확인
+// Sample 01 (jaewon) LLM 1-shot abroad-score §10 검증
+// PII는 _private/calibration-samples/data.ts 에만.
 
 import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -11,21 +12,23 @@ try {
   }
 } catch {}
 
-import { computeManse } from '/Users/eugene/Downloads/coding/four-pillars/eduluck/lib/manse/engine';
-import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '/Users/eugene/Downloads/coding/four-pillars/eduluck/lib/prompts/interpret-premium';
+import { computeManse } from '../lib/manse/engine';
+import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
+import { getSample } from '../_private/calibration-samples/data';
 
+const s = getSample('01-jaewon');
 const REPORT_DIR = '/Users/eugene/Downloads/coding/four-pillars/eduluck/_private/prompts-eval/jaewon-test';
 try { mkdirSync(REPORT_DIR, { recursive: true }); } catch {}
 
-const childManse = computeManse({ year: 2008, month: 6, day: 27, hour: 15, minute: 30, gender: 'male' });
+const childManse = computeManse(s.birth);
 
 const ctx = {
-  childNickname: '재원',
-  childGender: 'male' as const,
-  grade: 'high-2',  // 재원 17세 = 고2
-  childBirthYear: 2008,
-  childBirthMonth: 6,
-  childBirthDay: 27,
+  childNickname: s.nickname,
+  childGender: s.birth.gender,
+  grade: s.grade ?? 'high-2',
+  childBirthYear: s.birth.year,
+  childBirthMonth: s.birth.month,
+  childBirthDay: s.birth.day,
   childManse,
   motherManse: null,
   fatherManse: null,
@@ -37,7 +40,7 @@ const userMsg = buildInterpretPremiumPrompt(ctx);
 writeFileSync(`${REPORT_DIR}/system.txt`, system);
 writeFileSync(`${REPORT_DIR}/user-message.txt`, userMsg);
 
-console.log('=== 재원 사주 계산 결과 ===');
+console.log(`=== ${s.id} (${s.nickname}) 사주 계산 결과 ===`);
 console.log(`abroadScore: ${childManse.abroadScore.summary}`);
 console.log();
 
@@ -56,7 +59,6 @@ console.log();
   writeFileSync(`${REPORT_DIR}/run-1.md`, text);
   console.log(`saved (${text.length}자)`);
 
-  // §10 섹션 추출
   const section10Match = text.match(/##\s*10\.\s.*?(?=##\s*11\.|$)/s);
   if (section10Match) {
     console.log();
@@ -66,7 +68,6 @@ console.log();
     console.log('§10 섹션 못 찾음');
   }
 
-  // 해외 키워드 카운트
   console.log();
   console.log('=== 해외 관련 키워드 카운트 ===');
   console.log(`해외: ${(text.match(/해외/g) ?? []).length}회`);
