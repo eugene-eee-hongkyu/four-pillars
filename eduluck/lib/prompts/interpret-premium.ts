@@ -468,6 +468,16 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
           ? `  §12 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능. 메인 진로는 격국 1·2순위.`
           : `  §12 권유: 격국 lookup만 사용. 예술·디자인 언급 ✗.`,
     ``,
+    `[의·약·치·생명과학 점수 — 백엔드 보정. §12 전공 권유에서 격국 lookup이 놓치는 의약 자격직(천의성·백호대살·관인상생·학당귀인) 보강. 등급별 톤 가이드. 점수·시그너 이름 본문 노출 ✗]`,
+    `  ${c.medicalScore.summary}`,
+    c.medicalScore.level === '매우 강'
+      ? `  §12 권유: **격국 lookup보다 의·약·치·생명과학 우선**. 추천 분야: ${c.medicalScore.recommendedFields.join(' / ')}. 톤: "이 아이는 의·약 자리가 정말 강하게 보여요"·"학자형 자격직(의·약·법) 사주예요". 격국 1순위는 보조로 한 줄. 의대·한의대·치대·약대 중 시그너에 맞는 1~2개 명시.`
+      : c.medicalScore.level === '강'
+        ? `  §12 권유: 격국 1순위와 함께 의·약 자격직도 명시 — "전공은 ${c.gyeokguk.careers.primary[0]}도 좋고, ${c.medicalScore.recommendedFields[0] ?? '의·약 자격직'} 자리도 받쳐줘요". 추천: ${c.medicalScore.recommendedFields.join(' / ')}`
+        : c.medicalScore.level === '보통'
+          ? `  §12 권유: 격국 lookup 기본. 의·약 자격직(의대·한의대·약대) 가능성도 한 줄 언급 ("자격증·전문직 자리도 보여요"). 메인 진로는 격국 1·2순위.`
+          : `  §12 권유: 격국 lookup만 사용. 의·약 언급 ✗.`,
+    ``,
     `[현재 학운 시기 — 백엔드 결정성. §9 "현재~앞으로의 흐름" baseline. 이 라벨대로 풀이하되 점수·메타 표현은 본문 노출 ✗]`,
     `  ${luckPhase.oneLineSummary}`,
     ``,
