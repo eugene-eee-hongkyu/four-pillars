@@ -20,13 +20,9 @@
 
 ---
 
-## 2026-05-21: 통합 회귀 스크립트 (N=7+)
+## ~~2026-05-21: 통합 회귀 스크립트 (N=7+)~~ — 2026-05-21 완료
 
-- **백로그 이유**: 현재 calibration 회귀가 3개 스크립트로 분산 (eval-jaewon-abroad·eval-jaeho·eval-adult-calibration·eval-samples-567). 한 번에 7명 회귀 + 점수 산출 통합 필요. mom test 진행 중에는 우선순위 낮음.
-- **할 것**: scripts/eval-all-calibration.ts — 7명 sample 정의 + 모듈별 결과 통합 dump + 가중치 점수 산출. 결과 _private/calibration-report-{date}.md 저장.
-- **필요한 것**: 기존 스크립트 통합. _private/calibration-samples/data.json (또는 ts) 공통 정의.
-- **이전 검토**: N=7 도달 후 통합 가치 ↑. 단 각 sample 자료가 _private라 ts 코드에 직접 박을지 json 분리할지 결정 필요.
-- **관련 파일**: [eduluck/scripts/eval-adult-calibration.ts](../eduluck/scripts/eval-adult-calibration.ts), [eduluck/scripts/eval-samples-567.ts](../eduluck/scripts/eval-samples-567.ts), [eduluck/_private/calibration-samples/README.md](../eduluck/_private/calibration-samples/README.md)
+- **상태**: 완료. scripts/eval-all-calibration.ts + _private/calibration-samples/data.ts (PII 통합) 신규. 7/7 회귀 통과.
 
 ---
 

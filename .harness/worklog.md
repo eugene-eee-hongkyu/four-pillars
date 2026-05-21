@@ -5,31 +5,54 @@
 
 ---
 
-## Session 2026-05-21 15:59 — 정밀 prefetch + 공유 URL 구현
+## Session 2026-05-21 16:34 — 정밀 prefetch + 공유 URL + calibration sample PII 분리
 
 ### 작업 요약
-- 세션 격리 검증 — localStorage 격리 정상 동작 확인 (본인 기기만 복원)
-- 공유 기능 설계 재검토 — HTML 페이지 + URL 공유 모델로 전환
-- 정밀 속도 최적화 — 옵션 B (프론트 prefetch) 채택
-- **Step 1-10 구현 완료**:
-  - `lib/llm/sse-client.ts` SSE 파싱 헬퍼
-  - `interpret-free.tsx` / `interpret-premium.tsx` prefetch + cache 분기
-  - DB migration (share_token uuid 컬럼, 기존 23행 자동 채움)
-  - `/api/share` + `/api/share-token` 엔드포인트
-  - `/app/share/[token].tsx` read-only 페이지
-  - `ShareButton.tsx` (Web Share API + clipboard fallback)
-  - 타입체크 ✓ / calibration 회귀 7/7 통과 ✓
+
+**옵션 B (프론트 prefetch) — 정밀 진단 백그라운드 fetch**
+- 사용자 분석: 옵션 A(백엔드 chain)는 무료 done 후 정밀 trigger라 첫 사용자 ~45초 wait. 옵션 B(프론트 prefetch)가 미니 진행 동안 정밀 동시 진행으로 ~27초 단축
+- lib/llm/sse-client.ts 신규 — fetchSseText helper (background fetch 전용, StreamingBody와 별개)
+- interpret-free.tsx useEffect — 미니 화면 mount 시 정밀 SSE 동시 fetch, AbortController로 unmount 정리
+- interpret-premium.tsx — state.premiumInterpretText 캐시 hit 시 즉시 InterpretBody 렌더 (StreamingBody 우회), streamDone true로 강제 → survey CTA 표시
+- 효과: 사용자 wait 63초 → ~45초 (cache hit이면 0초)
+
+**정밀 진단 공유 URL (HTML 페이지)**
+- 사용자 분석: 텍스트 공유 ✗ 실제 결과 페이지 공유 ✓
+- DB migration: `interpretations.share_token uuid unique not null default gen_random_uuid()` (Supabase MCP apply_migration). 기존 23행 자동 채움 확인
+- GET /api/share?token={uuid} — premium 진단 본문·자녀 nickname·created_at 반환. service_role로 RLS 우회, token 자체가 인증. UUID 형식 검증 + premium kind 필터
+- GET /api/share-token?sessionId={uuid} — 본인 session의 최신 premium share_token 조회 (공유 버튼이 호출)
+- app/share/[token].tsx — read-only 페이지, "○○의 정밀 학운" 헤더 + InterpretBody + eduluck 광고 푸터
+- components/interpret/ShareButton.tsx — Web Share API (카톡·라인·메시지 OS 통합) + clipboard fallback. interpret-premium.tsx streamDone 후 또는 cache hit 시 표시
+
+**calibration sample PII 보안 분리 (옵션 B 지속 가능)**
+- 사용자 요청: "앞으로 비슷한 테스트 계속 — 지속 가능한 보안 옵션"
+- _private/calibration-samples/data.ts 신규 (gitignored) — N=7 sample 통합 (CalibrationSample 타입, SAMPLES 배열, getSample/getSamplesByCategory 헬퍼, expected 필드)
+- 4개 기존 스크립트 마이그레이션 — getSample(id)로 로드, 코드에 PII ✗
+- scripts/eval-all-calibration.ts 신규 — N=7 한 번에 회귀 + expected 비교 + diff 출력 + exit 1 on fail (CI 통합 가능)
+- 검증: 7/7 회귀 통과 ⭐ (점수 변동 0)
+
+**자동 검증 결과**
+- typecheck ✓
+- 7명 calibration 회귀 7/7 ✓ (코드 변경 영향 없음)
+- DB migration 적용 + 기존 row share_token 자동 채움 (Supabase MCP execute_sql)
+- share endpoint 단위 review (service_role·UUID regex·premium 필터)
+- Web Share API + clipboard fallback 로직 review
+
+**사용자 사람 검증 (prod 배포 후, 백로그 항목)**
+- 미니→정밀 흐름. 정밀 화면 진입 시 즉시/빠른 표시 (prefetch hit)
+- 공유 버튼 → 카톡/라인 공유 → 가족 디바이스에서 URL 열기
+
+### 실패한 시도
+
+- 없음
 
 ### 다음 액션
-- 프로덕션 배포 후 실제 모바일 & 가족 공유 검증 (Step 11-12)
 
+1. prod 배포 (Vercel auto-deploy) 후 사용자 실제 모바일 검증 — prefetch hit 효과 + 가족 공유 흐름
+2. 사용자 제공 예정 의대 진학자 sample 2개 받기 → 한의대·의대 격국 매핑 보강 (재호 calibration)
+3. Eugene mom test 10명 진입
 
-현재 `/` 디렉토리에 있고 git repository가 아니라서 워크로그를 기록할 수 없습니다. 
-
-세션 요약에서 "four-pillars" 프로젝트라고 하셨는데, 이 프로젝트의 위치가 필요합니다. four-pillars 프로젝트의 경로를 알려주시거나, 해당 프로젝트 디렉토리로 이동한 후 다시 워크로그를 기록하겠습니다.
-
-혹은 이번 워크로그가 `~/.claude/` 프로젝트의 것이라면 그곳으로 이동하여 기록하겠습니다.
-
+---
 
 ## Session 2026-05-21 14:59 — N=7 calibration 완성 + 양인격 추진력 보강 + 랜딩 카피 + LLM 풀이 검증
 
