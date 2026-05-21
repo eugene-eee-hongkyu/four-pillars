@@ -96,12 +96,14 @@ export default function FamilyInput() {
   const fatherParsedDate = useMemo(() => parseDate(fatherDate), [fatherDate]);
   const fatherParsedTime = useMemo(() => parseTime(fatherTime), [fatherTime]);
 
+  // 자녀는 시(時)가 학운 시그너의 핵심 — 필수. childTimeUnknown=true면 진행 차단.
   const childReady =
     state.child.nickname.trim().length > 0 &&
     state.child.gender !== null &&
     state.child.grade !== null &&
     childParsedDate !== null &&
-    (childTimeUnknown || childParsedTime !== null) &&
+    childParsedTime !== null &&
+    !childTimeUnknown &&
     state.child.birthLocation !== null;
 
   const motherSectionValid =
@@ -134,19 +136,24 @@ export default function FamilyInput() {
     setSubmitting(true);
     setError(null);
     try {
-      // 1. 자녀 state·DB 저장
+      // 1. 자녀 state·DB 저장 — 시간 필수 (canSubmit이 보장)
+      if (!childParsedTime) {
+        setError('자녀의 출생 시간이 필요해요');
+        setSubmitting(false);
+        return;
+      }
       patchChild({
         birthYear: childParsedDate.y, birthMonth: childParsedDate.m, birthDay: childParsedDate.d,
-        birthHour: childTimeUnknown ? null : childParsedTime?.h ?? null,
-        birthMinute: childTimeUnknown ? null : childParsedTime?.m ?? null,
+        birthHour: childParsedTime.h,
+        birthMinute: childParsedTime.m,
       });
       const childData = await postSubject({
         sessionId: state.sessionId, role: 'child' as const,
         nickname: state.child.nickname, gender: state.child.gender!, grade: state.child.grade,
         birthCalendar: state.child.birthCalendar,
         birthYear: childParsedDate.y, birthMonth: childParsedDate.m, birthDay: childParsedDate.d,
-        birthHour: childTimeUnknown ? undefined : childParsedTime?.h,
-        birthMinute: childTimeUnknown ? undefined : childParsedTime?.m,
+        birthHour: childParsedTime.h,
+        birthMinute: childParsedTime.m,
         birthLocation: state.child.birthLocation,
       });
       setChildSubject(childData.subjectId, childData.manse);
@@ -327,13 +334,22 @@ export default function FamilyInput() {
         </Button>
       </StickyCTA>
 
-      <Modal visible={childTimeModal} onClose={() => setChildTimeModal(false)}>
-        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간을 모르세요?</Text>
-        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
-          괜찮아요. 시(時)주를 비우고 나머지 3기둥으로 풀이합니다.{'\n'}
-          학운 큰 흐름은 충분히 보여요.
+      <Modal
+        visible={childTimeModal}
+        onClose={() => { setChildTimeModal(false); setChildTimeUnknown(false); }}
+      >
+        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간이 필요해요</Text>
+        <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
+          출생 시간은 사주 4기둥 중 1개(시주)를 결정해요. 시(時)주가 빠지면{'\n'}
+          학교 티어·전공·시기 시그너의 일부가 가려져 정확한 진단이 어려워요.
         </Text>
-        <Button onPress={() => setChildTimeModal(false)}>확인</Button>
+        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
+          부모님이나 친정 어머니께 출생 시간을 여쭤본 후 다시 와주세요. 🙏{'\n'}
+          정확한 시간을 알면, 자녀의 학운 본질이 선명하게 보입니다.
+        </Text>
+        <Button onPress={() => { setChildTimeModal(false); setChildTimeUnknown(false); }}>
+          돌아가기
+        </Button>
       </Modal>
     </View>
   );

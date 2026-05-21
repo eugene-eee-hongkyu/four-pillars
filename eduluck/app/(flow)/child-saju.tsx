@@ -1,12 +1,12 @@
-// 화면 3: 자녀 사주 입력 — 양력/음력 + 생년월일 + 시간(모름 옵션) + 출생 지역
-// 시간 모름 체크 시 모달 (이메일 선택) + birthHour=null로 진행.
+// 화면 3: 자녀 사주 입력 — 양력/음력 + 생년월일 + 시간(필수) + 출생 지역
+// 자녀는 시(時)주가 학운 진단 정확도의 핵심이라 시간 필수.
+// 시간 모름 체크 시 거부 모달 + 진행 차단 ("부모님께 확인 후 다시 와주세요").
 // CTA "만세력 보기" → POST /api/subjects → /child-manse
 
 import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CalendarToggle } from '@/components/ui/CalendarToggle';
-import { Input } from '@/components/ui/Input';
 import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
@@ -56,17 +56,18 @@ export default function ChildSaju() {
   });
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [showUnknownModal, setShowUnknownModal] = useState(false);
-  const [reminderEmail, setReminderEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const parsedDate = useMemo(() => parseDate(dateStr), [dateStr]);
   const parsedTime = useMemo(() => parseTime(timeStr), [timeStr]);
 
+  // 자녀는 시(時)가 학운 시그너의 핵심 — 필수. timeUnknown 체크 시 진행 차단.
   const canSubmit =
     state.child.birthCalendar &&
     parsedDate !== null &&
-    (timeUnknown || parsedTime !== null) &&
+    parsedTime !== null &&
+    !timeUnknown &&
     state.child.birthLocation !== null;
 
   const handleTimeUnknownToggle = () => {
@@ -78,6 +79,11 @@ export default function ChildSaju() {
     }
   };
 
+  const handleUnknownDismiss = () => {
+    setShowUnknownModal(false);
+    setTimeUnknown(false); // 모달 닫으면 체크 해제 — 사용자 시간 입력으로 유도
+  };
+
   const handleSubmit = async () => {
     if (!parsedDate || !canSubmit || !state.sessionId) {
       setError('필수 정보가 누락되었어요');
@@ -86,13 +92,18 @@ export default function ChildSaju() {
     setSubmitting(true);
     setError(null);
     try {
+      // 자녀 시간 필수 — canSubmit이 보장하지만 안전망으로 한 번 더 검증
+      if (!parsedTime) {
+        setError('자녀의 출생 시간이 필요해요');
+        setSubmitting(false);
+        return;
+      }
       patchChild({
         birthYear: parsedDate.y,
         birthMonth: parsedDate.m,
         birthDay: parsedDate.d,
-        birthHour: timeUnknown ? null : parsedTime?.h ?? null,
-        birthMinute: timeUnknown ? null : parsedTime?.m ?? null,
-        reminderEmail: reminderEmail || null,
+        birthHour: parsedTime.h,
+        birthMinute: parsedTime.m,
       });
       const body = {
         sessionId: state.sessionId,
@@ -104,8 +115,8 @@ export default function ChildSaju() {
         birthYear: parsedDate.y,
         birthMonth: parsedDate.m,
         birthDay: parsedDate.d,
-        birthHour: timeUnknown ? undefined : parsedTime?.h,
-        birthMinute: timeUnknown ? undefined : parsedTime?.m,
+        birthHour: parsedTime.h,
+        birthMinute: parsedTime.m,
         birthLocation: state.child.birthLocation,
       };
       const res = await fetch('/api/subjects', {
@@ -196,23 +207,18 @@ export default function ChildSaju() {
         </Button>
       </StickyCTA>
 
-      <Modal visible={showUnknownModal} onClose={() => setShowUnknownModal(false)}>
-        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간을 모르세요?</Text>
+      <Modal visible={showUnknownModal} onClose={handleUnknownDismiss}>
+        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간이 필요해요</Text>
         <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
-          괜찮아요. 시(時)주를 비우고 나머지 3기둥(년·월·일)으로 풀이합니다.{'\n'}
-          정확도는 약간 떨어지지만 학년·진로 큰 흐름은 충분히 보여요.
+          출생 시간은 사주 4기둥 중 1개(시주)를 결정해요. 시(時)주가 빠지면{'\n'}
+          학교 티어·전공·시기 시그너의 일부가 가려져 정확한 진단이 어려워요.
         </Text>
         <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
-          나중에 친정 어머니께 시간 확인하셨으면, 이메일 남겨주시면 1주일 안에 다시 진단할 수 있는 링크를 보내드려요.
+          부모님이나 친정 어머니께 출생 시간을 여쭤본 후 다시 와주세요. 🙏{'\n'}
+          정확한 시간을 알면, 자녀의 학운 본질이 선명하게 보입니다.
         </Text>
-        <Input
-          value={reminderEmail}
-          onChangeText={setReminderEmail}
-          placeholder="name@example.com"
-          type="email"
-        />
         <View className="mt-6">
-          <Button onPress={() => setShowUnknownModal(false)}>확인하고 진행</Button>
+          <Button onPress={handleUnknownDismiss}>돌아가기</Button>
         </View>
       </Modal>
     </View>
