@@ -18,6 +18,7 @@ import { calcHapchunh } from './hapchunh';
 import { calcAbroadScore } from './abroad-score';
 import { calcArtsScore } from './arts-score';
 import { calcMedicalScore } from './medical-score';
+import { calcCategoryScores, buildDirectionEntries } from './category-score';
 import { calcStudentTraitsWithPercentile } from './student-traits';
 import { splitPillar, countElements, BRANCH_ELEMENT, STEM_ELEMENT } from './pillars';
 import { calcAllJijanggan } from './jijanggan';
@@ -99,6 +100,10 @@ export function hydrateManse(m: ManseResult): ManseResult {
   const medicalScore = m.medicalScore ?? calcMedicalScore({
     pillars: pillarsInput, shensha, sipsin, gyeokguk,
   });
+  const categoryScores = m.categoryScores ?? calcCategoryScores({
+    shensha, sipsin, gyeokguk, unsung, elementCounts,
+  });
+  const directions = m.directions ?? buildDirectionEntries(categoryScores, artsScore, medicalScore);
   const studentTraits = m.studentTraits ?? calcStudentTraitsWithPercentile({
     shensha, sipsin, gyeokguk, unsung, elementCounts,
   });
@@ -108,6 +113,8 @@ export function hydrateManse(m: ManseResult): ManseResult {
     sipsin, unsung, gyeokguk, napum,
     shensha, hapchunh, jijanggan,
     elementCounts, luckCycles,
-    abroadScore, artsScore, medicalScore, studentTraits,
+    abroadScore, artsScore, medicalScore,
+    categoryScores, directions,
+    studentTraits,
   };
 }

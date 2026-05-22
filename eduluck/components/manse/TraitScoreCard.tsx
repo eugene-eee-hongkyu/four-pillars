@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Modal } from '@/components/ui/Modal';
 import {
-  TRAIT_LABELS, TRAIT_DESCRIPTIONS,
+  TRAIT_LABELS, TRAIT_DESCRIPTIONS, LEARNING_TRAIT_KEYS,
   type StudentTraits, type StudentTraitsWithPercentile,
 } from '@/lib/manse/student-traits';
 
@@ -110,8 +110,8 @@ export function TraitScoreCard({ traits, compact = false }: Props) {
     try { window.localStorage?.setItem(HINT_STORAGE_KEY, '1'); } catch {}
   };
 
-  // 10개 trait → 별점 + 그룹 분류
-  const entries = (Object.keys(traits) as (keyof StudentTraitsWithPercentile)[])
+  // 4개 학습 특성만 (방향성은 DirectionCard 별도 노출, 나머지 6개 trait는 방향성에 흡수)
+  const entries = LEARNING_TRAIT_KEYS
     .map(k => {
       const stars = starsFromPercentile(traits[k].percentile);
       return {
@@ -172,24 +172,27 @@ export function TraitScoreCard({ traits, compact = false }: Props) {
         <Pressable
           onPress={() => setCompactExpanded(!compactExpanded)}
           accessibilityRole="button"
-          accessibilityLabel={`타고난 학운 10가지 — 타고난 ${gifted.length}, 보통 ${normal.length}, 약한 ${weak.length}. 자세히 보기`}
+          accessibilityLabel={`학습 특성 4가지 — 강 ${gifted.length}, 보통 ${normal.length}, 약 ${weak.length}. 자세히 보기`}
           className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-1"
           style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
         >
           <View className="flex-row items-center justify-between">
             <Text className="font-heading-bold text-body-lg text-text-pri">
-              🎯 학과·트랙 방향성 10가지
+              📚 학습 특성 (공통 보조)
             </Text>
             <Text className="font-body text-label-md text-text-sub">{compactExpanded ? '▴' : '▾'}</Text>
           </View>
           <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-            🌟 타고난 자리 <Text className="font-body-bold text-text-pri">{gifted.length}개</Text> · ✏️ 보통 <Text className="font-body-bold text-text-pri">{normal.length}개</Text> · 💤 약한 <Text className="font-body-bold text-text-sub">{weak.length}개</Text>
+            🌟 강 <Text className="font-body-bold text-text-pri">{gifted.length}개</Text> · ✏️ 보통 <Text className="font-body-bold text-text-pri">{normal.length}개</Text> · 💤 약 <Text className="font-body-bold text-text-sub">{weak.length}개</Text>
           </Text>
           {!compactExpanded && gifted.length > 0 && (
             <Text className="font-body text-label-sm text-text-sub mt-1" numberOfLines={1}>
-              ★ {gifted.slice(0, 3).map(e => e.label).join(' · ')}{gifted.length > 3 ? ` 외 ${gifted.length - 3}` : ''}
+              ★ {gifted.map(e => e.label).join(' · ')}
             </Text>
           )}
+          <Text className="font-body text-label-sm text-text-sub mt-1">
+            시험·끈기·자기주도·회복 — 어느 방향이든 공통 보조 자리예요.
+          </Text>
         </Pressable>
 
         {compactExpanded && (

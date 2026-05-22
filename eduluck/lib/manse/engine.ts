@@ -13,6 +13,7 @@ import { calcNapum, type NapumResult } from './napum';
 import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
+import { calcCategoryScores, buildDirectionEntries, type CategoryScores, type DirectionEntry } from './category-score';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
@@ -56,7 +57,12 @@ export interface ManseResult {
   artsScore: ArtsScoreResult;
   /** 의·약·치·생명과학 점수 — §12 전공 풀이에서 격국 lookup 보정 (의약 자격직) */
   medicalScore: MedicalScoreResult;
-  /** 학운 8가지 특성 점수 + percentile — §0 직후 UI 카드용 */
+  /** 진로 방향성 6개 카테고리 점수 (Scholar·Authority·Engineer·Business·Entrepreneur·Action).
+   *  arts·medical과 함께 총 8개 방향성을 구성. §12 전공 풀이의 1차 baseline. */
+  categoryScores: CategoryScores;
+  /** 8개 방향성 통합 정렬 entry — 강도순 정렬, UI/LLM prompt에서 Top N 추출 사용 */
+  directions: DirectionEntry[];
+  /** 학운 4가지 학습 특성 점수 + percentile — §0 직후 UI 카드용 (방향성과 분리, 공통 보조) */
   studentTraits: StudentTraitsWithPercentile;
 }
 
@@ -173,6 +179,14 @@ export function computeManse(input: ManseInput): ManseResult {
     sipsin,
     gyeokguk,
   });
+  const categoryScores = calcCategoryScores({
+    shensha,
+    sipsin,
+    gyeokguk,
+    unsung,
+    elementCounts,
+  });
+  const directions = buildDirectionEntries(categoryScores, artsScore, medicalScore);
   const studentTraits = calcStudentTraitsWithPercentile({
     shensha,
     sipsin,
@@ -208,6 +222,8 @@ export function computeManse(input: ManseInput): ManseResult {
     abroadScore,
     artsScore,
     medicalScore,
+    categoryScores,
+    directions,
     studentTraits,
   };
 }

@@ -13,6 +13,7 @@ import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { ShareButton } from '@/components/interpret/ShareButton';
 import { TraitScoreCard } from '@/components/manse/TraitScoreCard';
 import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
+import { DirectionCard } from '@/components/manse/DirectionCard';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -182,7 +183,14 @@ export default function InterpretPremium() {
           />
         ) : null}
 
-        {/* 학과·트랙 방향성 10가지 — 본문 후 compact 노출 (스크롤 후 호기심 사용자만 펼침) */}
+        {/* 진로 방향성 8가지 — 본문 후 노출. 학자/의약/법조/이공/경영/사업/예술/체육 카테고리 */}
+        {streamDone && state.childManse?.directions && (
+          <View className="px-container-padding">
+            <DirectionCard directions={state.childManse.directions} compact={true} />
+          </View>
+        )}
+
+        {/* 학습 특성 4가지 — 공통 보조 (시험·끈기·자기주도·회복) */}
         {streamDone && state.childManse?.studentTraits && (
           <View className="px-container-padding">
             <TraitScoreCard traits={state.childManse.studentTraits} compact={true} />
