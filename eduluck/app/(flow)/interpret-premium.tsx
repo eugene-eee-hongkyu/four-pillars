@@ -133,7 +133,7 @@ export default function InterpretPremium() {
         </View>
 
         {/* 학운 8가지 점수 카드 — 첫인상 hook (본문 시작 전부터 노출) */}
-        {state.childManse && (
+        {state.childManse?.studentTraits && (
           <View className="px-container-padding">
             <TraitScoreCard traits={state.childManse.studentTraits} />
           </View>

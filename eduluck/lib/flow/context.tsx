@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { ManseResult } from '@/lib/manse/engine';
+import { hydrateManse } from '@/lib/manse/hydrate';
 
 const STORAGE_KEY = 'eduluck.flow.state';
 
@@ -13,12 +14,18 @@ function loadInitial(): FlowState {
     if (raw) {
       const parsed = JSON.parse(raw);
       // deep merge로 schema 변경 안전 처리
-      return {
+      const merged = {
         ...initial,
         ...parsed,
         child: { ...initial.child, ...(parsed.child ?? {}) },
         mother: { ...initial.mother, ...(parsed.mother ?? {}) },
       };
+      // ManseResult schema 확장 시 옛 객체에 새 필드 없으면 즉석 보충
+      // (사용자 memory: Persistent 스키마 확장 시 hydrate)
+      if (merged.childManse) merged.childManse = hydrateManse(merged.childManse);
+      if (merged.motherManse) merged.motherManse = hydrateManse(merged.motherManse);
+      if (merged.fatherManse) merged.fatherManse = hydrateManse(merged.fatherManse);
+      return merged;
     }
   } catch {}
   return initial;
