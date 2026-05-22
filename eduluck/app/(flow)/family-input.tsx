@@ -18,7 +18,6 @@ import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
-import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -56,8 +55,6 @@ export default function FamilyInput() {
       ? `${String(c.birthHour).padStart(2, '0')}:${String(c.birthMinute).padStart(2, '0')}`
       : '';
   });
-  const [childTimeUnknown, setChildTimeUnknown] = useState(() => state.child.birthYear !== null && state.child.birthHour === null);
-  const [childTimeModal, setChildTimeModal] = useState(false);
 
   // === 어머니 (옵션) ===
   const [showMother, setShowMother] = useState(state.motherStatus === 'entered');
@@ -99,14 +96,13 @@ export default function FamilyInput() {
   const fatherParsedDate = useMemo(() => parseDate(fatherDate), [fatherDate]);
   const fatherParsedTime = useMemo(() => parseTime(fatherTime), [fatherTime]);
 
-  // 자녀는 시(時)가 학운 시그너의 핵심 — 필수. childTimeUnknown=true면 진행 차단.
+  // 자녀는 시(時)가 학운 시그너의 핵심 — 필수. 시간 모름은 아예 입력 ✗ (인라인 가이드 안내).
   const childReady =
     state.child.nickname.trim().length > 0 &&
     state.child.gender !== null &&
     state.child.grade !== null &&
     childParsedDate !== null &&
     childParsedTime !== null &&
-    !childTimeUnknown &&
     state.child.birthLocation !== null;
 
   // 부모는 옵션 — 토글 열린 경우만 검증. 시간도 정확히 입력해야 valid (모름 ✗).
@@ -237,22 +233,15 @@ export default function FamilyInput() {
           <DateTimeInput label="생년월일" value={childDate} onChange={setChildDate} type="date" />
           <DateTimeInput
             label="출생 시간" value={childTime}
-            onChange={(t) => { setChildTime(t); if (t) setChildTimeUnknown(false); }}
-            type="time" disabled={childTimeUnknown}
+            onChange={setChildTime}
+            type="time"
           />
-          <Pressable
-            onPress={() => {
-              const next = !childTimeUnknown;
-              setChildTimeUnknown(next);
-              if (next) { setChildTimeModal(true); setChildTime(''); }
-            }}
-            className="flex-row items-center gap-2"
-          >
-            <View className={`w-5 h-5 rounded-sm border ${childTimeUnknown ? 'bg-primary border-primary' : 'border-outline-warm'} items-center justify-center`}>
-              {childTimeUnknown && <Text className="text-surface-container-low font-body-bold">✓</Text>}
-            </View>
-            <Text className="font-body text-body-md text-text-pri">자녀 시간을 모르겠어요</Text>
-          </Pressable>
+          <Text className="font-body text-label-md text-text-sub leading-relaxed">
+            💡 출생 시간을 모르면 사주 네 기둥(년·월·일·시) 중 시(時)주 한 자리가 비어,
+            학교·전공·시기를 결정하는 본질 시그너의 25%가 가려져요.
+            그래서 자녀의 학운은 출생 시간을 알아야 볼 수 있어요.
+            부모님이나 친정 어머니께 출생 시간을 한 번 더 여쭤본 후 다시 와주세요. 🙏
+          </Text>
           <LocationDropdown value={state.child.birthLocation} onChange={(loc) => patchChild({ birthLocation: loc })} />
         </View>
 
@@ -321,23 +310,6 @@ export default function FamilyInput() {
         </Button>
       </StickyCTA>
 
-      <Modal
-        visible={childTimeModal}
-        onClose={() => { setChildTimeModal(false); setChildTimeUnknown(false); }}
-      >
-        <Text className="font-heading text-headline-md text-text-pri mb-4">출생 시간이 필요해요</Text>
-        <Text className="font-body text-body-md text-text-pri mb-4 leading-relaxed">
-          출생 시간은 사주 4기둥 중 1개(시주)를 결정해요. 시(時)주가 빠지면{'\n'}
-          학교 티어·전공·시기 시그너의 일부가 가려져 정확한 진단이 어려워요.
-        </Text>
-        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
-          부모님이나 친정 어머니께 출생 시간을 여쭤본 후 다시 와주세요. 🙏{'\n'}
-          정확한 시간을 알면, 자녀의 학운 본질이 선명하게 보입니다.
-        </Text>
-        <Button onPress={() => { setChildTimeModal(false); setChildTimeUnknown(false); }}>
-          돌아가기
-        </Button>
-      </Modal>
     </View>
   );
 }
