@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-05-22 09:39: 정밀 분석 4종 추가 — 8가지 점수 카드 + 조심 한 해 + §14 현재 시점 + 본질 액션
+
+- **선택**: 사용자 이미지 패턴(승부욕·결단력 99 / 상위 1%)을 학운 8가지로 매핑, §0 직후 카드 노출 + §9 "조심해야 하는 한 해" 자동 선정 + §13 끝 "본질을 깨우는 액션 3카드" + §14 현재 시점 매트릭스 강화.
+- **8가지 항목 (사용자 확정)**: 공부 머리·시험장 강함·끈기·꾸준·이해·응용·표현·발표·자기주도·경쟁심·회복·멘탈
+- **명리 시그너 매핑 (한국 명리 통설)**:
+  - 공부 머리 — 정인+편인+학당귀인+관인상생
+  - 시험장 강함 — 문창귀인+양인+식상+천을귀인
+  - 끈기·꾸준 — 정관+정재+식신+토·금 강
+  - 이해·응용 — 정인+편인+식상+화·목 균형
+  - 표현·발표 — 상관+식신+도화살+화 강
+  - 자기주도 — 비견+양인+신왕+일주 강
+  - 경쟁심 — 양인+비견+편관
+  - 회복·멘탈 — 정인+관인상생+일주 강+천을귀인
+- **분포 시뮬레이션**: 2008~2020 × 365일 × 12시간 슬롯 × 2성별 = 113,976 sample (71초 batch) → trait-distribution.json. raw 점수 → z-score 정규화(mean=50, stddev=15) → 0~100 카드 표시 / percentile = 사주 모집단 상위 N%.
+- **천을귀인 신살 추가**: shensha.ts에 lookup 추가, hagun-tier HAGUN_GUI에서는 제외 (회귀 11/11 유지) → student-traits에서만 활용.
+- **N=11 sanity check ⭐**:
+  - 08 세형 (의예) 공부 머리 72 / 상위 7% ⭐⭐⭐
+  - 01 재원 (양인격) 자기주도 92 / 상위 1% + 경쟁심 94 / 상위 2% ⭐
+  - 07 영진 (artsScore 5) 표현·발표 82 / 상위 4% ⭐
+  - 05 이승희 (디자인) 표현·발표 71 / 상위 12% ⭐
+- **조심 한 해 (critical-year.ts)**: 자녀 학년대 ±1~5년 세운 검사 → 천간충/극 + 지지충(일·월·년) + 자형 + 6해 + 용신 극 + 대운 전환기 합산 → 최고점 1년 선정. 두흥 1993 sample 검증으로 묘유충 = 수능 0점 사고 명리 본질 정확 매칭 검증.
+- **LLM 1-shot 3 sample 검증 (02·08·09)**: §9 "흔들·집중·결정·시기" 모두 등장 / §13 "본질·받쳐·환경" 모두 등장 / §14 "지금·시기·어머님·잡아" 모두 등장 / 거짓 희망 단정 표현 (SKY·무조건·확정·보장) 모두 ✗ ⭐
+- **영향 범위**:
+  - `lib/manse/shensha.ts`: 천을귀인 lookup 추가
+  - `lib/manse/student-traits.ts`: 신규 — 8개 항목 계산 + percentile + normalized
+  - `lib/manse/data/trait-distribution.json`: 113,976 sample 분포
+  - `scripts/build-trait-distribution.ts`: 분포 빌드 batch (1회용)
+  - `lib/manse/critical-year.ts`: 신규 — 위험 세운 선정
+  - `lib/manse/engine.ts`: ManseResult.studentTraits 통합
+  - `lib/prompts/interpret-premium.ts`: §9 조심 한 해 baseline + §13 본질 액션 + §14 현재 시점 매트릭스 강화
+  - `components/manse/TraitScoreCard.tsx`: 신규 UI 컴포넌트 (2열 그리드)
+  - `app/(flow)/interpret-premium.tsx`: 상단 TraitScoreCard 노출
+  - `lib/prompts/hagun-tier.ts`: HAGUN_GUI에서 천을귀인 제외 (회귀 보호)
+- **회귀 11/11 통과** / typecheck ✓ / LLM 1-shot 3 sample 통과
+- **되돌리는 방법**: student-traits·critical-year·TraitScoreCard 파일 삭제 + engine.ts·interpret-premium.ts 통합 코드 revert + hagun-tier HAGUN_GUI 원복.
+
+---
+
 ## 2026-05-22 08:23: 부모 사주 입력 옵션 재도입 (Phase G 복귀) + 시간 정확도 룰
 
 - **선택**: 부모(어머니·아빠) 사주 입력을 family-input.tsx 옵션 토글로 재도입. 시간 모름 체크박스는 제거하고, 정확한 시간을 모르면 토글을 펴지 말라는 안내 문구만 표시.
