@@ -6,6 +6,23 @@
 
 ---
 
+## Session 2026-05-22 15:59 — 명리 점수 시스템 검증 및 세션 종료
+
+### 작업 요약
+- worklog, state, decision 3개 파일 동시 재작성 및 git 커밋·푸시 완료
+- 재호 인물의 학운 점수 차이 파악 시도 (테이블상 11점 vs 시스템 12점)
+- eval-medical-89-jaeho.ts, jaeho-score-trace.ts 스크립트 작성 시작
+- SCORING_SYSTEM.md 파일을 design/ → docs/로 이동 반영
+
+### 실패한 시도
+- jaeho-score-trace.ts 스크립트 작성 미완료 (Bash 마지막 명령이 끝나지 않음)
+- 명리 엔진의 실제 점수 계산 결과 확인 못함
+
+### 다음 액션
+- jaeho 점수 +1점 gap 원인 규명 (엔진 실행 및 점수 분해 로직 재검증)
+- mom test 10명 결과 대기 후 trait weight/라벨 미세 조정
+
+
 ## Session 2026-05-22 15:51 — trait 직관 정합 + 10가지 항목 + 점수 시스템 문서화
 
 ### 작업 요약
