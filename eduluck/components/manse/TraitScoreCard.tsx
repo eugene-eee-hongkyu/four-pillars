@@ -15,7 +15,6 @@ import {
   TRAIT_LABELS, TRAIT_DESCRIPTIONS,
   type StudentTraits, type StudentTraitsWithPercentile,
 } from '@/lib/manse/student-traits';
-import { colors } from '@/design-tokens/tokens';
 
 interface Props {
   traits: StudentTraitsWithPercentile;
@@ -40,11 +39,13 @@ function groupFromStars(stars: number): 'gifted' | 'normal' | 'weak' {
   return 'weak';                     // 약한 자리 (★1)
 }
 
-function StarRow({ stars, color }: { stars: number; color: string }) {
+/** 황금색 별 — 사용자 피드백 (2026-05-22): 빨강 ✗, 황금색 / 빈 별은 ☆ outline. */
+const STAR_GOLD = '#F59E0B'; // amber-500 (가독성 좋은 황금색)
+
+function StarRow({ stars }: { stars: number }) {
   return (
-    <Text className="font-body text-body-md" style={{ color, letterSpacing: 2 }}>
-      {'★'.repeat(stars)}
-      <Text className="text-text-sub">{'★'.repeat(5 - stars)}</Text>
+    <Text className="font-body text-body-md" style={{ color: STAR_GOLD, letterSpacing: 2 }}>
+      {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
     </Text>
   );
 }
@@ -58,7 +59,6 @@ interface CellProps {
 }
 
 function TraitCell({ label, fits, stars, group, onPress }: CellProps) {
-  const starColor = group === 'gifted' ? colors.fire : group === 'normal' ? colors.textPri : colors.textSub;
   const isGifted = group === 'gifted';
   const isWeak = group === 'weak';
 
@@ -78,7 +78,7 @@ function TraitCell({ label, fits, stars, group, onPress }: CellProps) {
         </Text>
         <Text className="font-body text-label-sm text-text-sub ml-1">ⓘ</Text>
       </View>
-      <StarRow stars={stars} color={starColor} />
+      <StarRow stars={stars} />
       {!isWeak && (
         <Text className="font-body text-label-sm text-text-sub mt-0.5" numberOfLines={1}>
           {fits}
@@ -233,7 +233,7 @@ export function TraitScoreCard({ traits }: Props) {
           <View className="gap-3">
             <View className="flex-row items-baseline justify-between">
               <Text className="font-heading-bold text-headline-md text-text-pri flex-1">{active.label}</Text>
-              <StarRow stars={active.stars} color={active.stars >= 4 ? colors.fire : colors.textPri} />
+              <StarRow stars={active.stars} />
             </View>
             <Text className="font-body text-body-md text-text-pri leading-relaxed">
               {active.desc.what}
