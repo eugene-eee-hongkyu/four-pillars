@@ -6,6 +6,35 @@
 
 ---
 
+## 2026-05-22 21:22: 학운 점수 시스템 v7 4-Layer 14 시그너 + trait UI v4 별점·그룹
+
+- **선택**: 22개 시그너 합산 → **14 시그너 4-Layer** (Layer 1 명식 60 / Layer 2 신살·귀인 20 / Layer 3 운 20 / Layer 4 페널티). + TraitScoreCard UI를 점수 0~100 → 별점 ★1~5 + 3그룹.
+- **대안 검토**:
+  - **A. 22개 합산 유지**: 관인상생 단독 변별력 -7% (1티어·4티어 모두 발동) 등 노이즈. 단일 점수 누적이 명리 표준에서 가장 멈 (KCI 메타분석). ✗
+  - **B. v6 9-시그너 3-Layer (cutoff ≥30)**: 1티어 sample 5명 모두 매우 강 분류했으나 매우 강 인구비 54%로 너무 광의. 5명 1티어 중 이윤수·류상수 (서울대) 33·8점에 머물러 사용자 회고 충돌.
+  - **C. v7 14-시그너 4-Layer (선택)** ⭐: Agent 명리 리서치(자평진전·적천수·삼명통회·연해자평) + 8명 변별력 매트릭스 기반. Eugene 같은 자립학자형·이윤수 같은 양인 천우신조 모두 잡힘. 11명 calibration 11/11 통과 + LLM 11/11 통과.
+  - **D. 더 큰 시그너 확장 (20+)**: overfit 위험 (N=11 sample). 명리 합의로 14가 적정선.
+  - **trait UI**: 점수 → 별점 + 그룹화. 어머님 비교·티어 느낌 ✗, 자기 자리 부각.
+- **선택 이유**:
+  - 사용자 회고 ("이윤수 최상위, 4명 균등") 정합
+  - 5명 1티어 sample (Eugene 40·정환 34·세형 41·이윤수 34·류상수 46) 모두 매우 강 분류 ⭐
+  - 명리 합의: "사주 본질 ≠ 실제 진학" — cutoff 인구비 30%는 "학자형 본질 인구"로 자연
+  - LLM 풀이에 신규 시그너 자연 반영: Eugene "자기 힘으로 서는 자리", 이윤수 "두 귀인이 함께 있는 자리는 흔치 않아요" (삼귀구비)
+  - trait UI v4 — 학부모 비교 강요 ✗, "타고난 자리 / 다른 트랙으로 빛나는 자리" 정직 권유 정합
+- **영향 범위**:
+  - [eduluck/lib/prompts/hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) — computeHagun() 4-Layer + scoreToGrade cutoff 재정의
+  - [eduluck/components/manse/TraitScoreCard.tsx](../eduluck/components/manse/TraitScoreCard.tsx) — v3 점수 → v4 별점·그룹 전면 개편
+  - [eduluck/docs/SCORING_SYSTEM.md](../eduluck/docs/SCORING_SYSTEM.md) — §1-1~1-5 + §5 v6·v7 변경 이력
+  - [eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md](../eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md) 신규 — 분석 문서
+  - [eduluck/scripts/eval-v7-all-11.ts](../eduluck/scripts/eval-v7-all-11.ts) 신규 — 11명 LLM 검증
+  - _private/calibration-samples/data.ts — 11명 expected.* 재calibration (gitignored)
+  - LLM prompt (interpret-premium.ts L484-559): hagunLabel·confidenceLabel·finalTierRange 그대로 사용 — v7 자동 적용
+- **되돌리는 방법**:
+  - `git revert 48a4f68 6d90cb5` — v7 + trait UI v4 동시 롤백 (v5 옵션 A 상태로)
+  - calibration data.ts는 _private/이라 별도 rollback 필요 (git log 참고)
+
+---
+
 ## 2026-05-22 15:51: 학운 8가지 → 10가지 trait 확장 (예술·체육 추가)
 
 - **선택**: 학자형(공부 머리 이름 변경) + 사고력(이해·응용 이름 변경) + 예술 감성·체육·운동 2개 신규 = 10가지

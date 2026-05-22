@@ -6,27 +6,27 @@
 
 ---
 
-## 마지막 실행: 2026-05-22
-## 마지막 업데이트: 2026-05-22
+## 마지막 실행: 2026-05-22 21:22
+## 마지막 업데이트: 2026-05-22 21:22
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 학운 점수 시스템 리팩토링 분석 완료 — [HAGUN_REFACTOR_ANALYSIS.md](../eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md) 저장. 3-Layer 평가 프레임 권장 (Boolean 라벨 + 70점 본질 + 30점 운 + 페널티). 사용자 옵션 A/B/C 결정 대기.
+- 학운 점수 시스템 v7 4-Layer 14 시그너 + TraitScoreCard v4 별점·그룹 분류 적용 완료 → mom test 진입 가능 상태. typecheck ✓ / 회귀 11/11 ✓ / LLM 검증 11/11 ✓ / git push 완료.
 
 ### 이어서 할 것
 
-1. 사용자 옵션 결정 → C 채택 시 hagun-tier.ts 재작성 (22→9 시그너)
-2. prod 배포 후 모바일 시각 검증 — 10개 카드·16섹션·"+ 새 진단" 버튼
-3. 의대 sample 2개 받기 → N=5 의약 재검증
+1. Vercel prod 배포 확인 (자동 트리거) — 별점·그룹 UI 모바일 시각 검증
+2. **Mom test 10명 진입** — 학부모 별점·"약한 자리" 메시지 수용도, trait 학과 방향성 직관성 정성 평가
+3. trait raw 시그너 보강 (정환 같은 "타고난 자리 2개" 1티어 sample 대응) — v7 hagun 신규 시그너 trait에도 반영
 
 ### 막힌 것
 
-- 사용자 옵션 결정 대기 — A(Agent 100점) / B(우리 sample 변별력) / C(3-Layer 하이브리드, 권장)
+- 없음
 
 ### 사람 판단 필요
 
-- 학운 시스템 옵션 A/B/C 결정 ⭐ (큰 리팩토링)
+- mom test 결과로 trait UI 카피·구조 추가 조정 / radar chart·트랙 매핑 추가 여부
 - 의대 sample 받은 후 매핑 방향 (격국 lookup 보강 vs medical-score 임계 조정)
 - 김영진 학교 격차 (5~6 vs 4) — 본인 의지 영역 vs 시스템 결함, sample 더 모이면 결정
 - mom test 후 어머니 사주 재도입 여부 (§16 emotional impact 정성 평가)
@@ -88,9 +88,13 @@
 - [x] **PREMIUM_PROMPT_VERSION 캐시 무효 메커니즘** — 옛 14섹션 캐시 자동 무효
 - [x] **hydrate.ts 강화** — 옛 manse_json·localStorage state에 새 필드 자동 보강
 - [x] **SCORING_SYSTEM.md 문서화** — 점수표·티어 매핑·10가지 trait 시그너·UI 가이드 (PII 제거)
-- [ ] prod 배포 후 모바일 시각 검증 (10개 카드·16섹션·새 진단 버튼)
+- [x] **학운 점수 시스템 v7 — 4-Layer 14 시그너** ⭐ (관인상생 콤보·자립학자·일주통근·천을·천덕월덕·삼귀구비·삼기귀인 / cutoff ≥34 매우 강 / 11/11 회귀 + LLM 검증 통과)
+- [x] **TraitScoreCard v4 — 별점·그룹 분류** ⭐ (점수 0~100 → ★1~5 + 🌟타고난/✏️보통/💤약한 / 어머님 카피 + 정직 권유)
+- [x] **HAGUN_REFACTOR_ANALYSIS.md** — Agent 명리 리서치 + 8명 변별력 매트릭스 + 3-Layer 권장 분석 문서
+- [ ] prod 배포 후 모바일 시각 검증 (별점·3그룹 UI·16섹션·새 진단 버튼)
+- [ ] **Mom test 10명** — 별점·"약한 자리" 메시지 수용도, trait 학과 방향성 직관성
+- [ ] trait raw 시그너 보강 — 정환·이윤수 같은 1티어 sample이 "타고난 자리 ≤2개" 케이스 대응 (v7 신규 시그너 trait에도 반영)
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증 (임계 조정 vs 현재 유지)
-- [ ] Eugene mom test 10명 — 자녀 단일 입력 + 시간 필수 + 새 §14·§15·§16 + 10가지 카드
 - [ ] mom test 결과로 v8 prompt 보강 vs 현재 유지 결정 + 어머니 사주 재도입 여부 결정
 - [ ] 김영진 격차 — 상관격·관인상생 sample 더 모이면 보강 검토
 - [ ] 외부 100명 검증 단계: signup·checkout·premium-value·부모 학력 재도입
