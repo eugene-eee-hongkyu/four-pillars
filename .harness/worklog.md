@@ -6,6 +6,36 @@
 
 ---
 
+## Session 2026-05-22 08:23 — 부모 사주 입력 옵션 재도입 + 시간 정확도 룰
+
+### 작업 요약
+
+**사용자 결정 (옵션 A)**: 부모 사주 입력을 옵션 토글로 재도입. 시간 모름 체크박스는 제거하고 "정확한 시간 아실 때만 입력" 안내 문구로 자연 처리.
+
+**family-input.tsx 재작성 (180 → 287줄)**
+- 어머니·아빠 옵션 토글 영역 복원 (b14dfeb 시점 코드 베이스)
+- 부모 영역 안 "시간 모르겠어요" 체크박스 제거
+- 부모 영역 상단에 안내 문구: "💡 출생 시간을 정확히 아실 때만 입력해주세요. 정확하지 않으면 비워두시는 게 더 정확한 진단으로 이어져요."
+- 자녀 시간 정책은 그대로 (필수 + 모달 거부)
+- motherSectionValid·fatherSectionValid에 `parsedTime !== null` 추가 (시간 모름은 valid ✗)
+
+**4개 legacy routes 헤더 정리 (DEPRECATED → LEGACY)**
+- `mother-saju.tsx`·`father-saju.tsx`·`mother-manse.tsx`·`parent-education.tsx`
+- "DEPRECATED" 표현 → "LEGACY (직접 진입 ✗)"로 정리
+- family-input 통합 입력으로 정상 동작, legacy 화면은 직접 진입만 ✗
+
+**검증**
+- typecheck ✓ / 회귀 11/11 통과 ✓
+- A/B LLM 재검증 ✗ (직전 세션에서 어머니 ✓/✗ §14 emotional impact 855 vs 859 chars 동등 확인 완료)
+
+### 다음 액션
+
+1. UI prod 배포 후 어머니·아빠 토글 시각 검증 + 시간 정확도 안내 문구 표시 확인
+2. Eugene mom test 10명 진입 — 어머니 입력률·§14 톤 정성 평가
+3. mom test 결과로 어머니 입력률 < 30% → 다시 옵션 제거 / > 50% → 디폴트 보강 결정
+
+---
+
 ## Session 2026-05-21 19:47 — /worklog 시각 정정 + worklog archive
 
 ### 작업 요약
