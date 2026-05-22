@@ -1,6 +1,5 @@
-// [DEPRECATED — 2026-05-21] 어머니 만세력 화면
-// mom test 단계에서 부모 사주 입력 제거. 파일·라우트는 유지 (재도입 대비).
-// 현재 어떤 main flow에서도 진입하지 않음.
+// [LEGACY — 직접 진입 ✗] 어머니 만세력 화면
+// mother-saju 단독 입력 흐름의 후속 화면. 현재 main flow는 family-input 통합이라 진입 ✗.
 //
 // 화면 10: 어머니 만세력 + relation-mini SSE (자녀-어머니 관계 1~2문장 hook)
 // DESIGN v1.1 §10 P0 #2: 사주팔자 표 = 화면 4 패턴 단일 (PalcaTable 재사용)

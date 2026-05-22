@@ -1,7 +1,6 @@
-// [DEPRECATED — 2026-05-21] 어머니 사주 입력 화면
-// mom test 단계에서 부모 사주 입력 제거. main flow는 family-input → child-manse → interpret-* 로 단순화.
-// 파일·라우트 유지: 외부 100명 검증 단계에서 부모 정보 재도입 가능성 대비 (Phase G 옵션화 결정).
-// 현재 어떤 main flow에서도 진입하지 않음.
+// [LEGACY — 직접 진입 ✗] 어머니 사주 단독 입력 화면
+// 어머니 사주 입력은 family-input.tsx 통합 화면(옵션 토글)에서 받음.
+// 이 파일은 결제 후 단계별 입력 흐름을 쓰던 legacy 경로용이며, 현재 main flow에서는 진입 ✗.
 //
 // 화면 9: 어머니 사주 입력 — 화면 3 패턴 + 시간 모름 체크박스 (§10 P0 #7)
 //                            + Success header "결제가 완료됐어요!" (§6-b)
