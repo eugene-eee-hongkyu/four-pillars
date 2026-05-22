@@ -69,6 +69,16 @@ const MUNCHANG_MAP: Record<string, string> = {
   무: '신', 기: '유', 경: '해', 신: '자', 임: '인', 계: '묘',
 };
 
+// ── 천을귀인: 일간 기준 (양귀인·음귀인 둘 다, 한국 명리 통설) ──
+// 명리에서 가장 강한 길성. 학자형·시험·자격·인덕의 핵심 시그너.
+const CHEONEUL_MAP: Record<string, string[]> = {
+  갑: ['축', '미'], 무: ['축', '미'], 경: ['축', '미'],
+  을: ['자', '신'], 기: ['자', '신'],
+  병: ['해', '유'], 정: ['해', '유'],
+  임: ['사', '묘'], 계: ['사', '묘'],
+  신: ['인', '오'],
+};
+
 // ── 양인살: 양간(갑병무경임)만, 일간 기준 ──
 const YANGIN_MAP: Record<string, string> = {
   갑: '묘', 병: '오', 무: '오', 경: '유', 임: '자',
@@ -262,6 +272,14 @@ export function calcShensha(
     for (const i of branchPositions(munchangTarget, stems as string[], branches)) pushTo(byPillar, i, '문창귀인');
   }
 
+  // ── 천을귀인: 일간 기준 (양귀인·음귀인 둘 다) — 명리 가장 강한 길성 ──
+  const cheoneulTargets = CHEONEUL_MAP[dayStem];
+  if (cheoneulTargets) {
+    for (const target of cheoneulTargets) {
+      for (const i of branchPositions(target, stems as string[], branches)) pushTo(byPillar, i, '천을귀인');
+    }
+  }
+
   // ── 양인살 ──
   const yanginTarget = YANGIN_MAP[dayStem];
   if (yanginTarget) {
@@ -352,7 +370,7 @@ export function calcShensha(
   }
 
   // ── 강조 신살 선정 ──
-  const GILSEONG = ['건록', '천덕귀인', '월덕귀인', '학당귀인', '천의성', '암록', '문창귀인', '금여성'];
+  const GILSEONG = ['천을귀인', '건록', '천덕귀인', '월덕귀인', '학당귀인', '천의성', '암록', '문창귀인', '금여성'];
   const all = [...byPillar['년주'], ...byPillar['월주'], ...byPillar['일주'], ...byPillar['시주']];
   const unique = all.filter((v, i, a) => a.indexOf(v) === i);
   const strong: string[] = [];

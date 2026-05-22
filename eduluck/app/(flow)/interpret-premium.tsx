@@ -11,6 +11,7 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { ShareButton } from '@/components/interpret/ShareButton';
+import { TraitScoreCard } from '@/components/manse/TraitScoreCard';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -130,6 +131,13 @@ export default function InterpretPremium() {
             {state.child.nickname || '아이'}의 정밀 학운
           </Text>
         </View>
+
+        {/* 학운 8가지 점수 카드 — 첫인상 hook (본문 시작 전부터 노출) */}
+        {state.childManse && (
+          <View className="px-container-padding">
+            <TraitScoreCard traits={state.childManse.studentTraits} />
+          </View>
+        )}
 
         {/* 진단 완료 후 — 본문 위 mini TOC (긴 본문 navigation) */}
         {streamDone && (

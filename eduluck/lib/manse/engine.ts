@@ -13,6 +13,7 @@ import { calcNapum, type NapumResult } from './napum';
 import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
+import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
 
@@ -55,6 +56,8 @@ export interface ManseResult {
   artsScore: ArtsScoreResult;
   /** 의·약·치·생명과학 점수 — §12 전공 풀이에서 격국 lookup 보정 (의약 자격직) */
   medicalScore: MedicalScoreResult;
+  /** 학운 8가지 특성 점수 + percentile — §0 직후 UI 카드용 */
+  studentTraits: StudentTraitsWithPercentile;
 }
 
 export function computeManse(input: ManseInput): ManseResult {
@@ -170,6 +173,13 @@ export function computeManse(input: ManseInput): ManseResult {
     sipsin,
     gyeokguk,
   });
+  const studentTraits = calcStudentTraitsWithPercentile({
+    shensha,
+    sipsin,
+    gyeokguk,
+    unsung,
+    elementCounts,
+  });
 
   return {
     yearPillar: raw.yearPillar,
@@ -198,6 +208,7 @@ export function computeManse(input: ManseInput): ManseResult {
     abroadScore,
     artsScore,
     medicalScore,
+    studentTraits,
   };
 }
 

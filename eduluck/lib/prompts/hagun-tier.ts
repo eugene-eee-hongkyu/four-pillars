@@ -38,7 +38,8 @@ const HAGUN_GRADE_TABLE: HagunGradeInfo[] = [
 // (이전 버그: '쇠'를 WEAK에서 누락 — unsung.ts에는 weak로 분류되지만 hagun-tier는 미반영.)
 const STRONG_UNSUNG = new Set(['장생', '관대', '건록', '제왕']);
 const WEAK_UNSUNG = new Set(['쇠', '병', '사', '묘', '절', '태']);
-const HAGUN_GUI = new Set(['문창귀인', '학당귀인', '문곡귀인', '천을귀인']);
+// 학자형 4귀인 — 직접 학문·시험 친화 (천을귀인은 일반 인덕 길성이라 student-traits에서 별도 활용)
+const HAGUN_GUI = new Set(['문창귀인', '학당귀인', '문곡귀인']);
 
 /** 학자형 격국 (학문·시험 친화). 명리 합의: 인성·관성·식신·건록 계열. */
 const SCHOLAR_GYEOKGUK = new Set(['정관격', '정인격', '편인격', '식신격', '건록격']);
