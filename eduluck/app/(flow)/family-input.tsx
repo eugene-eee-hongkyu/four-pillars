@@ -240,7 +240,6 @@ export default function FamilyInput() {
             💡 출생 시간을 모르면 사주 네 기둥(년·월·일·시) 중 시(時)주 한 자리가 비어,
             학교·전공·시기를 결정하는 본질 시그너의 25%가 가려져요.
             그래서 자녀의 학운은 출생 시간을 알아야 볼 수 있어요.
-            부모님이나 친정 어머니께 출생 시간을 한 번 더 여쭤본 후 다시 와주세요. 🙏
           </Text>
           <LocationDropdown value={state.child.birthLocation} onChange={(loc) => patchChild({ birthLocation: loc })} />
         </View>
