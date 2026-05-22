@@ -136,15 +136,21 @@ export default function InterpretPremium() {
           </Text>
         </View>
 
-        {/* Hero — 학운 그릇 compact (첫 viewport에 결론 압축 — Agent UX 리서치 권장 B+F).
-            등급·티어 + 게이지 + 핵심 시그너 chip 3개 + "근거 보기 ▾" 펼침 */}
+        {/* Hero — 학운 그릇 (등급·게이지·핵심 시그너 + 함께 작용 모두 노출, 펼침 ✗) */}
         {state.childManse && (
           <View className="px-container-padding">
-            <HagunSignerBreakdown manse={state.childManse} compact={true} />
+            <HagunSignerBreakdown manse={state.childManse} />
           </View>
         )}
 
-        {/* mini TOC — 진단 완료 후 본문 위 navigation (긴 본문 스캔) */}
+        {/* 진로 방향성 8가지 — Hero 다음 위치 (사용자 피드백: 맨 아래 ✗, 중간 적절) */}
+        {state.childManse?.directions && (
+          <View className="px-container-padding">
+            <DirectionCard directions={state.childManse.directions} compact={true} />
+          </View>
+        )}
+
+        {/* mini TOC — 진단 완료 후 본문 위 navigation */}
         {streamDone && (
           <View className="px-container-padding">
             <View className="flex-row flex-wrap gap-2 p-3 bg-secondary-container/40 rounded-md border border-outline-warm">
@@ -161,8 +167,7 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {/* LLM 본문 — Hero 직후 즉시 노출. 학부모는 등급 보고 바로 본문으로 진입.
-            cache 효과로 사용자 wait 0초 — mom test perception 가장 큰 개선 포인트. */}
+        {/* LLM 본문 — cache 효과로 wait 0초 */}
         {state.premiumInterpretText ? (
           <View className="p-card-padding gap-4">
             <InterpretBody text={state.premiumInterpretText} />
@@ -183,14 +188,7 @@ export default function InterpretPremium() {
           />
         ) : null}
 
-        {/* 진로 방향성 8가지 — 본문 후 노출. 학자/의약/법조/이공/경영/사업/예술/체육 카테고리 */}
-        {streamDone && state.childManse?.directions && (
-          <View className="px-container-padding">
-            <DirectionCard directions={state.childManse.directions} compact={true} />
-          </View>
-        )}
-
-        {/* 학습 특성 4가지 — 공통 보조 (시험·끈기·자기주도·회복) */}
+        {/* 학습 특성 4가지 — 본문 후 공통 보조 (시험·끈기·자기주도·회복) */}
         {streamDone && state.childManse?.studentTraits && (
           <View className="px-container-padding">
             <TraitScoreCard traits={state.childManse.studentTraits} compact={true} />

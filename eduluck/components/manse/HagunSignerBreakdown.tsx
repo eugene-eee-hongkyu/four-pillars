@@ -11,8 +11,7 @@
 //   - 한국 운세 시장(포스텔러·점신·플러스운세력): 분해 UI 표준 ✗ — 점수와 텍스트 분리
 //   - UX: 학부모는 "관인상생" 용어 모름, 수치 노출 시 혼란 위험
 
-import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text } from 'react-native';
 import type { ManseResult } from '@/lib/manse/engine';
 import { computeHagun, scoreToGrade } from '@/lib/prompts/hagun-tier';
 
@@ -85,18 +84,18 @@ function gradeToGauge(label: string): number {
   }
 }
 
-/** Compact 모드 (default) — 단일 hero, 본문 위 첫 viewport에 결론 압축.
- *   - 등급·티어 + 강도 게이지 + 핵심 3 시그너 chip (이름만)
- *   - 시그너 1줄 해석·강도·함께 작용·분해 점수 = 모두 펼침 안으로 흡수
+/** Hero — 사용자 피드백 반영 (2026-05-23):
+ *   - 펼침 ✗ — 처음부터 다 보임 (hero인데 접어두면 안 됨)
+ *   - 핵심 시그너 + 함께 작용 모두 박스 + 강도 점
+ *   - 점수 분해 섹션 제거 (점수 노출 ↓, 명리 정합 ↑)
  *
- *  NN/g progressive disclosure + iOS HIG hierarchy 정합. */
+ *  학자 트랙 ✗ (gauge 0) 케이스는 "다른 트랙 적성" 톤으로 자동 전환. */
 interface ExtendedProps extends Props {
-  /** compact=true: 본문 위 hero (default). false: 풀 분해 카드 (본문 후) */
+  /** legacy prop — 무시됨 (v9: 펼침 제거, 항상 풀 hero 표시) */
   compact?: boolean;
 }
 
-export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
-  const [expanded, setExpanded] = useState(false);
+export function HagunSignerBreakdown({ manse }: ExtendedProps) {
   const breakdown = computeHagun(manse);
   const grade = scoreToGrade(breakdown.total);
   const gauge = gradeToGauge(grade.label);
@@ -106,12 +105,29 @@ export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
   const top3 = positive.slice(0, 3);
   const rest = positive.slice(3);
 
-  // 학자 트랙 ✗ (gauge 0) 경우: hero 톤을 "다른 트랙 적성"으로 자연스럽게
   const isWeakScholar = gauge === 0;
+
+  // 카드 cell (핵심 + 함께 작용 공통 — 박스 + 강도 점)
+  const renderSignerCell = (h: { signer: string; value: number }, emphasize: boolean) => (
+    <View
+      key={h.signer}
+      className={`p-card-padding rounded-md border border-outline-warm gap-1 ${emphasize ? 'bg-surface-container-low' : 'bg-surface'}`}
+    >
+      <View className="flex-row items-center justify-between">
+        <Text className={`font-body${emphasize ? '-bold' : ''} text-body-md text-text-pri flex-1`}>
+          {h.signer}
+        </Text>
+        <StrengthDots value={h.value} />
+      </View>
+      <Text className={`font-body text-label-sm ${emphasize ? 'text-text-sub' : 'text-text-sub'} leading-relaxed`} numberOfLines={2}>
+        {explainSigner(h.signer)}
+      </Text>
+    </View>
+  );
 
   return (
     <View className="gap-3">
-      {/* ===== Hero (compact) — 첫 viewport에 결론 압축 ===== */}
+      {/* ===== Hero — 등급·티어 + 게이지 + 핵심 시그너 칩 ===== */}
       <View
         className="p-card-padding rounded-md border border-outline-warm gap-2"
         style={{ backgroundColor: isWeakScholar ? undefined : 'rgba(245, 158, 11, 0.06)' }}
@@ -120,7 +136,6 @@ export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
           학운 그릇
         </Text>
 
-        {/* 등급·티어 (한 줄, large) */}
         <View className="flex-row items-baseline gap-2 flex-wrap">
           <Text className="font-heading-bold text-display-sm text-text-pri">
             {grade.label}
@@ -131,7 +146,6 @@ export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
           </Text>
         </View>
 
-        {/* 게이지 — 등급 시각화 */}
         <Text
           className="font-body text-headline-md"
           style={{ color: STAR_GOLD, letterSpacing: 4 }}
@@ -140,14 +154,10 @@ export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
           {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
         </Text>
 
-        {/* 핵심 시그너 칩 (Top 3) — 학부모는 이름만, 강도/해석은 펼침 */}
         {top3.length > 0 && (
           <View className="flex-row flex-wrap gap-2 mt-1">
             {top3.map(h => (
-              <View
-                key={h.signer}
-                className="px-3 py-1 rounded-full bg-secondary-container"
-              >
+              <View key={h.signer} className="px-3 py-1 rounded-full bg-secondary-container">
                 <Text className="font-body-bold text-label-md text-primary" numberOfLines={1}>
                   {h.signer.split(' (')[0]}
                 </Text>
@@ -156,113 +166,53 @@ export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
           </View>
         )}
 
-        {/* 한 줄 요약 톤 — gauge 0이면 "다른 트랙 적성" */}
         <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
           {isWeakScholar
             ? '학자 트랙이 약한 자리예요. 다른 트랙(예술·실무·운동 등)에서 빛나는 사주일 수 있어요.'
-            : '사주 시그너로 만들어진 학운 그릇이에요. 자세한 근거는 아래에서 볼 수 있어요.'}
+            : '사주 시그너로 만들어진 학운 그릇이에요. 아래는 이 그릇을 만드는 자리들이에요.'}
         </Text>
-
-        {/* 근거 보기 — 단일 disclosure 토글 */}
-        <Pressable
-          onPress={() => setExpanded(!expanded)}
-          accessibilityRole="button"
-          accessibilityLabel="근거 보기"
-          className="flex-row items-center gap-1 mt-1"
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        >
-          <Text className="font-body text-label-md text-text-sub">
-            근거 보기 {expanded ? '▴' : '▾'}
-          </Text>
-        </Pressable>
       </View>
 
-      {/* ===== 펼침 — 시그너 해석 + 정합성 분해 ===== */}
-      {expanded && (
-        <View className="gap-3">
-          {/* 핵심 3 — 1줄 해석 + 강도 ●○ */}
-          {top3.length > 0 && (
-            <View className="gap-2">
-              <Text className="font-body-bold text-label-md text-text-sub">
-                ✨ 핵심 시그너
-              </Text>
-              {top3.map(h => (
-                <View
-                  key={h.signer}
-                  className="px-card-padding py-2 rounded-md bg-surface-container-low border border-outline-warm gap-1"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <Text className="font-body-bold text-body-sm text-text-pri flex-1">
-                      {h.signer}
-                    </Text>
-                    <StrengthDots value={h.value} />
-                  </View>
-                  <Text className="font-body text-label-sm text-text-sub leading-relaxed">
-                    {explainSigner(h.signer)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
+      {/* ===== 핵심 시그너 (Top 3) — 박스 + 강도 점 + 1줄 해석 ===== */}
+      {top3.length > 0 && (
+        <View className="gap-2">
+          <Text className="font-body-bold text-label-md text-text-sub">
+            ✨ 핵심 자리
+          </Text>
+          {top3.map(h => renderSignerCell(h, true))}
+        </View>
+      )}
 
-          {/* 함께 작용 — 키워드 라인 */}
-          {rest.length > 0 && (
-            <View className="gap-1">
-              <Text className="font-body-bold text-label-md text-text-sub">
-                🔹 함께 작용하는 자리 ({rest.length}개)
-              </Text>
-              <Text className="font-body text-body-sm text-text-pri leading-relaxed">
-                {rest.map(h => h.signer).join(' · ')}
-              </Text>
-            </View>
-          )}
+      {/* ===== 함께 작용 — 박스화 + 강도 점 (피드백 #2) ===== */}
+      {rest.length > 0 && (
+        <View className="gap-2">
+          <Text className="font-body-bold text-label-md text-text-sub">
+            🔹 함께 작용하는 자리 ({rest.length}개)
+          </Text>
+          {rest.map(h => renderSignerCell(h, false))}
+        </View>
+      )}
 
-          {/* 페널티 — "보완할 자리" 톤 */}
-          {negative.length > 0 && (
-            <View className="gap-1 px-card-padding py-2 rounded-md bg-surface border border-outline-warm">
-              <Text className="font-body-bold text-label-md text-text-sub">
-                💤 보완할 자리 ({negative.length}개)
-              </Text>
-              <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-                {negative.map(h => h.signer).join(' · ')}
-              </Text>
-              <Text className="font-body text-label-sm text-text-sub mt-1">
-                이 자리는 약해도 괜찮아요. 다른 시그너로 보강돼요.
-              </Text>
-            </View>
-          )}
-
-          {/* 점수 분해 — 정합성 보장 (분해 합 = 총점) */}
-          <View className="px-card-padding py-3 rounded-md bg-surface-container-low border border-outline-warm gap-1">
-            <Text className="font-body-bold text-label-md text-text-sub mb-1">
-              🔍 점수 분해
-            </Text>
-            {positive.map(h => (
-              <View key={h.signer} className="flex-row justify-between">
-                <Text className="font-body text-body-sm text-text-pri flex-1" numberOfLines={1}>
-                  {h.signer}
-                </Text>
-                <Text className="font-body-bold text-body-sm ml-2" style={{ color: STAR_GOLD }}>
-                  +{h.value}
-                </Text>
+      {/* ===== 페널티 — "보완할 자리" 톤 ===== */}
+      {negative.length > 0 && (
+        <View className="gap-2">
+          <Text className="font-body-bold text-label-md text-text-sub">
+            💤 보완할 자리 ({negative.length}개)
+          </Text>
+          {negative.map(h => (
+            <View key={h.signer} className="p-card-padding rounded-md border border-outline-warm bg-surface gap-1">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-body text-body-md text-text-sub flex-1">{h.signer}</Text>
+                <StrengthDots value={h.value} />
               </View>
-            ))}
-            {negative.map(h => (
-              <View key={h.signer} className="flex-row justify-between">
-                <Text className="font-body text-body-sm text-text-sub flex-1" numberOfLines={1}>
-                  {h.signer}
-                </Text>
-                <Text className="font-body-bold text-body-sm text-text-sub ml-2">{h.value}</Text>
-              </View>
-            ))}
-            <View className="h-px bg-outline-warm my-1" />
-            <View className="flex-row justify-between">
-              <Text className="font-body-bold text-body-sm text-text-pri">합계</Text>
-              <Text className="font-heading-bold text-body-sm" style={{ color: STAR_GOLD }}>
-                {breakdown.total}점
+              <Text className="font-body text-label-sm text-text-sub leading-relaxed" numberOfLines={2}>
+                {explainSigner(h.signer)}
               </Text>
             </View>
-          </View>
+          ))}
+          <Text className="font-body text-label-sm text-text-sub leading-relaxed">
+            이 자리는 약해도 괜찮아요. 다른 자리로 보강돼요.
+          </Text>
         </View>
       )}
     </View>
