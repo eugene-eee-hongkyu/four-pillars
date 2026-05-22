@@ -45,7 +45,7 @@ function StarRow({ value, onChange }: { value: number; onChange: (n: number) => 
   );
 }
 
-// 정밀 진단 14섹션 — skeleton에 미리 노출되는 구조 헤더 (StreamingBody A)
+// 정밀 진단 16섹션 — skeleton에 미리 노출되는 구조 헤더 (StreamingBody A)
 const PREMIUM_SECTION_HEADERS = [
   '1. 시작',
   '2. 본질',
@@ -60,7 +60,9 @@ const PREMIUM_SECTION_HEADERS = [
   '11. 직업·진로 흐름',
   '12. 전공 볼게요',
   '13. 학교 볼게요',
-  '14. 어머니께 한 마디',
+  '14. 가장 조심해야 하는 한 해',
+  '15. 본질을 깨우는 가장 효과적 액션',
+  '16. 어머니께 한 마디',
 ];
 
 // 정밀 진단 ~45초 평균 — 시간 기반 단계 라벨 (StreamingBody C)

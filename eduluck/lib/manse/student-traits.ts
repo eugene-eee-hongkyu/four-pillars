@@ -106,29 +106,38 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
     { signal: '인성 1~2', weight: 8, matched: c.insung >= 1 && c.insung <= 2 },
     { signal: '학당귀인 ≥1', weight: 12, matched: hakdang >= 1 },
     { signal: '학당귀인 ≥2', weight: 8, matched: hakdang >= 2 },
-    { signal: '학자형 격국', weight: 10, matched: ['정인격', '편인격', '식신격', '정관격', '건록격'].includes(gyeokguk.name) },
+    { signal: '학당귀인 ≥3', weight: 5, matched: hakdang >= 3 },
+    { signal: '자격직 격국', weight: 10, matched: ['정인격', '편인격', '식신격', '정관격', '편관격', '건록격'].includes(gyeokguk.name) },
     { signal: '관성 ≥2', weight: 5, matched: c.gwansung >= 2 },
+    { signal: '관성 ≥3', weight: 5, matched: c.gwansung >= 3 },
+    { signal: '관인상생+학당 콤보', weight: 10, matched: sipsin.isGwaninSangsaeng && hakdang >= 2 },
+    { signal: '자격직격국+학당 콤보', weight: 5, matched: ['정인격', '편인격', '식신격', '정관격', '편관격', '건록격'].includes(gyeokguk.name) && hakdang >= 2 },
+    { signal: '정재격+관인상생+학당 (학자형 정재)', weight: 8, matched: gyeokguk.name === '정재격' && sipsin.isGwaninSangsaeng && hakdang >= 1 },
   ]);
 
   // 2. 시험장 강함 — 시험 돌파력
   const examPower = calcTrait([
-    { signal: '문창귀인 ≥1', weight: 18, matched: munchang >= 1 },
+    { signal: '문창귀인 ≥1', weight: 15, matched: munchang >= 1 },
     { signal: '문창귀인 ≥2', weight: 10, matched: munchang >= 2 },
-    { signal: '천을귀인 ≥1', weight: 15, matched: cheoneul >= 1 },
+    { signal: '천을귀인 ≥1', weight: 12, matched: cheoneul >= 1 },
     { signal: '양인살', weight: 10, matched: yangin >= 1 },
     { signal: '관성 ≥1', weight: 8, matched: c.gwansung >= 1 },
     { signal: '식상 ≥2', weight: 8, matched: c.siksang >= 2 },
-    { signal: '신왕 (담대)', weight: 6, matched: sinwangScore >= 5 },
+    { signal: '신왕 (담대)', weight: 10, matched: sinwangScore >= 5 },
+    { signal: '일주 건록·제왕 (실전)', weight: 12, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
+    { signal: '월지 건록 (자기 자리)', weight: 6, matched: ['건록', '제왕'].includes(unsung.monthPillar.stage) },
   ]);
 
   // 3. 끈기·꾸준 — 장기전
   const persistence = calcTrait([
-    { signal: '정관 ≥1', weight: 15, matched: c.gwansung >= 1 },
-    { signal: '식신 ≥1', weight: 12, matched: c.siksang >= 1 && (gyeokguk.name !== '상관격') },
-    { signal: '재성 ≥1', weight: 10, matched: c.jaesung >= 1 },
+    { signal: '정관 ≥1', weight: 12, matched: c.gwansung >= 1 },
+    { signal: '식신 ≥1', weight: 10, matched: c.siksang >= 1 && (gyeokguk.name !== '상관격') },
+    { signal: '재성 ≥1', weight: 8, matched: c.jaesung >= 1 },
+    { signal: '관성+재성 콤보', weight: 8, matched: c.gwansung >= 1 && c.jaesung >= 1 },
     { signal: '토·금 강 (안정)', weight: 12, matched: earthMetalStrong },
-    { signal: '정재격·식신격', weight: 10, matched: ['정재격', '식신격', '정관격'].includes(gyeokguk.name) },
-    { signal: '일주 강', weight: 8, matched: dayStrong },
+    { signal: '안정 격국', weight: 10, matched: ['정재격', '식신격', '정관격', '편관격', '건록격'].includes(gyeokguk.name) },
+    { signal: '일주 건록·제왕', weight: 12, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
+    { signal: '관인상생+학당', weight: 8, matched: sipsin.isGwaninSangsaeng && hakdang >= 1 },
   ]);
 
   // 4. 이해·응용 — 사고력
@@ -152,21 +161,28 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
 
   // 6. 자기주도 — 혼공 능력
   const selfDriven = calcTrait([
-    { signal: '비겁 ≥2', weight: 15, matched: c.bigeop >= 2 },
-    { signal: '비겁 ≥3', weight: 10, matched: c.bigeop >= 3 },
-    { signal: '양인살', weight: 12, matched: yangin >= 1 },
-    { signal: '신왕', weight: 15, matched: sinwangScore >= 5 },
-    { signal: '일주 강', weight: 8, matched: dayStrong },
-    { signal: '양인격·건록격', weight: 8, matched: ['양인격', '건록격'].includes(gyeokguk.name) },
+    { signal: '비겁 ≥2', weight: 12, matched: c.bigeop >= 2 },
+    { signal: '비겁 ≥3', weight: 8, matched: c.bigeop >= 3 },
+    { signal: '양인살', weight: 10, matched: yangin >= 1 },
+    { signal: '신왕', weight: 12, matched: sinwangScore >= 5 },
+    { signal: '일주 건록·제왕', weight: 12, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
+    { signal: '양인격', weight: 12, matched: gyeokguk.name === '양인격' },
+    { signal: '건록격 (자수성가)', weight: 15, matched: gyeokguk.name === '건록격' },
+    { signal: '비견격', weight: 8, matched: gyeokguk.name === '비견격' },
+    { signal: '신왕+비겁≥2 콤보', weight: 8, matched: sinwangScore >= 5 && c.bigeop >= 2 },
+    { signal: '건록격+비겁≥2 (자수성가 콤보)', weight: 10, matched: gyeokguk.name === '건록격' && c.bigeop >= 2 },
+    { signal: '월지 건록 (자기 자리)', weight: 8, matched: ['건록', '제왕'].includes(unsung.monthPillar.stage) },
   ]);
 
   // 7. 경쟁심 — 1등 욕심
   const competitiveness = calcTrait([
     { signal: '양인살', weight: 18, matched: yangin >= 1 },
-    { signal: '비겁 ≥2', weight: 12, matched: c.bigeop >= 2 },
-    { signal: '편관 강 (도전)', weight: 12, matched: c.gwansung >= 2 },
+    { signal: '비겁 ≥2', weight: 10, matched: c.bigeop >= 2 },
+    { signal: '편관 강 (도전)', weight: 10, matched: c.gwansung >= 2 },
     { signal: '양인격', weight: 15, matched: gyeokguk.name === '양인격' },
+    { signal: '건록격', weight: 8, matched: gyeokguk.name === '건록격' },
     { signal: '신왕', weight: 10, matched: sinwangScore >= 5 },
+    { signal: '일주 건록·제왕', weight: 8, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
   ]);
 
   // 8. 회복·멘탈 — 스트레스 받침
@@ -174,9 +190,10 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
     { signal: '관인상생', weight: 18, matched: sipsin.isGwaninSangsaeng },
     { signal: '인성 ≥2', weight: 12, matched: c.insung >= 2 },
     { signal: '천을귀인 ≥1', weight: 12, matched: cheoneul >= 1 },
-    { signal: '일주 강', weight: 10, matched: dayStrong },
-    { signal: '신왕', weight: 8, matched: sinwangScore >= 5 },
+    { signal: '일주 건록·제왕', weight: 12, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
+    { signal: '신왕', weight: 10, matched: sinwangScore >= 5 },
     { signal: '천의성 (치유)', weight: 5, matched: cheonui >= 1 },
+    { signal: '관인상생+인성 ≥2 콤보', weight: 8, matched: sipsin.isGwaninSangsaeng && c.insung >= 2 },
   ]);
 
   return {
@@ -237,13 +254,28 @@ export function traitPercentile(key: keyof StudentTraits, score: number): number
   return Math.max(1, Math.min(99, Math.round(pct)));
 }
 
-/** Raw 점수 → 정규화 점수 (mean=50, stddev=15 기준 0~100) — UI 카드 직관용 */
+/** Raw 점수 → 정규화 점수 (percentile 직접 매핑, 가파른 stepwise) — UI 카드 직관용
+ *  사용자 직관: 학운 1~2티어 sample = 강한 영역 90+ 보임
+ *  - 상위 1% = 99 / 상위 5% = 95 / 상위 15% = 90 / 상위 30% = 78 / 상위 50% = 62 / 상위 99% = 17
+ */
 export function traitNormalized(key: keyof StudentTraits, raw: number): number {
-  const dist = DISTRIBUTION.distributions[key];
-  if (dist.stddev === 0) return 50;
-  const z = (raw - dist.mean) / dist.stddev;
-  const normalized = 50 + z * 15;
-  return Math.max(0, Math.min(100, Math.round(normalized)));
+  const pct = traitPercentile(key, raw);
+  // 가파른 stepwise — 상위 15% 이내가 90+, 상위 30% 이내가 78+
+  if (pct <= 1) return 99;
+  if (pct <= 3) return 97;
+  if (pct <= 5) return 95;
+  if (pct <= 8) return 93;
+  if (pct <= 12) return 91;
+  if (pct <= 15) return 90;
+  if (pct <= 20) return 86;
+  if (pct <= 25) return 82;
+  if (pct <= 30) return 78;
+  if (pct <= 40) return 70;
+  if (pct <= 50) return 62;
+  if (pct <= 65) return 50;
+  if (pct <= 80) return 38;
+  if (pct <= 95) return 25;
+  return 17;
 }
 
 export interface TraitScoreWithPercentile extends TraitScore {
