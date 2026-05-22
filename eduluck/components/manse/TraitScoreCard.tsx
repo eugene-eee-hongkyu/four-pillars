@@ -18,6 +18,8 @@ import {
 
 interface Props {
   traits: StudentTraitsWithPercentile;
+  /** compact=true: 한 줄 요약 + 펼침 (본문 안 inline). default false: 전체 3그룹 카드 노출 */
+  compact?: boolean;
 }
 
 /** percentile (낮을수록 상위) → 별 개수 1~5
@@ -90,9 +92,10 @@ function TraitCell({ label, fits, stars, group, onPress }: CellProps) {
 
 const HINT_STORAGE_KEY = 'eduluck:trait-hint-seen-v4';
 
-export function TraitScoreCard({ traits }: Props) {
+export function TraitScoreCard({ traits, compact = false }: Props) {
   const [activeKey, setActiveKey] = useState<keyof StudentTraits | null>(null);
   const [showHint, setShowHint] = useState(false);
+  const [compactExpanded, setCompactExpanded] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.localStorage) return;
@@ -159,6 +162,99 @@ export function TraitScoreCard({ traits }: Props) {
     stars: starsFromPercentile(traits[activeKey].percentile),
     percentile: traits[activeKey].percentile,
   } : null;
+
+  // ===== Compact 모드 — 본문 inline 인라인 사용용 =====
+  //   한 줄 요약 (🌟 N · ✏️ N · 💤 N) + 펼침 시 전체 카드
+  //   NN/g progressive disclosure + scroll fatigue 완화
+  if (compact) {
+    return (
+      <View className="gap-2">
+        <Pressable
+          onPress={() => setCompactExpanded(!compactExpanded)}
+          accessibilityRole="button"
+          accessibilityLabel={`타고난 학운 10가지 — 타고난 ${gifted.length}, 보통 ${normal.length}, 약한 ${weak.length}. 자세히 보기`}
+          className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-1"
+          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+        >
+          <View className="flex-row items-center justify-between">
+            <Text className="font-heading-bold text-body-lg text-text-pri">
+              🎯 학과·트랙 방향성 10가지
+            </Text>
+            <Text className="font-body text-label-md text-text-sub">{compactExpanded ? '▴' : '▾'}</Text>
+          </View>
+          <Text className="font-body text-body-sm text-text-sub leading-relaxed">
+            🌟 타고난 자리 <Text className="font-body-bold text-text-pri">{gifted.length}개</Text> · ✏️ 보통 <Text className="font-body-bold text-text-pri">{normal.length}개</Text> · 💤 약한 <Text className="font-body-bold text-text-sub">{weak.length}개</Text>
+          </Text>
+          {!compactExpanded && gifted.length > 0 && (
+            <Text className="font-body text-label-sm text-text-sub mt-1" numberOfLines={1}>
+              ★ {gifted.slice(0, 3).map(e => e.label).join(' · ')}{gifted.length > 3 ? ` 외 ${gifted.length - 3}` : ''}
+            </Text>
+          )}
+        </Pressable>
+
+        {compactExpanded && (
+          <View className="gap-4">
+            {gifted.length > 0 && (
+              <View className="gap-2">
+                <View className="flex-row items-baseline justify-between">
+                  <Text className="font-heading-bold text-body-md text-text-pri">
+                    🌟 타고난 자리 <Text className="font-body text-body-sm text-text-sub">({gifted.length}개)</Text>
+                  </Text>
+                </View>
+                {renderGroup(gifted)}
+              </View>
+            )}
+            {normal.length > 0 && (
+              <View className="gap-2">
+                <Text className="font-heading-bold text-body-md text-text-pri">
+                  ✏️ 보통 자리 <Text className="font-body text-body-sm text-text-sub">({normal.length}개)</Text>
+                </Text>
+                {renderGroup(normal)}
+              </View>
+            )}
+            {weak.length > 0 && (
+              <View className="gap-2">
+                <Text className="font-heading-bold text-body-md text-text-sub">
+                  💤 약한 자리 <Text className="font-body text-body-sm text-text-sub">({weak.length}개)</Text>
+                </Text>
+                <View className="px-3 py-2 rounded-md bg-surface border border-outline-warm">
+                  <Text className="font-body text-label-md text-text-sub leading-relaxed">
+                    이 자리는 약해도 괜찮아요. 사주가 <Text className="font-body-bold text-text-pri">다른 트랙</Text>으로 빛나는 자리예요.
+                  </Text>
+                </View>
+                {renderGroup(weak)}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 항목별 상세 설명 모달 */}
+        <Modal visible={active !== null} onClose={() => setActiveKey(null)}>
+          {active && (
+            <View className="gap-3">
+              <View className="flex-row items-baseline justify-between">
+                <Text className="font-heading-bold text-headline-md text-text-pri flex-1">{active.label}</Text>
+                <StarRow stars={active.stars} />
+              </View>
+              <Text className="font-body text-body-md text-text-pri leading-relaxed">
+                {active.desc.what}
+              </Text>
+              <View className="px-3 py-2 rounded-md bg-surface border border-outline-warm">
+                <Text className="font-body text-label-sm text-text-sub mb-1">잘 맞는 트랙</Text>
+                <Text className="font-body-bold text-body-md text-text-pri">{active.desc.fits}</Text>
+              </View>
+              <Pressable
+                onPress={() => setActiveKey(null)}
+                className="mt-2 py-3 rounded-md bg-primary items-center"
+              >
+                <Text className="font-body-bold text-body-md text-surface-container-low">닫기</Text>
+              </Pressable>
+            </View>
+          )}
+        </Modal>
+      </View>
+    );
+  }
 
   return (
     <View className="gap-4">

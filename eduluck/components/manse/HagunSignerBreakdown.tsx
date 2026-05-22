@@ -85,7 +85,17 @@ function gradeToGauge(label: string): number {
   }
 }
 
-export function HagunSignerBreakdown({ manse }: Props) {
+/** Compact 모드 (default) — 단일 hero, 본문 위 첫 viewport에 결론 압축.
+ *   - 등급·티어 + 강도 게이지 + 핵심 3 시그너 chip (이름만)
+ *   - 시그너 1줄 해석·강도·함께 작용·분해 점수 = 모두 펼침 안으로 흡수
+ *
+ *  NN/g progressive disclosure + iOS HIG hierarchy 정합. */
+interface ExtendedProps extends Props {
+  /** compact=true: 본문 위 hero (default). false: 풀 분해 카드 (본문 후) */
+  compact?: boolean;
+}
+
+export function HagunSignerBreakdown({ manse, compact = true }: ExtendedProps) {
   const [expanded, setExpanded] = useState(false);
   const breakdown = computeHagun(manse);
   const grade = scoreToGrade(breakdown.total);
@@ -93,21 +103,26 @@ export function HagunSignerBreakdown({ manse }: Props) {
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const negative = breakdown.hits.filter(h => h.value < 0);
-
-  // 핵심 3 (최대 +값 3개)
   const top3 = positive.slice(0, 3);
-  // 보강·보조 (나머지)
   const rest = positive.slice(3);
 
+  // 학자 트랙 ✗ (gauge 0) 경우: hero 톤을 "다른 트랙 적성"으로 자연스럽게
+  const isWeakScholar = gauge === 0;
+
   return (
-    <View className="gap-4">
-      {/* 헤더 — 등급·티어 + 강도 게이지 (점수 숫자 비노출) */}
-      <View className="gap-2">
-        <Text className="font-heading-bold text-headline-md text-text-pri">
+    <View className="gap-3">
+      {/* ===== Hero (compact) — 첫 viewport에 결론 압축 ===== */}
+      <View
+        className="p-card-padding rounded-md border border-outline-warm gap-2"
+        style={{ backgroundColor: isWeakScholar ? undefined : 'rgba(245, 158, 11, 0.06)' }}
+      >
+        <Text className="font-body text-label-sm text-text-sub uppercase tracking-wide">
           학운 그릇
         </Text>
-        <View className="flex-row items-baseline gap-2 flex-wrap mt-1">
-          <Text className="font-heading-bold text-headline-lg text-text-pri">
+
+        {/* 등급·티어 (한 줄, large) */}
+        <View className="flex-row items-baseline gap-2 flex-wrap">
+          <Text className="font-heading-bold text-display-sm text-text-pri">
             {grade.label}
           </Text>
           <Text className="font-body text-body-md text-text-sub">·</Text>
@@ -115,120 +130,138 @@ export function HagunSignerBreakdown({ manse }: Props) {
             {grade.baseTier}
           </Text>
         </View>
-        {gauge > 0 && (
-          <Text
-            className="font-body text-headline-md mt-1"
-            style={{ color: STAR_GOLD, letterSpacing: 4 }}
-            accessibilityLabel={`강도 ${gauge}점 만점에 ${gauge}점`}
-          >
-            {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
-          </Text>
-        )}
-        <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
-          학교 티어 그릇 크기예요. 아래는 이 그릇을 만드는 사주 시그너들이에요.
-        </Text>
-      </View>
 
-      {/* 핵심 3 자리 — 정성 강조 */}
-      {top3.length > 0 && (
-        <View className="gap-2">
-          <Text className="font-heading-bold text-body-lg text-text-pri">
-            ✨ 이 점수를 만드는 핵심 {top3.length}가지
-          </Text>
-          {top3.map((h, i) => {
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
-            return (
+        {/* 게이지 — 등급 시각화 */}
+        <Text
+          className="font-body text-headline-md"
+          style={{ color: STAR_GOLD, letterSpacing: 4 }}
+          accessibilityLabel={`강도 5점 만점에 ${gauge}점`}
+        >
+          {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
+        </Text>
+
+        {/* 핵심 시그너 칩 (Top 3) — 학부모는 이름만, 강도/해석은 펼침 */}
+        {top3.length > 0 && (
+          <View className="flex-row flex-wrap gap-2 mt-1">
+            {top3.map(h => (
               <View
                 key={h.signer}
-                className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-1"
+                className="px-3 py-1 rounded-full bg-secondary-container"
               >
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-body-bold text-body-md text-text-pri flex-1">
-                    {medal} {h.signer}
-                  </Text>
-                  <StrengthDots value={h.value} />
-                </View>
-                <Text className="font-body text-label-md text-text-sub leading-relaxed">
-                  {explainSigner(h.signer)}
+                <Text className="font-body-bold text-label-md text-primary" numberOfLines={1}>
+                  {h.signer.split(' (')[0]}
                 </Text>
               </View>
-            );
-          })}
-        </View>
-      )}
+            ))}
+          </View>
+        )}
 
-      {/* 함께 작용하는 자리 — 간략 키워드 */}
-      {rest.length > 0 && (
-        <View className="gap-1">
-          <Text className="font-heading-bold text-body-md text-text-sub">
-            🔹 함께 작용하는 자리 ({rest.length}개)
-          </Text>
-          <Text className="font-body text-body-sm text-text-pri leading-relaxed">
-            {rest.map(h => h.signer).join(' · ')}
-          </Text>
-        </View>
-      )}
-
-      {/* 페널티 — "보완할 자리" 톤 */}
-      {negative.length > 0 && (
-        <View className="gap-2 p-card-padding rounded-md border border-outline-warm bg-surface">
-          <Text className="font-heading-bold text-body-md text-text-sub">
-            💤 보완할 자리 ({negative.length}개)
-          </Text>
-          <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-            {negative.map(h => h.signer).join(' · ')}
-          </Text>
-          <Text className="font-body text-label-sm text-text-sub">
-            이 자리는 약해도 괜찮아요. 다른 시그너로 보강돼요.
-          </Text>
-        </View>
-      )}
-
-      {/* 펼침 — 정합성 보장 (분해 합 = 총점) */}
-      <Pressable
-        onPress={() => setExpanded(!expanded)}
-        accessibilityRole="button"
-        className="flex-row items-center justify-between px-3 py-2 rounded-md border border-outline-warm bg-surface"
-        style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-      >
-        <Text className="font-body text-label-md text-text-sub">
-          🔍 점수 분해 자세히 보기
+        {/* 한 줄 요약 톤 — gauge 0이면 "다른 트랙 적성" */}
+        <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
+          {isWeakScholar
+            ? '학자 트랙이 약한 자리예요. 다른 트랙(예술·실무·운동 등)에서 빛나는 사주일 수 있어요.'
+            : '사주 시그너로 만들어진 학운 그릇이에요. 자세한 근거는 아래에서 볼 수 있어요.'}
         </Text>
-        <Text className="font-body text-label-md text-text-sub">{expanded ? '▲' : '▼'}</Text>
-      </Pressable>
 
+        {/* 근거 보기 — 단일 disclosure 토글 */}
+        <Pressable
+          onPress={() => setExpanded(!expanded)}
+          accessibilityRole="button"
+          accessibilityLabel="근거 보기"
+          className="flex-row items-center gap-1 mt-1"
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text className="font-body text-label-md text-text-sub">
+            근거 보기 {expanded ? '▴' : '▾'}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* ===== 펼침 — 시그너 해석 + 정합성 분해 ===== */}
       {expanded && (
-        <View className="px-card-padding py-3 rounded-md bg-surface-container-low border border-outline-warm gap-2">
-          {positive.length > 0 && (
-            <>
-              <Text className="font-body-bold text-label-sm text-text-sub">큰 자리 · 보조 자리</Text>
-              {positive.map(h => (
-                <View key={h.signer} className="flex-row justify-between">
-                  <Text className="font-body text-body-sm text-text-pri flex-1">{h.signer}</Text>
-                  <Text className="font-body-bold text-body-sm" style={{ color: STAR_GOLD }}>
-                    +{h.value}
+        <View className="gap-3">
+          {/* 핵심 3 — 1줄 해석 + 강도 ●○ */}
+          {top3.length > 0 && (
+            <View className="gap-2">
+              <Text className="font-body-bold text-label-md text-text-sub">
+                ✨ 핵심 시그너
+              </Text>
+              {top3.map(h => (
+                <View
+                  key={h.signer}
+                  className="px-card-padding py-2 rounded-md bg-surface-container-low border border-outline-warm gap-1"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-body-bold text-body-sm text-text-pri flex-1">
+                      {h.signer}
+                    </Text>
+                    <StrengthDots value={h.value} />
+                  </View>
+                  <Text className="font-body text-label-sm text-text-sub leading-relaxed">
+                    {explainSigner(h.signer)}
                   </Text>
                 </View>
               ))}
-            </>
+            </View>
           )}
+
+          {/* 함께 작용 — 키워드 라인 */}
+          {rest.length > 0 && (
+            <View className="gap-1">
+              <Text className="font-body-bold text-label-md text-text-sub">
+                🔹 함께 작용하는 자리 ({rest.length}개)
+              </Text>
+              <Text className="font-body text-body-sm text-text-pri leading-relaxed">
+                {rest.map(h => h.signer).join(' · ')}
+              </Text>
+            </View>
+          )}
+
+          {/* 페널티 — "보완할 자리" 톤 */}
           {negative.length > 0 && (
-            <>
-              <Text className="font-body-bold text-label-sm text-text-sub mt-2">보완할 자리</Text>
-              {negative.map(h => (
-                <View key={h.signer} className="flex-row justify-between">
-                  <Text className="font-body text-body-sm text-text-sub flex-1">{h.signer}</Text>
-                  <Text className="font-body-bold text-body-sm text-text-sub">{h.value}</Text>
-                </View>
-              ))}
-            </>
+            <View className="gap-1 px-card-padding py-2 rounded-md bg-surface border border-outline-warm">
+              <Text className="font-body-bold text-label-md text-text-sub">
+                💤 보완할 자리 ({negative.length}개)
+              </Text>
+              <Text className="font-body text-body-sm text-text-sub leading-relaxed">
+                {negative.map(h => h.signer).join(' · ')}
+              </Text>
+              <Text className="font-body text-label-sm text-text-sub mt-1">
+                이 자리는 약해도 괜찮아요. 다른 시그너로 보강돼요.
+              </Text>
+            </View>
           )}
-          <View className="h-px bg-outline-warm my-2" />
-          <View className="flex-row justify-between">
-            <Text className="font-body-bold text-body-md text-text-pri">합계</Text>
-            <Text className="font-heading-bold text-body-md" style={{ color: STAR_GOLD }}>
-              {breakdown.total}점
+
+          {/* 점수 분해 — 정합성 보장 (분해 합 = 총점) */}
+          <View className="px-card-padding py-3 rounded-md bg-surface-container-low border border-outline-warm gap-1">
+            <Text className="font-body-bold text-label-md text-text-sub mb-1">
+              🔍 점수 분해
             </Text>
+            {positive.map(h => (
+              <View key={h.signer} className="flex-row justify-between">
+                <Text className="font-body text-body-sm text-text-pri flex-1" numberOfLines={1}>
+                  {h.signer}
+                </Text>
+                <Text className="font-body-bold text-body-sm ml-2" style={{ color: STAR_GOLD }}>
+                  +{h.value}
+                </Text>
+              </View>
+            ))}
+            {negative.map(h => (
+              <View key={h.signer} className="flex-row justify-between">
+                <Text className="font-body text-body-sm text-text-sub flex-1" numberOfLines={1}>
+                  {h.signer}
+                </Text>
+                <Text className="font-body-bold text-body-sm text-text-sub ml-2">{h.value}</Text>
+              </View>
+            ))}
+            <View className="h-px bg-outline-warm my-1" />
+            <View className="flex-row justify-between">
+              <Text className="font-body-bold text-body-sm text-text-pri">합계</Text>
+              <Text className="font-heading-bold text-body-sm" style={{ color: STAR_GOLD }}>
+                {breakdown.total}점
+              </Text>
+            </View>
           </View>
         </View>
       )}

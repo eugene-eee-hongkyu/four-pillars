@@ -135,21 +135,15 @@ export default function InterpretPremium() {
           </Text>
         </View>
 
-        {/* 학운 종합 점수 분해 — 그릇 크기 시그너 (trait 카드보다 위에 노출 — "이 점수가 어디서 왔는가") */}
+        {/* Hero — 학운 그릇 compact (첫 viewport에 결론 압축 — Agent UX 리서치 권장 B+F).
+            등급·티어 + 게이지 + 핵심 시그너 chip 3개 + "근거 보기 ▾" 펼침 */}
         {state.childManse && (
           <View className="px-container-padding">
-            <HagunSignerBreakdown manse={state.childManse} />
+            <HagunSignerBreakdown manse={state.childManse} compact={true} />
           </View>
         )}
 
-        {/* 학운 10가지 trait 카드 — 학과·방향 (그릇 모양) */}
-        {state.childManse?.studentTraits && (
-          <View className="px-container-padding">
-            <TraitScoreCard traits={state.childManse.studentTraits} />
-          </View>
-        )}
-
-        {/* 진단 완료 후 — 본문 위 mini TOC (긴 본문 navigation) */}
+        {/* mini TOC — 진단 완료 후 본문 위 navigation (긴 본문 스캔) */}
         {streamDone && (
           <View className="px-container-padding">
             <View className="flex-row flex-wrap gap-2 p-3 bg-secondary-container/40 rounded-md border border-outline-warm">
@@ -166,8 +160,8 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {/* 캐시 hit — interpret-free 화면에서 prefetch 완료된 경우 즉시 표시.
-            cache 효과로 사용자 wait 0초. mom test perception 가장 큰 개선 포인트. */}
+        {/* LLM 본문 — Hero 직후 즉시 노출. 학부모는 등급 보고 바로 본문으로 진입.
+            cache 효과로 사용자 wait 0초 — mom test perception 가장 큰 개선 포인트. */}
         {state.premiumInterpretText ? (
           <View className="p-card-padding gap-4">
             <InterpretBody text={state.premiumInterpretText} />
@@ -187,6 +181,13 @@ export default function InterpretPremium() {
             onComplete={(text) => { setPremiumInterpretText(text); setStreamDone(true); }}
           />
         ) : null}
+
+        {/* 학과·트랙 방향성 10가지 — 본문 후 compact 노출 (스크롤 후 호기심 사용자만 펼침) */}
+        {streamDone && state.childManse?.studentTraits && (
+          <View className="px-container-padding">
+            <TraitScoreCard traits={state.childManse.studentTraits} compact={true} />
+          </View>
+        )}
 
         {/* 공유 버튼 — streamDone 후 (캐시 hit 또는 stream 완료) */}
         {streamDone && state.sessionId && (
