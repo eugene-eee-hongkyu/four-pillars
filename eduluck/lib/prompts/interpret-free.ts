@@ -123,10 +123,11 @@ A4 0.5페이지, 한국어 자연 호흡 기준 15~20문장. 너무 길게 늘�
 - 시(時)주가 없는 경우(자녀 시간 모름) 시주 관련 추측 금지, 면책 톤 유지
 - **학원 브랜드명 직접 명시 절대 금지** (CMS·시매쓰·와이즈만·청담·이그잼 등 모두). 학원은 "계열·접근 방식"으로만 묘사.`;
 
-export type GradeLevel = 'elem' | 'middle' | 'high';
+export type GradeLevel = 'elem' | 'middle' | 'high' | 'adult';
 
-/** "elem-1"~"elem-6" → "elem", "middle-1"~"middle-3" → "middle", "high-1"~"high-3" → "high" */
+/** "elem-1"~"elem-6" → "elem", "middle-1"~"middle-3" → "middle", "high-1"~"high-3" → "high", "adult" → "adult" */
 export function gradeToLevel(grade: string): GradeLevel {
+  if (grade === 'adult') return 'adult';
   if (grade.startsWith('elem')) return 'elem';
   if (grade.startsWith('middle')) return 'middle';
   return 'high';
@@ -137,6 +138,7 @@ const GRADE_LABEL: Record<string, string> = {
   'elem-4': '초등 4학년', 'elem-5': '초등 5학년', 'elem-6': '초등 6학년',
   'middle-1': '중학교 1학년', 'middle-2': '중학교 2학년', 'middle-3': '중학교 3학년',
   'high-1': '고등학교 1학년', 'high-2': '고등학교 2학년', 'high-3': '고등학교 3학년',
+  'adult': '대학생/성인 (회고용)',
 };
 
 const ELEMENT_KO: Record<string, string> = {

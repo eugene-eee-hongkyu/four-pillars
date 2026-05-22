@@ -11,6 +11,7 @@ export const GRADES = [
   { value: 'middle-3', label: '중학교 3학년' },
   { value: 'high-1', label: '고등학교 1학년' }, { value: 'high-2', label: '고등학교 2학년' },
   { value: 'high-3', label: '고등학교 3학년' },
+  { value: 'adult', label: '대학생 / 성인 (회고용)' },
 ] as const;
 
 interface Props {

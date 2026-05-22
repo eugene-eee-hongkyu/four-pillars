@@ -94,6 +94,8 @@ function gradeToAgeRange(grade: string | undefined, currentAge: number): { start
   // grade 기반: 입시까지 남은 기간 + 입시 후 1년
   // grade 미입력: 현재~+4년 (보편 입시 4년)
   if (!grade) return { start: currentAge, end: currentAge + 4 };
+  // adult 회고용: 과거 고3~대학 입시 시기 (만 17~20세) 검사
+  if (grade === 'adult') return { start: 17, end: 21 };
   // grade 매핑: 입시(고3 19세)까지 + 1년
   const gradeAge: Record<string, number> = {
     'elem-1': 8, 'elem-2': 9, 'elem-3': 10, 'elem-4': 11, 'elem-5': 12, 'elem-6': 13,
