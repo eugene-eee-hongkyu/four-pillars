@@ -71,10 +71,25 @@ function StrengthDots({ value }: { value: number }) {
   );
 }
 
+/** 등급 라벨 → 강도 게이지 (5단계).
+ *  점수 숫자 비노출 + 게이지로 직관 표시. 학부모 인지 부조화 해소
+ *  ("100점 만점 32점 = 낙제 vs 강 2~3티어 = 좋음" 충돌 제거). */
+function gradeToGauge(label: string): number {
+  switch (label) {
+    case '매우 강': return 5;
+    case '강': return 4;
+    case '중상': return 3;
+    case '중': return 2;
+    case '중하': return 1;
+    default: return 0; // 약상·약중·약하
+  }
+}
+
 export function HagunSignerBreakdown({ manse }: Props) {
   const [expanded, setExpanded] = useState(false);
   const breakdown = computeHagun(manse);
   const grade = scoreToGrade(breakdown.total);
+  const gauge = gradeToGauge(grade.label);
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const negative = breakdown.hits.filter(h => h.value < 0);
@@ -86,24 +101,31 @@ export function HagunSignerBreakdown({ manse }: Props) {
 
   return (
     <View className="gap-4">
-      {/* 헤더 — 총점 + 등급 */}
-      <View className="gap-1">
+      {/* 헤더 — 등급·티어 + 강도 게이지 (점수 숫자 비노출) */}
+      <View className="gap-2">
         <Text className="font-heading-bold text-headline-md text-text-pri">
-          학운 종합 점수
+          학운 그릇
         </Text>
-        <View className="flex-row items-baseline gap-3 mt-1">
-          <Text className="font-heading-bold text-display-sm" style={{ color: STAR_GOLD }}>
-            {breakdown.total}
+        <View className="flex-row items-baseline gap-2 flex-wrap mt-1">
+          <Text className="font-heading-bold text-headline-lg text-text-pri">
+            {grade.label}
           </Text>
-          <Text className="font-body text-body-md text-text-sub">/ 100</Text>
-          <View className="px-2 py-0.5 rounded-full bg-secondary-container">
-            <Text className="font-body-bold text-label-md text-primary">
-              {grade.label} · {grade.baseTier}
-            </Text>
-          </View>
+          <Text className="font-body text-body-md text-text-sub">·</Text>
+          <Text className="font-body-bold text-body-lg text-text-pri">
+            {grade.baseTier}
+          </Text>
         </View>
-        <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-2">
-          학교 티어 그릇 크기를 보여주는 점수예요. 아래는 이 점수를 만드는 사주 시그너들이에요.
+        {gauge > 0 && (
+          <Text
+            className="font-body text-headline-md mt-1"
+            style={{ color: STAR_GOLD, letterSpacing: 4 }}
+            accessibilityLabel={`강도 ${gauge}점 만점에 ${gauge}점`}
+          >
+            {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
+          </Text>
+        )}
+        <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
+          학교 티어 그릇 크기예요. 아래는 이 그릇을 만드는 사주 시그너들이에요.
         </Text>
       </View>
 
