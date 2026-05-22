@@ -25,13 +25,13 @@ export interface TraitScore {
 }
 
 export interface StudentTraits {
-  /** 공부 머리 — 학자형 본질 */
+  /** 학자형 — 정통 학문·자격직 본질 (인성+관인상생+학당귀인) */
   studyMind: TraitScore;
   /** 시험장 강함 — 시험 돌파력 */
   examPower: TraitScore;
   /** 끈기·꾸준 — 장기전 */
   persistence: TraitScore;
-  /** 이해·응용 — 사고력 */
+  /** 사고력 — 이해·응용·분석 */
   comprehension: TraitScore;
   /** 표현·발표 — 말·글 */
   expression: TraitScore;
@@ -41,6 +41,10 @@ export interface StudentTraits {
   competitiveness: TraitScore;
   /** 회복·멘탈 — 스트레스 받침 */
   resilience: TraitScore;
+  /** 예술 감성 — 시각·창작·미디어 (화개·도화·식상격) */
+  arts: TraitScore;
+  /** 체육·운동 — 체력·기세·외부 활동 (신왕·양인·일주 강·금토·역마) */
+  athletics: TraitScore;
 }
 
 interface CalcInput {
@@ -196,6 +200,36 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
     { signal: '관인상생+인성 ≥2 콤보', weight: 8, matched: sipsin.isGwaninSangsaeng && c.insung >= 2 },
   ]);
 
+  // 9. 예술 감성 — 시각·창작·미디어
+  const cheondeokCount = countShensha(shensha, '천덕귀인');
+  const woldeokCount = countShensha(shensha, '월덕귀인');
+  const hwagae = countShensha(shensha, '화개살');
+  const arts = calcTrait([
+    { signal: '화개살 ≥2', weight: 18, matched: hwagae >= 2 },
+    { signal: '화개살 ≥1', weight: 8, matched: hwagae >= 1 },
+    { signal: '도화살 ≥1', weight: 10, matched: dohwa >= 1 },
+    { signal: '식신격·상관격', weight: 12, matched: ['식신격', '상관격'].includes(gyeokguk.name) },
+    { signal: '식상 ≥2', weight: 8, matched: c.siksang >= 2 },
+    { signal: '천덕·월덕 둘 다', weight: 8, matched: cheondeokCount >= 1 && woldeokCount >= 1 },
+    { signal: '일주 화개살', weight: 6, matched: shensha.dayPillar.includes('화개살') },
+    { signal: '화·목 강 (감성)', weight: 5, matched: (elementCounts.fire + elementCounts.wood) >= 4 },
+  ]);
+
+  // 10. 체육·운동 — 체력·기세·외부 활동
+  const yeokma = countShensha(shensha, '역마살');
+  const athletics = calcTrait([
+    { signal: '신왕', weight: 15, matched: sinwangScore >= 5 },
+    { signal: '일주 건록·제왕', weight: 12, matched: ['건록', '제왕'].includes(unsung.dayPillar.stage) },
+    { signal: '양인살', weight: 10, matched: yangin >= 1 },
+    { signal: '양인격·편관격', weight: 12, matched: ['양인격', '편관격'].includes(gyeokguk.name) },
+    { signal: '건록격', weight: 8, matched: gyeokguk.name === '건록격' },
+    { signal: '금 강', weight: 6, matched: elementCounts.metal >= 2 },
+    { signal: '토 강', weight: 6, matched: elementCounts.earth >= 2 },
+    { signal: '역마살 ≥1', weight: 6, matched: yeokma >= 1 },
+    { signal: '식상 ≥2', weight: 5, matched: c.siksang >= 2 },
+    { signal: '비겁 ≥3 (단체 본질)', weight: 5, matched: c.bigeop >= 3 },
+  ]);
+
   return {
     studyMind,
     examPower,
@@ -205,19 +239,23 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
     selfDriven,
     competitiveness,
     resilience,
+    arts,
+    athletics,
   };
 }
 
-/** 8개 항목 한국어 라벨 (UI 카드용) */
+/** 10개 항목 한국어 라벨 (UI 카드용) */
 export const TRAIT_LABELS: Record<keyof StudentTraits, string> = {
-  studyMind: '공부 머리',
+  studyMind: '학자형',
   examPower: '시험장 강함',
   persistence: '끈기·꾸준',
-  comprehension: '이해·응용',
+  comprehension: '사고력',
   expression: '표현·발표',
   selfDriven: '자기주도',
   competitiveness: '경쟁심',
   resilience: '회복·멘탈',
+  arts: '예술 감성',
+  athletics: '체육·운동',
 };
 
 // ── Percentile Rank ──────────────────────────────────────────
@@ -247,6 +285,8 @@ const DISTRIBUTION = distributionData as DistributionFile;
 /** 점수 → 상위 N% (1~99 정수, 더 작을수록 상위) */
 export function traitPercentile(key: keyof StudentTraits, score: number): number {
   const dist = DISTRIBUTION.distributions[key];
+  // 새 trait 추가 후 분포 재빌드 전 fallback — 50% (중간)
+  if (!dist) return 50;
   const s = Math.max(0, Math.min(100, Math.round(score)));
   const below = s > 0 ? dist.cumulative[s - 1] : 0;
   const aboveOrEqual = dist.total - below;
@@ -259,6 +299,8 @@ export function traitPercentile(key: keyof StudentTraits, score: number): number
  *  - 상위 1% = 99 / 상위 5% = 95 / 상위 15% = 90 / 상위 30% = 78 / 상위 50% = 62 / 상위 99% = 17
  */
 export function traitNormalized(key: keyof StudentTraits, raw: number): number {
+  // 분포 누락 시 raw 점수 그대로 (fallback)
+  if (!DISTRIBUTION.distributions[key]) return Math.max(0, Math.min(100, Math.round(raw)));
   const pct = traitPercentile(key, raw);
   // 가파른 stepwise — 상위 15% 이내가 90+, 상위 30% 이내가 78+
   if (pct <= 1) return 99;
@@ -294,6 +336,8 @@ export interface StudentTraitsWithPercentile {
   selfDriven: TraitScoreWithPercentile;
   competitiveness: TraitScoreWithPercentile;
   resilience: TraitScoreWithPercentile;
+  arts: TraitScoreWithPercentile;
+  athletics: TraitScoreWithPercentile;
 }
 
 /** 8개 항목 점수 + percentile (UI 카드용 main API) */

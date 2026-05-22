@@ -13,7 +13,7 @@ import { writeFileSync, mkdirSync } from 'fs';
 import { computeManse } from '../lib/manse/engine';
 import { calcStudentTraits } from '../lib/manse/student-traits';
 
-const TRAIT_KEYS = ['studyMind', 'examPower', 'persistence', 'comprehension', 'expression', 'selfDriven', 'competitiveness', 'resilience'] as const;
+const TRAIT_KEYS = ['studyMind', 'examPower', 'persistence', 'comprehension', 'expression', 'selfDriven', 'competitiveness', 'resilience', 'arts', 'athletics'] as const;
 type TraitKey = typeof TRAIT_KEYS[number];
 
 // 모집단 정의 — 초·중·고 자녀 학년 커버 (2008~2020 출생)
