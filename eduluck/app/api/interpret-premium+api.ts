@@ -88,7 +88,7 @@ export async function POST(request: Request) {
         child_subject_id: body.childSubjectId,
         mother_subject_id: body.motherSubjectId ?? null,
         body_text: bodyText,
-        prompt_version: 'interpret-premium-v2',
+        prompt_version: 'interpret-premium-v3-16sections',
         llm_model: ANTHROPIC_MODEL,
       });
     } catch (e) {

@@ -25,6 +25,12 @@ function loadInitial(): FlowState {
       if (merged.childManse) merged.childManse = hydrateManse(merged.childManse);
       if (merged.motherManse) merged.motherManse = hydrateManse(merged.motherManse);
       if (merged.fatherManse) merged.fatherManse = hydrateManse(merged.fatherManse);
+      // premium prompt 구조 버전 mismatch 시 캐시 무효 — 옛 14섹션 결과가
+      // 새 16섹션 prompt 도입 후에도 그대로 표시되는 문제 방지
+      if (merged.premiumInterpretVersion !== PREMIUM_PROMPT_VERSION) {
+        merged.premiumInterpretText = null;
+        merged.premiumInterpretVersion = null;
+      }
       return merged;
     }
   } catch {}
@@ -111,7 +117,12 @@ export interface FlowState {
 
   freeInterpretText: string | null;
   premiumInterpretText: string | null;
+  /** premiumInterpretText의 prompt 버전 — 코드 PREMIUM_PROMPT_VERSION과 mismatch 시 캐시 무효 */
+  premiumInterpretVersion: string | null;
 }
+
+/** Premium prompt 구조 버전. 변경 시 클라이언트 캐시(localStorage premiumInterpretText) 자동 무효 */
+export const PREMIUM_PROMPT_VERSION = 'v3-16sections';
 
 const initial: FlowState = {
   sessionId: null,
@@ -163,6 +174,7 @@ const initial: FlowState = {
   parentEducationStatus: 'pending',
   freeInterpretText: null,
   premiumInterpretText: null,
+  premiumInterpretVersion: null,
 };
 
 interface FlowContextValue {
@@ -243,7 +255,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, freeInterpretText: t }));
   }, []);
   const setPremiumInterpretText = useCallback((t: string) => {
-    setState((s) => ({ ...s, premiumInterpretText: t }));
+    setState((s) => ({ ...s, premiumInterpretText: t, premiumInterpretVersion: PREMIUM_PROMPT_VERSION }));
   }, []);
   const resetMother = useCallback(() => {
     setState((s) => ({
@@ -273,6 +285,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       childManse: null,
       freeInterpretText: null,
       premiumInterpretText: null,
+      premiumInterpretVersion: null,
     }));
   }, []);
   const resetAll = useCallback(() => {
