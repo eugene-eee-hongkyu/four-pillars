@@ -183,6 +183,14 @@ interface FlowContextValue {
   setParentEducationStatus: (status: 'entered' | 'skipped') => void;
   setFreeInterpretText: (t: string) => void;
   setPremiumInterpretText: (t: string) => void;
+  /** 어머니 정보·만세력 초기화 — 사용자가 옵션 입력 후 삭제 원하는 경우 */
+  resetMother: () => void;
+  /** 아빠 정보·만세력 초기화 */
+  resetFather: () => void;
+  /** 자녀 정보·만세력·결과 초기화 — 같은 디바이스로 다른 아이 진단 시 (어머니·아빠는 유지) */
+  resetChild: () => void;
+  /** 전체 초기화 — 다른 가족 진단 시 */
+  resetAll: () => void;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -237,6 +245,39 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   const setPremiumInterpretText = useCallback((t: string) => {
     setState((s) => ({ ...s, premiumInterpretText: t }));
   }, []);
+  const resetMother = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      mother: { ...initial.mother },
+      motherSubjectId: null,
+      motherManse: null,
+      motherStatus: 'pending',
+      motherEducation: { level: null, schoolName: null, major: null },
+    }));
+  }, []);
+  const resetFather = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      father: { ...initial.father },
+      fatherSubjectId: null,
+      fatherManse: null,
+      fatherStatus: 'pending',
+      fatherEducation: { level: null, schoolName: null, major: null },
+    }));
+  }, []);
+  const resetChild = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      child: { ...initial.child },
+      childSubjectId: null,
+      childManse: null,
+      freeInterpretText: null,
+      premiumInterpretText: null,
+    }));
+  }, []);
+  const resetAll = useCallback(() => {
+    setState(() => ({ ...initial }));
+  }, []);
 
   return (
     <FlowContext.Provider
@@ -256,6 +297,10 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         patchMotherEducation,
         patchFatherEducation,
         setParentEducationStatus,
+        resetMother,
+        resetFather,
+        resetChild,
+        resetAll,
         setFreeInterpretText,
         setPremiumInterpretText,
       }}

@@ -40,6 +40,7 @@ export default function FamilyInput() {
     state, patchChild, setChildSubject,
     patchMother, setMotherSubject, setMotherSkipped,
     patchFather, setFatherSubject, setFatherSkipped,
+    resetMother, resetFather, resetChild,
   } = useFlow();
 
   // === 자녀 (필수) ===
@@ -214,7 +215,20 @@ export default function FamilyInput() {
 
         {/* === 자녀 (필수) === */}
         <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-4 mt-2">
-          <Text className="font-body-bold text-body-md text-text-pri">자녀 (필수)</Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="font-body-bold text-body-md text-text-pri">자녀 (필수)</Text>
+            {state.child.birthYear !== null && (
+              <Pressable
+                onPress={() => {
+                  resetChild();
+                  setChildDate('');
+                  setChildTime('');
+                }}
+              >
+                <Text className="font-body text-label-md text-text-sub underline">↻ 다른 아이 진단</Text>
+              </Pressable>
+            )}
+          </View>
           <Input
             label="닉네임"
             value={state.child.nickname}
@@ -269,6 +283,17 @@ export default function FamilyInput() {
               type="time"
             />
             <LocationDropdown value={state.mother.birthLocation} onChange={(loc) => patchMother({ birthLocation: loc })} />
+            <Pressable
+              onPress={() => {
+                resetMother();
+                setMotherDate('');
+                setMotherTime('');
+                setShowMother(false);
+              }}
+              className="flex-row items-center justify-center mt-1 py-2 rounded-sm border border-outline-warm"
+            >
+              <Text className="font-body text-label-md text-text-sub">↻ 어머니 사주 초기화</Text>
+            </Pressable>
           </View>
         )}
 
@@ -297,6 +322,17 @@ export default function FamilyInput() {
               type="time"
             />
             <LocationDropdown value={state.father.birthLocation} onChange={(loc) => patchFather({ birthLocation: loc })} />
+            <Pressable
+              onPress={() => {
+                resetFather();
+                setFatherDate('');
+                setFatherTime('');
+                setShowFather(false);
+              }}
+              className="flex-row items-center justify-center mt-1 py-2 rounded-sm border border-outline-warm"
+            >
+              <Text className="font-body text-label-md text-text-sub">↻ 아빠 사주 초기화</Text>
+            </Pressable>
           </View>
         )}
 
