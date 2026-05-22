@@ -12,6 +12,7 @@ import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { ShareButton } from '@/components/interpret/ShareButton';
 import { TraitScoreCard } from '@/components/manse/TraitScoreCard';
+import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -134,7 +135,14 @@ export default function InterpretPremium() {
           </Text>
         </View>
 
-        {/* 학운 8가지 점수 카드 — 첫인상 hook (본문 시작 전부터 노출) */}
+        {/* 학운 종합 점수 분해 — 그릇 크기 시그너 (trait 카드보다 위에 노출 — "이 점수가 어디서 왔는가") */}
+        {state.childManse && (
+          <View className="px-container-padding">
+            <HagunSignerBreakdown manse={state.childManse} />
+          </View>
+        )}
+
+        {/* 학운 10가지 trait 카드 — 학과·방향 (그릇 모양) */}
         {state.childManse?.studentTraits && (
           <View className="px-container-padding">
             <TraitScoreCard traits={state.childManse.studentTraits} />

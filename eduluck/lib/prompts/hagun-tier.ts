@@ -95,7 +95,7 @@ function hasSamgi(stems: string[]): boolean {
       || SAMGI_HUMAN.every(s => set.has(s));
 }
 
-function computeHagun(m: ManseResult): HagunBreakdown {
+export function computeHagun(m: ManseResult): HagunBreakdown {
   const c = m.sipsin.counts;
   const hits: HagunBreakdown['hits'] = [];
   const allShensha = [
@@ -311,7 +311,7 @@ function scoreHagun(m: ManseResult): number {
  *  점수별 Confidence (LLM 톤):
  *    ≥55 "확실한 1티어 (상위 5%)" / 45~54 "1~2티어 안정 (상위 15%)" /
  *    34~44 "1~2티어 가능 + 2~3티어 안정 (상위 30%)" / 20~33 "2~3티어" / ... */
-function scoreToGrade(score: number): HagunGradeInfo {
+export function scoreToGrade(score: number): HagunGradeInfo {
   if (score >= 34) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어) — 상위 ~30%
   if (score >= 22) return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어) — 상위 ~50%
   if (score >= 14) return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어) — 상위 ~70%
