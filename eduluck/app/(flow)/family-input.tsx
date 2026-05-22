@@ -18,6 +18,7 @@ import { DateTimeInput } from '@/components/ui/DateTimeInput';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
+import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
@@ -89,6 +90,15 @@ export default function FamilyInput() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "새 진단 시작" 확인 모달 — 자녀 정보 손실 안전망
+  const [newSessionModal, setNewSessionModal] = useState(false);
+
+  const confirmNewSession = () => {
+    resetChild();
+    setChildDate('');
+    setChildTime('');
+    setNewSessionModal(false);
+  };
 
   const childParsedDate = useMemo(() => parseDate(childDate), [childDate]);
   const childParsedTime = useMemo(() => parseTime(childTime), [childTime]);
@@ -219,13 +229,13 @@ export default function FamilyInput() {
             <Text className="font-body-bold text-body-md text-text-pri">자녀 (필수)</Text>
             {state.child.birthYear !== null && (
               <Pressable
-                onPress={() => {
-                  resetChild();
-                  setChildDate('');
-                  setChildTime('');
-                }}
+                onPress={() => setNewSessionModal(true)}
+                accessibilityRole="button"
+                accessibilityLabel="새 진단 시작 — 지금 정보 지우고 새 진단"
+                className="px-3 py-1.5 rounded-full border border-primary bg-secondary-container"
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                <Text className="font-body text-label-md text-text-sub underline">↻ 다른 아이 진단</Text>
+                <Text className="font-body-bold text-label-md text-primary">+ 새 진단 시작</Text>
               </Pressable>
             )}
           </View>
@@ -345,6 +355,30 @@ export default function FamilyInput() {
         </Button>
       </StickyCTA>
 
+      {/* 새 진단 시작 확인 모달 — 자녀 정보 손실 안전망 */}
+      <Modal visible={newSessionModal} onClose={() => setNewSessionModal(false)}>
+        <Text className="font-heading text-headline-md text-text-pri mb-3">새 진단을 시작할까요?</Text>
+        <Text className="font-body text-body-md text-text-pri mb-6 leading-relaxed">
+          지금 입력한 자녀 정보가 모두 지워지고{'\n'}
+          처음부터 다시 입력하게 돼요.
+        </Text>
+        <View className="flex-row gap-2">
+          <Pressable
+            onPress={() => setNewSessionModal(false)}
+            className="flex-1 py-3 rounded-md border border-outline-warm items-center"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <Text className="font-body-bold text-body-md text-text-pri">취소</Text>
+          </Pressable>
+          <Pressable
+            onPress={confirmNewSession}
+            className="flex-1 py-3 rounded-md bg-primary items-center"
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <Text className="font-body-bold text-body-md text-surface-container-low">새 진단 시작 →</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
