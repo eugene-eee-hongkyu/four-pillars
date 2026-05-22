@@ -6,6 +6,76 @@
 
 ---
 
+## Session 2026-05-22 15:51 — trait 직관 정합 + 10가지 항목 + 점수 시스템 문서화
+
+### 작업 요약
+
+**A. 학운 8가지 → 10가지 trait 확장 + 직관 정합 보강**
+- "공부 머리" → "**학자형**" (IQ 오해 ✗, 명리 본질 정확 명명)
+- "이해·응용" → "**사고력**"
+- 신규 9. **예술 감성** (artsScore 매핑 + 화개·도화·식상격)
+- 신규 10. **체육·운동** (신왕·일주 건록·양인·금토·역마)
+- 시그너 weight 보강 — 학자형·자기주도·시험장·끈기 강화
+- percentile → normalized stepwise 매핑 (상위 1%→99, 15%→90, 30%→78)
+- 분포 재시뮬레이션 113,976 sample (70초) × 2회
+
+**B. §14·§15·§16 별도 섹션 분리**
+- 이전: §9·§13 마지막 단락에 통합 → 시각 분리 ✗
+- 신규: §14 "조심 한 해" / §15 "본질 액션" / §16 "어머니 마디" / §17 시그니처
+- LLM 3 sample 16섹션 헤더 정확 분리 검증 ⭐
+
+**C. UX 개선 3건 (NN/g·UXPin·iOS HIG 검토)**
+- TraitScoreCard: ⓘ 아이콘 + 카드 tap → Modal (10개 항목 어머니 친화 설명 + 잘 맞는 트랙)
+- 첫 진입 hint "카드를 누르면 자세한 설명이 나와요" (localStorage 1회성)
+- "다른 아이 진단" → "**+ 새 진단 시작**" outline 버튼 + 확인 모달
+
+**D. 성인/회고용 학년 옵션 추가**
+- GradeDropdown에 "대학생 / 성인 (회고용)" 옵션 (value: 'adult')
+- gradeSpec·gradeToLevel·gradeToAgeRange 분기 추가
+- §13 학교 회고 톤·§14 과거 입시 시기·§16 "본인에게 한 마디" 자동 전환
+- LLM 1-shot 검증 (1976년생 sample): "1992년 흔들리는 자리" + "Eugene에게 한 마디" 본인 청자 ⭐
+
+**E. 캐시 무효화 메커니즘 (16섹션 변경 후 14섹션 캐시 문제 해결)**
+- `PREMIUM_PROMPT_VERSION = 'v3-16sections'` 상수
+- `FlowState.premiumInterpretVersion` 필드 추가
+- loadInitial mismatch 시 localStorage premiumInterpretText 자동 null
+- DB prompt_version: v2 → v3-16sections
+- 앞으로 prompt 구조 변경 시 상수 bump만으로 모든 클라이언트 자동 재호출
+
+**F. 부모/자녀 초기화 버튼 + 다른 아이 진단 유즈케이스**
+- context resetMother·resetFather·resetChild·resetAll 4함수
+- family-input 어머니·아빠 토글 안 "↻ 초기화" 버튼
+- 자녀 헤더 옆 "+ 새 진단 시작" + 확인 모달
+
+**G. 정밀 분석 오류 fix (옛 manse_json hydrate 누락)**
+- hydrate.ts 강화 — 새 필드(studentTraits·abroadScore·artsScore·medicalScore·shensha·hapchunh·jijanggan) 일괄 보강
+- FlowProvider loadInitial이 localStorage 복원 시 childManse·motherManse·fatherManse 각각 hydrate 호출
+
+**H. SCORING_SYSTEM.md 신규 문서 (eduluck/docs/design/)**
+- 학운 점수표 -9~+18 + 1점 단위 세분화 (1티어 확실·강·도전 등 20단계)
+- 티어별 대표 학교 (한국 입시 통설)
+- 점수 산출 시그너 + 부모 환경 조정 (±2)
+- 10가지 trait 각각 설명 + 시그너 weight 표
+- UI 표시 가이드 + 명리적 근거 + 관련 코드 위치
+- PII (sample 이름) 완전 제거 — 외부 공유 가능 형태
+
+**N=11 검증 결과 (학운 1~2티어 4명 모두 통과)**
+- 4명 매우 강 sample: 자기주도·공부머리·시험장·끈기 등 영역에서 90+ 1~2개 + 70+ 1~3개 ⭐
+- 예술·체육 신규 항목도 명리 본질 정확 (디자이너 95·양인격 97·신왕 95)
+
+### 실패한 시도
+
+- 분포 시뮬레이션 1차 — 새 trait 추가 시 percentile lookup이 분포 JSON에 새 키 ✗으로 crash. traitPercentile에 fallback (default 50) 추가로 해소
+- 1차 weight 임계 — 1~2티어 sample이 90+ 항목 ✗으로 사용자 직관 미달. 시그너 보강 + percentile stepwise 매핑 2차로 통과
+
+### 다음 액션
+
+1. prod 배포 후 모바일 시각 검증 — 10개 카드 그리드·ⓘ 모달·"+ 새 진단 시작" 버튼·hint
+2. Eugene mom test 10명 진입 — 시각 카드·16섹션 분리·성인 회고 옵션 정성 평가
+3. mom test 결과로 trait 항목 weight·라벨·UI 미세 조정
+
+---
+
 ## Session 2026-05-22 11:16 — 정밀 분석 4종 보강 (직관 정합 + 16섹션)
 
 ### 작업 요약

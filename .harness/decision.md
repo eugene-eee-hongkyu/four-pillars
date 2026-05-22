@@ -6,6 +6,72 @@
 
 ---
 
+## 2026-05-22 15:51: 학운 8가지 → 10가지 trait 확장 (예술·체육 추가)
+
+- **선택**: 학자형(공부 머리 이름 변경) + 사고력(이해·응용 이름 변경) + 예술 감성·체육·운동 2개 신규 = 10가지
+- **대안 검토**:
+  - 8개 유지 + 항목 일부 교체 (회복 멘탈 → 예술) — 명리적으로 회복도 의미 있어 제외 ✗
+  - 9개 (예술만 추가) — 사용자 명시 "예술·체육 각 1개"
+  - **10개 (선택)** — 명리 영역 골고루 커버, 2x5 그리드 깔끔
+- **선택 이유**: 사용자 직관 정합 + 명리 본질(화개살·도화살·신왕·양인) 명확 매핑 + N=11 sample에서 90+ 도달 정확
+- **영향 범위**: student-traits.ts StudentTraits 인터페이스·TRAIT_LABELS·TRAIT_DESCRIPTIONS·calcStudentTraits / lib/manse/data/trait-distribution.json 재빌드 / scripts/build-trait-distribution.ts TRAIT_KEYS / TraitScoreCard 자동 2x5 그리드
+- **되돌리는 방법**: arts·athletics 키 제거 + 분포 재빌드 + 라벨 원복
+
+---
+
+## 2026-05-22 15:51: TraitScoreCard 카드 탭 → 모달 (UX 페르소나)
+
+- **선택**: 카드 우측 상단 ⓘ 아이콘 + 카드 전체 tap → 모달 (10개 항목 설명) + 첫 진입 hint
+- **대안 검토**:
+  - A. ⓘ 아이콘 (선택) — NN/g 정보 시그너 표준, 모달 의미 정합
+  - B. ▸ chevron — iOS drill-in 표준이지만 "다음 페이지" 오해
+  - C. "자세히" 텍스트 — 가장 명시적이나 시각 noise
+  - D. Hint 1회만 — discoverability 약함
+- **선택 이유**: NN/g·iOS HIG·UXPin 검토 — ⓘ가 "추가 정보" 보편 시그너 + 모달 의미 정합. 카드 자체 tappable + active state opacity 0.7 피드백.
+- **영향 범위**: components/manse/TraitScoreCard.tsx + student-traits.ts TRAIT_DESCRIPTIONS export
+- **되돌리는 방법**: ⓘ 아이콘·onPress·Modal 제거 + TRAIT_DESCRIPTIONS 미사용
+
+---
+
+## 2026-05-22 15:51: "다른 아이 진단" → "+ 새 진단 시작" prominent 버튼
+
+- **선택**: outline 버튼 (border-primary + secondary-container 배경) + 확인 모달 + 텍스트 "+ 새 진단 시작"
+- **대안 검토**:
+  - 현재 ("↻ 다른 아이 진단") underline 텍스트 — 눈에 띔 약함
+  - chevron 텍스트 ("→") — 의미 모호
+  - 버튼 + 확인 모달 (선택) — UX 가이드: 데이터 손실 액션은 confirmation 필수
+- **선택 이유**: UX 검색 (designmonks·UXPin·UX Movement) — 1) Specific & Action-oriented ("새 진단 시작") 2) Secondary action 톤 (outline) 3) Confirmation prompt 4) Mobile 44pt+ 터치 영역. 자녀+성인 회고 모두 커버.
+- **영향 범위**: family-input.tsx
+- **되돌리는 방법**: text Pressable로 복원 + Modal 제거
+
+---
+
+## 2026-05-22 15:51: PREMIUM_PROMPT_VERSION 캐시 무효 메커니즘
+
+- **선택**: localStorage premiumInterpretText 저장 시 version도 같이 set + loadInitial mismatch 시 자동 null
+- **대안 검토**:
+  - A. version 키 자동 무효 (선택) — 코드 한 줄 bump만으로 모든 클라이언트 자동 재호출
+  - B. 사용자에게 "+ 새 진단 시작" 안내 — 수동, 옛 진단 유저 모르고 14섹션 그대로 봄
+  - C. localStorage 전체 wipe — 다른 state도 손실
+- **선택 이유**: 16섹션 도입 후 옛 사용자가 14섹션 캐시된 결과 그대로 봄 = 사용자 보고. version 키가 자동 무효 보장. 앞으로 prompt 변경 시 PREMIUM_PROMPT_VERSION만 bump.
+- **영향 범위**: lib/flow/context.tsx + app/api/interpret-premium+api.ts
+- **되돌리는 방법**: PREMIUM_PROMPT_VERSION 상수 + premiumInterpretVersion 필드 제거
+
+---
+
+## 2026-05-22 15:51: 성인/회고용 학년 옵션 도입
+
+- **선택**: GradeDropdown에 'adult' 옵션 추가 + gradeSpec·gradeToLevel·gradeToAgeRange 분기 + §16 본인 청자 자동 전환
+- **대안 검토**:
+  - A. 기존 학년 옵션만 (회고용 안내 ✗) — 졸업한 사람이 학년 입력 애매
+  - B. 'adult' 옵션 추가 (선택) — 사주 회고용 명확
+  - C. 별도 화면 진입 — UI 복잡
+- **선택 이유**: 사용자 유즈케이스 — "이미 졸업해서 대학 간 사람이 재미로 자기 사주 조회". 학년 'adult' 선택 시 §13 학교 회고 톤·§14 과거 입시 시기·§16 본인 청자 자동 전환. LLM 검증 통과.
+- **영향 범위**: GradeDropdown.tsx + interpret-premium·interpret-free·critical-year + §16 prompt
+- **되돌리는 방법**: GRADES 배열에서 adult 제거 + 각 분기 제거
+
+---
+
 ## 2026-05-22 11:16: 정밀 분석 4종 보강 — trait 점수 직관 정합 + 16섹션 분리
 
 - **선택**: 사용자 직관 "1~2티어 = 1-2개 90+ + 1-2개 70+ 항목" 충족하도록 trait 시그너 weight 강화 + percentile → normalized stepwise 매핑. 통합 §9·§13에 묻혀 있던 "조심 한 해" + "본질 액션"을 §14·§15 별도 섹션으로 분리. 어머니 마디를 §16으로 이동 (총 16섹션 + §17 시그니처).
