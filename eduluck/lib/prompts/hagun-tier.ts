@@ -235,14 +235,15 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   let layer3 = 0;
 
   // 3-1. 청소년 대운 (15 / 8 / 4)
-  // 입시 직전 16~22세 대운은 ×2 가중 (Gemini 권장 — 입시 결과 직결 시기.
-  // 초등 6~12 대운만 좋고 고등 16~22가 약한 경우 점수 +가 나와 입시 결과와 어긋나던 구조 해소).
+  // 입시 직전 16-22세 대운은 ×1.5 가중 (Gemini 권장 — 입시 결과 직결 시기.
+  // 초등 6-12 대운만 좋고 고등 16-22가 약한 경우 점수 +가 나와 입시 결과와 어긋나던 구조 해소).
+  // 2026-05-23: ×2 → ×1.5 보수화 (1티어 매우 강 유지하면서 in-sample overfitting 위험 ↓).
   const SCHOLAR_LUCK = new Set(['정인', '편인', '정관', '편관']);
   const HEADWIND_LUCK = new Set(['정재', '편재']);
   let youthLuck = 0;
   for (const d of m.luckCycles.daeun) {
     if (d.age < 6 || d.age > 22) continue;
-    const weight = d.age >= 16 ? 2 : 1;
+    const weight = d.age >= 16 ? 1.5 : 1;
     if (SCHOLAR_LUCK.has(d.stemSipsin)) youthLuck += weight;
     else if (HEADWIND_LUCK.has(d.stemSipsin)) youthLuck -= weight;
     if (SCHOLAR_LUCK.has(d.branchSipsin)) youthLuck += weight;
@@ -311,9 +312,10 @@ function scoreHagun(m: ManseResult): number {
  *  ≥34 매우 강 — 상위 ~30% (5명 1티어 sample 모두 ≥34 도달).
  *  사용자 요구("분포 보수적" + "1티어 sample 1~2티어 매핑") 절충.
  *
- *  점수별 Confidence (LLM 톤):
- *    ≥55 "확실한 1티어 (상위 5%)" / 45~54 "1~2티어 안정 (상위 15%)" /
- *    34~44 "1~2티어 가능 + 2~3티어 안정 (상위 30%)" / 20~33 "2~3티어" / ... */
+ *  점수별 Confidence (LLM 톤, 2026-05-23 표현 약화):
+ *    ≥55 "1티어 최상위 가능 영역 (상위 5%)" / 45-54 "1-2티어 안정 (상위 15%)" /
+ *    34-44 "1-2티어 가능 + 2-3티어 안정 (상위 30%)" / 20-33 "2-3티어" / ...
+ *  Counterfactual 결과 random 사주 33%가 ≥34에 도달 → "확실한" 단언 사용 ✗. */
 export function scoreToGrade(score: number): HagunGradeInfo {
   if (score >= 34) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어) — 상위 ~30%
   if (score >= 22) return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어) — 상위 ~50%
@@ -416,7 +418,8 @@ export interface FinalTierResult {
   primaryTier: number;
   /** 안정권 티어 (primaryTier + 1) */
   safetyTier: number;
-  /** LLM 풀이용 한 줄 confidence 표현: "확실한 1티어" / "1티어 가능 + 2티어 안정" / "1티어 도전 + 2티어 안정" */
+  /** LLM 풀이용 한 줄 confidence 표현: "1티어 안정 영역" / "1티어 가능 + 2티어 안정" / "1티어 도전 + 2티어 안정"
+   *  (2026-05-23 표현 약화: "확실한" → "안정 영역"·"가능" — Counterfactual cutoff random 33% 통과 반영) */
   confidenceLabel: string;
   /** LLM 풀이용 한 줄 요약 */
   oneLineSummary: string;
@@ -440,8 +443,8 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
   // 매우 강 ≥10 / 강 7~9 / 중상 4~6 / 중 2~3 / 중하 0~1 / 약상 -1~-2 / 약중 -3~-4 / 약하 -5~-6
   let confidence: 'certain' | 'likely' | 'reach';
 
-  if (score >= 15) confidence = 'certain';           // 매우 강 최상위 (의대·서울대 최상위 학과 등)
-  else if (score >= 13) confidence = 'certain';      // 매우 강 상단 (확실한 1티어)
+  if (score >= 15) confidence = 'certain';           // 매우 강 최상위 (의대·서울대 최상위 학과 도전 영역)
+  else if (score >= 13) confidence = 'certain';      // 매우 강 상단 (1티어 안정 영역)
   else if (score >= 11) confidence = 'likely';       // 매우 강 중간
   else if (score === 10) confidence = 'reach';       // 매우 강 하단
   else if (score === 9) confidence = 'certain';      // 강 상단
@@ -460,10 +463,10 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
 
   let label: string;
   if (confidence === 'certain' && score >= 15 && primaryTier === 1) {
-    // 매우 강 최상위 — 의대·서울대 최상위 학과·KAIST·POSTECH 명시 가능 영역
-    label = `확실한 1티어 최상위`;
+    // 매우 강 최상위 — 의대·서울대 최상위 학과·KAIST·POSTECH 도전 영역
+    label = `1티어 최상위 도전 영역`;
   } else if (confidence === 'certain') {
-    label = `확실한 ${primaryTier}티어`;
+    label = `${primaryTier}티어 안정 영역`;
   } else if (confidence === 'likely') {
     label = `${primaryTier}티어 가능 + ${safetyTier}티어 안정`;
   } else {
