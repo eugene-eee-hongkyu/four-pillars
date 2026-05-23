@@ -107,19 +107,38 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
 
   const isWeakScholar = gauge === 0;
 
-  // 카드 cell (핵심 + 함께 작용 공통 — 박스 + 강도 점)
-  const renderSignerCell = (h: { signer: string; value: number }, emphasize: boolean) => (
+  // 핵심 자리 — Filled card (elevation 1, primary)
+  const renderPrimaryCell = (h: { signer: string; value: number }) => (
     <View
       key={h.signer}
-      className={`p-card-padding rounded-md border border-outline-warm gap-1 ${emphasize ? 'bg-surface-container-low' : 'bg-surface'}`}
+      className="p-card-padding rounded-md bg-surface-container-low border border-outline-warm gap-1"
     >
       <View className="flex-row items-center justify-between">
-        <Text className={`font-body${emphasize ? '-bold' : ''} text-body-md text-text-pri flex-1`}>
+        <Text className="font-body-bold text-body-md text-text-pri flex-1">
           {h.signer}
         </Text>
         <StrengthDots value={h.value} />
       </View>
-      <Text className={`font-body text-label-sm ${emphasize ? 'text-text-sub' : 'text-text-sub'} leading-relaxed`} numberOfLines={2}>
+      <Text className="font-body text-label-sm text-text-sub leading-relaxed" numberOfLines={2}>
+        {explainSigner(h.signer)}
+      </Text>
+    </View>
+  );
+
+  // 함께 작용 자리 — Outlined card (Material elevation 0, secondary)
+  //   bg ✗, border만 + 작은 padding + smaller typography (NN/g visual hierarchy)
+  const renderSecondaryRow = (h: { signer: string; value: number }) => (
+    <View
+      key={h.signer}
+      className="px-3 py-2 rounded-md border border-outline-warm gap-0.5"
+    >
+      <View className="flex-row items-center justify-between">
+        <Text className="font-body text-body-sm text-text-sub flex-1">
+          {h.signer}
+        </Text>
+        <StrengthDots value={h.value} />
+      </View>
+      <Text className="font-body text-label-sm text-text-sub leading-relaxed" numberOfLines={1}>
         {explainSigner(h.signer)}
       </Text>
     </View>
@@ -173,45 +192,43 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
         </Text>
       </View>
 
-      {/* ===== 핵심 시그너 (Top 3) — 박스 + 강도 점 + 1줄 해석 ===== */}
+      {/* ===== 핵심 자리 (Top 3) — Filled card (primary) ===== */}
       {top3.length > 0 && (
         <View className="gap-2">
           <Text className="font-body-bold text-label-md text-text-sub">
             ✨ 핵심 자리
           </Text>
-          {top3.map(h => renderSignerCell(h, true))}
+          {top3.map(renderPrimaryCell)}
         </View>
       )}
 
-      {/* ===== 함께 작용 — 박스화 + 강도 점 (피드백 #2) ===== */}
+      {/* ===== 함께 작용 — Outlined card (secondary, 위계 격하) ===== */}
       {rest.length > 0 && (
-        <View className="gap-2">
-          <Text className="font-body-bold text-label-md text-text-sub">
-            🔹 함께 작용하는 자리 ({rest.length}개)
+        <View className="gap-1.5">
+          <Text className="font-body text-label-md text-text-sub">
+            🔹 함께 작용하는 자리
           </Text>
-          {rest.map(h => renderSignerCell(h, false))}
+          {rest.map(renderSecondaryRow)}
         </View>
       )}
 
-      {/* ===== 페널티 — "보완할 자리" 톤 ===== */}
+      {/* ===== 페널티 — Chip tag (가볍게, negativity bias 완충) ===== */}
       {negative.length > 0 && (
-        <View className="gap-2">
-          <Text className="font-body-bold text-label-md text-text-sub">
-            💤 보완할 자리 ({negative.length}개)
+        <View className="gap-1">
+          <Text className="font-body text-label-sm text-text-sub">
+            참고: 약한 자리
           </Text>
-          {negative.map(h => (
-            <View key={h.signer} className="p-card-padding rounded-md border border-outline-warm bg-surface gap-1">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-body text-body-md text-text-sub flex-1">{h.signer}</Text>
-                <StrengthDots value={h.value} />
+          <View className="flex-row flex-wrap gap-1.5">
+            {negative.map(h => (
+              <View key={h.signer} className="px-2 py-1 rounded-full bg-surface border border-outline-warm">
+                <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>
+                  {h.signer}
+                </Text>
               </View>
-              <Text className="font-body text-label-sm text-text-sub leading-relaxed" numberOfLines={2}>
-                {explainSigner(h.signer)}
-              </Text>
-            </View>
-          ))}
-          <Text className="font-body text-label-sm text-text-sub leading-relaxed">
-            이 자리는 약해도 괜찮아요. 다른 자리로 보강돼요.
+            ))}
+          </View>
+          <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
+            이 자리는 약하지만, 위 핵심 자리로 보강돼요.
           </Text>
         </View>
       )}

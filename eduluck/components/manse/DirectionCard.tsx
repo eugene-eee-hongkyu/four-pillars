@@ -38,7 +38,6 @@ function levelLabel(level: CategoryLevel): { tone: 'strong' | 'mid' | 'weak'; em
 }
 
 export function DirectionCard({ directions, compact = true }: Props) {
-  const [expanded, setExpanded] = useState(false);
   const [activeKey, setActiveKey] = useState<DirectionEntry['key'] | null>(null);
 
   const strong = directions.filter(d => d.level === '매우 강' || d.level === '강');
@@ -75,80 +74,69 @@ export function DirectionCard({ directions, compact = true }: Props) {
 
   if (compact) {
     return (
-      <View className="gap-2">
-        <Pressable
-          onPress={() => setExpanded(!expanded)}
-          accessibilityRole="button"
-          accessibilityLabel="진로 방향성 8가지 자세히 보기"
-          className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-1"
-          style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-        >
-          <View className="flex-row items-center justify-between">
-            <Text className="font-heading-bold text-body-lg text-text-pri">
-              🎯 사주가 가리키는 방향성
-            </Text>
-            <Text className="font-body text-label-md text-text-sub">{expanded ? '▴' : '▾'}</Text>
-          </View>
-          {!expanded && strongDisplay.length > 0 && (
-            <Text className="font-body text-body-sm text-text-pri leading-relaxed">
-              🌟 {strongDisplay.slice(0, 3).map(d => `${d.emoji} ${d.label}`).join(' · ')}
-            </Text>
-          )}
-          <Text className="font-body text-label-sm text-text-sub">
-            강한 방향 {strong.length}개 · 보통 {mid.length}개 · 약한 방향 {weak.length}개
+      <View className="gap-3">
+        {/* 헤더 — 펼침 제거, 항상 즉시 노출 (피드백 #1: Hero급 결론은 펼침 ✗) */}
+        <View>
+          <Text className="font-heading-bold text-headline-md text-text-pri">
+            🎯 사주가 가리키는 방향성
           </Text>
-        </Pressable>
+          <Text className="font-body text-label-sm text-text-sub mt-1">
+            학과·트랙 매핑이에요. 강한 방향 위주로 보세요.
+          </Text>
+        </View>
 
-        {expanded && (
-          <View className="gap-4">
-            {/* 강한 방향 (매우 강·강) */}
-            {strongDisplay.length > 0 && (
-              <View className="gap-2">
-                <View className="flex-row items-baseline justify-between">
-                  <Text className="font-heading-bold text-body-md text-text-pri">
-                    🌟 강한 방향 <Text className="font-body text-body-sm text-text-sub">({strongDisplay.length}개)</Text>
+        {/* 강한 방향 — Filled card (primary) */}
+        {strongDisplay.length > 0 && (
+          <View className="gap-2">
+            <View className="flex-row items-baseline justify-between">
+              <Text className="font-body-bold text-label-md text-text-sub">
+                🌟 강한 방향 ({strongDisplay.length})
+              </Text>
+              <Text className="font-body text-label-sm text-text-sub">사주가 받쳐주는 트랙</Text>
+            </View>
+            {strongDisplay.map(d => renderDirectionCell(d, true))}
+          </View>
+        )}
+
+        {/* 가능한 방향 — Chip tag (secondary) */}
+        {mid.length > 0 && strong.length > 0 && (
+          <View className="gap-1.5">
+            <Text className="font-body text-label-md text-text-sub">
+              ✏️ 가능한 방향
+            </Text>
+            <View className="flex-row flex-wrap gap-1.5">
+              {mid.map(d => (
+                <Pressable
+                  key={d.key}
+                  onPress={() => setActiveKey(d.key)}
+                  className="px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-warm"
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Text className="font-body text-label-md text-text-pri">{d.emoji} {d.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 약한 방향 — Chip tag (회색·작게, "참고" 라벨로 리프레이밍, negativity bias 완충) */}
+        {weak.length > 0 && (
+          <View className="gap-1">
+            <Text className="font-body text-label-sm text-text-sub">
+              참고: 약한 방향
+            </Text>
+            <View className="flex-row flex-wrap gap-1.5">
+              {weak.map(d => (
+                <View key={d.key} className="px-2 py-1 rounded-full bg-surface border border-outline-warm">
+                  <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>
+                    {d.emoji} {d.label}
                   </Text>
-                  <Text className="font-body text-label-sm text-text-sub">사주가 받쳐주는 트랙</Text>
                 </View>
-                {strongDisplay.map(d => renderDirectionCell(d, true))}
-              </View>
-            )}
-
-            {/* 가능한 방향 (보통) */}
-            {mid.length > 0 && strong.length > 0 && (
-              <View className="gap-2">
-                <Text className="font-heading-bold text-body-md text-text-pri">
-                  ✏️ 가능한 방향 <Text className="font-body text-body-sm text-text-sub">({mid.length}개)</Text>
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {mid.map(d => (
-                    <Pressable
-                      key={d.key}
-                      onPress={() => setActiveKey(d.key)}
-                      className="px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-warm"
-                      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-                    >
-                      <Text className="font-body text-label-md text-text-pri">{d.emoji} {d.label}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* 약한 방향 */}
-            {weak.length > 0 && (
-              <View className="gap-1">
-                <Text className="font-heading-bold text-body-md text-text-sub">
-                  💤 약한 방향 <Text className="font-body text-body-sm text-text-sub">({weak.length}개)</Text>
-                </Text>
-                <Text className="font-body text-label-sm text-text-sub leading-relaxed">
-                  {weak.map(d => `${d.emoji} ${d.label}`).join(' · ')}
-                </Text>
-                <Text className="font-body text-label-sm text-text-sub mt-0.5">
-                  이 방향은 약하지만, 사주는 위 방향에서 빛나요.
-                </Text>
-              </View>
-            )}
+              ))}
+            </View>
+            <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
+              사주는 위 강한 방향에서 빛나요.
+            </Text>
           </View>
         )}
 
