@@ -154,12 +154,11 @@ export function buildLuckCycles(
   }
   allDaeun[curIdx].isCurrent = true;
 
-  // Build output: index 0 = leftmost (furthest future), last = rightmost (current)
-  const daeun: DaeunItem[] = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const idx = curIdx + i;
-    if (idx < allDaeun.length) daeun.push(allDaeun[idx]);
-  }
+  // 2026-05-23 bug fix: 이전 로직은 curIdx부터 count개만 잘라 미래 대운만 남기고
+  // 청소년기(6~22) 대운을 모두 누락시킴 — hagun-tier Layer 3 (청소년 대운),
+  // score.ts (early/middle/late), abroad-score (8~62), critical-year 모두 영향.
+  // 전 히스토리 반환: 청소년기부터 노년까지 모두 포함, isCurrent flag로 UI 분기.
+  const daeun: DaeunItem[] = allDaeun;
 
   // --- 세운 ---
   const sewun: SewunItem[] = [];

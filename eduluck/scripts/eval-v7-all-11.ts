@@ -36,8 +36,7 @@ interface VerifySpec {
 }
 
 const VERIFY: Record<string, VerifySpec> = {
-  '01-jaewon':  { expectedTier: [6, 7], expectedLabel: '약상', keywords: ['양인', '추진력', '추진', '의지', '자기', '주도', '한양', '중앙', '해외'], mustHave: ['양인'] },
-  '02-jaeho':   { expectedTier: [2, 3], expectedLabel: '강', keywords: ['건록격', '관성', '관인상생', '학자', '컴공', '컴퓨터', '의대', '한의대'], mustHave: ['건록격'] },
+  // 01-jaewon·02-jaeho 2026-05-23 제거 — 외부 명리 진단만 있고 실제 입시 결과 미확정
   '03-self':    { expectedTier: [1, 2], expectedLabel: '매우 강', keywords: ['정인격', '자립', '신왕', '학자', '인성', 'POSTECH', '서울대', '연구', '박사'], mustHave: ['정인격'] },
   '04-wife':    { expectedTier: [7, 8], expectedLabel: '약중', keywords: ['정재격', '시각', '디자인', '실무', '안정', '재극인', '신약'], mustHave: ['정재격'] },
   '05':         { expectedTier: [3, 4], expectedLabel: '중상', keywords: ['상관', '표현', '예술', '디자인', '시각', '이동', '국민'], mustHave: ['상관'] },

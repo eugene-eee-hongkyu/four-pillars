@@ -235,15 +235,18 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   let layer3 = 0;
 
   // 3-1. 청소년 대운 (15 / 8 / 4)
+  // 입시 직전 16~22세 대운은 ×2 가중 (Gemini 권장 — 입시 결과 직결 시기.
+  // 초등 6~12 대운만 좋고 고등 16~22가 약한 경우 점수 +가 나와 입시 결과와 어긋나던 구조 해소).
   const SCHOLAR_LUCK = new Set(['정인', '편인', '정관', '편관']);
   const HEADWIND_LUCK = new Set(['정재', '편재']);
   let youthLuck = 0;
   for (const d of m.luckCycles.daeun) {
     if (d.age < 6 || d.age > 22) continue;
-    if (SCHOLAR_LUCK.has(d.stemSipsin)) youthLuck += 1;
-    else if (HEADWIND_LUCK.has(d.stemSipsin)) youthLuck -= 1;
-    if (SCHOLAR_LUCK.has(d.branchSipsin)) youthLuck += 1;
-    else if (HEADWIND_LUCK.has(d.branchSipsin)) youthLuck -= 1;
+    const weight = d.age >= 16 ? 2 : 1;
+    if (SCHOLAR_LUCK.has(d.stemSipsin)) youthLuck += weight;
+    else if (HEADWIND_LUCK.has(d.stemSipsin)) youthLuck -= weight;
+    if (SCHOLAR_LUCK.has(d.branchSipsin)) youthLuck += weight;
+    else if (HEADWIND_LUCK.has(d.branchSipsin)) youthLuck -= weight;
   }
   if (youthLuck >= 3) {
     layer3 += 15;
