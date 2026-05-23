@@ -253,6 +253,46 @@
 
 ---
 
+## Session 2026-05-23 08:22 — 진로 방향성 8가지 + 화면 위계 강화 (v8-v10)
+
+### 작업 요약
+
+**v8 진로 방향성 8가지 카테고리 도입 (commit b818212)**
+- Agent 명리 리서치 (자평진전·적천수·KCI ART002532556 명리 NCS·KISS 명리 직업적성이론·부산대 평생교육원) 권장 반영
+- 현재 10 trait의 5개가 학습 특성이고 5개만 방향성이라 학부모 학과·트랙 매핑 부족 진단
+- 신규 [lib/manse/category-score.ts](../eduluck/lib/manse/category-score.ts) — Scholar/Authority/Engineer/Business/Entrepreneur/Action 6개 점수 모듈
+- arts·medical은 기존 모듈 활용 → 총 8 방향성 + buildDirectionEntries 통합 정렬
+- 신규 [components/manse/DirectionCard.tsx](../eduluck/components/manse/DirectionCard.tsx) — 8 방향성 카드 (강/가능/약 3그룹)
+- TraitScoreCard는 LEARNING_TRAIT_KEYS 4개(시험·끈기·자기주도·회복)만 필터링 → "학습 특성 (공통 보조)"
+- LLM prompt §12 baseline에 방향성 8가지 주입, 격국 lookup은 2차 baseline으로 격하
+
+**Hero 디자인 개편 — Compact Hero + Inline Disclosure (commit 32b09df)**
+- Agent UX 리서치 (NN/g F-shape·progressive disclosure·iOS HIG + 포스텔러·16Personalities)
+- HagunSignerBreakdown compact mode: 등급+게이지+핵심 chip 3개 + 한 줄 톤
+- TraitScoreCard compact mode 추가 (한 줄 요약 + 펼침)
+- interpret-premium.tsx 순서 재배치: Hero → mini TOC → 본문 → trait
+
+**v10 위계 강화 — Material elevation + chip tag (commit ec78d92, 8f0db8a)**
+- 사용자 피드백 4가지 반영: 펼침 ✗, 함께 작용 박스화, 점수 분해 제거, 방향성 위치 상단
+- 사용자 추가 피드백 3가지: 방향성 카드 펼침 ✗, 함께 작용 위계 격하, 약한 방향 chip tag
+- Agent UX 리서치 (NN/g Visual Hierarchy·Negativity Bias + Material 3 Elevation + Stripe/Linear/16Personalities)
+- 핵심 자리: Filled card (Level 2)
+- 함께 작용: Outlined card border만 (Level 3)
+- 약한 자리·약한 방향: Chip tag + "참고" 라벨 리프레이밍 (Level 4, negativity bias 완충)
+- DirectionCard 펼침 토글 완전 제거 → 즉시 노출 (Hero급 결론)
+- TraitScoreCard 별 황금색 통일 + 빈 별 ☆ outline (commit 959ab66)
+
+**메모리 신규**
+- `feedback_no_tilde.md` — 물결 기호 "~" 절대 사용 금지 (마크다운 strikethrough로 깨짐)
+
+### 다음 액션
+
+1. Vercel prod 배포 후 모바일 시각 검증 — Hero·방향성·학습 특성 위계 차이 명확한지
+2. mom test 10명 진입 — 학과·트랙 방향성 직관성, 약점 부정 인지 완충 효과 정성 평가
+3. LLM 호출 11명 재검증 — 8 방향성 prompt baseline 자연 반영 (이공·법조·경영 등 신규 키워드 등장 확인)
+
+---
+
 ## Session 2026-05-22 21:22 — 학운 점수 시스템 v7 + trait UI v4 (별점·그룹) 구현 완료
 
 ### 작업 요약

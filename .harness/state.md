@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-22 21:22
-## 마지막 업데이트: 2026-05-22 21:22
+## 마지막 실행: 2026-05-23 08:22
+## 마지막 업데이트: 2026-05-23 08:22
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 학운 점수 시스템 v7 4-Layer 14 시그너 + TraitScoreCard v4 별점·그룹 분류 적용 완료 → mom test 진입 가능 상태. typecheck ✓ / 회귀 11/11 ✓ / LLM 검증 11/11 ✓ / git push 완료.
+- 진로 방향성 8가지 카테고리 (Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action) + 학습 특성 4가지 분리 완료. 화면 위계 4단계 (Hero/Filled/Outlined/Chip) 적용. typecheck ✓, 11/11 회귀 ✓. mom test 진입 가능 상태.
 
 ### 이어서 할 것
 
-1. Vercel prod 배포 확인 (자동 트리거) — 별점·그룹 UI 모바일 시각 검증
-2. **Mom test 10명 진입** — 학부모 별점·"약한 자리" 메시지 수용도, trait 학과 방향성 직관성 정성 평가
-3. trait raw 시그너 보강 (정환 같은 "타고난 자리 2개" 1티어 sample 대응) — v7 hagun 신규 시그너 trait에도 반영
+1. Vercel prod 배포 후 모바일 시각 검증 — Hero·방향성·학습 특성 위계 차이 명확한지
+2. Mom test 10명 진입 — 학과·트랙 방향성 직관성, 약점 부정 인지 완충 효과 정성 평가
+3. LLM 호출 11명 재검증 — 8 방향성 prompt baseline 자연 반영 (이공·법조·경영 등 신규 키워드 등장 확인)
 
 ### 막힌 것
 
@@ -26,10 +26,10 @@
 
 ### 사람 판단 필요
 
-- mom test 결과로 trait UI 카피·구조 추가 조정 / radar chart·트랙 매핑 추가 여부
-- 의대 sample 받은 후 매핑 방향 (격국 lookup 보강 vs medical-score 임계 조정)
-- 김영진 학교 격차 (5~6 vs 4) — 본인 의지 영역 vs 시스템 결함, sample 더 모이면 결정
-- mom test 후 어머니 사주 재도입 여부 (§16 emotional impact 정성 평가)
+- mom test 결과로 방향성·위계 미세 조정 (정환 1티어인데 방향성 "강 1개"만 등 일부 sample 가중치 조정 여지)
+- trait raw 시그너 보강 (이윤수 양인격이 모든 카테고리에서 보통 이하 — 학자형 양인 가중치 추가 검토)
+- 의대 sample 2개 받기 → N=5 의약 재검증
+- mom test 후 어머니 사주 재도입 여부 결정
 - 외부 100명 검증 단계 진입 시점 (signup·checkout·premium-value·부모 학력 재도입)
 
 ### 백로그 요약
@@ -39,10 +39,10 @@
 
 ### 진행 상황
 
-- [x] sajutalk MVP Phase 1~20 + 만세력 보정 production 배포
-- [x] eduluck 기획 + Phase 0~9 (Supabase·만세력·UI·E2E·Vercel deploy)
+- [x] sajutalk MVP Phase 1-20 + 만세력 보정 production 배포
+- [x] eduluck 기획 + Phase 0-9 (Supabase·만세력·UI·E2E·Vercel deploy)
 - [x] **정밀 진단 prompt v3 — Sonnet 4.6 100/100**
-- [x] **Phase A~F 만세력 화면 정통 명식판 전환**
+- [x] **Phase A-F 만세력 화면 정통 명식판 전환**
 - [x] **운영 안정성 hotfix 5건**
 - [x] **prompt 강화·대학 권유 정직성 정책**
 - [x] **Phase G 가족 정보 옵션화**
@@ -50,9 +50,9 @@
 - [x] **실제 사주 calibration** (jaeho·POSTECH·울산대)
 - [x] **Confidence 구간 도입**
 - [x] **Self-test 인프라**
-- [x] **Phase H 13→6 스텝 UX 단순화**
+- [x] **Phase H 13-6 스텝 UX 단순화**
 - [x] **가독성 Phase 1·2 (v6 prompt 92.8)**
-- [x] **6→5 스텝 단순화**
+- [x] **6-5 스텝 단순화**
 - [x] **SSE 스트리밍 진단 로그**
 - [x] **가독성 perception UX 5종**
 - [x] **v7 톤 전환** (친근한 이모/언니)
@@ -76,11 +76,11 @@
 - [x] **N=9 학운 시스템 97.8/100점** ⭐ (전공 적성 94.4→97.8, 의·치 매핑 격차 해소)
 - [x] **부모 사주 입력 제거** — family-input 자녀 단일 + checkout 라우팅 + 4개 routes deprecate
 - [x] **§14 prompt 강화** — A/B LLM 검증으로 어머니 ✗ §14 859chars (어머니 ✓와 동등) ⭐
-- [x] **부모 사주 옵션 재도입** — family-input 어머니·아빠 토글 + 시간 정확할 때만 입력 안내 (시간 모름 체크박스 제거)
-- [x] **자녀 시간 모름 인라인 가이드** — 체크박스·모달 제거, 사주 4기둥 25% 가려진다 설명
-- [x] **정밀 분석 4종 (초기)** — 학운 8가지 점수 카드 + 조심 한 해 + §14 현재 시점 + §13 본질 액션 / LLM 검증 통과 ⭐
-- [x] **trait 점수 직관 정합** — N=11 1~2티어 sample 모두 90+ 1-2개 + 70+ 1-2개 통과 ⭐
-- [x] **16섹션 분리** — §14 조심 한 해 + §15 본질 액션 + §16 어머니 마디 별도 섹션 / LLM 3 sample 검증 ⭐
+- [x] **부모 사주 옵션 재도입** — family-input 어머니·아빠 토글
+- [x] **자녀 시간 모름 인라인 가이드** — 체크박스·모달 제거
+- [x] **정밀 분석 4종 (초기)** — 학운 8가지 점수 카드 + 조심 한 해 + §14 현재 시점 + §13 본질 액션
+- [x] **trait 점수 직관 정합** — N=11 1-2티어 sample 모두 90+ 1-2개 + 70+ 1-2개 통과 ⭐
+- [x] **16섹션 분리** — §14 조심 한 해 + §15 본질 액션 + §16 어머니 마디 별도 섹션
 - [x] **학운 10가지 trait 확장** — 학자형·사고력 이름 변경 + 예술 감성·체육·운동 신규
 - [x] **TraitScoreCard ⓘ + 모달 + hint** — NN/g·iOS·UXPin 기준 UX 페르소나 적용
 - [x] **"+ 새 진단 시작" prominent 버튼** + 확인 모달 + 부모/자녀 초기화 함수
@@ -89,13 +89,22 @@
 - [x] **hydrate.ts 강화** — 옛 manse_json·localStorage state에 새 필드 자동 보강
 - [x] **SCORING_SYSTEM.md 문서화** — 점수표·티어 매핑·10가지 trait 시그너·UI 가이드 (PII 제거)
 - [x] **학운 점수 시스템 v7 — 4-Layer 14 시그너** ⭐ (관인상생 콤보·자립학자·일주통근·천을·천덕월덕·삼귀구비·삼기귀인 / cutoff ≥34 매우 강 / 11/11 회귀 + LLM 검증 통과)
-- [x] **TraitScoreCard v4 — 별점·그룹 분류** ⭐ (점수 0~100 → ★1~5 + 🌟타고난/✏️보통/💤약한 / 어머님 카피 + 정직 권유)
+- [x] **TraitScoreCard v4 — 별점·그룹 분류** ⭐ (점수 0-100 → ★1-5 + 🌟타고난/✏️보통/💤약한 / 어머님 카피 + 정직 권유)
+- [x] **TraitScoreCard 별 황금색 통일 + ☆ outline** (사용자 피드백)
+- [x] **HagunSignerBreakdown** — 학운 종합 점수 시그너 분해 카드 (Compact Hero 디자인)
+- [x] **v8 진로 방향성 8 카테고리** ⭐ (Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action) — category-score.ts 신규
+- [x] **DirectionCard** — 8 방향성 카드 (강/가능/약 3그룹)
+- [x] **학습 특성 4개 분리** — LEARNING_TRAIT_KEYS (시험·끈기·자기주도·회복)
+- [x] **LLM prompt §12 8 방향성 baseline 주입**
+- [x] **v10 화면 위계 4단계** — Hero/Filled/Outlined/Chip (Material elevation + chip tag + 약점 negativity bias 완충)
+- [x] **방향성 카드 펼침 제거** — Hero급 즉시 노출
 - [x] **HAGUN_REFACTOR_ANALYSIS.md** — Agent 명리 리서치 + 8명 변별력 매트릭스 + 3-Layer 권장 분석 문서
-- [ ] prod 배포 후 모바일 시각 검증 (별점·3그룹 UI·16섹션·새 진단 버튼)
-- [ ] **Mom test 10명** — 별점·"약한 자리" 메시지 수용도, trait 학과 방향성 직관성
-- [ ] trait raw 시그너 보강 — 정환·이윤수 같은 1티어 sample이 "타고난 자리 ≤2개" 케이스 대응 (v7 신규 시그너 trait에도 반영)
+- [x] **메모리: feedback_no_tilde** — 물결 기호 "~" 절대 사용 금지 (마크다운 strikethrough)
+- [ ] prod 배포 후 모바일 시각 검증 (Hero·8 방향성·학습 특성 위계 4단계)
+- [ ] **Mom test 10명** — 학과·트랙 방향성 직관성, 약점 부정 인지 완충 효과
+- [ ] LLM 호출 11명 재검증 — 8 방향성 prompt baseline 자연 반영 (이공·법조·경영 키워드)
+- [ ] trait raw 시그너 보강 — 이윤수 양인격 학자형 가중치, 정환 정재격 이공계 분기 등
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증 (임계 조정 vs 현재 유지)
-- [ ] mom test 결과로 v8 prompt 보강 vs 현재 유지 결정 + 어머니 사주 재도입 여부 결정
 - [ ] 김영진 격차 — 상관격·관인상생 sample 더 모이면 보강 검토
 - [ ] 외부 100명 검증 단계: signup·checkout·premium-value·부모 학력 재도입
 - [ ] 사주톡 10명 지인 테스트 계속 진행

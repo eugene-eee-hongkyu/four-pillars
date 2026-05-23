@@ -6,6 +6,36 @@
 
 ---
 
+## 2026-05-23 08:22: 진로 방향성 8 카테고리 + 화면 위계 강화 (v8-v10)
+
+- **선택**: 10 trait를 4 학습 특성 + 8 방향성 카테고리(Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action)로 분리 + 화면 위계 4단계 (Hero / Filled / Outlined / Chip)
+- **대안 검토**:
+  - **A. 10 trait 라벨만 재정렬** (방향성/특성 그룹) — 명리 합의 ✗, 학과 매핑 부족. 비추
+  - **B. 점수 모듈만 추가 (8 방향성)** + UI 미변경 — 명리 정합 ↑, UI 미흡
+  - **C. 풀 리팩토링 (선택)** ⭐ — category-score.ts + DirectionCard 신규 + trait 압축 + LLM prompt 보강. 가장 큰 변경.
+  - **UI 위계**: 1) 핵심 vs 함께 작용 동일 박스 (NN/g 위계 실패) → outlined card 격하  2) 약한 자리 회색 라인 (negativity bias 증폭) → chip tag + "참고" 리프레이밍  3) 방향성 펼침 → Hero급 즉시 노출
+- **선택 이유**:
+  - 명리 합의 (자평진전·적천수·KCI ART002532556 NCS·부산대) 8 카테고리 정합
+  - 학부모 학과·트랙 매핑이 학운 점수보다 더 직관적
+  - UX 위계 NN/g·Material·iOS 가이드라인 모두 준수
+  - 11명 sample 정합: 1티어 5명 모두 핵심 방향성 명확 (Eugene 학자·정환 경영·세형 법조+의약·이윤수 자수성가·류상수 학자+이공)
+  - Hero/방향성 모두 즉시 노출로 학부모 첫 viewport에 핵심 결론 ↑
+- **영향 범위**:
+  - [eduluck/lib/manse/category-score.ts](../eduluck/lib/manse/category-score.ts) 신규 — 6 카테고리 + 통합 directions
+  - [eduluck/lib/manse/engine.ts](../eduluck/lib/manse/engine.ts) — categoryScores·directions 필드 추가
+  - [eduluck/lib/manse/hydrate.ts](../eduluck/lib/manse/hydrate.ts) — 새 필드 hydrate
+  - [eduluck/lib/manse/student-traits.ts](../eduluck/lib/manse/student-traits.ts) — LEARNING_TRAIT_KEYS export
+  - [eduluck/lib/prompts/interpret-premium.ts](../eduluck/lib/prompts/interpret-premium.ts) — 8 방향성 baseline 주입
+  - [eduluck/components/manse/DirectionCard.tsx](../eduluck/components/manse/DirectionCard.tsx) 신규
+  - [eduluck/components/manse/HagunSignerBreakdown.tsx](../eduluck/components/manse/HagunSignerBreakdown.tsx) — 펼침 제거 + 위계 4단계
+  - [eduluck/components/manse/TraitScoreCard.tsx](../eduluck/components/manse/TraitScoreCard.tsx) — 4 학습 특성만 + 황금색 별
+  - [eduluck/app/(flow)/interpret-premium.tsx](../eduluck/app/\(flow\)/interpret-premium.tsx) — 순서 재배치
+- **되돌리는 방법**:
+  - `git revert b818212 32b09df ec78d92 8f0db8a 959ab66` — v10 → v7로 일괄 롤백
+  - 또는 cherry-pick으로 부분 롤백 가능
+
+---
+
 ## 2026-05-22 21:22: 학운 점수 시스템 v7 4-Layer 14 시그너 + trait UI v4 별점·그룹
 
 - **선택**: 22개 시그너 합산 → **14 시그너 4-Layer** (Layer 1 명식 60 / Layer 2 신살·귀인 20 / Layer 3 운 20 / Layer 4 페널티). + TraitScoreCard UI를 점수 0~100 → 별점 ★1~5 + 3그룹.
