@@ -4,7 +4,27 @@
 >
 > Source: [lib/manse/category-score.ts](../lib/manse/category-score.ts), [lib/manse/arts-score.ts](../lib/manse/arts-score.ts), [lib/manse/medical-score.ts](../lib/manse/medical-score.ts)
 >
-> 관련 문서: [SCORING_SYSTEM.md](./SCORING_SYSTEM.md) (학운 종합 점수 §1 + 학습 특성 4개 §2)
+> 관련 문서: [SCORING_SYSTEM.md](./SCORING_SYSTEM.md) (학운 종합 점수 §1 + 학습 특성 4개 §2) · [HAGUN_SCORING.md](./HAGUN_SCORING.md) (학운 4-Layer)
+
+---
+
+## 0. 면책 — 본 시스템이 주장하지 않는 것
+
+이 시스템은 **명리학적 기질·강점 분류 + 한국 진로 분류 매핑**이다. **진로 예측 모델이 아니다.**
+
+| 본 시스템이 주장하는 것 | 본 시스템이 주장하지 않는 것 |
+|---|---|
+| 명리 합의(자평명리·김기승 응용) 기준 8개 방향성 강·약 추정 | "이 아이는 OO 직업 간다"는 예측 |
+| 한국 진로 분류(인문·자연·이공·의약·예술 등) 친화도 | 사주가 진로의 주요 결정 변수라는 주장 |
+| N=11 calibration sample 기준 in-sample 정합 | out-of-sample 일반화 능력 (미검증) |
+
+**자유도 함정**: 8 카테고리 × 약 60개 시그너 vs N=11 sample → 자유도가 sample을 훨씬 초과한다. 학운 시스템과 동일한 in-sample fitting 위험. "11명 calibration 통과 = 일반화 검증" ✗ — fitting + 운 + 신호의 합.
+
+**Self-fulfilling prophecy 주의**: 진로 시스템은 **결정 가능성 framing**이 학운보다 강하다 ("의대형", "예술형" 등 라벨 단정 위험). UI·LLM 풀이에서 "환경·기질·출발점" 표현 위주로 사용. "직업 단정" ✗.
+
+**카테고리 sample 편향**: N=11 중 Scholar/Engineer/Medical은 5-7명 sample, **Authority·Entrepreneur·Action은 sample 0명**. 이 3 카테고리의 시그너 weight는 명리 합의로만 정당화되었고 in-sample 검증조차 안 됨. 외부 100명 단계에서 5-10명씩 확보 필수.
+
+**외적 검증 도구**: 학운과 달리 진로 영역은 검증 가능 도구가 있다. **Holland RIASEC 한국 타당성 81-85%** (이제경 2009) + KNOW 직업분류 + Big5. 외부 100명 모집 시 Holland Interest Profiler 동시 시행으로 사주 8 방향성 vs Holland 6유형 일치도 측정 가능. [§9 RIASEC 매핑](#9-riasec-매핑) 참조.
 
 ---
 
@@ -19,7 +39,16 @@ v7까지는 "학자형 본질 강·중·약" 단일 축으로만 평가했다. �
 
 ### 1-2. 8 카테고리 선정 근거
 
-명리 진로상담 합의 (자평진전 격국론 + KCI 명리 진로상담 메타 + 부산대 평생교육원 표준)에서 직업군은 보통 6~8 갈래로 나뉜다. eduluck은 한국 입시·취업 기준으로 다음 8 갈래를 채택:
+명리 진로상담 합의에서 직업군은 보통 6-8 갈래로 나뉜다. eduluck은 다음 학파·문헌을 의식적으로 절충해 한국 입시·취업 기준 8 갈래를 채택:
+
+- **자평명리 격국론** (자평진전·적천수) — 격국·십성 매핑 기반
+- **김기승 (2009) 『명리직업상담론』** — 한국 현대 직업 분류 응용 표준 텍스트
+- **함혜수 (2007)** "사주의 격과 직업목표·직업적성 일치도" — 격국 vs 실제 직업 일치도 설문 검증
+- **이원태 (2005)** "식신·상관과 전문직 직업만족도" — 일간 상생 작용 검증
+
+단일 학파 일관성보다 한국 진로 분류 정합을 우선했다. 김기승은 현대 한국 직업 분류에 맞춘 응용 체계이지 자평진전·적천수 고전과 100% 정합 ✗ — 인용 시 "한국 현대 응용 매핑" 메타 라벨이 정직.
+
+8 갈래:
 
 | # | 카테고리 | 본질 시그너 | 대표 학과·직업 |
 |---|---|---|---|
@@ -34,7 +63,7 @@ v7까지는 "학자형 본질 강·중·약" 단일 축으로만 평가했다. �
 
 ### 1-3. 분리 효과
 
-- 약점 노출이 강점 발굴과 짝지어짐 — 약 8개가 아니라 "강 1~2개 + 가능 2~3개 + 약 3~5개"로 분포가 정렬됨
+- 약점 노출이 강점 발굴과 짝지어짐 — 약 8개가 아니라 "강 1-2개 + 가능 2-3개 + 약 3-5개"로 분포가 정렬됨
 - §12 LLM 전공 풀이가 격국 단일 lookup에서 벗어남 — 8 점수 + recommendedFields가 prompt baseline에 직접 주입되어 의예·법조·이공·경영 등 분기가 자연 등장
 - 학습 특성과 분리 — 진로 방향(8) + 학습 스타일(4: 시험·끈기·자기주도·회복) 두 축으로 어머니가 "어디로 + 어떻게"를 동시에 본다
 
@@ -44,22 +73,22 @@ v7까지는 "학자형 본질 강·중·약" 단일 축으로만 평가했다. �
 
 ### 2-1. 공통 규칙
 
-- 각 카테고리당 6~8개 시그너, 각 시그너 weight 1~3점
-- 매칭된 시그너 weight 합산 → 0~10점대 total
+- 각 카테고리당 6-8개 시그너, 각 시그너 weight 1-3점
+- 매칭된 시그너 weight 합산 → 0-10점대 total
 - 레벨 4단계 임계값 매핑:
 
 | total | 레벨 | UI 그룹 |
 |---|---|---|
 | ≤ 2 | 약 | 약한 방향 (회색) |
-| 3 ~ 4 | 보통 | 가능한 방향 (가운데) |
-| 5 ~ 6 | 강 | 강한 방향 (강조) |
+| 3 - 4 | 보통 | 가능한 방향 (가운데) |
+| 5 - 6 | 강 | 강한 방향 (강조) |
 | ≥ 7 | 매우 강 | 강한 방향 (Hero) |
 
-> arts·medical은 0~12점 만점이라 임계값이 살짝 다름. arts: ≤1 약 / ≤3 보통 / ≤5 강 / ≥6 매우 강. medical: ≤2 약 / ≤4 보통 / ≤7 강 / ≥8 매우 강.
+> arts·medical은 0-12점 만점이라 임계값이 살짝 다름. arts: ≤1 약 / ≤3 보통 / ≤5 강 / ≥6 매우 강. medical: ≤2 약 / ≤4 보통 / ≤7 강 / ≥8 매우 강.
 
 ### 2-2. recommendedFields
 
-각 카테고리는 레벨이 강·매우 강이면 4~6개의 구체 학과·직업 키워드를 노출한다. LLM §12 전공 풀이의 baseline으로 그대로 주입되며, 거짓 희망 금지 정책에 따라 약·보통일 때는 빈 배열 또는 1~2개 generic 키워드만 노출.
+각 카테고리는 레벨이 강·매우 강이면 4-6개의 구체 학과·직업 키워드를 노출한다. LLM §12 전공 풀이의 baseline으로 그대로 주입되며, 거짓 희망 금지 정책에 따라 약·보통일 때는 빈 배열 또는 1-2개 generic 키워드만 노출.
 
 예: Scholar 강 → `['박사·연구원·교수', '인문·사회 자격직', '교사·강의', '연구원·국책연구소']`
 
@@ -230,21 +259,30 @@ LLM은 이를 받아 "1순위 학자·연구 + 보강 의약·치" 등 자연 �
 
 ---
 
-## 6. Calibration
+## 6. Calibration (in-sample fit, 외적 검증 ✗)
+
+> **주의**: 아래 표는 N=11 sample에서 시스템 출력이 sample 실제 진로와 어떻게 정렬되는지 보여주는 **in-sample fitting 결과**이지 검증 ✗. 약 60개 시그너 vs 11 sample = 자유도 곱셈으로 in-sample 정합은 거의 보장된다. 외적 타당성은 외부 100명 + Holland RIASEC 일치도 측정에서만 확인 가능 ([§9](#9-riasec-매핑)).
 
 | Sample | 1순위 (강·매우 강) | 2순위 | 비고 |
 |---|---|---|---|
-| Eugene (POSTECH 컴공) | Scholar 매우 강 + Engineer 강 | — | 정인격 + 일지 건록 + 자립학자 |
+| 홍규 (POSTECH 컴공) | Scholar 매우 강 + Engineer 강 | — | 정인격 + 일지 건록 + 자립학자 |
 | 정환 (포공 컴공) | Scholar 강 + Engineer 강 | Business 보통 | 정재격 + 관인상생 |
 | 세형 (연대 의예) | Medical 매우 강 + Scholar 강 | Authority 보통 | 편관격 + 관인상생 + 학당 |
 | 두흥 (경북대 치대) | Medical 강 + Action 보통 | — | 편관격 + 백호대살 |
-| 이윤수 (서울대 전자) | Engineer 강 + Scholar 보통 | Action 보통 | 양인격 + 학당·문창 |
-| 류상수 (서울대 대기) | Scholar 매우 강 | — | 관인상생 + 학당귀인 ≥ 3 |
+| 윤수 (서울대 전자) | Engineer 강 + Scholar 보통 | Action 보통 | 양인격 + 학당·문창 |
+| 상수 (서울대 대기) | Scholar 매우 강 | — | 관인상생 + 학당귀인 ≥ 3 |
 | 소영 (서울대 생명) | Medical 강 + Scholar 보통 | Arts 보통 | 정재격 + 천의성 + 화개살 |
 | 승희 (국민대 디자인) | Arts 강 | Business 보통 | 상관격 + 화개·도화 |
 | 와이프 (울산대) | Business 보통 | — | 정재격 — 학자 본질 약 |
 
-N=11에서 1티어 5명 모두 Scholar/Engineer/Medical 강 이상으로 정합. 비학자형 sample도 Arts·Business·Action 등 다른 강 방향이 1개 이상 노출되어 진로 부정 신호 ✗.
+**관찰**: N=11에서 1티어 5명 모두 Scholar/Engineer/Medical 강 이상으로 in-sample 정합. 비학자형 sample도 Arts·Business·Action 등 다른 강 방향이 1개 이상 노출되어 진로 부정 신호 ✗.
+
+**카테고리 sample 편향** (위 §0 면책 재강조):
+- Scholar/Engineer/Medical: 5-7 sample
+- Arts: 1 sample (승희), Business: 1 sample (와이프)
+- **Authority·Entrepreneur·Action: sample 0** — 시그너 weight는 명리 합의로만 정당화, in-sample 검증조차 안 됨
+
+**가장 의미 있는 정합 sample**: 승희 (국민대 디자인) — 학운 점수 25 (강 / 2-3티어)로는 격차 sample이었으나 방향성에서 **Arts 강** 정확히 잡음. 학자형 ✗ + 예술형 강 두 축 분리 설계의 정성 증거.
 
 ---
 
@@ -264,3 +302,108 @@ N=11에서 1티어 5명 모두 Scholar/Engineer/Medical 강 이상으로 정합.
 - **Engine 통합**: [lib/manse/engine.ts:170-189](../lib/manse/engine.ts#L170-L189)
 - **UI 카드**: [components/manse/DirectionCard.tsx](../components/manse/DirectionCard.tsx)
 - **Hydrate (옛 cache 보강)**: [lib/manse/hydrate.ts](../lib/manse/hydrate.ts)
+- **분포 시뮬레이션**: [scripts/eval-direction-distribution.ts](../scripts/eval-direction-distribution.ts) (Phase D-doc 신규)
+
+---
+
+## 9. RIASEC 매핑
+
+Eduluck 8 방향성을 Holland RIASEC 6유형 + 보완 2 카테고리로 느슨하게 매핑한다. 사용자에게 "사주라서 믿어야 하나?"가 아니라 "명리 기반 성향 해석을 현대 진로 프레임과 비교해볼 수 있구나"라고 받아들이게 하기 위한 외적 비교 기준.
+
+### 9-1. 매핑 표
+
+| eduluck 카테고리 | RIASEC 대응 | 매핑 근거 |
+|---|---|---|
+| **Scholar 학자·연구** | **I** (Investigative) | 분석·탐구·이론·연구 |
+| **Medical 의약·치·생명** | **I + R** (Investigative + Realistic) | 학문 + 실무·임상 결합 |
+| **Authority 법조·관료** | **E + C** (Enterprising + Conventional) | 설득·제도권 + 규칙·체계 |
+| **Engineer 이공계·기술** | **R + I** (Realistic + Investigative) | 구조화된 문제 해결 + 분석 |
+| **Business 경영·실무** | **E + C** (Enterprising + Conventional) | 사업 + 관리·재무 |
+| **Entrepreneur 사업·자영업** | **E** (Enterprising) | 설득·리더십·사업화 |
+| **Arts 예술·미디어** | **A** (Artistic) | 창작·표현·감각 |
+| **Action 체육·군경·외과** | **R** (Realistic) | 손·체력·현장성·실행력 |
+
+**미매핑된 RIASEC 카테고리**:
+- **S (Social)** — 교육·상담·돌봄형. eduluck 8 카테고리에 직접 매핑 ✗. Scholar(교사·강의)와 Authority(공무원)에 부분 포함. **외부 100명 단계에서 Social 별도 카테고리 도입 검토**.
+- **C (Conventional 단독)** — eduluck은 C를 Authority/Business에 합쳤음. 분리 가치 검토 가능.
+
+### 9-2. Holland 한국 타당성
+
+- **이제경 (2009) 아시아교육연구 10(2)**: 한국 고등학생 81% / 일반인 85%가 Holland 모형 예측 방향과 일치. 불완전하나 부분 충족.
+- **한양대 석사 (2017)**: Holland × Big5 상관 검증.
+- **이요행 (2003)**: 한국직업정보시스템(KNOW) 직업 분류 × RIASEC 코딩.
+
+### 9-3. 외부 검증 권고
+
+외부 100명 모집 시 Holland Interest Profiler (O*NET 무료 도구 한국어 번역본) 동시 시행:
+- 사주 8 방향성 강한 1-2개 vs Holland 6유형 상위 2-3 일치도 측정
+- 일치율 ≥ 70%면 사주 방향성의 외적 타당성 데이터 확보 — 학운 티어가 못 가진 검증 분기점
+
+도구 출처:
+- O*NET Interest Profiler (영문): https://www.mynextmove.org/explore/ip
+- 한국직업정보시스템 (KNOW) 흥미검사: https://www.career.go.kr
+
+### 9-4. 매핑의 한계
+
+- RIASEC는 흥미·자기보고 중심 → "어떤 일을 하고 싶은가". 사주 방향성은 명리 기반 기질 분류 → "어떤 환경에서 자연스러운가". **두 도구는 같은 개념을 다른 각도로 본다** — 일치도 100% 기대 ✗
+- 매핑은 "느슨한 비교 기준"이지 "변환 공식"이 아님
+- RIASEC 자체도 한국 타당성이 81-85%로 완전 ✗. eduluck × RIASEC 일치도가 70% 이상이면 *상호 부분 정합* 의미
+
+---
+
+## 10. 분포 시뮬레이션 (Counterfactual)
+
+[scripts/eval-direction-distribution.ts](../scripts/eval-direction-distribution.ts) — random 사주 1000개에 8 카테고리 점수를 매겨 분포 측정. v7 학운의 [CALIBRATION_COUNTERFACTUAL.md](./CALIBRATION_COUNTERFACTUAL.md)와 동일 패턴.
+
+목적:
+- 각 카테고리의 "강·매우 강" 비율 측정 → cutoff 정직성 평가
+- 1티어 sample 5명 평균 vs random cohort 평균 gap 측정 → 신호 강도
+- 시그너 weight ad-hoc 위험 정성 측정
+
+### 10-1. 결과 (Seed 42, 777 두 차례 안정)
+
+**카테고리별 신호 강도** (1티어 평균 vs random cohort, gap = 1티어 - random):
+
+| Category | 1티어 평균 | B안 cohort | gap | random "강 이상" % | 해석 |
+|---|---|---|---|---|---|
+| **scholar** | **5.8** | 3.86 | **+1.94** | 37.7% | **유일한 강한 신호** ⭐ |
+| medical | 3.4 | 2.60 | +0.80 | 17.7% | 약한 신호 |
+| action | 2.8 | 2.01 | +0.79 | 9.5% | 약한 신호, cutoff 보수적 |
+| engineer | 3.0 | 2.98 | +0.02 | 31.4% | **신호 ✗** |
+| business | 3.4 | 3.19 | +0.21 | 30% | **신호 ✗** |
+| entrepreneur | 1.4 | 1.65 | -0.25 | 7% | **신호 ✗**, sample 0 |
+| authority | 2.8 | 3.30 | **-0.50** | 30% | **1티어가 random보다 낮음** |
+| arts | 1.8 | 2.72 | **-0.92** | 35.8% | **1티어가 random보다 낮음** (1티어는 학자형이 강한 sample, arts 약은 자연) |
+
+### 10-2. 핵심 발견
+
+1. **Scholar만 진짜 신호** ⭐
+   - 1티어 5명 평균 5.8, random 3.86, gap 1.94 — 명확한 신호
+   - "1티어 sample"이 학자형 강한 사주를 모은 결과 (selection bias 가능성). 외부 100명에서 비학자형 1티어 sample 5-10명 확보 시 재측정 필요.
+
+2. **6 카테고리에서 random "강 이상" ≥ 30%** — cutoff이 후함
+   - scholar 37.7% / arts 35.8% / engineer 31.4% / authority 30% / business 30% / (medical 17.7%)
+   - "강" 라벨이 random 1/3에 발생 → **"강" 위상은 "특별함" ✗, "통계적 상위 1/3"**
+   - UI·LLM 풀이에서 단정 표현 사용 ✗ ([§0 면책](#0-면책--본-시스템이-주장하지-않는-것))
+
+3. **Authority·arts는 1티어가 random보다 낮음** (gap 음수)
+   - authority: 1티어가 학자형(관성 약)이라 자연
+   - arts: 1티어가 학자형 강해서 화개·도화 시그너 적음
+   - **음수 gap은 "신호 부재"가 아니라 "1티어 sample의 카테고리 편향"**의 결과. selection bias 명시 강화 필요.
+
+4. **Entrepreneur·Action 보수적 cutoff** (7-9.5%)
+   - sample 0이라 in-sample 검증조차 안 됐지만 random에 대해서는 보수적
+   - "강" 라벨 등장 시 진짜 신호 가능성 ↑ — 단 외부 100명에서 검증 필수
+
+### 10-3. 함의
+
+- **Scholar만 다른 카테고리와 차별성 있음** — 시스템 정당화는 Scholar에 집중되어 있음. 다른 카테고리는 sample 다양화 후 재검증.
+- 외부 100명 단계에서 카테고리별 5-10명 확보 + 각 카테고리 gap 재측정이 진짜 검증.
+- 현재 단계 표현 전략: "Scholar 강"은 비교적 강한 단언 가능. **다른 카테고리는 "참고" 톤이 정직** ("Engineer 강 = 사주에서 잘 풀리는 영역 + 외부 검증은 진행 중").
+
+### 10-4. 재현
+
+```bash
+npx tsx scripts/eval-direction-distribution.ts --seed 42 --n 1000
+npx tsx scripts/eval-direction-distribution.ts --seed 777 --n 1000  # 안정성 확인
+```

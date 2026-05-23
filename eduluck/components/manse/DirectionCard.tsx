@@ -39,6 +39,7 @@ function levelLabel(level: CategoryLevel): { tone: 'strong' | 'mid' | 'weak'; em
 
 export function DirectionCard({ directions, compact = true }: Props) {
   const [activeKey, setActiveKey] = useState<DirectionEntry['key'] | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const strong = directions.filter(d => d.level === '매우 강' || d.level === '강');
   const mid = directions.filter(d => d.level === '보통');
@@ -77,11 +78,22 @@ export function DirectionCard({ directions, compact = true }: Props) {
       <View className="gap-3">
         {/* 헤더 — 펼침 제거, 항상 즉시 노출 (피드백 #1: Hero급 결론은 펼침 ✗) */}
         <View>
-          <Text className="font-heading-bold text-headline-md text-text-pri">
-            🎯 사주가 가리키는 방향성
-          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="font-heading-bold text-headline-md text-text-pri">
+              🎯 사주가 가리키는 방향성
+            </Text>
+            <Pressable
+              onPress={() => setInfoOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="방향성 점수에 대한 설명 보기"
+              hitSlop={8}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text className="font-body text-body-md text-text-sub">ⓘ</Text>
+            </Pressable>
+          </View>
           <Text className="font-body text-label-sm text-text-sub mt-1">
-            학과·트랙 매핑이에요. 강한 방향 위주로 보세요.
+            사주에서 잘 풀리는 방향이에요. 실제 진로는 흥미·노력과 함께 정해져요.
           </Text>
         </View>
 
@@ -139,6 +151,38 @@ export function DirectionCard({ directions, compact = true }: Props) {
             </Text>
           </View>
         )}
+
+        {/* 면책 모달 — 방향성 시스템 전체 설명 */}
+        <Modal visible={infoOpen} onClose={() => setInfoOpen(false)}>
+          <View className="gap-3">
+            <Text className="font-heading-bold text-headline-md text-text-pri">
+              방향성 점수에 대해
+            </Text>
+            <Text className="font-body text-body-md text-text-pri leading-relaxed">
+              이 8개 방향은 명리학(자평명리 격국론 + 김기승 명리직업상담론 한국 응용) 관점에서 사주의 강점·기질을 분류한 것이에요.
+            </Text>
+            <View className="px-3 py-2 rounded-md bg-surface border border-outline-warm gap-1">
+              <Text className="font-body text-body-md text-text-pri">
+                · "강한 방향" = 사주가 받쳐주는 트랙
+              </Text>
+              <Text className="font-body text-body-md text-text-pri">
+                · "약한 방향" = 사주 신호가 적은 트랙 (능력 부족 아님)
+              </Text>
+              <Text className="font-body text-body-md text-text-pri">
+                · 같은 사람이 보통 강한 방향 1-3개 + 가능한 방향 2-3개를 가져요
+              </Text>
+            </View>
+            <Text className="font-body text-body-sm text-text-sub leading-relaxed">
+              실제 진로 선택은 흥미·훈련량·시기 운까지 함께 봐야 해요. 명리 결과는 "여기서 시작해볼래?"라는 출발점이지 "정답"이 아니에요.
+            </Text>
+            <Pressable
+              onPress={() => setInfoOpen(false)}
+              className="mt-2 py-3 rounded-md bg-primary items-center"
+            >
+              <Text className="font-body-bold text-body-md text-surface-container-low">닫기</Text>
+            </Pressable>
+          </View>
+        </Modal>
 
         {/* 방향성별 상세 모달 */}
         <Modal visible={active !== null} onClose={() => setActiveKey(null)}>
