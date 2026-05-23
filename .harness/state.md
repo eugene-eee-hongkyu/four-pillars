@@ -6,31 +6,36 @@
 
 ---
 
-## 마지막 실행: 2026-05-23 15:59
-## 마지막 업데이트: 2026-05-23 15:59
+## 마지막 실행: 2026-05-23 16:40
+## 마지막 업데이트: 2026-05-23 16:40
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 진로 방향성 8가지 카테고리 (Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action) + 학습 특성 4가지 분리 완료. 화면 위계 4단계 (Hero/Filled/Outlined/Chip) 적용. typecheck ✓, 11/11 회귀 ✓. mom test 진입 가능 상태.
+- 방향성 v8 정직성 강화 완료 (DirectionCard ⓘ 면책 + DIRECTION_SCORING §0 면책·학파 인용·RIASEC·분포 시뮬 + recommendedFields 환경 키워드). LLM 9 sample 자연성 검증: 환경 단어 9/9 (100%) 등장, 단정 표현 실제 0건. Counterfactual + youthLuck x1.5 + 학운 표현 약화 commit·push 완료. mom test 진입 가능 상태.
 
 ### 이어서 할 것
 
-1. Vercel prod 배포 후 모바일 시각 검증 — Hero·8 방향성·학습 특성 위계 4단계 적용 확인
-2. Mom test 10명 진입 — 학과·트랙 방향성 직관성, 약점 부정 인지 완충 효과 정성 평가
-3. LLM 호출 11명 재검증 — 8 방향성 prompt baseline 자연 반영 (이공·법조·경영 등 신규 키워드)
+1. Mom test 10명 진입 — DirectionCard ⓘ 면책 모달 작동·환경 표현 직관성·8 방향성 강/가능/약 정성 평가
+2. 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷, 03·10·11과 비대칭)
+3. 외부 100명 단계 준비 — Holland Interest Profiler 동시 시행 + Authority·Entrepreneur·Action 카테고리 5-10명 강제 모집
 
 ### 막힌 것
 
-- 없음
+- 없음 (Phase Final 시각 회귀는 expo --web API mismatch로 자동 ✗, mom test 실제 환경 의존)
 
 ### 사람 판단 필요
 
-- mom test 결과로 방향성·위계 미세 조정 (정환 1티어인데 방향성 "강 1개"만 등 일부 sample 가중치 조정 여지)
-- trait raw 시그너 보강 (이윤수 양인격이 모든 카테고리에서 보통 이하 — 학자형 양인 가중치 추가 검토)
+- mom test 결과 반영 — 정직성 강화 카피가 어머니 통감인가 vs 정보 부족 인상인가
+- RIASEC 매핑 명리 정합성 최종 검토 (Authority가 E냐 C냐 등 미세 결정)
+- recommendedFields 환경 키워드 형식 mom test 후 미세 조정 (직업명 vs 환경 비중)
+- Scholar 외 7 카테고리의 시그너 weight 정당성 — 외부 100명 단계에서 분포 재측정 후 결정
 - 의대 sample 2개 받기 → N=5 의약 재검증
-- mom test 후 어머니 사주 재도입 여부 결정
-- 외부 100명 검증 단계 진입 시점 (signup·checkout·premium-value·부모 학력 재도입)
+
+### 백로그 요약
+
+- 대기 중: 9개
+- 최근 추가: 2026-05-23 — 06 정환·08 세형 sample md v7 포맷 갱신
 
 ### 진행 상황
 
@@ -61,45 +66,55 @@
 - [x] 사용자 회고 재해석 (해외운·정재격 실무·artsScore 연예인 정확)
 - [x] 05·06·07 LLM 풀이 검증
 - [x] N=7 학운 시스템 ~97/100 점수
-- [x] 정밀 prefetch (옵션 B) — 미니 화면 mount 시 정밀 SSE 동시 fetch + cache 분기
-- [x] 공유 URL — DB migration + /api/share + /share/[token] 페이지 + ShareButton (Web Share API)
-- [x] calibration sample PII 분리 — _private/data.ts 단일 소스 + 통합 회귀 스크립트
-- [x] N=11 calibration — 의사 2명(세형·두흥) + 해외 직장인 2명(소영·희식) 추가
-- [x] 두흥 ⭐⭐⭐ 격상 — 묘유충 = 수능 0점 사고 명리 본질 완벽 매칭 재해석
-- [x] 자녀 시간 필수화 — child-saju + family-input 모달 거부 모드 + canSubmit 차단
+- [x] 정밀 prefetch (옵션 B)
+- [x] 공유 URL — DB migration + /api/share + /share/[token] 페이지 + ShareButton
+- [x] calibration sample PII 분리 — _private/data.ts 단일 소스
+- [x] N=11 calibration — 의사 2명·해외 직장인 2명 추가
+- [x] 두흥 ⭐⭐⭐ 격상 — 묘유충 = 수능 0점 사고 명리 본질 매칭
+- [x] 자녀 시간 필수화 — child-saju + family-input 모달 거부 모드
 - [x] 의약 점수 모듈(medical-score) — 천의성·백호대살·관인상생·학당귀인·격국 통합 12점
-- [x] N=9 학운 시스템 97.8/100점 ⭐ (전공 적성 94.4→97.8, 의·치 매핑 격차 해소)
-- [x] 부모 사주 입력 제거 — family-input 자녀 단일 + checkout 라우팅 + 4개 routes deprecate
-- [x] §14 prompt 강화 — A/B LLM 검증 어머니 ✗ 동등 ⭐
+- [x] N=9 학운 시스템 97.8/100점 ⭐
+- [x] 부모 사주 입력 제거 — family-input 자녀 단일
+- [x] §14 prompt 강화 — A/B LLM 검증 어머니 ✗ 동등
 - [x] 부모 사주 옵션 재도입 — family-input 어머니·아빠 토글
 - [x] 자녀 시간 모름 인라인 가이드 — 체크박스·모달 제거
-- [x] 정밀 분석 4종 (초기) — 학운 8가지 점수 카드 + 조심 한 해 + §14 현재 시점 + §13 본질 액션
-- [x] trait 점수 직관 정합 — N=11 1-2티어 sample 모두 90+ 1-2개 + 70+ 1-2개 통과 ⭐
-- [x] 16섹션 분리 — §14 조심 한 해 + §15 본질 액션 + §16 어머니 마디 별도 섹션
-- [x] 학운 10가지 trait 확장 — 학자형·사고력 이름 변경 + 예술 감성·체육·운동 신규
-- [x] TraitScoreCard ⓘ + 모달 + hint — NN/g·iOS·UXPin 기준 UX 페르소나 적용
-- [x] "+ 새 진단 시작" prominent 버튼 + 확인 모달 + 부모/자녀 초기화 함수
-- [x] 성인/회고용 학년 옵션 — 'adult' grade + §13 회고·§14 과거 입시·§16 본인 청자 자동 전환
-- [x] PREMIUM_PROMPT_VERSION 캐시 무효 메커니즘 — 옛 14섹션 캐시 자동 무효
+- [x] 정밀 분석 4종 (초기) — 학운 8가지 점수 카드 + 조심 한 해 + §14·§13
+- [x] trait 점수 직관 정합 — N=11 1-2티어 sample 90+ 1-2개 통과 ⭐
+- [x] 16섹션 분리 — §14·§15·§16 별도
+- [x] 학운 10가지 trait 확장 — 학자형·사고력 이름 변경 + 예술·체육·운동 신규
+- [x] TraitScoreCard ⓘ + 모달 + hint
+- [x] "+ 새 진단 시작" prominent 버튼 + 확인 모달
+- [x] 성인/회고용 학년 옵션 — 'adult' grade
+- [x] PREMIUM_PROMPT_VERSION 캐시 무효 메커니즘
 - [x] hydrate.ts 강화 — 옛 manse_json·localStorage state에 새 필드 자동 보강
-- [x] SCORING_SYSTEM.md 문서화 — 점수표·티어 매핑·10가지 trait 시그너·UI 가이드 (PII 제거)
-- [x] 학운 점수 시스템 v7 — 4-Layer 14 시그너 ⭐ (관인상생 콤보·자립학자·일주통근·천을·천덕월덕·삼귀구비·삼기귀인 / cutoff ≥34 매우 강 / 11/11 회귀 + LLM 검증)
-- [x] TraitScoreCard v4 — 별점·그룹 분류 ⭐ (점수 0-100 → ★1-5 + 🌟타고난/✏️보통/💤약한 / 어머님 카피 + 정직 권유)
-- [x] TraitScoreCard 별 황금색 통일 + ☆ outline (사용자 피드백)
-- [x] HagunSignerBreakdown — 학운 종합 점수 시그너 분해 카드 (Compact Hero 디자인)
-- [x] v8 진로 방향성 8 카테고리 ⭐ (Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action) — category-score.ts 신규
+- [x] SCORING_SYSTEM.md 문서화 — 점수표·티어 매핑·10가지 trait 시그너
+- [x] 학운 점수 시스템 v7 — 4-Layer 14 시그너 ⭐ (cutoff ≥34 매우 강)
+- [x] TraitScoreCard v4 — 별점·그룹 분류 ⭐
+- [x] HagunSignerBreakdown — 학운 종합 점수 시그너 분해 카드
+- [x] v8 진로 방향성 8 카테고리 ⭐
 - [x] DirectionCard — 8 방향성 카드 (강/가능/약 3그룹)
-- [x] 학습 특성 4개 분리 — LEARNING_TRAIT_KEYS (시험·끈기·자기주도·회복)
+- [x] 학습 특성 4개 분리 — LEARNING_TRAIT_KEYS
 - [x] LLM prompt §12 8 방향성 baseline 주입
-- [x] v10 화면 위계 4단계 — Hero/Filled/Outlined/Chip (Material elevation + chip tag + 약점 negativity bias 완충)
+- [x] v10 화면 위계 4단계 — Hero/Filled/Outlined/Chip
 - [x] 방향성 카드 펼침 제거 — Hero급 즉시 노출
-- [x] HAGUN_REFACTOR_ANALYSIS.md — Agent 명리 리서치 + 8명 변별력 매트릭스 + 3-Layer 권장 분석 문서
-- [ ] prod 배포 후 모바일 시각 검증 (Hero·8 방향성·학습 특성 위계 4단계)
-- [ ] Mom test 10명 — 학과·트랙 방향성 직관성, 약점 부정 인지 완충 효과
-- [ ] LLM 호출 11명 재검증 — 8 방향성 prompt baseline 자연 반영 (이공·법조·경영 키워드)
+- [x] HAGUN_REFACTOR_ANALYSIS.md
+- [x] daeun 청소년기 누락 bugfix + N=9 회귀 복원 ⭐
+- [x] calibration sample 03·10·11 md v7 갱신 — Eugene → 홍규 rename + v7 Layer breakdown + 대운 표 + 학업/커리어 인생 데이터
+- [x] **Counterfactual 검증** 신규 (random vs cohort, B안 gap 18.1) ⭐ — `eval-counterfactual.ts` + `CALIBRATION_COUNTERFACTUAL.md`
+- [x] **youthLuck x2 → x1.5 보수화** — 1티어 5명 매우 강 유지, LOOCV 패턴 동일
+- [x] **LOOCV × Counterfactual 교차 검증** — 홍규 경계, 윤수 인위적, 세형 anchor (`HAGUN_LOOCV.md §9`)
+- [x] **학운 v7 표현 약화** — "확실한 N티어" → "N티어 안정 영역", LLM prompt 단정 금지 명문화
+- [x] **방향성 v8 정직성** — DIRECTION_SCORING.md §0 면책 + §1-2 김기승·함혜수·이원태 인용 + §6 in-sample fit 톤 + §9 RIASEC + §10 분포 (Scholar gap 1.94)
+- [x] **DirectionCard ⓘ 면책 모달** — 학파·강/약 의미·"정답 아님" 명시
+- [x] **분포 시뮬 스크립트** — `eval-direction-distribution.ts` (seed 42·777 안정)
+- [x] **recommendedFields 환경 키워드 보강** (Phase C) — 8 카테고리 직업명 + 환경
+- [x] **LLM 9 sample §12 자연성 검증** — 환경 단어 9/9 (100%), 단정 표현 0건
+- [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 직관성 + 8 방향성 정성 평가
+- [ ] 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷)
+- [ ] prod 배포 후 모바일 시각 검증
 - [ ] trait raw 시그너 보강 — 이윤수 양인격 학자형 가중치, 정환 정재격 이공계 분기 등
-- [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증 (임계 조정 vs 현재 유지)
+- [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 김영진 격차 — 상관격·관인상생 sample 더 모이면 보강 검토
-- [ ] 외부 100명 검증 단계: signup·checkout·premium-value·부모 학력 재도입
+- [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행 + Authority·Entrepreneur·Action 5-10명 모집
 - [ ] 사주톡 10명 지인 테스트 계속 진행
 - [ ] sajutalk v2 완료 보고

@@ -4,6 +4,26 @@
 
 ## 대기 중
 
+## 2026-05-23: 06 정환·08 세형 sample md v7 포맷 갱신
+
+- **백로그 이유**: 03·10·11 sample md는 v7 Layer breakdown + 대운 표 + 학업/커리어 인생 데이터로 갱신 완료. 06·08은 여전히 v3 포맷 (학운 점수 11·12 한 줄). 비대칭. 이번 세션 task 범위 외라 보류.
+- **할 것**: 06-parkjeonghwan.md·08-kimsehyeong.md를 03/10/11과 동일 구조로 갱신 — (1) v7 Layer breakdown 표 (현재 점수 정환 38·세형 45 반영) (2) 대운 표 (luck-cycles.ts 결과) (3) 학업/커리어 인생 데이터 (사용자 회고 수집 필요)
+- **필요한 것**: 사용자에게서 정환·세형의 학창 시절 + 커리어 인생 데이터 수집 (홍규·윤수·상수처럼). 시스템 데이터는 `eval-hagun-scores-only.ts` + `luck-cycles.ts`로 추출 가능.
+- **이전 검토**: 03(홍규)·10(윤수)·11(상수) 갱신 시 동일 패턴 적용. youthLuck x1.5 보수화로 정환 45→38·세형 52→45 점수 변동 반영 필요.
+- **관련 파일**: [eduluck/_private/calibration-samples/06-parkjeonghwan.md](../eduluck/_private/calibration-samples/06-parkjeonghwan.md), [08-kimsehyeong.md](../eduluck/_private/calibration-samples/08-kimsehyeong.md)
+
+---
+
+## 2026-05-23: 자연성 평가 단정 표현 regex 정밀화
+
+- **백로그 이유**: `scripts/eval-direction-naturalness.ts`의 단정 표현 검출 regex가 광범위해서 false positive 발생 (정환·세형 sample에서 "확실히 잡아주시면"·"무조건 공부해라가 아니라" 등 어머니 행동 권유까지 잡음). 본질 평가 외 부수 작업이라 보류.
+- **할 것**: 단정 표현 regex를 "사주 단정" 맥락만 잡도록 정밀화. 예: "확실한 [0-9]티어"는 OK, "방향을 확실히 잡아"는 ✗. 컨텍스트 윈도우 단어 분석 또는 N-gram 패턴.
+- **필요한 것**: 9 sample LLM 출력의 단정 표현 등장 맥락 케이스 분석 (5-10건). regex vs 간단한 룰 기반 분류기 비교.
+- **이전 검토**: 현재 9 sample 모두 실제 사주 단정 0건 = false positive만. mom test 진입 후 외부 sample에서 진짜 단정 등장 시 즉시 검출 가능한 형태로 유지하면 됨.
+- **관련 파일**: [eduluck/scripts/eval-direction-naturalness.ts](../eduluck/scripts/eval-direction-naturalness.ts)
+
+---
+
 ## ~~2026-05-20: 추가 calibration sample 5명+ 확보~~ — 2026-05-21 N=7 도달 완료
 
 - **상태**: 완료. 재원·재호·self·wife + 이승희·박정환·김영진 (N=7) → ~97/100 점수 도달.

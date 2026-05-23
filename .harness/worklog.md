@@ -6,6 +6,32 @@
 
 ---
 
+## Session 2026-05-23 16:40 — 방향성 v8 정직성·환경 키워드·LLM 자연성 검증
+
+### 작업 요약
+- **Counterfactual 검증** 신규 (random vs cohort 셔플): B안 gap 18.1 = 시그너 신호 실재, A안 ≈ B안 = cohort 효과 해소. random 33%가 매우 강 통과 = 라벨 "통계적 상위 1/3"
+- **youthLuck x2 → x1.5 보수화**: 1티어 5명 평균 43.4 → 40.6, 모두 매우 강 유지 ✓ (정환·세형 -7, 다른 sample 영향 ✗)
+- **LOOCV × Counterfactual 교차 검증**: 홍규 경계 sample, 윤수 시스템 인위적 끌어올림(L1·L2·L3 누적), 세형 anchor 확정
+- **calibration sample md 갱신 (03·10·11)**: Eugene → 홍규 rename + v7 Layer breakdown + 대운 표 + 학업/커리어 인생 데이터 추가
+- **학운 v7 표현 약화**: "확실한 N티어" → "N티어 안정 영역", LLM prompt 단정 표현 금지 명문화 (HAGUN_SCORING·SCORING_SYSTEM·hagun-tier·interpret-premium)
+- **DIRECTION_SCORING.md 정직성 강화 (Phase A·B·D-doc)**: §0 면책 신규, §1-2 학파 인용(김기승 2009·함혜수 2007·이원태 2005), §6 in-sample fit 톤 약화, §9 RIASEC 매핑(Holland 한국 81-85%), §10 분포 시뮬 (Scholar만 진짜 신호 gap 1.94)
+- **DirectionCard ⓘ 면책 모달** (Phase A): 헤더 카피 약화 + 학파·강/약 의미·"정답 아님" 명시
+- **분포 시뮬 스크립트 신규** (eval-direction-distribution): 8 카테고리 random vs cohort gap 측정, seed 42·777 안정
+- **recommendedFields 환경 키워드 보강 (Phase C)**: 8 카테고리 + arts + medical에 "환경: ..." 표현 추가 (직업명 유지)
+- **LLM 9 sample §12 자연성 검증**: 환경 단어 9/9 (100%) 등장, 단정 표현 실제 0건 (검출 2건 false positive)
+- **자가 검증 산출물 5개**: .harness/test-results/phase-{a,b,c,d-doc,final}-result.md
+- **commit 3개 + push 완료**: 559ce0c(검증·튜닝) → 4ba7364(방향성 정직성) → 1d4ecff(환경 키워드·산출물)
+
+### 실패한 시도
+- Phase Final 시각 회귀: dev server up + landing 렌더 OK, 진단 흐름 API route HTML 반환 에러 (expo --web 모드 API mismatch). DirectionCard ⓘ 모달 자동 시각 확인 불가 → 사람 mom test 시 확인 의존.
+
+### 다음 액션
+- mom test 10명 진입 (DirectionCard ⓘ 모달·환경 표현 직관성 정성 평가)
+- 외부 100명 단계: Holland RIASEC 동시 시행 + Authority·Entrepreneur·Action 카테고리 sample 5-10명씩 확보
+- 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷, 03·10·11과 비대칭)
+
+---
+
 ## Session 2026-05-23 15:59 — four-pillars 학운 시스템 v7 개선 (5개 우선순위 완료)
 
 ### 작업 요약

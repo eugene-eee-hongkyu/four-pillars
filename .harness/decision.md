@@ -6,6 +6,55 @@
 
 ---
 
+## 2026-05-23: recommendedFields 환경 키워드 보강 형식
+
+- **선택**: 직업명 유지 + 마지막에 "환경: ..." 줄 1개 추가
+- **대안 검토**:
+  - A안 (현 채택): "박사·연구원·교수" + "환경: 깊게 파고드는 장기 프로젝트가 잘 풀려요" — 직업명 + 환경 균형
+  - B안: 직업명 → 환경 완전 대체 ("박사·연구원·교수" → "깊은 탐구 환경") — GPT 권고
+  - C안: recommendedFields 변경 ✗, LLM prompt 측에서만 환경 표현 강제
+- **선택 이유**:
+  - 어머니 직관성 (직업명 즉시 이해) + 정직성 (환경 강조) 둘 다 충족
+  - B안은 "박사·연구원·교수" 즉시 이해 손실, 어머니 인지 부담 ↑
+  - C안은 prompt 변경만으로는 LLM이 환경 표현 안정 등장 보장 ✗
+  - LLM 9 sample 자연성 검증: 환경 단어 9/9 (100%) sample 등장 = A안 성공
+- **영향 범위**: [lib/manse/category-score.ts](../eduluck/lib/manse/category-score.ts) + arts-score.ts + medical-score.ts 8 카테고리 모두. LLM §12 prompt baseline에 직접 주입.
+- **되돌리는 방법**: 각 카테고리의 마지막 `recommendedFields.push('환경: ...')` 줄 제거. 점수 계산 무관이라 회귀 영향 ✗
+
+---
+
+## 2026-05-23: 진로 방향성 v8 calibration 정직성 framing
+
+- **선택**: 학운 §0 면책 패턴을 DIRECTION_SCORING에 동일 적용 + 김기승 인용 + RIASEC 매핑 백로그
+- **대안 검토**:
+  - A안 (현 채택): §0 면책 (자유도 함정·sample 편향·외적 검증 도구) + §1-2 학파 인용 + §9 RIASEC + §10 분포 시뮬
+  - B안: in-sample 정합 톤 유지 + 외부 100명 단계까지 정직성 작업 보류
+  - C안: 8 카테고리 → Holland RIASEC 6유형으로 재구조화 (Claude·GPT 권고)
+- **선택 이유**:
+  - 분포 시뮬에서 Scholar만 진짜 신호 (gap 1.94), 다른 7 카테고리는 random과 비슷 → in-sample 정합 톤은 자유도 곱셈 fitting을 검증으로 오인
+  - 학운 §0 면책 패턴이 이미 정착 — 일관 적용이 cross-doc 정직성 균일성 ↑
+  - C안 (RIASEC 재구조화)은 카테고리 라벨 변경 비용 ↑ + 명리 정합 약화 ↓ → 매핑 표만 추가 (백로그 외적 검증 시점)
+- **영향 범위**: [docs/DIRECTION_SCORING.md](../eduluck/docs/DIRECTION_SCORING.md) §0·§1-2·§6·§9·§10. 코드 변경 ✗
+- **되돌리는 방법**: §0·§9·§10 섹션 삭제. §1-2·§6 톤 복원.
+
+---
+
+## 2026-05-23: 3-commit 분리 (vs 1-commit 일괄)
+
+- **선택**: 3 commit으로 분리 push (검증·튜닝 / 방향성 정직성 / 환경 키워드+산출물)
+- **대안 검토**:
+  - A안 (현 채택): 3 commit — 시스템 검증·튜닝 / 방향성 v8 UI·doc / Phase C 코드+산출물
+  - B안: 1 commit 일괄 — 빠르나 롤백 단위 큼
+  - C안: 9 commit (8 Phase + 산출물) — 너무 잘게, git log 노이즈
+- **선택 이유**:
+  - LLM 영향 작업(Phase C)이 별도 commit이어야 LLM 회귀 시 cherry-pick·revert 용이
+  - 시각 회귀 자동화 불가로 사람 검토 부담 → commit 분리로 변경 범위 파악 쉬움
+  - Counterfactual·youthLuck·표현 약화는 한 묶음 (시스템 검증 단계의 단일 사이클)
+- **영향 범위**: git history. revert 시 단위.
+- **되돌리는 방법**: `git revert <hash>` 단일 commit 단위. 또는 `git reset HEAD~3`로 일괄 되돌리기.
+
+---
+
 ## 2026-05-23: youthLuck Age Weight 가중치 결정
 
 - **선택**: weight ×1.5 최종 채택 (×2 → ×1.5)
