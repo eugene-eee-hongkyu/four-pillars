@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-05-23: youthLuck Age Weight 가중치 결정
+
+- **선택**: weight ×1.5 최종 채택 (×2 → ×1.5)
+- **대안 검토**: 
+  - ×2 (기존): 1티어 평균 점수 43.4 유지, 신호 최강
+  - ×1.5 (신규): 1티어 평균 40.6, LOOCV·Counterfactual gap 동일 패턴 유지, 신호 강도 유지
+- **선택 이유**: Counterfactual gap 18 기반 "중간" 톤 표현 약화와 기술적 일치. ×2는 점수 inflation 문제, ×1.5는 신호 명백성 유지 + 표현 톤과 수치적 신뢰도 정렬
+- **영향 범위**: `lib/prompts/hagun-tier.ts`의 youthLuck 계산 (16~22세 가중 계수)
+- **되돌리는 방법**: 계수를 1.5에서 2.0으로 변경하거나, 원점으로 1.0으로 원복 가능
+
+
 ## 2026-05-23 08:22: 진로 방향성 8 카테고리 + 화면 위계 강화 (v8-v10)
 
 - **선택**: 10 trait를 4 학습 특성 + 8 방향성 카테고리(Scholar/Medical/Authority/Engineer/Business/Entrepreneur/Arts/Action)로 분리 + 화면 위계 4단계 (Hero / Filled / Outlined / Chip)

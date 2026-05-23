@@ -6,6 +6,29 @@
 
 ---
 
+## Session 2026-05-23 15:59 — four-pillars 학운 시스템 v7 개선 (5개 우선순위 완료)
+
+### 작업 요약
+- **Phase 1**: HAGUN_SCORING.md 표현 약화 (Self-fulfilling prophecy 면책, 학파 라벨 "절충형" 명시)
+- **Phase 2**: 학파 라벨 시스템 문서화 (자평명리 60% + 신살학파 20% + 신왕 합의 20%)
+- **Phase 3**: Birth month confound 분석 완료 (11명 월별 분포 정상, confound 가능성 낮음)
+- **Phase 4**: youthLuck 16~22세 가중 ×2 적용 (재호 점수 32→39, 외부 기대값 격차 해소)
+- **Phase 5**: LOOCV·layer ablation 민감도 분석 (cutoff 안정±2, Layer 1~4 모두 필수)
+- **부차**: daeun 대운 버그 수정 (청소년기 누락 9/9), calibration-samples 3개 파일 갱신 (대운 표·학파 정보)
+
+### 실패한 시도
+- Playwright 브라우저 테스트 중 API route HTML 반환 에러 (환경 이슈, 코드 문제 아님)
+
+### 다음 액션
+- Git commit: 5개 작업 1회 commit (또는 Phase별 분리) → mom test 10명 재검증 진입
+- Out-of-sample 100명 수집 → LOOCV 갭 재측정 (단기 목표)
+- Prospective 검증 (T0 봉인 → 수능 결과 추적, 장기)
+
+---
+
+**생성/수정 파일**: HAGUN_SCORING.md, CALIBRATION_BIRTH_MONTH.md, YOUTHLUCK_AGE_WEIGHT.md, HAGUN_LOOCV.md, hagun-tier.ts, calibration-samples/data.ts, 평가·LOOCV 스크립트 2개
+
+
 ## Session 2026-05-22 15:59 — 명리 점수 시스템 검증 및 세션 종료
 
 ### 작업 요약
