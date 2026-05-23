@@ -2,7 +2,7 @@
 // body: { sessionId, childSubjectId, motherSubjectId?, fatherSubjectId? }
 // 어머니·아빠는 모두 옵션. 자녀만 필수.
 
-import { getAnthropicClient, ANTHROPIC_MODEL } from '@/lib/llm/client';
+import { getAnthropicClient, ANTHROPIC_MODEL_PREMIUM } from '@/lib/llm/client';
 import { sseResponse } from '@/lib/llm/stream-sse';
 import {
   getInterpretPremiumSystem,
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   const userMsg = buildInterpretPremiumPrompt(ctx);
 
   const stream = getAnthropicClient().messages.stream({
-    model: ANTHROPIC_MODEL,
+    model: ANTHROPIC_MODEL_PREMIUM,
     // 정밀 진단 14섹션 75-95문장 한국어 ≈ 4500-5500 tokens 필요. 4096이면 §8 쯤에서 잘림.
     max_tokens: 8192,
     // 0.5로 추가 낮춤 — 학운 티어는 코드에서 결정성 계산해 user message에 주입(hagun-tier.ts).
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
         mother_subject_id: body.motherSubjectId ?? null,
         body_text: bodyText,
         prompt_version: 'interpret-premium-v3-16sections',
-        llm_model: ANTHROPIC_MODEL,
+        llm_model: ANTHROPIC_MODEL_PREMIUM,
       });
     } catch (e) {
       console.error('[interpret-premium] save failed', e);
