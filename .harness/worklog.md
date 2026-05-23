@@ -6,6 +6,28 @@
 
 ---
 
+## Session 2026-05-23 20:28 — 정밀 진단 LLM Sonnet 4.5 → Haiku 4.5 다운그레이드 검증·채택
+
+### 작업 요약
+- **검증 동기**: 학운·방향성 점수가 코드로 결정 + LLM은 narrative만. Sonnet 필요 없을 가능성.
+- **검증 스크립트 신규** (`eval-haiku-compare.ts`): single/all 모드, Haiku 출력을 별도 파일(`v7-{id}-haiku-output.md`)에 저장해 Sonnet baseline 보존. analyzeOutput으로 chars·환경 단어·단정 표현·문장 종결 다양성 측정.
+- **1 sample 검증 (홍규)**: chars 5744 vs Sonnet 7828 (-26.6%), 단정 0건, §13 표현 약화 "1티어 최상위 도전 영역" 정확 적용, 16 섹션 모두 작성, 명리 의역 자연. 시나리오 A 판정 → 사용자 안전한 C(전체 9 sample) 진행 결정.
+- **9 sample 전체 검증**: 단정 표현 합계 Haiku 0 / Sonnet 0, 평균 chars ratio 98%, 1티어 5명 완전 동등 또는 Haiku 우위, 와이프 6티어 sample만 chars -26%·환경 6/19로 narrative 압축 (약 영역 자연 현상 추정). 총 비용 $0.49, 시간 615초.
+- **채택 결정**: 정밀 진단 API만 Haiku 분리 (`/api/interpret-premium`). 무료 진단·관계 분석은 미검증 영역으로 Sonnet 유지.
+- **구현**: `lib/llm/client.ts`에 `ANTHROPIC_MODEL_PREMIUM` 신규 상수 (default `claude-haiku-4-5-20251001`). `interpret-premium+api.ts`에서 model·llm_model 모두 ANTHROPIC_MODEL_PREMIUM 사용.
+- **검증 산출물**: `.harness/test-results/haiku-vs-sonnet-result.md` (9 sample 비교 표 + 채택 근거 + mom test 사후 모니터링 권고).
+- **commit + push**: 32a1957 (정밀 진단 LLM Sonnet 4.5 → Haiku 4.5 다운그레이드).
+
+### 실패한 시도
+- `eval-haiku-compare.ts` 첫 실행: `const system` 중복 선언 (typecheck 에러 + tsx transform 실패). main 함수의 system 변수와 단일 sample 모드의 system 충돌 → 단일 모드 system 선언 제거로 해결.
+
+### 다음 액션
+- Mom test 10명 진입 — DirectionCard ⓘ + 환경 표현 직관성 + **약 영역(4-6티어) 어머니 narrative 풍부도 만족도** 정성 평가 (와이프 type sample chars -26% 영향 검증)
+- perception 회귀 감지 시 Hybrid (Scholar 강 이상만 Haiku) 또는 prompt 미세 조정 옵션 적용
+- 무료 진단(interpret-free)·관계 분석(relation-mini) Haiku 검증 → 추가 비용 절감 가능
+
+---
+
 ## Session 2026-05-23 16:40 — 방향성 v8 정직성·환경 키워드·LLM 자연성 검증
 
 ### 작업 요약

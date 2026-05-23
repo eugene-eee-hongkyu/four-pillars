@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-05-23: 정밀 진단 LLM Sonnet 4.5 → Haiku 4.5 다운그레이드
+
+- **선택**: 정밀 진단 API(`/api/interpret-premium`)만 Haiku 4.5 (`claude-haiku-4-5-20251001`)로 변경. 무료 진단·관계 분석은 Sonnet 유지.
+- **대안 검토**:
+  - A안 (현 채택): 정밀 진단만 Haiku. 검증된 영역만 다운그레이드, 미검증 영역 보존
+  - B안: 전체 API (interpret-free·relation-mini 포함) Haiku 통일. 미검증 영역 위험
+  - C안: Hybrid — Scholar 강 이상만 Haiku, 약 영역은 Sonnet. 복잡도 ↑, 비용 절감 ↓
+  - D안: Sonnet 유지 (현 상태)
+- **선택 이유**:
+  - 9 sample 검증 결과 시나리오 A 확정 (Haiku ≈ Sonnet): 단정 0/0, chars 평균 98%, 1티어 5명 완전 동등
+  - §13 표현 약화 ("1티어 최상위 도전 영역") Haiku 정확 적용
+  - 무료 진단(SSE 스트리밍, 5-8문장)·관계 분석은 다른 prompt 구조 → 추가 검증 필요 (보수적 보존)
+  - C안은 복잡도(model 분기 코드) 대비 비용 절감 50%로 줄어들어 트레이드오프 불리. mom test perception 회귀 시 사후 적용 가능
+  - D안은 정직성·검증 완료된 절감 기회 포기 비합리
+- **영향 범위**: [eduluck/lib/llm/client.ts](../eduluck/lib/llm/client.ts) `ANTHROPIC_MODEL_PREMIUM` 신규 + [eduluck/app/api/interpret-premium+api.ts](../eduluck/app/api/interpret-premium+api.ts) 사용. 비용 추정 1000명/월 $135 → $45 (3x 절감).
+- **되돌리는 방법**: `interpret-premium+api.ts`에서 `ANTHROPIC_MODEL_PREMIUM` → `ANTHROPIC_MODEL` 또는 env var `ANTHROPIC_MODEL_PREMIUM=claude-sonnet-4-5-20250929` 설정으로 즉시 Sonnet 복귀. perception 회귀 시 옵션 C(Hybrid) 또는 prompt 미세 조정 잔존.
+
+---
+
 ## 2026-05-23: recommendedFields 환경 키워드 보강 형식
 
 - **선택**: 직업명 유지 + 마지막에 "환경: ..." 줄 1개 추가
