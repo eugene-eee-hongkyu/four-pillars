@@ -4,7 +4,7 @@
 >
 > **2026-05-23 갱신 (Counterfactual + LOOCV 후)**: ×2 → **×1.5** 보수화. §7 참조.
 >
-> Source: [lib/prompts/hagun-tier.ts:240-252](../lib/prompts/hagun-tier.ts#L240) `youthLuck` 계산
+> Source: [lib/prompts/hagun-tier.ts:240-252](../../lib/prompts/hagun-tier.ts#L240) `youthLuck` 계산
 
 ---
 
@@ -103,9 +103,9 @@ daeun fix 후 youthLuck 값이 0이 아닌 sample이 발생. ×2 가중과 ×1(r
 
 ## 6. 관련 변경
 
-- [lib/prompts/hagun-tier.ts:240-252](../lib/prompts/hagun-tier.ts#L240) — `weight = d.age >= 16 ? 1.5 : 1` 가중 (2026-05-23 ×2 → ×1.5)
-- [scripts/eval-hagun-scores-only.ts](../scripts/eval-hagun-scores-only.ts) — Phase 4 baseline 비교 스크립트 (신규)
-- [_private/calibration-samples/data.ts](../_private/calibration-samples/data.ts) — 2026-05-23 sample 재호·재원 제거 (실제 결과 미확정). 본 Phase 4의 재호 expected 갱신은 sample 제거로 무효화됨
+- [lib/prompts/hagun-tier.ts:240-252](../../lib/prompts/hagun-tier.ts#L240) — `weight = d.age >= 16 ? 1.5 : 1` 가중 (2026-05-23 ×2 → ×1.5)
+- [scripts/eval-hagun-scores-only.ts](../../scripts/eval-hagun-scores-only.ts) — Phase 4 baseline 비교 스크립트 (신규)
+- [_private/calibration-samples/data.ts](../../_private/calibration-samples/data.ts) — 2026-05-23 sample 재호·재원 제거 (실제 결과 미확정). 본 Phase 4의 재호 expected 갱신은 sample 제거로 무효화됨
 
 ---
 

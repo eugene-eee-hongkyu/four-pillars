@@ -139,5 +139,5 @@ npx tsx scripts/eval-counterfactual.ts --seed 777 --n 1000  # 안정성 확인�
 - BaZi-LLM 논문 (사주 셔플 → 20-45% 정확도 하락) — Counterfactual primary validation 학술 precedent
 - Claude·Gemini 4-way 통합 자문 ★★★ 추천 항목
 - `docs/CALIBRATION_BIRTH_MONTH.md` cohort confound 기록 (이 검증으로 부분 해소)
-- `docs/HAGUN_SCORING.md` v7 4-Layer 14 시그너 정의
+- `docs/scoring/HAGUN_SCORING.md` v7 4-Layer 14 시그너 정의
 - [HAGUN_LOOCV.md §9](./HAGUN_LOOCV.md) — LOOCV × Counterfactual 교차 검증 (sample별 수렴 패턴)

@@ -1,7 +1,7 @@
 # Phase B 테스트 결과 — DIRECTION_SCORING.md doc 갱신
 
 **일시**: 2026-05-23
-**파일**: [eduluck/docs/DIRECTION_SCORING.md](../../eduluck/docs/DIRECTION_SCORING.md)
+**파일**: [eduluck/docs/DIRECTION_SCORING.md](../../eduluck/docs/scoring/DIRECTION_SCORING.md)
 
 ## 변경 사항
 

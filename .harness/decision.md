@@ -88,7 +88,7 @@
   - 분포 시뮬에서 Scholar만 진짜 신호 (gap 1.94), 다른 7 카테고리는 random과 비슷 → in-sample 정합 톤은 자유도 곱셈 fitting을 검증으로 오인
   - 학운 §0 면책 패턴이 이미 정착 — 일관 적용이 cross-doc 정직성 균일성 ↑
   - C안 (RIASEC 재구조화)은 카테고리 라벨 변경 비용 ↑ + 명리 정합 약화 ↓ → 매핑 표만 추가 (백로그 외적 검증 시점)
-- **영향 범위**: [docs/DIRECTION_SCORING.md](../eduluck/docs/DIRECTION_SCORING.md) §0·§1-2·§6·§9·§10. 코드 변경 ✗
+- **영향 범위**: [docs/DIRECTION_SCORING.md](../eduluck/docs/scoring/DIRECTION_SCORING.md) §0·§1-2·§6·§9·§10. 코드 변경 ✗
 - **되돌리는 방법**: §0·§9·§10 섹션 삭제. §1-2·§6 톤 복원.
 
 ---
@@ -168,8 +168,8 @@
 - **영향 범위**:
   - [eduluck/lib/prompts/hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) — computeHagun() 4-Layer + scoreToGrade cutoff 재정의
   - [eduluck/components/manse/TraitScoreCard.tsx](../eduluck/components/manse/TraitScoreCard.tsx) — v3 점수 → v4 별점·그룹 전면 개편
-  - [eduluck/docs/SCORING_SYSTEM.md](../eduluck/docs/SCORING_SYSTEM.md) — §1-1~1-5 + §5 v6·v7 변경 이력
-  - [eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md](../eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md) 신규 — 분석 문서
+  - [eduluck/docs/SCORING_SYSTEM.md](../eduluck/docs/scoring/SCORING_SYSTEM.md) — §1-1~1-5 + §5 v6·v7 변경 이력
+  - [eduluck/docs/HAGUN_REFACTOR_ANALYSIS.md](../eduluck/docs/scoring/HAGUN_REFACTOR_ANALYSIS.md) 신규 — 분석 문서
   - [eduluck/scripts/eval-v7-all-11.ts](../eduluck/scripts/eval-v7-all-11.ts) 신규 — 11명 LLM 검증
   - _private/calibration-samples/data.ts — 11명 expected.* 재calibration (gitignored)
   - LLM prompt (interpret-premium.ts L484-559): hagunLabel·confidenceLabel·finalTierRange 그대로 사용 — v7 자동 적용

@@ -2,7 +2,7 @@
 
 > eduluck 정밀 진단의 **학운 종합 점수 + 추천 베이스 티어** 산출 로직. 4-Layer 14 시그너 + 부모 환경 조정 + Confidence 분기.
 >
-> Source: [lib/prompts/hagun-tier.ts](../lib/prompts/hagun-tier.ts)
+> Source: [lib/prompts/hagun-tier.ts](../../lib/prompts/hagun-tier.ts)
 >
 > 관련 문서: [DIRECTION_SCORING.md](./DIRECTION_SCORING.md) (진로 방향성 8 카테고리 — 어느 학과·트랙)
 
@@ -22,11 +22,11 @@
 
 **Self-fulfilling prophecy 주의**: 사주는 "가능성의 지도"이지 "결정된 미래"가 아니다. 어머니가 결과를 보고 자녀 진로를 미리 닫는 도구로 쓰면 안 된다.
 
-**Month-effect confound 미해결**: 사주의 월지·연주는 출생일의 결정론적 함수라 한국 학교 학년 cutoff·월령 효과 (배호중 2020)와 분리 불가. N=9 sample에서 1티어 5명 중 여름(6-8) 출생 0명, 비1티어 4명 중 여름 출생 3명 — 사주 시그너가 학교 적응 우월성을 명리 용어로 재라벨링한 것일 가능성을 배제할 수 없다. 자세한 분석: [CALIBRATION_BIRTH_MONTH.md](./CALIBRATION_BIRTH_MONTH.md).
+**Month-effect confound 미해결**: 사주의 월지·연주는 출생일의 결정론적 함수라 한국 학교 학년 cutoff·월령 효과 (배호중 2020)와 분리 불가. N=9 sample에서 1티어 5명 중 여름(6-8) 출생 0명, 비1티어 4명 중 여름 출생 3명 — 사주 시그너가 학교 적응 우월성을 명리 용어로 재라벨링한 것일 가능성을 배제할 수 없다. 자세한 분석: [CALIBRATION_BIRTH_MONTH.md](../run/CALIBRATION_BIRTH_MONTH.md).
 
 **학파 메타 라벨**: 본 시스템은 **자평명리 격국론** (자평진전·적천수) + **연해자평·삼명통회 신살·귀인 학파**를 한국 입시 휴리스틱 목적으로 의식적 절충한 모델이다. 단일 학파 일관성보다 한국 입시 sample 정합을 우선했다.
 
-**Counterfactual 결과 (2026-05-23, N=1000 random 사주 vs 1티어 5명)**: 무작위 사주의 약 **33%가 cutoff ≥34 "매우 강" 영역에 들어온다**. 즉 "매우 강"은 "특별한 자리"가 아니라 **통계적 상위 1/3** 위상이다. 1티어 5명 평균(40.6)은 매우 강 영역 내 중상위에 위치하며, "확실한 1티어" 단언은 정직하지 않다. 자세한 분석: [CALIBRATION_COUNTERFACTUAL.md](./CALIBRATION_COUNTERFACTUAL.md).
+**Counterfactual 결과 (2026-05-23, N=1000 random 사주 vs 1티어 5명)**: 무작위 사주의 약 **33%가 cutoff ≥34 "매우 강" 영역에 들어온다**. 즉 "매우 강"은 "특별한 자리"가 아니라 **통계적 상위 1/3** 위상이다. 1티어 5명 평균(40.6)은 매우 강 영역 내 중상위에 위치하며, "확실한 1티어" 단언은 정직하지 않다. 자세한 분석: [CALIBRATION_COUNTERFACTUAL.md](../run/CALIBRATION_COUNTERFACTUAL.md).
 
 ---
 
@@ -73,7 +73,7 @@ isScholar = (관인상생 OR 학자격국narrow OR 양인+제왕+다귀인)
 
 **왜 이 식**: 8명 calibration 변별력 매트릭스 검증에서 **precision 100% + recall 100%** (Rule 5 — `8-sample-signer-audit.ts`). 다른 단일·콤보 조합은 모두 정밀도·재현율 하나 이상 떨어짐.
 
-학자귀인 = 문창귀인·학당귀인·문곡귀인 (천을귀인은 메타 길성이라 [student-traits.ts](../lib/manse/student-traits.ts)에서 별도 활용).
+학자귀인 = 문창귀인·학당귀인·문곡귀인 (천을귀인은 메타 길성이라 [student-traits.ts](../../lib/manse/student-traits.ts)에서 별도 활용).
 
 ---
 
@@ -84,7 +84,7 @@ isScholar = (관인상생 OR 학자격국narrow OR 양인+제왕+다귀인)
 | # | 시그너 | weight | 명리 근거 |
 |---|---|---|---|
 | 1-1 | **관인상생 + 학자귀인 ≥ 1 콤보** | +15 | 단독 관인상생 변별력 −7%, 콤보일 때만 의미 (8명 audit) |
-| 1-2 | **학자형 격국 narrow** (정관·정인·편인·식신·건록격) | +12 | 편관격 제외 — 의약·법조는 [medical-score.ts](../lib/manse/medical-score.ts) 별도 모듈 |
+| 1-2 | **학자형 격국 narrow** (정관·정인·편인·식신·건록격) | +12 | 편관격 제외 — 의약·법조는 [medical-score.ts](../../lib/manse/medical-score.ts) 별도 모듈 |
 | 1-3 | **학자귀인 ≥ 3 / 2 / 1** | +10 / +7 / +4 | 8명 audit 단일 변별력 +67% — 최강 단일 |
 | 1-4 | **인성 ≥ 2 / 1** | +8 / +4 | saju-master "학문 기본" |
 | 1-5 | **자립 학자형 콤보** (정인·편인·정관격 + 일지 건록·제왕 + 비겁 ≥ 2) | +12 | 자평진전 "正印格喜身旺" — Eugene POSTECH 패턴 |
@@ -217,7 +217,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 
 ## 9. Confidence (같은 등급 내 미세 강도)
 
-같은 베이스 티어 안에서도 점수에 따라 LLM 풀이 톤이 달라진다 ([calcConfidence](../lib/prompts/hagun-tier.ts#L424)).
+같은 베이스 티어 안에서도 점수에 따라 LLM 풀이 톤이 달라진다 ([calcConfidence](../../lib/prompts/hagun-tier.ts#L424)).
 
 > **라벨 의미**: 사주 시그너 강도의 상담형 표현. "1티어"는 한국 입시 체감 라벨 매핑이고, **실제 진학 보장 ✗**.
 
@@ -244,7 +244,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 
 ## 10. 부모 환경 조정 (`parentAdjust`)
 
-부모 사주 입력 시 ±2 가산 한도 내에서 베이스 티어 조정 ([calcParentAdjust](../lib/prompts/hagun-tier.ts#L355)).
+부모 사주 입력 시 ±2 가산 한도 내에서 베이스 티어 조정 ([calcParentAdjust](../../lib/prompts/hagun-tier.ts#L355)).
 
 | 조건 | 가감 |
 |---|---|
@@ -256,7 +256,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 
 부모 미입력(현재 기본)이면 `parentAdjust = 0` → 베이스 티어 = 최종 티어.
 
-부모 학력 가중치는 Phase H에서 mom test 단계 UX 단순화 목적으로 제거 ([university-tier.ts](../lib/manse/university-tier.ts)·resolveParentTier 함수는 코드 유지 — 향후 재도입 옵션).
+부모 학력 가중치는 Phase H에서 mom test 단계 UX 단순화 목적으로 제거 ([university-tier.ts](../../lib/manse/university-tier.ts)·resolveParentTier 함수는 코드 유지 — 향후 재도입 옵션).
 
 ---
 
@@ -284,7 +284,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 >
 > **2026-05-23 변경**: 재원(01-jaewon)·재호(02-jaeho)는 외부 명리 진단만 있고 실제 입시 결과 미확정 → calibration에서 제거. ground truth가 분명한 9명만 유지.
 >
-> **LOOCV + Layer Ablation 결과 (2026-05-23, N=9)**: cutoff은 분산 0으로 안정적이나 이는 sample이 cutoff 경계에 정확히 정렬돼서 그런 것. Layer 2 신살·귀인 카테고리가 정환·이윤수 sample 매우 강 분류에 결정적 — Claude 비판 "이윤수 1명을 위해 Layer 2 신설" ad-hoc 위험 정성 확증. 자세한 분석: [HAGUN_LOOCV.md](./HAGUN_LOOCV.md).
+> **LOOCV + Layer Ablation 결과 (2026-05-23, N=9)**: cutoff은 분산 0으로 안정적이나 이는 sample이 cutoff 경계에 정확히 정렬돼서 그런 것. Layer 2 신살·귀인 카테고리가 정환·이윤수 sample 매우 강 분류에 결정적 — Claude 비판 "이윤수 1명을 위해 Layer 2 신설" ad-hoc 위험 정성 확증. 자세한 분석: [HAGUN_LOOCV.md](../run/HAGUN_LOOCV.md).
 
 | Sample | 실제 tier | v7 점수 | 등급 | 베이스 티어 | 비고 |
 |---|---|---|---|---|---|
@@ -298,7 +298,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 | 영진 | 4 (경희대) | 0 | 약중 | [7,8] | 상관격 — 외부 의지 |
 | 와이프 | 6 (울산대) | 0 | 약중 | [7,8] | 재극인 + 신약 누적 |
 
-> **2026-05-23 변화 (luck-cycles.ts daeun bugfix)**: 청소년기(6~22) 대운 데이터가 9/9 sample에서 누락됐던 buggy 상태 fix. 1티어 5명 평균 39.0 → 43.4. 5/5 매우 강 분류 유지. 자세한 분석: [DAEUN_BUGFIX.md](./DAEUN_BUGFIX.md).
+> **2026-05-23 변화 (luck-cycles.ts daeun bugfix)**: 청소년기(6~22) 대운 데이터가 9/9 sample에서 누락됐던 buggy 상태 fix. 1티어 5명 평균 39.0 → 43.4. 5/5 매우 강 분류 유지. 자세한 분석: [DAEUN_BUGFIX.md](../run/DAEUN_BUGFIX.md).
 
 **8명 in-sample 정합** (외부 변수 sample 두흥 제외, 검증 ✗):
 - 5/5 1티어 sample 모두 매우 강 등급 (1~2티어 매핑)
@@ -311,7 +311,7 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 
 ## 13. 변경 이력
 
-- **v7-fix1 (2026-05-23)**: **luck-cycles.ts daeun bugfix** — 청소년기(6~22) 대운이 9/9 sample에서 누락됐던 buggy 상태 fix. 1티어 5명 평균 39.0 → 43.4. 5/5 매우 강 유지. 4티어 sample 승희만 21→32 강 격상 (학운 본질 vs 진로 트랙 분리 정합으로 해석). cutoff ≥34 유지. 자세한 분석: [DAEUN_BUGFIX.md](./DAEUN_BUGFIX.md).
+- **v7-fix1 (2026-05-23)**: **luck-cycles.ts daeun bugfix** — 청소년기(6~22) 대운이 9/9 sample에서 누락됐던 buggy 상태 fix. 1티어 5명 평균 39.0 → 43.4. 5/5 매우 강 유지. 4티어 sample 승희만 21→32 강 격상 (학운 본질 vs 진로 트랙 분리 정합으로 해석). cutoff ≥34 유지. 자세한 분석: [DAEUN_BUGFIX.md](../run/DAEUN_BUGFIX.md).
 - **v7 (2026-05-22)**: 4-Layer + 14 시그너. 일간 강도 균형 시그너 제거 (Eugene 신왕 7 페널티 해소). 자립 학자형 콤보 +12·일주 통근 +5 신규. Layer 2 신살·귀인 카테고리 신설 (천을 +6/4·천덕월덕 +5·삼귀구비 +5·삼기귀인 +5). 신약 페널티 정인격·편인격 예외 −5. cutoff ≥34 매우 강. 11명 calibration sample in-sample 정합 (out-of-sample 미검증). 분포 시뮬 N=56,988 mean 25.33 / p90 49.
 - **v6 (2026-05-22)**: 3-Layer 도입. 22개 → 9개 시그너 축소. 점수 −14~+20 → 0~100. 자세한 분석: [HAGUN_REFACTOR_ANALYSIS.md](./HAGUN_REFACTOR_ANALYSIS.md).
 - **v5 (2026-05-22)**: 학운 삼합 제거 (9/9 발동 = 변별력 0).
@@ -322,11 +322,11 @@ total = max(0, min(100, Layer1 + Layer2 + Layer3 + Layer4))
 
 ## 14. 관련 코드
 
-- **계산**: [lib/prompts/hagun-tier.ts](../lib/prompts/hagun-tier.ts) `computeHagun()` / `scoreToGrade()` / `calculateFinalTier()`
-- **Confidence 분기**: [hagun-tier.ts:424](../lib/prompts/hagun-tier.ts#L424) `calcConfidence()`
-- **부모 환경 조정**: [hagun-tier.ts:355](../lib/prompts/hagun-tier.ts#L355) `calcParentAdjust()`
-- **현재 대운·세운 phase**: [hagun-tier.ts:488](../lib/prompts/hagun-tier.ts#L488) `calcCurrentLuckPhase()`
-- **티어 lookup**: [lib/manse/university-tier.ts](../lib/manse/university-tier.ts)
-- **UI Core 카드**: [components/manse/HagunCoreCard.tsx](../components/manse/HagunCoreCard.tsx)
-- **UI 시그너 분해**: [components/manse/HagunSignerBreakdown.tsx](../components/manse/HagunSignerBreakdown.tsx)
-- **11명 회귀 검증**: [scripts/eval-v7-all-11.ts](../scripts/eval-v7-all-11.ts)
+- **계산**: [lib/prompts/hagun-tier.ts](../../lib/prompts/hagun-tier.ts) `computeHagun()` / `scoreToGrade()` / `calculateFinalTier()`
+- **Confidence 분기**: [hagun-tier.ts:424](../../lib/prompts/hagun-tier.ts#L424) `calcConfidence()`
+- **부모 환경 조정**: [hagun-tier.ts:355](../../lib/prompts/hagun-tier.ts#L355) `calcParentAdjust()`
+- **현재 대운·세운 phase**: [hagun-tier.ts:488](../../lib/prompts/hagun-tier.ts#L488) `calcCurrentLuckPhase()`
+- **티어 lookup**: [lib/manse/university-tier.ts](../../lib/manse/university-tier.ts)
+- **UI Core 카드**: [components/manse/HagunCoreCard.tsx](../../components/manse/HagunCoreCard.tsx)
+- **UI 시그너 분해**: [components/manse/HagunSignerBreakdown.tsx](../../components/manse/HagunSignerBreakdown.tsx)
+- **11명 회귀 검증**: [scripts/eval-v7-all-11.ts](../../scripts/eval-v7-all-11.ts)

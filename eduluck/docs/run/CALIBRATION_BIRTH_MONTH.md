@@ -2,9 +2,9 @@
 
 > N=9 calibration sample의 출생월 분포를 한국 일반 출생 분포·학교 학년 cutoff와 대조해 **month-effect confound** 가설을 검증한다.
 >
-> Source: [_private/calibration-samples/data.ts](../_private/calibration-samples/data.ts) (PII 제외)
+> Source: [_private/calibration-samples/data.ts](../../_private/calibration-samples/data.ts) (PII 제외)
 >
-> 관련 문서: [HAGUN_SCORING.md §0 면책](./HAGUN_SCORING.md) · [HAGUN_SCORING.md §12 calibration](./HAGUN_SCORING.md)
+> 관련 문서: [HAGUN_SCORING.md §0 면책](../scoring/HAGUN_SCORING.md) · [HAGUN_SCORING.md §12 calibration](../scoring/HAGUN_SCORING.md)
 >
 > **2026-05-23 변경**: 재원(2008/06)·재호(2016/05) 제거 (실제 입시 결과 미확정 sample). N=11 → N=9.
 

@@ -18,7 +18,7 @@
 
 | 파일 | 변경 |
 |---|---|
-| [docs/DIRECTION_SCORING.md](../../eduluck/docs/DIRECTION_SCORING.md) | §0 면책 신규 + §1-2 학파 인용(김기승·함혜수·이원태) + §6 톤 약화 + §9 RIASEC + §10 분포 (Phase B + D-doc) |
+| [docs/DIRECTION_SCORING.md](../../eduluck/docs/scoring/DIRECTION_SCORING.md) | §0 면책 신규 + §1-2 학파 인용(김기승·함혜수·이원태) + §6 톤 약화 + §9 RIASEC + §10 분포 (Phase B + D-doc) |
 
 ### 스크립트 신규
 

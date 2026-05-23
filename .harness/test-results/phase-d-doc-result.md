@@ -2,7 +2,7 @@
 
 **일시**: 2026-05-23
 **파일**:
-- [eduluck/docs/DIRECTION_SCORING.md](../../eduluck/docs/DIRECTION_SCORING.md) §9·§10 추가
+- [eduluck/docs/DIRECTION_SCORING.md](../../eduluck/docs/scoring/DIRECTION_SCORING.md) §9·§10 추가
 - [eduluck/scripts/eval-direction-distribution.ts](../../eduluck/scripts/eval-direction-distribution.ts) 신규
 
 ## 변경 사항

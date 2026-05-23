@@ -2,7 +2,7 @@
 
 > 9/9 calibration sample에서 청소년기(6~22) 대운 데이터가 누락됐던 광범위 버그 fix 기록. 학운 시스템 Layer 3 (청소년 대운 가산 최대 +15) 본래 의미 복원.
 >
-> Source: [lib/manse/luck-cycles.ts:151-162](../lib/manse/luck-cycles.ts#L151) `buildLuckCycles()`
+> Source: [lib/manse/luck-cycles.ts:151-162](../../lib/manse/luck-cycles.ts#L151) `buildLuckCycles()`
 
 ---
 
@@ -155,10 +155,10 @@ const daeun: DaeunItem[] = allDaeun;
 
 | 파일 | 변경 |
 |---|---|
-| [lib/manse/luck-cycles.ts](../lib/manse/luck-cycles.ts) | line 156-162 buildLuckCycles output 변경 (전 히스토리 반환) |
-| [_private/calibration-samples/data.ts](../_private/calibration-samples/data.ts) | Eugene/정환/세형/이윤수/두흥/승희 expected.hagunScore 갱신 |
-| [_private/calibration-samples/10-yoonsoo.md](../_private/calibration-samples/10-yoonsoo.md) | Layer breakdown 갱신 권장 (L3 4→8) |
-| [docs/HAGUN_SCORING.md §12·변경 이력](./HAGUN_SCORING.md) | 9명 점수 새 값 + 승희 격차 설명 + v7-fix1 항목 |
+| [lib/manse/luck-cycles.ts](../../lib/manse/luck-cycles.ts) | line 156-162 buildLuckCycles output 변경 (전 히스토리 반환) |
+| [_private/calibration-samples/data.ts](../../_private/calibration-samples/data.ts) | Eugene/정환/세형/이윤수/두흥/승희 expected.hagunScore 갱신 |
+| [_private/calibration-samples/10-yoonsoo.md](../../_private/calibration-samples/10-yoonsoo.md) | Layer breakdown 갱신 권장 (L3 4→8) |
+| [docs/HAGUN_SCORING.md §12·변경 이력](../scoring/HAGUN_SCORING.md) | 9명 점수 새 값 + 승희 격차 설명 + v7-fix1 항목 |
 | [docs/HAGUN_LOOCV.md](./HAGUN_LOOCV.md) | LOOCV 결과 갱신 (4/5 + 분산 2) |
 | [docs/YOUTHLUCK_AGE_WEIGHT.md](./YOUTHLUCK_AGE_WEIGHT.md) | ×2 vs ×1 비교 (daeun fix 후 진짜 효과) |
 

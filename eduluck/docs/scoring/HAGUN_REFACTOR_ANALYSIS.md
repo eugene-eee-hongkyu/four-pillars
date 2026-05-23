@@ -197,7 +197,7 @@
 
 ### C 진행 시 작업
 
-1. [hagun-tier.ts](../lib/prompts/hagun-tier.ts) — `scoreHagun` 재작성 (22 시그너 → 9 시그너) + Layer 0 Boolean export
+1. [hagun-tier.ts](../../lib/prompts/hagun-tier.ts) — `scoreHagun` 재작성 (22 시그너 → 9 시그너) + Layer 0 Boolean export
 2. SCORING_SYSTEM.md 완전 재작성 (1-1 ~ 1-5 전면 갱신)
 3. 11명 calibration `expected.*` 재calibration
 4. LLM prompt에 Layer 0 라벨 주입 (학자형 본질 강/중/약)

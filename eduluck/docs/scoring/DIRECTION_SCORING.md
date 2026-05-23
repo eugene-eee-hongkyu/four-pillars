@@ -2,7 +2,7 @@
 
 > eduluck 정밀 진단의 **진로 방향성** 점수 산출 로직. 8개 카테고리 × 시그너 매핑 × 레벨 임계값 × LLM·UI 통합.
 >
-> Source: [lib/manse/category-score.ts](../lib/manse/category-score.ts), [lib/manse/arts-score.ts](../lib/manse/arts-score.ts), [lib/manse/medical-score.ts](../lib/manse/medical-score.ts)
+> Source: [lib/manse/category-score.ts](../../lib/manse/category-score.ts), [lib/manse/arts-score.ts](../../lib/manse/arts-score.ts), [lib/manse/medical-score.ts](../../lib/manse/medical-score.ts)
 >
 > 관련 문서: [SCORING_SYSTEM.md](./SCORING_SYSTEM.md) (학운 종합 점수 §1 + 학습 특성 4개 §2) · [HAGUN_SCORING.md](./HAGUN_SCORING.md) (학운 4-Layer)
 
@@ -185,7 +185,7 @@ sinwang = (비겁+인성) − (식상+재성+관성/2)
 
 만점 11점. 편관격이면 군경·검찰 키워드 추가.
 
-### 3-7. Arts — 예술·미디어 ([arts-score.ts](../lib/manse/arts-score.ts))
+### 3-7. Arts — 예술·미디어 ([arts-score.ts](../../lib/manse/arts-score.ts))
 
 별도 모듈. 배경: 격국 lookup이 "정재격 + 화개살 3 + 도화살"을 회계·금융으로 잘못 매핑한 sample #2 calibration 사고 → 보정용.
 
@@ -201,7 +201,7 @@ sinwang = (비겁+인성) − (식상+재성+관성/2)
 
 만점 11점. 화개+도화 = 시각·미디어 / 화개 단독 = 순수예술·종교 / 도화+식상 = 공연·연예 / 상관·식신격 단독 = 문예·언어 분기.
 
-### 3-8. Medical — 의·약·치·생명과학 ([medical-score.ts](../lib/manse/medical-score.ts))
+### 3-8. Medical — 의·약·치·생명과학 ([medical-score.ts](../../lib/manse/medical-score.ts))
 
 별도 모듈. 배경: N=11 calibration에서 의약·자격직 4 sample 중 격국 단독으로는 "의대" 키워드 미등장이 다수 → 보정용.
 
@@ -222,7 +222,7 @@ sinwang = (비겁+인성) − (식상+재성+관성/2)
 
 ---
 
-## 4. 통합·정렬 ([buildDirectionEntries](../lib/manse/category-score.ts#L532))
+## 4. 통합·정렬 ([buildDirectionEntries](../../lib/manse/category-score.ts#L532))
 
 8 카테고리 점수를 한 배열로 통합 후 정렬:
 
@@ -231,7 +231,7 @@ levelRank = 매우강 4 / 강 3 / 보통 2 / 약 1
 sort by (level 내림차순, level 동률시 total 내림차순)
 ```
 
-결과 8개 entry가 강 → 약 순으로 정렬되어 `manseData.directions`에 저장. UI([DirectionCard.tsx](../components/manse/DirectionCard.tsx))는 강(매우 강·강) / 가능(보통) / 약 3그룹으로 분기 렌더링.
+결과 8개 entry가 강 → 약 순으로 정렬되어 `manseData.directions`에 저장. UI([DirectionCard.tsx](../../components/manse/DirectionCard.tsx))는 강(매우 강·강) / 가능(보통) / 약 3그룹으로 분기 렌더링.
 
 ### Fallback
 
@@ -296,13 +296,13 @@ LLM은 이를 받아 "1순위 학자·연구 + 보강 의약·치" 등 자연 �
 
 ## 8. 관련 코드
 
-- **8 카테고리 계산**: [lib/manse/category-score.ts](../lib/manse/category-score.ts) `calcCategoryScores()` `buildDirectionEntries()`
-- **Arts 보정**: [lib/manse/arts-score.ts](../lib/manse/arts-score.ts) `calcArtsScore()`
-- **Medical 보정**: [lib/manse/medical-score.ts](../lib/manse/medical-score.ts) `calcMedicalScore()`
-- **Engine 통합**: [lib/manse/engine.ts:170-189](../lib/manse/engine.ts#L170-L189)
-- **UI 카드**: [components/manse/DirectionCard.tsx](../components/manse/DirectionCard.tsx)
-- **Hydrate (옛 cache 보강)**: [lib/manse/hydrate.ts](../lib/manse/hydrate.ts)
-- **분포 시뮬레이션**: [scripts/eval-direction-distribution.ts](../scripts/eval-direction-distribution.ts) (Phase D-doc 신규)
+- **8 카테고리 계산**: [lib/manse/category-score.ts](../../lib/manse/category-score.ts) `calcCategoryScores()` `buildDirectionEntries()`
+- **Arts 보정**: [lib/manse/arts-score.ts](../../lib/manse/arts-score.ts) `calcArtsScore()`
+- **Medical 보정**: [lib/manse/medical-score.ts](../../lib/manse/medical-score.ts) `calcMedicalScore()`
+- **Engine 통합**: [lib/manse/engine.ts:170-189](../../lib/manse/engine.ts#L170-L189)
+- **UI 카드**: [components/manse/DirectionCard.tsx](../../components/manse/DirectionCard.tsx)
+- **Hydrate (옛 cache 보강)**: [lib/manse/hydrate.ts](../../lib/manse/hydrate.ts)
+- **분포 시뮬레이션**: [scripts/eval-direction-distribution.ts](../../scripts/eval-direction-distribution.ts) (Phase D-doc 신규)
 
 ---
 
@@ -353,7 +353,7 @@ Eduluck 8 방향성을 Holland RIASEC 6유형 + 보완 2 카테고리로 느슨�
 
 ## 10. 분포 시뮬레이션 (Counterfactual)
 
-[scripts/eval-direction-distribution.ts](../scripts/eval-direction-distribution.ts) — random 사주 1000개에 8 카테고리 점수를 매겨 분포 측정. v7 학운의 [CALIBRATION_COUNTERFACTUAL.md](./CALIBRATION_COUNTERFACTUAL.md)와 동일 패턴.
+[scripts/eval-direction-distribution.ts](../../scripts/eval-direction-distribution.ts) — random 사주 1000개에 8 카테고리 점수를 매겨 분포 측정. v7 학운의 [CALIBRATION_COUNTERFACTUAL.md](../run/CALIBRATION_COUNTERFACTUAL.md)와 동일 패턴.
 
 목적:
 - 각 카테고리의 "강·매우 강" 비율 측정 → cutoff 정직성 평가

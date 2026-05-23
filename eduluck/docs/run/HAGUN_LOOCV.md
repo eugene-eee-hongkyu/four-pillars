@@ -2,9 +2,9 @@
 
 > Claude 비판 (외부 의견 종합 §3-3): 14 시그너 × 9 데이터 = 자유도 > 데이터 → 과적합 보장. 9명 100% 정합은 변별력이 아닌 fitting의 증거. LOOCV로 갭 측정.
 >
-> Source: [scripts/eval-hagun-loocv.ts](../scripts/eval-hagun-loocv.ts)
+> Source: [scripts/eval-hagun-loocv.ts](../../scripts/eval-hagun-loocv.ts)
 >
-> 관련 문서: [HAGUN_SCORING.md §12](./HAGUN_SCORING.md) · [YOUTHLUCK_AGE_WEIGHT.md](./YOUTHLUCK_AGE_WEIGHT.md)
+> 관련 문서: [HAGUN_SCORING.md §12](../scoring/HAGUN_SCORING.md) · [YOUTHLUCK_AGE_WEIGHT.md](./YOUTHLUCK_AGE_WEIGHT.md)
 >
 > **2026-05-23 변경**: 재원·재호 제거 후 N=11 → N=9 재실행. cutoff·Ablation 패턴 동일.
 
@@ -143,10 +143,10 @@ cutoff이 34로 고정돼 있어 누구를 빼든 분류 결과 변화 ✗. 그�
 
 ## 8. 관련 파일
 
-- [scripts/eval-hagun-loocv.ts](../scripts/eval-hagun-loocv.ts) — LOOCV + Ablation 스크립트
-- [scripts/eval-hagun-scores-only.ts](../scripts/eval-hagun-scores-only.ts) — baseline 점수 측정 (Phase 4)
-- [HAGUN_SCORING.md §12](./HAGUN_SCORING.md) — calibration sample 표
-- [HAGUN_SCORING.md §0](./HAGUN_SCORING.md) — 면책 박스 (out-of-sample 미검증 명시)
+- [scripts/eval-hagun-loocv.ts](../../scripts/eval-hagun-loocv.ts) — LOOCV + Ablation 스크립트
+- [scripts/eval-hagun-scores-only.ts](../../scripts/eval-hagun-scores-only.ts) — baseline 점수 측정 (Phase 4)
+- [HAGUN_SCORING.md §12](../scoring/HAGUN_SCORING.md) — calibration sample 표
+- [HAGUN_SCORING.md §0](../scoring/HAGUN_SCORING.md) — 면책 박스 (out-of-sample 미검증 명시)
 - [CALIBRATION_COUNTERFACTUAL.md](./CALIBRATION_COUNTERFACTUAL.md) — 무작위 사주 대조 검증 (2026-05-23 추가)
 
 ---
@@ -175,12 +175,13 @@ cutoff이 34로 고정돼 있어 누구를 빼든 분류 결과 변화 ✗. 그�
    - L3 의존 + 점수 38 (cutoff 34 +4 마진) → 외부 검증 sensitivity ↑
    - → ×1.5 보수화의 비용. 그러나 명리적으로 더 정직 (입시 직전 가중치 ×2는 과했음)
 
-3. **윤수 시스템 인위적 끌어올림** ⚠⚠
+3. **윤수 시스템 인위적 끌어올림** ⚠⚠ (2026-05-23 사용자 정정으로 우려 강화)
    - L2 Layer Ablation: 윤수만 매우 강 ✗ (다른 1티어 4명은 L2 빼도 매우 강 유지)
    - L3 의존: L3 제외 시도 매우 강 ✗
    - Counterfactual: gap 15.1 (38점 중 신호는 15점 정도)
    - → **윤수 38점 = L1(16) + L2(14) + L3(8) 누적으로 매우 강 달성**. 어느 한 Layer만 빠져도 무너짐.
-   - → **L2 ad-hoc 우려가 두 검증에서 일치**. 외부 100명 단계에서 "양인격 + 천을·천덕·월덕만 강한데 비1티어" sample 수집 = L2 정당성 핵심 검증.
+   - → **사용자 정정 (2026-05-23)**: 1티어 5명 학교 성적은 대부분 비슷. "윤수 최상위"라는 이전 회고는 사회적 성공(부사장)과 학운을 혼동한 것. **학운만 보면 윤수는 다른 1티어와 동등** → L2 +14가 윤수만을 위해 작동하는 구조는 더 강한 ad-hoc 위험. 자평진전 34장 ⑤번 ("자기 만든 이론으로 외격") 함정 가능성 ↑↑
+   - → 외부 100명 단계에서 "양인격 + 천을·천덕·월덕만 강한데 비1티어" sample 수집 = L2 정당성 핵심 검증. **검증 안 되면 L2 신살 점수에서 narrative 라벨로 이전 강력 권고**.
 
 4. **세형 anchor 확정** ⭐
    - LOOCV: 모든 sample 중 가장 높은 점수 (45, ×1.5 보수화 후도 1위)
