@@ -233,6 +233,9 @@ export function calcMedicalScore(input: CalcInput): MedicalScoreResult {
       recommendedFields.push('한의학·한의대');
     }
   }
+  if (recommendedFields.length > 0) {
+    recommendedFields.push('환경: 생명·치유·정밀함 + 전문 자격 누적이 잘 풀려요');
+  }
   // 중복 제거
   const dedupRecommendedFields = [...new Set(recommendedFields)];
 

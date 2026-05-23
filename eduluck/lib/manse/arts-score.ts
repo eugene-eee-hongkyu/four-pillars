@@ -163,6 +163,9 @@ export function calcArtsScore(input: CalcInput): ArtsScoreResult {
       // 상관·식신격 = 언어·창작
       recommendedFields.push('문예창작', '언어·통역', '광고·카피', '디자인');
     }
+    if (recommendedFields.length > 0) {
+      recommendedFields.push('환경: 표현·창작·감각 활용이 잘 풀려요');
+    }
   }
 
   const matchedNames = signals.filter(s => s.matched).map(s => s.name);

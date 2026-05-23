@@ -138,8 +138,10 @@ function calcScholar(input: CalcInput): CategoryScore {
   if (level === '강' || level === '매우 강') {
     recommendedFields.push('박사·연구원·교수', '인문·사회 자격직', '교사·강의', '연구원·국책연구소');
     if (isInsungGyeokguk) recommendedFields.push('대학원·박사 트랙');
+    recommendedFields.push('환경: 깊게 파고드는 장기 프로젝트·혼자 집중하는 시간이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('교사·강의·자격직');
+    recommendedFields.push('환경: 학습·자격 누적이 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
@@ -207,8 +209,10 @@ function calcAuthority(input: CalcInput): CategoryScore {
     } else {
       recommendedFields.push('행정·5급 공채', '법학·로스쿨', '외무·공무원', '관리·공공');
     }
+    recommendedFields.push('환경: 규칙·체계·전문성 누적이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('공무원·공기업·안정 직장');
+    recommendedFields.push('환경: 안정된 조직·체계가 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
@@ -275,8 +279,10 @@ function calcEngineer(input: CalcInput): CategoryScore {
   if (level === '강' || level === '매우 강') {
     recommendedFields.push('컴공·AI', '전자·전기', '기계·로봇', '수학·통계', '물리·화학');
     if (isPyeoninGyeokguk) recommendedFields.push('연구·R&D', '특수 응용 기술');
+    recommendedFields.push('환경: 구조·시스템·논리적 문제 해결이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('이공계 일반·산업공학');
+    recommendedFields.push('환경: 분석·도구 활용이 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
@@ -341,8 +347,10 @@ function calcBusiness(input: CalcInput): CategoryScore {
   const recommendedFields: string[] = [];
   if (level === '강' || level === '매우 강') {
     recommendedFields.push('경영·경제', '회계·세무', '재무·금융', '산업공학·MBA');
+    recommendedFields.push('환경: 실무·관리·관계 누적이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('경영 일반·실무·관리');
+    recommendedFields.push('환경: 안정된 관리·실무가 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
@@ -410,8 +418,10 @@ function calcEntrepreneur(input: CalcInput): CategoryScore {
   if (level === '강' || level === '매우 강') {
     recommendedFields.push('자영업·창업', '1인 전문직', '무역·국제 비즈니스', 'MBA·창업 트랙');
     if (isGeonRokGyeokguk) recommendedFields.push('자수성가형 전문직');
+    recommendedFields.push('환경: 이동·전환·자율적 결정이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('직장 + 부업·자기 사업 옵션');
+    recommendedFields.push('환경: 안정 + 자기 분야 구축이 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
@@ -479,8 +489,10 @@ function calcAction(input: CalcInput): CategoryScore {
   if (level === '강' || level === '매우 강') {
     recommendedFields.push('체대·운동선수', '경찰대·사관학교', '소방·구조', '외과·응급의학');
     if (isPyeonGwanGyeokguk) recommendedFields.push('군경·검찰');
+    recommendedFields.push('환경: 현장·즉각 실행·체력 활용이 잘 풀려요');
   } else if (level === '보통') {
     recommendedFields.push('체육 일반·생활체육·외부 활동 직업');
+    recommendedFields.push('환경: 몸·외부 활동이 잘 풀려요');
   }
   const result: CategoryScore = {
     total, level, signals, summary: '',
