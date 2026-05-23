@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-05-24: 30단계 내부 티어 + 사회 분포 기준 cutoff 시스템
+
+- **선택**: 외부 노출 10티어 × 내부 3단계 (엄청 강·강·약강) = 30단계. 한국 사회 분포 기준 cutoff 자동 산출.
+- **대안 검토**:
+  - A (현 채택): 10티어 외부 + 30단계 내부. 사회 분포 cutoff 1티어 5% (55점) … 10티어 100%. 9 sample fit 가능
+  - B: 외부도 30단계 노출. 어머니 인지 부담 ↑, 너무 복잡
+  - C: 5단계 cutoff (매우 강·강·중·약·매우 약). 너무 거침, 30단계 sample 변별 불가
+  - D: random 분포 cutoff 폐기, 9 sample 점수만 비교. 외부 100명 단계에서 generalization ✗
+- **선택 이유**:
+  - 10티어가 한국 입시 표준 (의대·SKY·서성한·…·지방 사립). 사용자·어머니 직관 친화
+  - 내부 3단계 (엄청 강·강·약강)는 30단계 정밀도 + UI 변별력 동시 충족
+  - 사회 분포 cutoff (수능 등급제 4·7·12·17·20·17·12·7·4% 기반)이 외부 통계 기준이라 ad-hoc fitting 회피
+  - 100만 random 사주 시뮬에서 1만·10만·100만 cutoff ±1점 일치 → calibration loop 정밀도 안정
+- **영향 범위**: [eduluck/scripts/eval-distribution-tier.ts](../eduluck/scripts/eval-distribution-tier.ts), [eduluck/scripts/eval-tier-30.ts](../eduluck/scripts/eval-tier-30.ts), [eduluck/scripts/run-calibration-30.ts](../eduluck/scripts/run-calibration-30.ts), [eduluck/scripts/run-calibration-v2.ts](../eduluck/scripts/run-calibration-v2.ts) 스크립트군. 향후 hagun-tier.ts cutoff 적용 시 시스템 영향.
+- **되돌리는 방법**: cutoff 로직 변경. 현재 v7 cutoff (≥34 매우 강) 그대로 유지하면 됨. 30단계 사회 분포 cutoff은 보고용 metric만으로 사용 가능.
+
+---
+
+## 2026-05-24: "L2 신살 ad-hoc 위험" 명분 폐기 + 9 sample fit 우선
+
+- **선택**: 명리 학파 정통성·"ad-hoc 위험" 추상 우려 무시. 9 sample 다 fit이 우선. 사회 분포 cutoff만 외부 기준 유지.
+- **대안 검토**:
+  - A (현 채택): 사용자 ground truth (9명 실제 진학 결과) 기준 시그너 weight 자유 조정. 명리 합의 안 vs ad-hoc 구분 X
+  - B: 명리 학파 정통 (자평진전·적천수) 기준 시그너만 채택. 9명 fit 어려움 → 사용자 비판 "기존 명리학은 1티어 못 잡으면 쓰레기" 정합
+  - C: 명리 통설 안전 명분 + 외부 100명 단계에서 결정. 이미 비판된 baseline에 안주
+- **선택 이유**:
+  - 사용자 비판 정확: 명리 정통이 1티어 5명을 분포 25-28% (4티어 영역)로 잡음 = 시스템 실패 baseline
+  - "ad-hoc 위험"이라는 표현이 결정 회피로 사용되었음 자기비판
+  - 9 sample은 사용자 직접 ground truth (실제 진학 결과). 명리 학파 합의보다 강한 검증 기준
+  - 외부 100명 단계에서 generalization 검증은 별도. 현재 단계는 9 sample 정합이 본질
+- **영향 범위**: 시그너 weight 설계 방향성. 신살 시그너 폐기·신규 도입 자유. v8 진로 방향성도 같은 원칙 적용 가능.
+- **되돌리는 방법**: 명리 학파 정통 기준 시그너만 채택. 9 sample fit 포기. 현재 v7 (cutoff 34 매우 강) 유지.
+
+---
+
 ## 2026-05-23: 정밀 진단 LLM Sonnet 4.5 → Haiku 4.5 다운그레이드
 
 - **선택**: 정밀 진단 API(`/api/interpret-premium`)만 Haiku 4.5 (`claude-haiku-4-5-20251001`)로 변경. 무료 진단·관계 분석은 Sonnet 유지.

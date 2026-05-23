@@ -4,6 +4,16 @@
 
 ## 대기 중
 
+## 2026-05-24: 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
+
+- **백로그 이유**: 시그너 가중치 calibration loop 90회 (V1+V2) 결과 wgap 89 floor. 영진(상관격 4티어, gap 18-19)·정환(정재격 1티어, gap 12-16)·두흥(외부 변수 1티어, gap 14-18) 격차 잔존. 사주만으로 fit 한계 입증. mom test 진입 전 결정 우선순위 ↓.
+- **할 것**: (1) 외부 변수 categorization (학원·노력·환경·SES·내신·재수 등) (2) parentAdjust 모듈 패턴 확장 (3) 학운 점수에 외부 변수 가중치 도입 (4) 사주 점수 + 외부 변수 합산 시스템 (5) UI 입력 인터페이스 (6) 9 sample 외부 변수 데이터 수집
+- **필요한 것**: 사용자가 알고 있는 9 sample 외부 변수 회고 (학원·재수·내신·환경 등). 또는 mom test 10명에서 어머니에게 외부 변수 입력 받기. parentAdjust 모듈 코드 패턴 재활용.
+- **이전 검토**: V2 Loop 27·6·18·58·90 모두 영진 gap 18-19로 동일. 사주 본질만 측정하는 시스템으로는 비학자형 4티어 진학 cover ✗. 명리 합의 + ML 합의 모두 "사주는 결정론 ✗ 가능성 분석". 외부 변수가 본질.
+- **관련 파일**: [eduluck/lib/prompts/hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) parentAdjust·tierToParentWeight 함수 (Phase H에서 비활성화, 코드 유지)
+
+---
+
 ## 2026-05-23: 06 정환·08 세형 sample md v7 포맷 갱신
 
 - **백로그 이유**: 03·10·11 sample md는 v7 Layer breakdown + 대운 표 + 학업/커리어 인생 데이터로 갱신 완료. 06·08은 여전히 v3 포맷 (학운 점수 11·12 한 줄). 비대칭. 이번 세션 task 범위 외라 보류.
