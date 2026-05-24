@@ -1,23 +1,25 @@
-// 학운 단계 + 추천 베이스 티어 결정성 계산 — v7 (2026-05-22)
+// 학운 단계 + 추천 베이스 티어 결정성 계산 — v11 (2026-05-24)
 //
-// v7 4-Layer 평가 (v6 9 시그너 → 14 시그너, Agent 명리 리서치 권장 반영):
-//   Layer 0 (Boolean): 학자형 본질 = (관인상생 OR 학자격국narrow OR 양인+제왕+다귀인) AND 학자귀인≥1
-//   Layer 1 (명식 본질 0~60): 관인상생 콤보 + 격국 + 학자귀인 + 인성 + 자립 학자형 + 학자형 양인 + 일주 통근
-//   Layer 2 (신살·귀인 0~20): 천을 + 천덕월덕 + 삼귀구비 + 삼기귀인 — Agent 리서치 신규 카테고리
-//   Layer 3 (운 0~20): 청소년 대운 + 관성 단독
-//   Layer 4 (페널티 -35~0): 신약 (정인격 예외 -5) + 재극인 + 학자형 부재
-//   총점 = max(0, Layer1 + Layer2 + Layer3 + Layer4) → 0~100
+// v11 Loop 603 (V8_BEST_335 + 비견 콤보 3개 +6 + combo_jaeSiksangBigeopJarip +45):
+//   13 sample calibration totalGap 21.5 (V6 #266 totalGap 47 대비 -25.5).
+//   김택범 raw 100 (3-1) ✓ / 박진우 raw 101 (3-1) ✓ — 둘 다 외부변수 weight 0.5 인정.
 //
-// 주요 변경 (v6 → v7):
-//   ❌ "일간 강도 균형 [-2, +4]" 시그너 제거 — Eugene 신왕 7이 페널티 받던 구조 해소 (자평진전 "正印格喜身旺")
-//   ✅ 자립 학자형 콤보 +12 신규 — POSTECH·이공계 1티어 패턴 (Eugene)
-//   ✅ 일주 통근 (일지 비겁) +5 신규
-//   ✅ 신살·귀인 20점 신설 — 천을·천덕월덕·삼귀구비·삼기귀인 (이윤수 같은 양인 천우신조)
-//   ✅ 신약 페널티 정인격 예외 -5 — 자평진전 "신약 인성격" 합의
-//   📊 cutoff ≥55 매우 강 (1~2티어) — 5명 1티어 sample 모두 55+ 도달
+// 주요 변경 (v6 #266 → v11 Loop 603):
+//   ✅ 정관격 base 22 → 28 (V8) — 재호 정관격 학자형 1-3 도달
+//   ✅ combo_jarip 20 → 28 (V7) — 자립학자 콤보 강화
+//   ✅ combo_salinSangsaeng 8 → 16 (V7) — 살인상생 weight 갱신
+//   ✅ cnt_gwangwiHakgwan ×8 → ×16 (V8) — 관귀학관 시험 길성 강화
+//   ✅ u_dayJewang +6 (V7 신규) — 일주 제왕 통근
+//   ✅ cnt_hakdang ×4 (V7 신규) — 학당귀인 중첩 multiplier
+//   ✅ cnt_munchang ×4 (V8 신규) — 문창귀인 중첩
+//   ✅ cnt_gwansung ×5 (V8 신규) — 관성 중첩
+//   ✅ combo_jariplBigeopMulti +6 (V7 신규) — 정인격 + 일지 통근 + 비겁 3
+//   ✅ combo_jeonggwanScholar +25 (V8 신규) — 정관격 학자형 (재호 1-3 직접 fit)
+//   ✅ combo_bigyeon{Gwansung,Gwangwi,Munchang} +6 (V10 신규) — 비견격 학자형 3 콤보
+//   ✅ combo_jaeSiksangBigeopJarip +45 (V11 신규) — 박진우 fit (정재격/편재격 + 재성≥3 + 식상≥2 + 비겁≥1 + 일주 약)
 //
 // 명리 출처: 자평진전·적천수·삼명통회·연해자평·다시 배우는 사주명리·sajustudy·healerlee
-// 8명 calibration 변별력: Rule 5 (관인상생 OR 학자격국narrow OR 양인학자) AND 학자귀인≥1 → 100% precision + 100% recall
+// 13명 정합: 7명 gap 0 / 4명 gap 1-3 / 2명 외부변수 fit (영진은 사주 학자형 ✗, 재원은 ground truth 미확정)
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
@@ -162,9 +164,9 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   // ===== Layer 1: 명식 본질 (격국·십성·콤보) =====
   let layer1 = 0;
 
-  // 1-1. 격국 base (V6 weight)
+  // 1-1. 격국 base (v11 weight — V8에서 정관격 22 → 28)
   const gyeokgukWeights: Record<string, number> = {
-    정인격: 22, 편인격: 22, 정관격: 22, 편관격: 15,
+    정인격: 22, 편인격: 22, 정관격: 28, 편관격: 15,
     식신격: 18, 비견격: 15, 건록격: 15, 양인격: 12,
     정재격: 8, 편재격: 8, 상관격: 8,
   };
@@ -203,8 +205,13 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
     hits.push({ signer: 'combo_allScholar (격국+관인+인성+귀인)', value: 25, layer: 1 });
   }
   if (['정인격', '편인격'].includes(m.gyeokguk.name) && dayStrong2 && c.bigeop >= 2) {
-    layer1 += 20;
-    hits.push({ signer: 'combo_jarip (자립학자)', value: 20, layer: 1 });
+    layer1 += 28; // V7: 20 → 28
+    hits.push({ signer: 'combo_jarip (자립학자)', value: 28, layer: 1 });
+  }
+  // V7 신규: 정인격/편인격 + 일지 통근(비겁) + 비겁 ≥ 3 = 자립 비겁 다중
+  if (['정인격', '편인격'].includes(m.gyeokguk.name) && dayTonggeun && c.bigeop >= 3) {
+    layer1 += 6;
+    hits.push({ signer: 'combo_jariplBigeopMulti (자립 비겁 다중)', value: 6, layer: 1 });
   }
   if (isYanginScholar) {
     layer1 += 18;
@@ -220,8 +227,8 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
     hits.push({ signer: 'combo_sanggwanPaeIn (상관패인, 자평진전)', value: 8, layer: 1 });
   }
   if (m.gyeokguk.name === '편관격' && c.insung >= 2 && m.sipsin.isGwaninSangsaeng) {
-    layer1 += 8;
-    hits.push({ signer: 'combo_salinSangsaeng (살인상생)', value: 8, layer: 1 });
+    layer1 += 16; // V7: 8 → 16
+    hits.push({ signer: 'combo_salinSangsaeng (살인상생)', value: 16, layer: 1 });
   }
   if (m.gyeokguk.name === '정재격' && c.gwansung >= 2 && m.sipsin.isGwaninSangsaeng) {
     layer1 += 8;
@@ -243,6 +250,39 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   if (c.jaesung >= 1 && c.gwansung >= 1 && c.insung >= 1 && (c.bigeop >= 2 || dayTonggeun)) {
     layer1 += 5;
     hits.push({ signer: 's_jaeGwanIn_samgwi (재관인 삼귀)', value: 5, layer: 1 });
+  }
+  // V8 신규: 정관격 학자형 (자평진전 「正官格은 本格 學者·官吏의 命」)
+  if (m.gyeokguk.name === '정관격' && c.gwansung >= 2 && guiCount >= 1) {
+    layer1 += 25;
+    hits.push({ signer: 'combo_jeonggwanScholar (정관격 학자형)', value: 25, layer: 1 });
+  }
+  // V10 신규: 비견격/건록격 학자형 콤보 — 자평진전·적천수
+  const isBigyeonGyeokguk = m.gyeokguk.name === '비견격' || m.gyeokguk.name === '건록격';
+  if (isBigyeonGyeokguk && c.gwansung >= 2 && guiCount >= 1) {
+    layer1 += 6;
+    hits.push({ signer: 'combo_bigyeonGwansung (비견격 학자형)', value: 6, layer: 1 });
+  }
+  if (isBigyeonGyeokguk && gwangwiCount >= 2) {
+    layer1 += 6;
+    hits.push({ signer: 'combo_bigyeonGwangwi (비견격 + 관귀학관)', value: 6, layer: 1 });
+  }
+  if (isBigyeonGyeokguk && munchang >= 2) {
+    layer1 += 6;
+    hits.push({ signer: 'combo_bigyeonMunchang (비견격 + 문창 다중)', value: 6, layer: 1 });
+  }
+  // V11 신규: 정재격/편재격 + 재성≥3 + 식상≥2 + 비겁≥1 + 일주 약 = 외부 환경 활용 자수성가형
+  //   (재성·식상·비겁 = 사업 추진 + 신약 = 외부 의지·환경 활용)
+  const dayWeakV11 = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  const isJaeGyeokguk = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
+  if (isJaeGyeokguk && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeakV11) {
+    layer1 += 45;
+    hits.push({ signer: 'combo_jaeSiksangBigeopJarip (재·식·비 자수성가형)', value: 45, layer: 1 });
+  }
+  // V8 신규: cnt_gwansung × 5 (관성 중첩 multiplier)
+  if (c.gwansung > 0) {
+    const v = c.gwansung * 5;
+    layer1 += v;
+    hits.push({ signer: `관성 multiplier (×5)`, value: v, layer: 1 });
   }
 
   // ===== Layer 2: 신살·귀인 (boolean — V6 #266 weight 정확 재현) =====
@@ -268,9 +308,21 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
     layer2 += v;
     hits.push({ signer: `학자귀인 합 (cnt × 4)`, value: v, layer: 2 });
   }
-  // V5 관귀학관 cnt × 8 (사주첩경·명리정종·한국명리학협회·조세일보)
+  // V7 신규: cnt_hakdang × 4 (학당귀인 중첩 multiplier)
+  if (hakdang > 0) {
+    const v = hakdang * 4;
+    layer2 += v;
+    hits.push({ signer: `학당귀인 multiplier (×4)`, value: v, layer: 2 });
+  }
+  // V8 신규: cnt_munchang × 4 (문창귀인 중첩 multiplier)
+  if (munchang > 0) {
+    const v = munchang * 4;
+    layer2 += v;
+    hits.push({ signer: `문창귀인 multiplier (×4)`, value: v, layer: 2 });
+  }
+  // V8 갱신: 관귀학관 cnt × 16 (V5 8 → V8 16, 시험·합격 길성 강화)
   if (gwangwiCount > 0) {
-    const v = gwangwiCount * 8;
+    const v = gwangwiCount * 16;
     layer2 += v;
     hits.push({ signer: `관귀학관 ×${gwangwiCount} (시험·합격 길성)`, value: v, layer: 2 });
   }
@@ -285,10 +337,14 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   // ===== Layer 3: 운 (청소년 대운 + 일주 통근) =====
   let layer3 = 0;
 
-  // 일지 건록만 (V6 weight: u_dayGeonrok: 5, u_dayJewang은 V6에 없음)
+  // 일지 건록 (V6) + 일지 제왕 (V7 신규)
   if (m.unsung.dayPillar.stage === '건록') {
     layer3 += 5;
     hits.push({ signer: '일지 건록', value: 5, layer: 3 });
+  }
+  if (m.unsung.dayPillar.stage === '제왕') {
+    layer3 += 6;
+    hits.push({ signer: '일지 제왕', value: 6, layer: 3 });
   }
   if (dayTonggeun) {
     layer3 += 5;

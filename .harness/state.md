@@ -6,29 +6,27 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 17:19
-## 마지막 업데이트: 2026-05-24 17:19
+## 마지막 실행: 2026-05-24 17:50
+## 마지막 업데이트: 2026-05-24 17:50
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Hagun tier calibration V10 완료 (Loop 523 best, totalGap 21.5). 비견격 학자형 콤보 4개 detector 추가로 재호 1-3 도달 성공. 11명 정합 표 작성 + 김택범·박진우 신규 sample 평가 + 음력→양력 변환 진단 (lunar-typescript 활용 가능 확인).
+- V11 Loop 603 prod 반영 완료 (`combo_jaeSiksangBigeopJarip +45` 박진우 fit detector 신규 + V8/V10 통합 weight 갱신). 13명 self-test 100% raw 일치, 박진우·김택범 모두 3-1 도달. tsc 0 에러 + vitest 12/12 pass.
 
 ### 이어서 할 것
 
-1. V10 Loop 523 weight prod 반영 (hagun-tier.ts에 비견격 학자형 콤보 4개 detector 통합 + weight 갱신)
-2. 김택범·박진우 sample을 `_private/calibration-samples/data.ts`에 추가 (둘 다 weight 0.5 외부변수)
-3. (선택) UI에 음력/양력 토글 추가 — lunar-typescript `Lunar.fromYmd().getSolar()` 1줄 코드
+1. (선택) UI 음력/양력 토글 추가 — `Lunar.fromYmd().getSolar()` 1줄 코드
+2. (선택) 영진 외부 의지 score 모듈 (사주 본질 학자형 ✗ + SKY 도달)
+3. (선택) V11 production deploy + 실제 사용자 케이스 검증
 
 ### 막힌 것
 
-- 박진우 sample: 학운 7-2 (전문대~사립 하위) ↔ 실제 고려대 (1-3) — 17 단계 빗나감. 영진 패턴 (사주 본질 약 + SKY 도달, 외부 의지)
-- 김택범 sample: 학운 3-1 ↔ 실제 고려대 화공 (1-3) — 2 단계 낮음. 3수+사업 정리로 외부 환경/노력 변수
+- 영진 sample (정규화 14.9 vs 실제 경희대 4티어, 24 단계 빗나감): 사주 본질 학자형 ✗ + SKY/상위권 도달. 사주 만으론 fit 불가, 외부 의지·환경 변수 별도 모듈 필요.
 
 ### 사람 판단 필요
 
-- V10 Loop 523 prod 반영 시점 결정 (지금 vs 김택범·박진우 추가 후 V11 cycle 한 번 더)
-- 김택범·박진우 weight 0.5 부여 — V11에서 학자형 본질 강화 필요 vs 외부변수 인정으로 끝
+- V11 prod deploy 시점 — 지금 vs 영진 패턴 모듈까지 작업 후
 
 ### 백로그 요약
 
@@ -127,8 +125,8 @@
 - [x] 11 sample 정규화 표 출력 (홍규~재원)
 - [x] 김택범·박진우 신규 sample V10 평가
 - [x] 음력→양력 변환 lunar-typescript 활용 진단
-- [ ] V10 Loop 523 weight prod 반영 (hagun-tier.ts)
-- [ ] 김택범·박진우 data.ts 추가
+- [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
+- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 ⭐
 - [ ] 음력 입력 UI 토글 추가 (선택)
 - [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + 약 영역 Haiku narrative
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감

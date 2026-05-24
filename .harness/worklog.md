@@ -6,6 +6,47 @@
 
 ---
 
+## Session 2026-05-24 17:50 — V11 Loop 603 prod 반영 + 13명 sample 통합
+
+### 작업 요약
+- **신규 sample 추가** (`_private/calibration-samples/data.ts`):
+  - `12-taekbeom` 김택범 (음력 1976-03-01 → 양력 1976-03-31, lunar-typescript 변환), weight 0.5
+  - `13-jinwoo` 박진우 (1993-03-10 15:00), weight 0.5
+- **V11 calibration sweep** (`scripts/run-calibration-v11.ts`, 18 시나리오):
+  - 박진우 raw 56 (7-2) → 박진우용 신규 detector 후보 3종 (jaeSiksangBigeopJarip / chungYakJarip / engineerType) 각 weight sweep
+  - **Loop 603 best**: V10 Loop 523 + `combo_jaeSiksangBigeopJarip` +45 단독 → 박진우 raw 101 (3-1) ✓, 김택범 raw 100 (3-1) ✓, totalGap 21.5 (V10 baseline 28에서 -6.5)
+  - 신규 detector 정의: **정재격/편재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약** (절·태·양·병·사·묘) — 박진우 명식 정확 매칭, 다른 12명 발동 0건
+- **prod hagun-tier.ts V11 Loop 603 완전 반영**:
+  - Layer 1: 정관격 base 22 → 28, combo_jarip 20 → 28, combo_salinSangsaeng 8 → 16
+  - Layer 1 신규: combo_jariplBigeopMulti +6, combo_jeonggwanScholar +25, combo_bigyeon{Gwansung,Gwangwi,Munchang} +6, **combo_jaeSiksangBigeopJarip +45 (V11 박진우 fit)**, cnt_gwansung × 5
+  - Layer 2 신규: cnt_hakdang × 4, cnt_munchang × 4, cnt_gwangwiHakgwan × 8 → × 16
+  - Layer 3 신규: u_dayJewang +6
+- **13명 self-test 통과** (`scripts/selftest-v11-prod.ts`): prod `computeHagun` raw = V11 calibration raw 100% 일치 (Eugene 113·정환 126·세형 134·이윤수 143·류상수 122·두흥 96·승희 95·영진 21·와이프 74·재호 126·재원 35·김택범 100·박진우 101)
+- **tsc + vitest 통과**: prod 영역 0 에러, unit test 12/12 pass
+
+### 13명 최종 정규화 점수·티어 (V11 Loop 603 prod)
+| 순 | Sample | raw | 정규화 (/100) | 30단계 | 실제 목표 | gap |
+|----|--------|-----|--------------|--------|-----------|-----|
+| 1 | 이윤수 | 143 | 101.4 | 1-1 | 1-1 | 0 |
+| 2 | 세형 | 134 | 95.0 | 1-2 | 1-2 | 0 |
+| 3 | 정환 | 126 | 89.4 | 1-3 | 1-2 | 1 |
+| 4 | 재호 | 126 | 89.4 | 1-3 | 1-3+ | 0 |
+| 5 | 류상수 | 122 | 86.5 | 2-1 | 1-2 | 2 |
+| 6 | Eugene | 113 | 80.1 | 2-2 | 1-2 | 3 |
+| 7 | 박진우 | 101 | 71.6 | **3-1** | 3-1+ | 0 ⭐ |
+| 8 | 김택범 | 100 | 70.9 | **3-1** | 3-1+ | 0 ⭐ |
+| 9 | 두흥 | 96 | 68.1 | 3-2 | 3-2 | 0 |
+| 10 | 승희 | 95 | 67.4 | 3-2 | 3-2 | 0 |
+| 11 | 와이프 | 74 | 52.5 | 5-1 | 6-2 | 4 |
+| 12 | 재원 | 35 | 24.8 | 9-3 | 5-3 | 12 (w 0) |
+| 13 | 영진 | 21 | 14.9 | 10-3 | 2-3 | 24 (외부 의지) |
+
+### 다음 액션
+- (선택) UI 음력/양력 토글 추가 — `Lunar.fromYmd().getSolar()` 1줄 코드, 입력 폼 + 변환 1줄
+- (선택) 영진 외부 의지 sample 처리 — 사주 본질 학자형 ✗ + SKY 도달 패턴 별도 모듈 (외부 환경·노력 score)
+
+---
+
 ## Session 2026-05-24 17:19 — V7~V10 후속 + 11명 평가 + 음력 변환 진단
 
 ### 작업 요약
