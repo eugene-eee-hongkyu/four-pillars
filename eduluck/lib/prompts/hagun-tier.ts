@@ -95,6 +95,29 @@ function hasSamgi(stems: string[]): boolean {
       || SAMGI_HUMAN.every(s => set.has(s));
 }
 
+/**
+ * v8 학운 점수 — V6 calibration 결과 (#266, totalGap 47) 반영.
+ *
+ * Calibration 라운드: V1 (30 weight tuning) → V2 (60 안 시도 방향) → V3 (90 fine-tune + 8방향)
+ *                     → V4 (60 학파 ≥ 2 검증 19 신규 detector) → V5 (30 관귀학관 등 라운드 2)
+ *                     → V6 (V4 #195 raw cutoff baseline + V5 시나리오 absolute 재측정)
+ *
+ * V6 best (Loop 266): V4 #195 + 재관쌍미 ↓ (8→4) + 재관인 삼귀 +5 + 관귀학관 cnt×8 + 천을·학당 +5
+ *
+ * Layer 분류:
+ *   Layer 1 (명식 본질): 격국·십성·콤보 (g_*, s_*, combo_*)
+ *   Layer 2 (신살·귀인): 학자귀인·천을·삼귀·관귀학관 (gw_*, cnt_gwangwiHakgwan, combo_cheonEulHakdang 등)
+ *   Layer 3 (운): 청소년 대운 + 일주 통근 (d_*, u_*)
+ *   Layer 4 (페널티): 재성 다중·청소년 재성 대운 (cnt_jaesung 음수, d_youthJaesung 음수)
+ *
+ * 점수 범위: 0~150+ raw scale. scoreToGrade는 V4 #195 absolute cutoff 기준.
+ */
+const GWANGWI_MAP: Record<string, string> = {
+  갑: '사', 을: '사', 병: '신', 정: '신',
+  무: '해', 기: '해', 경: '인', 신: '인',
+  임: '인', 계: '인',
+};
+
 export function computeHagun(m: ManseResult): HagunBreakdown {
   const c = m.sipsin.counts;
   const hits: HagunBreakdown['hits'] = [];
@@ -103,200 +126,205 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
     ...m.shensha.dayPillar, ...m.shensha.hourPillar,
   ];
   const guiCount = allShensha.filter(s => HAGUN_GUI.has(s)).length;
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const munchang = allShensha.filter(s => s === '문창귀인').length;
   const cheonEulCount = allShensha.filter(s => s === '천을귀인').length;
   const hasCheonDeok = allShensha.includes('천덕귀인');
   const hasWolDeok = allShensha.includes('월덕귀인');
   const hasTwoVirtues = hasCheonDeok && hasWolDeok;
-  const hasSamgwi = cheonEulCount >= 1 && hasTwoVirtues; // 삼귀구비 (천을+천덕+월덕)
+  const hasSamgwi = cheonEulCount >= 1 && hasTwoVirtues; // 삼귀구비
 
   const isScholarGyeokguk = SCHOLAR_GYEOKGUK_NARROW.has(m.gyeokguk.name);
   const monthStrong = STRONG_UNSUNG.has(m.unsung.monthPillar.stage);
-  const dayStrong = STRONG_UNSUNG.has(m.unsung.dayPillar.stage);
   const dayStrong2 = ['건록', '제왕'].includes(m.unsung.dayPillar.stage);
-  const dayWeak = WEAK_UNSUNG.has(m.unsung.dayPillar.stage);
   const isYanginScholar = m.gyeokguk.name === '양인격' && monthStrong && guiCount >= 2;
 
-  const sinwang =
-    (c.bigeop + c.insung) - (c.siksang + c.jaesung + c.gwansung / 2)
-    + (monthStrong ? 2 : WEAK_UNSUNG.has(m.unsung.monthPillar.stage) ? -1 : 0)
-    + (dayStrong ? 2 : dayWeak ? -1 : 0);
-
-  // 일주 통근 — 일지가 비겁(비견·겁재)인지
   const dayBranch = splitPillar(m.dayPillar).branch;
   const dayIlgan = splitPillar(m.dayPillar).stem;
   const dayBranchSipsin = getStemSipsin(dayIlgan, dayBranch);
   const dayTonggeun = dayBranchSipsin === '비견' || dayBranchSipsin === '겁재';
 
-  // ===== Layer 0: Boolean 학자형 본질 =====
+  // 관귀학관 — 일간별 정관 장생지 (사주첩경·명리정종·한국명리학협회·조세일보)
+  const branches = [
+    splitPillar(m.yearPillar).branch,
+    splitPillar(m.monthPillar).branch,
+    splitPillar(m.dayPillar).branch,
+    m.hourPillar ? splitPillar(m.hourPillar).branch : '',
+  ].filter(Boolean);
+  const gwangwiTarget = GWANGWI_MAP[dayIlgan] ?? '';
+  const gwangwiCount = gwangwiTarget ? branches.filter(b => b === gwangwiTarget).length : 0;
+
+  // ===== Layer 0: Boolean 학자형 본질 (UI grade 분기용, 유지) =====
   const isScholar =
     (m.sipsin.isGwaninSangsaeng || isScholarGyeokguk || isYanginScholar) &&
     guiCount >= 1;
 
-  // ===== Layer 1: 명식 본질 (0~60+, 자연 cap) =====
+  // ===== Layer 1: 명식 본질 (격국·십성·콤보) =====
   let layer1 = 0;
 
-  // 1-1. 관인상생 + 학자귀인 콤보 (15)
+  // 1-1. 격국 base (V6 weight)
+  const gyeokgukWeights: Record<string, number> = {
+    정인격: 22, 편인격: 22, 정관격: 22, 편관격: 15,
+    식신격: 18, 비견격: 15, 건록격: 15, 양인격: 12,
+    정재격: 8, 편재격: 8, 상관격: 8,
+  };
+  const gw = gyeokgukWeights[m.gyeokguk.name] ?? 0;
+  if (gw > 0) {
+    layer1 += gw;
+    hits.push({ signer: `격국 (${m.gyeokguk.name})`, value: gw, layer: 1 });
+  }
+
+  // 1-2. 관인상생 + 학자귀인 콤보 (s_gwaninCombo)
   if (m.sipsin.isGwaninSangsaeng && guiCount >= 1) {
-    layer1 += 15;
-    hits.push({ signer: '관인상생+학자귀인 콤보', value: 15, layer: 1 });
+    layer1 += 18;
+    hits.push({ signer: '관인상생+학자귀인 콤보', value: 18, layer: 1 });
   }
 
-  // 1-2. 학자형 격국 narrow (12) — 편관격 제외
-  if (isScholarGyeokguk) {
+  // 1-3. 인성 threshold
+  if (c.insung >= 3) {
     layer1 += 12;
-    hits.push({ signer: `학자형 격국 (${m.gyeokguk.name})`, value: 12, layer: 1 });
-  }
-
-  // 1-3. 학자귀인 (10 / 7 / 4)
-  if (guiCount >= 3) {
-    layer1 += 10;
-    hits.push({ signer: `학자귀인 ${guiCount}개`, value: 10, layer: 1 });
-  } else if (guiCount === 2) {
-    layer1 += 7;
-    hits.push({ signer: '학자귀인 2개', value: 7, layer: 1 });
-  } else if (guiCount === 1) {
-    layer1 += 4;
-    hits.push({ signer: '학자귀인 1개', value: 4, layer: 1 });
-  }
-
-  // 1-4. 인성 (8 / 4)
-  if (c.insung >= 2) {
+    hits.push({ signer: `인성 ${c.insung}개`, value: 12, layer: 1 });
+  } else if (c.insung === 2) {
     layer1 += 8;
-    hits.push({ signer: `인성 ${c.insung}개`, value: 8, layer: 1 });
-  } else if (c.insung === 1) {
-    layer1 += 4;
-    hits.push({ signer: '인성 1개', value: 4, layer: 1 });
+    hits.push({ signer: '인성 2개', value: 8, layer: 1 });
   }
 
-  // 1-5. 자립 학자형 콤보 (12) — 정인·편인·정관격 + 일지 건록·제왕 + 비겁≥2
-  //   자평진전 "正印格喜身旺" — Eugene 같은 POSTECH·이공계 1티어 패턴
-  const scholarInsungGyeokguk = ['정인격', '편인격', '정관격'].includes(m.gyeokguk.name);
-  const isJaripScholar = scholarInsungGyeokguk && dayStrong2 && c.bigeop >= 2;
-  if (isJaripScholar) {
-    layer1 += 12;
-    hits.push({ signer: '자립 학자형 콤보 (인성격+일지건록·제왕+비겁≥2)', value: 12, layer: 1 });
+  // 1-4. cnt_insung × 4
+  if (c.insung > 0) {
+    const v = c.insung * 4;
+    layer1 += v;
+    hits.push({ signer: `인성 multiplier (×4)`, value: v, layer: 1 });
   }
 
-  // 1-6. 학자형 양인 (5) — 양인+월지강+학자귀인≥2
+  // 1-5. 콤보 시그너 (V3 + V4 + V5)
+  // V3 콤보
+  if (isScholarGyeokguk && m.sipsin.isGwaninSangsaeng && c.insung >= 2 && guiCount >= 1) {
+    layer1 += 25;
+    hits.push({ signer: 'combo_allScholar (격국+관인+인성+귀인)', value: 25, layer: 1 });
+  }
+  if (['정인격', '편인격'].includes(m.gyeokguk.name) && dayStrong2 && c.bigeop >= 2) {
+    layer1 += 20;
+    hits.push({ signer: 'combo_jarip (자립학자)', value: 20, layer: 1 });
+  }
   if (isYanginScholar) {
+    layer1 += 18;
+    hits.push({ signer: 'combo_yanginScholar', value: 18, layer: 1 });
+  }
+  if (hakdang >= 1 && munchang >= 1 && cheonEulCount >= 1) {
+    layer1 += 12;
+    hits.push({ signer: 'combo_youngshik (학당+문창+천을)', value: 12, layer: 1 });
+  }
+  // V4 신규 콤보 (학파 ≥ 2 검증)
+  if (m.gyeokguk.name === '상관격' && c.insung >= 2) {
+    layer1 += 8;
+    hits.push({ signer: 'combo_sanggwanPaeIn (상관패인, 자평진전)', value: 8, layer: 1 });
+  }
+  if (m.gyeokguk.name === '편관격' && c.insung >= 2 && m.sipsin.isGwaninSangsaeng) {
+    layer1 += 8;
+    hits.push({ signer: 'combo_salinSangsaeng (살인상생)', value: 8, layer: 1 });
+  }
+  if (m.gyeokguk.name === '정재격' && c.gwansung >= 2 && m.sipsin.isGwaninSangsaeng) {
+    layer1 += 8;
+    hits.push({ signer: 'combo_jeongjaeYonggwan (정재용관)', value: 8, layer: 1 });
+  }
+  if (m.gyeokguk.name === '양인격' && c.siksang >= 3) {
+    layer1 += 8;
+    hits.push({ signer: 'combo_yanginSiksang (양인 식상)', value: 8, layer: 1 });
+  }
+  if (c.jaesung >= 2 && c.gwansung >= 2 && (c.bigeop >= 2 || dayTonggeun)) {
+    layer1 += 4;
+    hits.push({ signer: 'combo_jaegwanSsangmi (재관쌍미)', value: 4, layer: 1 });
+  }
+  if (m.gyeokguk.name === '정인격' && dayStrong2 && c.insung >= 2) {
+    layer1 += 8;
+    hits.push({ signer: 'combo_jeonginTonggeunMulti (정인 통근 다중)', value: 8, layer: 1 });
+  }
+  // V5 라운드 2: 재관인 삼귀
+  if (c.jaesung >= 1 && c.gwansung >= 1 && c.insung >= 1 && (c.bigeop >= 2 || dayTonggeun)) {
     layer1 += 5;
-    hits.push({ signer: '학자형 양인 (양인+월지강+귀인≥2)', value: 5, layer: 1 });
+    hits.push({ signer: 's_jaeGwanIn_samgwi (재관인 삼귀)', value: 5, layer: 1 });
   }
 
-  // 1-7. 일주 통근 (5) — 일지 비겁 (적천수 "통근투출")
-  if (dayTonggeun) {
-    layer1 += 5;
-    hits.push({ signer: `일주 통근 (일지 ${dayBranchSipsin})`, value: 5, layer: 1 });
-  }
-
-  // ===== Layer 2: 신살·귀인 (0~20) — Agent 리서치 신규 카테고리 =====
+  // ===== Layer 2: 신살·귀인 (boolean — V6 #266 weight 정확 재현) =====
   let layer2 = 0;
-
-  // 2-1. 천을귀인 (6 / 4) — 연해자평 "최상귀"
-  if (cheonEulCount >= 2) {
-    layer2 += 6;
-    hits.push({ signer: `천을귀인 ${cheonEulCount}개`, value: 6, layer: 2 });
-  } else if (cheonEulCount === 1) {
-    layer2 += 4;
-    hits.push({ signer: '천을귀인 1개', value: 4, layer: 2 });
-  }
-
-  // 2-2. 천덕+월덕 동시 (5) — 삼명통회 "천우신조 팔자"
-  if (hasTwoVirtues) {
-    layer2 += 5;
-    hits.push({ signer: '천덕+월덕 동시 (천우신조)', value: 5, layer: 2 });
-  } else if (hasCheonDeok || hasWolDeok) {
-    layer2 += 2;
-    hits.push({ signer: hasCheonDeok ? '천덕귀인' : '월덕귀인', value: 2, layer: 2 });
-  }
-
-  // 2-3. 삼귀구비 (5) — 천을+천덕+월덕 모두 (중첩 보너스)
-  //   삼명통회 "天乙·天德·月德 三貴同臨, 名曰天地人三才俱備"
-  if (hasSamgwi) {
-    layer2 += 5;
-    hits.push({ signer: '삼귀구비 (천을+천덕+월덕)', value: 5, layer: 2 });
-  }
-
-  // 2-4. 삼기귀인 (5) — 천상 갑무경 / 지하 을병정 / 인중 임계신
-  //   삼명통회 "三奇爲貴" 비범한 두뇌
-  // m.hourPillar는 시간 모름 시 null. 4기둥 모두 있어야 삼기귀인 발동하므로 null이면 자동 ✗.
+  // 학자귀인 (boolean — 1개 이상이면 weight)
+  if (hakdang >= 1) { layer2 += 4; hits.push({ signer: '학당귀인', value: 4, layer: 2 }); }
+  if (munchang >= 1) { layer2 += 4; hits.push({ signer: '문창귀인', value: 4, layer: 2 }); }
+  const mungok = allShensha.filter(s => s === '문곡귀인').length;
+  if (mungok >= 1) { layer2 += 2; hits.push({ signer: '문곡귀인', value: 2, layer: 2 }); }
+  if (cheonEulCount >= 1) { layer2 += 4; hits.push({ signer: '천을귀인', value: 4, layer: 2 }); }
+  if (hasTwoVirtues) { layer2 += 5; hits.push({ signer: '천덕+월덕 동시', value: 5, layer: 2 }); }
+  if (hasSamgwi) { layer2 += 5; hits.push({ signer: '삼귀구비 (천을+천덕+월덕)', value: 5, layer: 2 }); }
   const stems = [
     splitPillar(m.yearPillar).stem,
     splitPillar(m.monthPillar).stem,
     splitPillar(m.dayPillar).stem,
     m.hourPillar ? splitPillar(m.hourPillar).stem : '',
   ];
-  if (hasSamgi(stems)) {
+  if (hasSamgi(stems)) { layer2 += 5; hits.push({ signer: '삼기귀인', value: 5, layer: 2 }); }
+  // cnt_gui_total × 4
+  if (guiCount > 0) {
+    const v = guiCount * 4;
+    layer2 += v;
+    hits.push({ signer: `학자귀인 합 (cnt × 4)`, value: v, layer: 2 });
+  }
+  // V5 관귀학관 cnt × 8 (사주첩경·명리정종·한국명리학협회·조세일보)
+  if (gwangwiCount > 0) {
+    const v = gwangwiCount * 8;
+    layer2 += v;
+    hits.push({ signer: `관귀학관 ×${gwangwiCount} (시험·합격 길성)`, value: v, layer: 2 });
+  }
+  // V5 천을·학당 콤보
+  const cheonEulHakdang = (cheonEulCount >= 1 && hakdang >= 2) ||
+                          (cheonEulCount >= 1 && hakdang >= 1 && munchang >= 1);
+  if (cheonEulHakdang) {
     layer2 += 5;
-    hits.push({ signer: '삼기귀인 (갑무경/을병정/임계신)', value: 5, layer: 2 });
+    hits.push({ signer: 'combo_cheonEulHakdang (천을·학당)', value: 5, layer: 2 });
   }
 
-  // ===== Layer 3: 운 (0~20) =====
+  // ===== Layer 3: 운 (청소년 대운 + 일주 통근) =====
   let layer3 = 0;
 
-  // 3-1. 청소년 대운 (15 / 8 / 4)
-  // 입시 직전 16-22세 대운은 ×1.5 가중 (Gemini 권장 — 입시 결과 직결 시기.
-  // 초등 6-12 대운만 좋고 고등 16-22가 약한 경우 점수 +가 나와 입시 결과와 어긋나던 구조 해소).
-  // 2026-05-23: ×2 → ×1.5 보수화 (1티어 매우 강 유지하면서 in-sample overfitting 위험 ↓).
-  const SCHOLAR_LUCK = new Set(['정인', '편인', '정관', '편관']);
-  const HEADWIND_LUCK = new Set(['정재', '편재']);
-  let youthLuck = 0;
-  for (const d of m.luckCycles.daeun) {
-    if (d.age < 6 || d.age > 22) continue;
-    const weight = d.age >= 16 ? 1.5 : 1;
-    if (SCHOLAR_LUCK.has(d.stemSipsin)) youthLuck += weight;
-    else if (HEADWIND_LUCK.has(d.stemSipsin)) youthLuck -= weight;
-    if (SCHOLAR_LUCK.has(d.branchSipsin)) youthLuck += weight;
-    else if (HEADWIND_LUCK.has(d.branchSipsin)) youthLuck -= weight;
-  }
-  if (youthLuck >= 3) {
-    layer3 += 15;
-    hits.push({ signer: `청소년 대운 강 (youthLuck ${youthLuck})`, value: 15, layer: 3 });
-  } else if (youthLuck >= 1) {
-    layer3 += 8;
-    hits.push({ signer: `청소년 대운 보조 (youthLuck ${youthLuck})`, value: 8, layer: 3 });
-  } else if (youthLuck === 0) {
-    layer3 += 4;
-    hits.push({ signer: '청소년 대운 중립', value: 4, layer: 3 });
-  }
-
-  // 3-2. 관성 단독 (5 / 3)
-  if (c.gwansung >= 2) {
+  // 일지 건록만 (V6 weight: u_dayGeonrok: 5, u_dayJewang은 V6에 없음)
+  if (m.unsung.dayPillar.stage === '건록') {
     layer3 += 5;
-    hits.push({ signer: `관성 ${c.gwansung}개`, value: 5, layer: 3 });
-  } else if (c.gwansung === 1) {
-    layer3 += 3;
-    hits.push({ signer: '관성 1개', value: 3, layer: 3 });
+    hits.push({ signer: '일지 건록', value: 5, layer: 3 });
+  }
+  if (dayTonggeun) {
+    layer3 += 5;
+    hits.push({ signer: `일주 통근 (일지 ${dayBranchSipsin})`, value: 5, layer: 3 });
   }
 
-  // ===== Layer 4: 페널티 =====
+  // 청소년 대운 (V6 weight: 인성 +15, 관성 +17, 재성 -8)
+  const youthDaeun = m.luckCycles.daeun.filter(d => d.age >= 6 && d.age <= 22);
+  const hasYouthSipsin = (s: string) =>
+    youthDaeun.some(d => d.stemSipsin === s || d.branchSipsin === s);
+  if (hasYouthSipsin('정인') || hasYouthSipsin('편인')) {
+    layer3 += 15;
+    hits.push({ signer: '청소년 대운 인성', value: 15, layer: 3 });
+  }
+  if (hasYouthSipsin('정관') || hasYouthSipsin('편관')) {
+    layer3 += 17;
+    hits.push({ signer: '청소년 대운 관성', value: 17, layer: 3 });
+  }
+
+  // ===== Layer 4: 페널티 (재성 음수) =====
   let layer4 = 0;
-
-  // 4-1. 신약 (sinwang ≤ -3) — 정인·편인격 예외 -5, 그외 -15
-  //   자평진전 "정인격 신약은 페널티 완화"
-  if (sinwang <= -3) {
-    if (m.gyeokguk.name === '정인격' || m.gyeokguk.name === '편인격') {
-      layer4 -= 5;
-      hits.push({ signer: `신약 페널티 정인격 예외 (sinwang ${sinwang.toFixed(1)})`, value: -5, layer: 4 });
-    } else {
-      layer4 -= 15;
-      hits.push({ signer: `신약 페널티 (sinwang ${sinwang.toFixed(1)})`, value: -15, layer: 4 });
-    }
+  // cnt_jaesung × -3
+  if (c.jaesung > 0) {
+    const v = c.jaesung * -3;
+    layer4 += v;
+    hits.push({ signer: `재성 페널티 (×-3)`, value: v, layer: 4 });
+  }
+  // 청소년 재성 대운 -8
+  if (hasYouthSipsin('정재') || hasYouthSipsin('편재')) {
+    layer4 -= 8;
+    hits.push({ signer: '청소년 재성 대운 -8', value: -8, layer: 4 });
   }
 
-  // 4-2. 재극인
-  if (c.jaesung >= 3 && c.jaesung >= 2 * (c.insung + 1) && guiCount <= 1) {
-    layer4 -= 10;
-    hits.push({ signer: `재극인 (재성 ${c.jaesung}/인성 ${c.insung})`, value: -10, layer: 4 });
-  }
-
-  // 4-3. 학자형 부재 콤보
-  if (guiCount === 0 && !isScholarGyeokguk && dayWeak) {
-    layer4 -= 10;
-    hits.push({ signer: '학자형 부재 (귀인0+격국✗+일지약)', value: -10, layer: 4 });
-  }
-
-  const total = Math.max(0, Math.min(100, layer1 + layer2 + layer3 + layer4));
+  // baseScore 18 (V6 #266)
+  const baseScore = 18;
+  const total = Math.max(0, baseScore + layer1 + layer2 + layer3 + layer4);
 
   return { total, isScholar, layer1, layer2, layer3, layer4, hits };
 }
@@ -305,25 +333,41 @@ function scoreHagun(m: ManseResult): number {
   return computeHagun(m).total;
 }
 
-/** v7 등급 cutoff — 0~100 점수 기반.
- *  Agent 명리 리서치 + 11명 calibration + 분포 시뮬 (N=56,988) 정합 검증.
- *  분포: min=0, max=91, mean=25.33, p50=25, p90=49, p95=55, p99=64.
+/** v8 등급 cutoff — V4 #195 raw 시뮬 (N=10,000 seed 42) absolute baseline.
+ *  점수 범위 0~150 raw. 30단계 cutoff은 사회 분포 % 매핑.
  *
- *  ≥34 매우 강 — 상위 ~30% (5명 1티어 sample 모두 ≥34 도달).
- *  사용자 요구("분포 보수적" + "1티어 sample 1~2티어 매핑") 절충.
+ *  cutoff (raw): 1-1=141, 1-2=131, 1-3=124, 2-1=115, 2-2=108, 2-3=103,
+ *                3-1=97, 3-2=91, 3-3=87, 4-1=83, 4-2=80, 4-3=77,
+ *                5-1=74, 5-2=71, 5-3=68, 6-1=66, 6-2=63, 6-3=60,
+ *                7-1=58, 7-2=55, 7-3=52, 8-1=49, 8-2=46, 8-3=43,
+ *                9-1=41, 9-2=38, 9-3=34, 10-1=30, 10-2=24, 10-3=3.
  *
- *  점수별 Confidence (LLM 톤, 2026-05-23 표현 약화):
- *    ≥55 "1티어 최상위 가능 영역 (상위 5%)" / 45-54 "1-2티어 안정 (상위 15%)" /
- *    34-44 "1-2티어 가능 + 2-3티어 안정 (상위 30%)" / 20-33 "2-3티어" / ...
- *  Counterfactual 결과 random 사주 33%가 ≥34에 도달 → "확실한" 단언 사용 ✗. */
+ *  Grade 매핑 (30단계 → 10-grade):
+ *    매우 강 (1-2티어 = idx 1-6): score ≥ 103 (2-3 cutoff)
+ *    강 (2-3티어 = idx 4-9): score ≥ 87 (3-3 cutoff)
+ *    중상 (3-4티어 = idx 7-12): score ≥ 77 (4-3 cutoff)
+ *    중 (4-5티어 = idx 10-15): score ≥ 68 (5-3 cutoff)
+ *    중하 (5-6티어 = idx 13-18): score ≥ 60 (6-3 cutoff)
+ *    약상 (6-7티어 = idx 16-21): score ≥ 52 (7-3 cutoff)
+ *    약중 (7-8티어 = idx 19-24): score ≥ 43 (8-3 cutoff)
+ *    약하 (8-10티어): score ≥ 24 (10-2 cutoff)
+ *    매우 약 (전문대): score ≥ 3 (10-3 cutoff)
+ *    비대학: < 3
+ *
+ *  9 sample V6 best 정합: 홍규 101 → 강 / 정환 91 → 강 / 세형 105 → 매우 강 /
+ *  윤수 127 → 매우 강 / 상수 113 → 매우 강 / 두흥 83 → 중상 / 승희 87 → 강 /
+ *  영진 16 → 매우 약 (외부변수) / 와이프 64 → 중하 */
 export function scoreToGrade(score: number): HagunGradeInfo {
-  if (score >= 34) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어) — 상위 ~30%
-  if (score >= 22) return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어) — 상위 ~50%
-  if (score >= 14) return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어) — 상위 ~70%
-  if (score >= 8)  return HAGUN_GRADE_TABLE[3]; // 중 (4~5티어) — 상위 ~80%
-  if (score >= 4)  return HAGUN_GRADE_TABLE[4]; // 중하 (5~6티어) — 상위 ~85%
-  if (score >= 1)  return HAGUN_GRADE_TABLE[5]; // 약상 (6~7티어)
-  return HAGUN_GRADE_TABLE[6];                  // 약중 이하 — 학자 트랙 ✗
+  if (score >= 103) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어)
+  if (score >= 87)  return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어)
+  if (score >= 77)  return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어)
+  if (score >= 68)  return HAGUN_GRADE_TABLE[3]; // 중 (4~5티어)
+  if (score >= 60)  return HAGUN_GRADE_TABLE[4]; // 중하 (5~6티어)
+  if (score >= 52)  return HAGUN_GRADE_TABLE[5]; // 약상 (6~7티어)
+  if (score >= 43)  return HAGUN_GRADE_TABLE[6]; // 약중 (7~8티어)
+  if (score >= 24)  return HAGUN_GRADE_TABLE[7]; // 약하 (8~10티어)
+  if (score >= 3)   return HAGUN_GRADE_TABLE[8]; // 매우 약 (전문대)
+  return HAGUN_GRADE_TABLE[9];                   // 비대학 강
 }
 
 interface ParentEducationInput {
