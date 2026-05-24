@@ -188,6 +188,7 @@ interface CalibConfig {
   weights: Record<string, number>; // weight × detector value
 }
 
+// raw 점수 (clamp 없음). 정규화는 evaluateConfig에서.
 function computeConfigScore(m: ManseResult, config: CalibConfig): number {
   const sigils = detectAllSigils(m);
   let score = config.baseScore;
@@ -195,7 +196,7 @@ function computeConfigScore(m: ManseResult, config: CalibConfig): number {
     const v = sigils[id] ?? 0;
     score += v * weight;
   }
-  return Math.max(0, Math.min(100, score));
+  return Math.max(0, score);
 }
 
 // ============================================================================
@@ -261,22 +262,35 @@ interface SampleTarget {
 }
 
 const SAMPLE_TARGETS: SampleTarget[] = [
-  { id: '03-self',    nickname: '홍규',  school: 'POSTECH',     target30Index: 2,  targetLabel: '1-2', weight: 2 },
-  { id: '06',         nickname: '정환',  school: '포항공대',     target30Index: 2,  targetLabel: '1-2', weight: 2 },
-  { id: '08',         nickname: '세형',  school: '연대 의예',   target30Index: 2,  targetLabel: '1-2', weight: 2 },
-  { id: '10-yoonsoo', nickname: '윤수',  school: '서울대 전자', target30Index: 2,  targetLabel: '1-2', weight: 2 },
-  { id: '11-sangsoo', nickname: '상수',  school: '서울대 대기', target30Index: 2,  targetLabel: '1-2', weight: 2 },
-  { id: '09',         nickname: '두흥',  school: '비대학(외부)',  target30Index: 2,  targetLabel: '1-2(외부)', weight: 0.5 },
-  { id: '05',         nickname: '승희',  school: '국민대',       target30Index: 11, targetLabel: '4-2', weight: 1 },
-  { id: '07',         nickname: '영진',  school: '경희대',       target30Index: 11, targetLabel: '4-2', weight: 1 },
-  { id: '04-wife',    nickname: '와이프', school: '울산대',       target30Index: 17, targetLabel: '6-2', weight: 1 },
+  // v2 TIER_SYSTEM 매핑 적용 (2026-05-24)
+  { id: '03-self',    nickname: '홍규',  school: 'POSTECH (학과불명)',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '06',         nickname: '정환',  school: '포항공대',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '08',         nickname: '세형',  school: '연대 의예',   target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '10-yoonsoo', nickname: '윤수',  school: '서울대 전기전자', target30Index: 1,  targetLabel: '1-1', weight: 1 },
+  { id: '11-sangsoo', nickname: '상수',  school: '서울대 대기', target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '09',         nickname: '두흥',  school: '경북대 치대(외부)',  target30Index: 8,  targetLabel: '3-2', weight: 0.5 },
+  { id: '05',         nickname: '승희',  school: '국민대',       target30Index: 8,  targetLabel: '3-2', weight: 1 },
+  { id: '07',         nickname: '영진',  school: '경희대 경영(연예인)',  target30Index: 6,  targetLabel: '2-3', weight: 0.5 },
+  { id: '04-wife',    nickname: '와이프', school: '울산대 시디',       target30Index: 17, targetLabel: '6-2', weight: 1 },
 ];
 
 function evaluateConfig(config: CalibConfig, N: number) {
   const sortedScores = simulateDistribution(config, N);
-  const mean = sortedScores.reduce((s, x) => s + x, 0) / sortedScores.length;
-  const stddev = Math.sqrt(sortedScores.reduce((s, x) => s + (x - mean) ** 2, 0) / sortedScores.length);
-  const cutoffs = build30Cutoffs(sortedScores);
+  const rawMean = sortedScores.reduce((s, x) => s + x, 0) / sortedScores.length;
+  const rawStddev = Math.sqrt(sortedScores.reduce((s, x) => s + (x - rawMean) ** 2, 0) / sortedScores.length);
+  const rawCutoffs = build30Cutoffs(sortedScores);
+
+  // 정규화: 1-1 cutoff (시뮬 상위 1.67% raw 점수)을 100으로
+  const top1Raw = rawCutoffs[0]?.cutoff ?? 1;
+  const scale = top1Raw > 0 ? 100 / top1Raw : 1;
+  const norm = (x: number) => Math.round(x * scale * 10) / 10;
+
+  const cutoffs = rawCutoffs.map(c => ({ ...c, cutoff: norm(c.cutoff) }));
+  const mean = norm(rawMean);
+  const stddev = norm(rawStddev);
+  const max = norm(sortedScores[sortedScores.length - 1]);
+  const median = cutoffs[14]?.cutoff ?? 0;
+  const meanMedianDiff = Math.round((mean - median) * 10) / 10;
 
   const sampleResults: Array<{
     id: string; nickname: string; school: string;
@@ -293,8 +307,8 @@ function evaluateConfig(config: CalibConfig, N: number) {
       year: sample.birth.year, month: sample.birth.month, day: sample.birth.day,
       hour: sample.birth.hour, minute: sample.birth.minute, gender: sample.birth.gender,
     });
-    const score = computeConfigScore(manse, config);
-    const tierIdx = tierIndex30(score, cutoffs);
+    const rawScore = computeConfigScore(manse, config);
+    const tierIdx = tierIndex30(rawScore, rawCutoffs);
     const tierLabel = cutoffs[tierIdx - 1] ? `${cutoffs[tierIdx - 1].tier}-${cutoffs[tierIdx - 1].sub}` : '?';
     const gap = Math.abs(tierIdx - target.target30Index);
     const weightedGap = gap * target.weight;
@@ -302,7 +316,7 @@ function evaluateConfig(config: CalibConfig, N: number) {
     totalWeightedGap += weightedGap;
     sampleResults.push({
       id: target.id, nickname: target.nickname, school: target.school,
-      score, tierIndex: tierIdx, tierLabel,
+      score: norm(rawScore), tierIndex: tierIdx, tierLabel,
       targetIndex: target.target30Index, targetLabel: target.targetLabel,
       gap, weightedGap,
     });
@@ -310,7 +324,7 @@ function evaluateConfig(config: CalibConfig, N: number) {
 
   return {
     config,
-    distribution: { mean, stddev, min: sortedScores[0], max: sortedScores[sortedScores.length - 1], n: sortedScores.length },
+    distribution: { mean, stddev, min: norm(sortedScores[0]), max, n: sortedScores.length, median, meanMedianDiff },
     cutoffs, sampleResults, totalGap, totalWeightedGap,
   };
 }
@@ -671,7 +685,7 @@ async function main() {
     console.log(`Loop ${config.id}/90: ${config.name}`);
     const result = evaluateConfig(config, N);
     const elapsed = (Date.now() - start) / 1000;
-    console.log(`  완료 ${elapsed.toFixed(1)}s | wgap=${result.totalWeightedGap.toFixed(1)} | mean=${result.distribution.mean.toFixed(1)} stddev=${result.distribution.stddev.toFixed(1)}`);
+    console.log(`  완료 ${elapsed.toFixed(1)}s | totalGap=${result.totalGap} | mean=${result.distribution.mean.toFixed(1)} stddev=${result.distribution.stddev.toFixed(1)}`);
     allResults.push({ scenarioId: config.id, result });
   }
 
@@ -682,14 +696,14 @@ async function main() {
   for (let i = 0; i < top3.length; i++) {
     const r = top3[i];
     console.log(`#${i + 1}: Loop ${r.scenarioId} — ${r.result.config.name}`);
-    console.log(`  wgap=${r.result.totalWeightedGap.toFixed(1)}, mean=${r.result.distribution.mean.toFixed(1)}`);
+    console.log(`  totalGap=${r.result.totalGap}, mean=${r.result.distribution.mean.toFixed(1)}, stddev=${r.result.distribution.stddev.toFixed(1)}`);
     for (const s of r.result.sampleResults) {
       console.log(`  ${s.nickname.padEnd(5)} 점수=${s.score} → ${s.tierLabel} (목표 ${s.targetLabel}, gap=${s.gap})`);
     }
   }
 
   writeReport(allResults, top3);
-  console.log(`\n→ docs/CALIBRATION_LOOPS_V2.md 작성 완료`);
+  console.log(`\n→ docs/run/CALIBRATION_LOOPS_V2.md 작성 완료`);
 }
 
 type ScenarioResult = { scenarioId: number; result: ReturnType<typeof evaluateConfig> };
@@ -704,20 +718,58 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
   lines.push('>');
   lines.push('> **새 detector**: count (insung·gwansung·jaesung·hakdang·munchang·cheoneul 등), combo (scholar·jarip·gwaninStrong·yanginScholar·allScholar·youngshik), timing (early_6_15·exam_16_22), threshold (insung_1+/4+, gui_2+/3+)');
   lines.push('');
-  lines.push('## 종합 결과 (weightedGap 오름차순)');
+  lines.push('## 종합 결과 (totalGap 오름차순)');
   lines.push('');
-  lines.push('| 순위 | Loop | 시나리오 | weightedGap | totalGap | mean | stddev |');
-  lines.push('|---|---|---|---|---|---|---|');
+  lines.push('- **totalGap**: 9 sample gap 합 (작을수록 좋음)');
+  lines.push('- **mean**: 1만 random 분포 평균 (정규화 후. 5-3 cutoff 중앙값과 가까울수록 자연스러움)');
+  lines.push('- **stddev**: 분포 표준편차 (10 미만 ⚠️ = 변별력 ✗)');
+  lines.push('- **mean−median**: |mean − 5-3 cutoff|. 클수록 분포 skewed');
+  lines.push('');
+  lines.push('| 순위 | Loop | 시나리오 | totalGap | mean | stddev | mean−median | 경고 |');
+  lines.push('|---|---|---|---|---|---|---|---|');
   const sorted = [...allResults].sort((a, b) => a.result.totalWeightedGap - b.result.totalWeightedGap);
   for (let i = 0; i < sorted.length; i++) {
     const r = sorted[i];
-    lines.push(`| ${i + 1} | #${r.scenarioId} | ${r.result.config.name} | **${r.result.totalWeightedGap.toFixed(1)}** | ${r.result.totalGap} | ${r.result.distribution.mean.toFixed(1)} | ${r.result.distribution.stddev.toFixed(1)} |`);
+    const d = r.result.distribution as { mean: number; stddev: number; median?: number; meanMedianDiff?: number };
+    const diff = d.meanMedianDiff ?? Math.round((d.mean - (d.median ?? 0)) * 10) / 10;
+    const w: string[] = [];
+    if (d.stddev < 10) w.push('⚠️ stddev↓');
+    if (Math.abs(diff) > 15) w.push('⚠️ skewed');
+    lines.push(`| ${i + 1} | #${r.scenarioId} | ${r.result.config.name} | **${r.result.totalGap}** | ${d.mean.toFixed(1)} | ${d.stddev.toFixed(1)} | ${diff > 0 ? '+' : ''}${diff.toFixed(1)} | ${w.join(' ') || '-'} |`);
   }
 
   lines.push('');
   lines.push('---');
   lines.push('');
-  lines.push('## 🏆 V2 Top 3');
+  lines.push('## 🏆 V2 Top 3 — 30단계 cutoff 통합 비교');
+  lines.push('');
+  lines.push(`| 30단계 | 누적 % | #1 (Loop ${top3[0]?.scenarioId}) | #2 (Loop ${top3[1]?.scenarioId}) | #3 (Loop ${top3[2]?.scenarioId}) |`);
+  lines.push('|---|---|---|---|---|');
+  const cutoffsByRank = top3.map(r => r.result.cutoffs);
+  for (let j = 0; j < 30; j++) {
+    const c0 = cutoffsByRank[0]?.[j];
+    if (!c0) continue;
+    const r1 = cutoffsByRank[0]?.[j]?.cutoff ?? '-';
+    const r2 = cutoffsByRank[1]?.[j]?.cutoff ?? '-';
+    const r3 = cutoffsByRank[2]?.[j]?.cutoff ?? '-';
+    lines.push(`| **${c0.tier}-${c0.sub}** (${c0.subLabel}) | ${c0.cumPct}% | ${r1} | ${r2} | ${r3} |`);
+  }
+  lines.push('');
+  lines.push('### Sample 점수 통합 (Top 3 횡단)');
+  lines.push('');
+  lines.push('| Sample | 학교 | 목표 | #1 점수 → 위치 | #2 점수 → 위치 | #3 점수 → 위치 |');
+  lines.push('|---|---|---|---|---|---|');
+  const samplesByRank = top3.map(r => r.result.sampleResults);
+  const sampleCount = samplesByRank[0]?.length ?? 0;
+  for (let s = 0; s < sampleCount; s++) {
+    const s0 = samplesByRank[0][s];
+    const s1 = samplesByRank[1]?.[s];
+    const s2 = samplesByRank[2]?.[s];
+    const fmt = (x: typeof s0 | undefined) => x ? `**${x.score}** → ${x.tierLabel} (gap ${x.gap})` : '-';
+    lines.push(`| ${s0.nickname} | ${s0.school} | ${s0.targetLabel} | ${fmt(s0)} | ${fmt(s1)} | ${fmt(s2)} |`);
+  }
+  lines.push('');
+  lines.push('---');
   lines.push('');
 
   for (let i = 0; i < top3.length; i++) {
@@ -725,8 +777,13 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
     lines.push(`### #${i + 1}: Loop ${r.scenarioId} — ${r.result.config.name}`);
     lines.push('');
     lines.push(`**가설**: ${r.result.config.hypothesis}`);
-    lines.push(`**점수**: weightedGap = **${r.result.totalWeightedGap.toFixed(1)}**, totalGap = ${r.result.totalGap}`);
-    lines.push(`**분포**: mean=${r.result.distribution.mean.toFixed(2)}, stddev=${r.result.distribution.stddev.toFixed(2)}, max=${r.result.distribution.max}`);
+    const d2 = r.result.distribution as { mean: number; stddev: number; max: number; median?: number; meanMedianDiff?: number };
+    const diff2 = d2.meanMedianDiff ?? Math.round((d2.mean - (d2.median ?? 0)) * 10) / 10;
+    const w2: string[] = [];
+    if (d2.stddev < 10) w2.push('⚠️ stddev↓');
+    if (Math.abs(diff2) > 15) w2.push('⚠️ skewed');
+    lines.push(`**점수**: totalGap = **${r.result.totalGap}**`);
+    lines.push(`**분포**: mean=${d2.mean.toFixed(1)}, stddev=${d2.stddev.toFixed(1)}, median(5-3)=${(d2.median ?? 0).toFixed(1)}, mean−median=${diff2 > 0 ? '+' : ''}${diff2.toFixed(1)}, max=${d2.max.toFixed(1)} ${w2.join(' ')}`);
     lines.push('');
     lines.push('| Sample | 학교 | 점수 | 시뮬 위치 | 목표 위치 | gap |');
     lines.push('|---|---|---|---|---|---|');
@@ -734,11 +791,11 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
       lines.push(`| ${s.nickname} | ${s.school} | **${s.score}** | ${s.tierLabel} (#${s.tierIndex}) | ${s.targetLabel} (#${s.targetIndex}) | ${s.gap} |`);
     }
     lines.push('');
-    lines.push('**1티어 영역 cutoff (1-1 ~ 2-3)**:');
+    lines.push('**30단계 전체 cutoff**:');
     lines.push('');
     lines.push('| 30단계 | 누적 % | cutoff |');
     lines.push('|---|---|---|');
-    for (let j = 0; j < 6; j++) {
+    for (let j = 0; j < r.result.cutoffs.length; j++) {
       const c = r.result.cutoffs[j];
       lines.push(`| ${c.tier}-${c.sub} (${c.subLabel}) | ${c.cumPct}% | ${c.cutoff} |`);
     }
@@ -760,7 +817,7 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
     lines.push('');
     lines.push(`- **가설**: ${r.result.config.hypothesis}`);
     lines.push(`- **base score**: ${r.result.config.baseScore}, **시그너 활성 수**: ${Object.keys(r.result.config.weights).length}`);
-    lines.push(`- **결과**: weightedGap = ${r.result.totalWeightedGap.toFixed(1)}, mean=${r.result.distribution.mean.toFixed(1)}`);
+    lines.push(`- **결과**: totalGap = ${r.result.totalGap}, mean=${r.result.distribution.mean.toFixed(1)}, stddev=${r.result.distribution.stddev.toFixed(1)}`);
     lines.push('');
     lines.push('| Sample | 점수 | 시뮬 → 목표 | gap |');
     lines.push('|---|---|---|---|');
@@ -798,7 +855,7 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
   lines.push('- **신살 가중치 단계별** — 천을 1개 vs 2개 vs 3개 (현재 binary)');
   lines.push('- **자유도 ↓ — Top 3 weight set 평균 + Bayes 최적화**');
 
-  writeFileSync('/Users/eugene/Downloads/coding/four-pillars/eduluck/docs/CALIBRATION_LOOPS_V2.md', lines.join('\n'));
+  writeFileSync('/Users/eugene/Downloads/coding/four-pillars/eduluck/docs/run/CALIBRATION_LOOPS_V2.md', lines.join('\n'));
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
