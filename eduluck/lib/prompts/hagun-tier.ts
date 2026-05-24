@@ -324,7 +324,13 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
 
   // baseScore 18 (V6 #266)
   const baseScore = 18;
-  const total = Math.max(0, baseScore + layer1 + layer2 + layer3 + layer4);
+  const rawTotal = Math.max(0, baseScore + layer1 + layer2 + layer3 + layer4);
+
+  // 정규화: V4 #195 raw 1-1 cutoff (141) = 100점 기준 비율 변환
+  //   raw 141 → 100, raw 127 → 90.1, raw 100 → 70.9, raw 50 → 35.5
+  //   100 초과 가능 (raw > 141 케이스 — 상위 1.67% 통과 sample). UI에선 cap or 그대로 표시.
+  const SCALE_FACTOR = 100 / 141;
+  const total = Math.round(rawTotal * SCALE_FACTOR * 10) / 10; // 0.1 단위
 
   return { total, isScholar, layer1, layer2, layer3, layer4, hits };
 }
@@ -333,41 +339,43 @@ function scoreHagun(m: ManseResult): number {
   return computeHagun(m).total;
 }
 
-/** v8 등급 cutoff — V4 #195 raw 시뮬 (N=10,000 seed 42) absolute baseline.
- *  점수 범위 0~150 raw. 30단계 cutoff은 사회 분포 % 매핑.
+/** v8 등급 cutoff — V4 #195 raw 시뮬 분포를 1-1 cutoff(141)=100점 기준 정규화.
+ *  점수 범위 0~100 (1-1 통과 시 100 초과 가능). 30단계 cutoff은 사회 분포 % 매핑.
  *
- *  cutoff (raw): 1-1=141, 1-2=131, 1-3=124, 2-1=115, 2-2=108, 2-3=103,
- *                3-1=97, 3-2=91, 3-3=87, 4-1=83, 4-2=80, 4-3=77,
- *                5-1=74, 5-2=71, 5-3=68, 6-1=66, 6-2=63, 6-3=60,
- *                7-1=58, 7-2=55, 7-3=52, 8-1=49, 8-2=46, 8-3=43,
- *                9-1=41, 9-2=38, 9-3=34, 10-1=30, 10-2=24, 10-3=3.
+ *  정규화된 cutoff (raw × 100/141):
+ *    1-1=100.0, 1-2=92.9, 1-3=87.9, 2-1=81.6, 2-2=76.6, 2-3=73.0,
+ *    3-1=68.8, 3-2=64.5, 3-3=61.7, 4-1=58.9, 4-2=56.7, 4-3=54.6,
+ *    5-1=52.5, 5-2=50.4, 5-3=48.2, 6-1=46.8, 6-2=44.7, 6-3=42.6,
+ *    7-1=41.1, 7-2=39.0, 7-3=36.9, 8-1=34.8, 8-2=32.6, 8-3=30.5,
+ *    9-1=29.1, 9-2=27.0, 9-3=24.1, 10-1=21.3, 10-2=17.0, 10-3=2.1.
  *
- *  Grade 매핑 (30단계 → 10-grade):
- *    매우 강 (1-2티어 = idx 1-6): score ≥ 103 (2-3 cutoff)
- *    강 (2-3티어 = idx 4-9): score ≥ 87 (3-3 cutoff)
- *    중상 (3-4티어 = idx 7-12): score ≥ 77 (4-3 cutoff)
- *    중 (4-5티어 = idx 10-15): score ≥ 68 (5-3 cutoff)
- *    중하 (5-6티어 = idx 13-18): score ≥ 60 (6-3 cutoff)
- *    약상 (6-7티어 = idx 16-21): score ≥ 52 (7-3 cutoff)
- *    약중 (7-8티어 = idx 19-24): score ≥ 43 (8-3 cutoff)
- *    약하 (8-10티어): score ≥ 24 (10-2 cutoff)
- *    매우 약 (전문대): score ≥ 3 (10-3 cutoff)
- *    비대학: < 3
+ *  Grade 매핑 (30단계 → 10-grade) — 정규화 cutoff 기준:
+ *    매우 강 (1-2티어): score ≥ 73.0 (2-3 cutoff)
+ *    강 (2-3티어): score ≥ 61.7 (3-3 cutoff)
+ *    중상 (3-4티어): score ≥ 54.6 (4-3 cutoff)
+ *    중 (4-5티어): score ≥ 48.2 (5-3 cutoff)
+ *    중하 (5-6티어): score ≥ 42.6 (6-3 cutoff)
+ *    약상 (6-7티어): score ≥ 36.9 (7-3 cutoff)
+ *    약중 (7-8티어): score ≥ 30.5 (8-3 cutoff)
+ *    약하 (8-10티어): score ≥ 17.0 (10-2 cutoff)
+ *    매우 약 (전문대): score ≥ 2.1 (10-3 cutoff)
+ *    비대학: < 2.1
  *
- *  9 sample V6 best 정합: 홍규 101 → 강 / 정환 91 → 강 / 세형 105 → 매우 강 /
- *  윤수 127 → 매우 강 / 상수 113 → 매우 강 / 두흥 83 → 중상 / 승희 87 → 강 /
- *  영진 16 → 매우 약 (외부변수) / 와이프 64 → 중하 */
+ *  9 sample V6 best 정합 (정규화):
+ *    홍규 71.6 강 / 정환 64.5 강 / 세형 74.5 매우 강 / 윤수 90.1 매우 강 /
+ *    상수 80.1 매우 강 / 두흥 58.9 중상 / 승희 61.7 강 (boundary) /
+ *    영진 11.3 매우 약 (외부변수) / 와이프 45.4 중하 */
 export function scoreToGrade(score: number): HagunGradeInfo {
-  if (score >= 103) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어)
-  if (score >= 87)  return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어)
-  if (score >= 77)  return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어)
-  if (score >= 68)  return HAGUN_GRADE_TABLE[3]; // 중 (4~5티어)
-  if (score >= 60)  return HAGUN_GRADE_TABLE[4]; // 중하 (5~6티어)
-  if (score >= 52)  return HAGUN_GRADE_TABLE[5]; // 약상 (6~7티어)
-  if (score >= 43)  return HAGUN_GRADE_TABLE[6]; // 약중 (7~8티어)
-  if (score >= 24)  return HAGUN_GRADE_TABLE[7]; // 약하 (8~10티어)
-  if (score >= 3)   return HAGUN_GRADE_TABLE[8]; // 매우 약 (전문대)
-  return HAGUN_GRADE_TABLE[9];                   // 비대학 강
+  if (score >= 73.0) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어)
+  if (score >= 61.7) return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어)
+  if (score >= 54.6) return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어)
+  if (score >= 48.2) return HAGUN_GRADE_TABLE[3]; // 중 (4~5티어)
+  if (score >= 42.6) return HAGUN_GRADE_TABLE[4]; // 중하 (5~6티어)
+  if (score >= 36.9) return HAGUN_GRADE_TABLE[5]; // 약상 (6~7티어)
+  if (score >= 30.5) return HAGUN_GRADE_TABLE[6]; // 약중 (7~8티어)
+  if (score >= 17.0) return HAGUN_GRADE_TABLE[7]; // 약하 (8~10티어)
+  if (score >= 2.1)  return HAGUN_GRADE_TABLE[8]; // 매우 약 (전문대)
+  return HAGUN_GRADE_TABLE[9];                    // 비대학 강
 }
 
 interface ParentEducationInput {
@@ -483,31 +491,37 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
     ? Math.min(primaryTier + 1, 12)
     : finalTierRange[1];
 
-  // 단계별 점수 구간 (cutoff과 동일)
-  // 매우 강 ≥10 / 강 7~9 / 중상 4~6 / 중 2~3 / 중하 0~1 / 약상 -1~-2 / 약중 -3~-4 / 약하 -5~-6
-  let confidence: 'certain' | 'likely' | 'reach';
+  // v8: 정규화 score (0~100) + 30단계 cutoff 위치로 confidence 결정.
+  //   primaryTier(t)는 finalTierRange[0]. t의 30단계 sub cutoff [t-1, t-2, t-3] 비교.
+  //   score >= t-2 cutoff → certain (상위 2/3 영역)
+  //   score >= t-3 cutoff → likely (하위 1/3 영역)
+  //   미달 → reach
+  const NORMALIZED_CUTOFFS: number[] = [
+    100.0, 92.9, 87.9, // 1-1, 1-2, 1-3
+    81.6, 76.6, 73.0,  // 2-1, 2-2, 2-3
+    68.8, 64.5, 61.7,  // 3-1, 3-2, 3-3
+    58.9, 56.7, 54.6,  // 4-1, 4-2, 4-3
+    52.5, 50.4, 48.2,  // 5-1, 5-2, 5-3
+    46.8, 44.7, 42.6,  // 6-1, 6-2, 6-3
+    41.1, 39.0, 36.9,  // 7-1, 7-2, 7-3
+    34.8, 32.6, 30.5,  // 8-1, 8-2, 8-3
+    29.1, 27.0, 24.1,  // 9-1, 9-2, 9-3
+    21.3, 17.0, 2.1,   // 10-1, 10-2, 10-3
+  ];
+  const tierIdx = Math.max(1, Math.min(12, primaryTier));
+  // primaryTier가 11(전문대) 또는 12(비대학)인 경우 30단계 cutoff에 없으므로 마지막 영역 사용
+  const baseIdx = Math.min(27, (tierIdx - 1) * 3); // 10-1 idx = 27
+  const midCutoff = NORMALIZED_CUTOFFS[baseIdx + 1] ?? 0;
+  const botCutoff = NORMALIZED_CUTOFFS[baseIdx + 2] ?? 0;
 
-  if (score >= 15) confidence = 'certain';           // 매우 강 최상위 (의대·서울대 최상위 학과 도전 영역)
-  else if (score >= 13) confidence = 'certain';      // 매우 강 상단 (1티어 안정 영역)
-  else if (score >= 11) confidence = 'likely';       // 매우 강 중간
-  else if (score === 10) confidence = 'reach';       // 매우 강 하단
-  else if (score === 9) confidence = 'certain';      // 강 상단
-  else if (score === 8) confidence = 'likely';       // 강 중간
-  else if (score === 7) confidence = 'reach';        // 강 하단
-  else if (score === 6) confidence = 'certain';      // 중상 상단
-  else if (score === 5) confidence = 'likely';       // 중상 중간
-  else if (score === 4) confidence = 'reach';        // 중상 하단
-  else if (score === 3) confidence = 'certain';      // 중 상단
-  else if (score === 2) confidence = 'reach';        // 중 하단
-  else if (score === 1) confidence = 'certain';      // 중하 상단
-  else if (score === 0) confidence = 'reach';        // 중하 하단
-  else if (score === -1) confidence = 'certain';     // 약상 상단
-  else if (score === -2) confidence = 'reach';       // 약상 하단
-  else confidence = 'reach';                          // 그 이하는 모두 reach (범위로 풀이)
+  let confidence: 'certain' | 'likely' | 'reach';
+  if (score >= midCutoff) confidence = 'certain';
+  else if (score >= botCutoff) confidence = 'likely';
+  else confidence = 'reach';
 
   let label: string;
-  if (confidence === 'certain' && score >= 15 && primaryTier === 1) {
-    // 매우 강 최상위 — 의대·서울대 최상위 학과·KAIST·POSTECH 도전 영역
+  // 1티어 최상위 (1-1 통과, 정규화 100점) — 의대·서울대 최상위·KAIST·POSTECH
+  if (primaryTier === 1 && score >= NORMALIZED_CUTOFFS[0]) {
     label = `1티어 최상위 도전 영역`;
   } else if (confidence === 'certain') {
     label = `${primaryTier}티어 안정 영역`;
