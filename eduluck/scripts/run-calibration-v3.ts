@@ -130,13 +130,6 @@ export function detectAllSigils(m: ManseResult): Record<string, number> {
   // 재호(정관격 + 관성 2 + 문창 2 + 관귀학관 2)가 시스템에 안 잡히던 케이스 fix
   const comboJeonggwanScholar = m.gyeokguk.name === '정관격' && c.gwansung >= 2 && guiCount >= 1;
 
-  // V9: 정관격 시너지 콤보 (재호 1-3 도달 위해)
-  const comboJeonggwanGwangwi = m.gyeokguk.name === '정관격' && gwangwiCount >= 2; // 정관격 + 관귀학관 ≥ 2 (자평진전·명리정종)
-  const comboJeonggwanGeonrok = m.gyeokguk.name === '정관격' && m.unsung.dayPillar.stage === '건록'; // 정관격 + 일주 건록 (자평진전 「正官格 喜身旺」)
-  const comboJeonggwanMunchang = m.gyeokguk.name === '정관격' && munchang >= 2; // 정관격 + 문창 다중 (삼명통회)
-
-  // V10: 비견격/건록격 학자형 콤보 (gwangwiCount는 아래 V5 블록 후 사용 가능 — return 시 평가)
-
   // === V5 신규: 관귀학관 (사주첩경·명리정종·한국명리학협회·조세일보) ===
   // 일간별 정관 장생지 = 시험·합격·승진 길성
   const GWANGWI_MAP: Record<string, string> = {
@@ -157,6 +150,11 @@ export function detectAllSigils(m: ManseResult): Record<string, number> {
   const comboCheonEulHakdang = (cheonEul >= 1 && hakdang >= 2) || (cheonEul >= 1 && hakdang >= 1 && munchang >= 1); // 천을·학당 동주 (삼명통회·자평수언·한국 통설)
   const sJaeGwanInSamgwi = c.jaesung >= 1 && c.gwansung >= 1 && c.insung >= 1 && (c.bigeop >= 2 || dayTonggeun); // 재관인 삼귀 (자평진전·다시배우는사주명리)
   const comboExamGwangwi = gwangwiCount >= 1 && youthHasGwansung; // 관귀학관 + 청소년 관성 (사주첩경·명리정종·자평진전)
+
+  // V9: 정관격 시너지 콤보 (gwangwiCount 선언 이후로 이동 — TDZ fix)
+  const comboJeonggwanGwangwi = m.gyeokguk.name === '정관격' && gwangwiCount >= 2; // 정관격 + 관귀학관 ≥ 2 (자평진전·명리정종)
+  const comboJeonggwanGeonrok = m.gyeokguk.name === '정관격' && m.unsung.dayPillar.stage === '건록'; // 정관격 + 일주 건록 (자평진전 「正官格 喜身旺」)
+  const comboJeonggwanMunchang = m.gyeokguk.name === '정관격' && munchang >= 2; // 정관격 + 문창 다중 (삼명통회)
 
   // V10: 비견격/건록격 학자형 콤보 — 자평진전·적천수
   const isBigyeonGyeokguk = m.gyeokguk.name === '비견격' || m.gyeokguk.name === '건록격';
