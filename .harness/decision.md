@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-05-24: V4 점진적 채택 vs. V6 전체 메커니즘 교체
+
+- **선택**: V6 전체 교체 (absolute cutoff 기반)
+- **대안 검토**: 
+  - a+b 옵션: V4 (raw cutoff) + 기존 정규화 메커니즘 유지 → 점진적 개선 예상
+  - B 옵션: V6 전체 교체 → 정규화 메커니즘 자체를 absolute cutoff로 변경
+- **선택 이유**: 정규화 메커니즘이 새 detector의 절대 weight 효과를 cancel-out하는 근본 문제 발견. 점진적 개선으로는 한계 명백 → 전체 메커니즘 교체로 breakthrough 달성 (totalGap 57→47)
+- **영향 범위**: hagun-tier.ts (V6 weight 95 detector 95개 통합), calibration 5단계 커밋 + prod 반영 1단계
+- **되돌리는 방법**: git revert 또는 V4 기반으로 재구성 가능
+
+## 2026-05-24: Loop 298 vs. Loop 299 선택
+
+- **선택**: Loop 298 (정규화된 점수, 정환 weight 0.5)
+- **대안 검토**: Loop 299 및 다른 variant들 → Loop 298만이 홍규/세형/윤수/상수 모두 2-2 이상 달성
+- **선택 이유**: 사용자 요구사항(4명 모두 2-2 이상 가점) 충족하는 유일한 선택지
+- **영향 범위**: hagun-tier.ts에 이미 반영, 현재 V10 calibration의 base
+- **되돌리는 방법**: git revert로 해당 커밋 취소 후 Loop 299 또는 다른 variant 재적용
+
+
 ## 2026-05-24: 30단계 내부 티어 + 사회 분포 기준 cutoff 시스템
 
 - **선택**: 외부 노출 10티어 × 내부 3단계 (엄청 강·강·약강) = 30단계. 한국 사회 분포 기준 cutoff 자동 산출.

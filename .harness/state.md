@@ -6,31 +6,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 07:19
-## 마지막 업데이트: 2026-05-24 07:19
+## 마지막 실행: 2026-05-24 15:59
+## 마지막 업데이트: 2026-05-24 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 시그너 가중치 calibration loop 90회 자동 실행 완료 (V1 30회 + V2 60회). Top wgap = 89 (Loop 58·90). 100만 random 사주 시뮬 + 30단계 사회 분포 cutoff 인프라 확보. 9 sample 중 영진·정환·두흥 격차 잔존 (wgap 89 floor). V3 추가 vs V2 Top 3 채택 결정 대기.
+- 시그너 가중치 calibration V1·V2·V3 병렬 실행 (npx tsx scripts/run-calibration-*.ts). 각 30-60회 루프. V1/V2/V3 모두 fix 완료 후 실행 시작. 동시에 V10 calibration 진행 중 (비견격 학자형 detector 신규 설계).
 
 ### 이어서 할 것
 
-1. V3 30-60회 calibration: 개별 sample fine-tuning (Top 3 weight 기준 + 영진·정환·두흥 강화) + 안 시도 8방향 (격국별 페널티 차등·세운 가중·충형해파 단계별·신살 카운트 단계별·Bayes 최적화 등)
-2. 또는 V2 Top 3 (Loop 58·90) 시스템 적용 — hagun-tier.ts 업데이트 + 30단계 cutoff 도입
-3. 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토 — 영진·정환·두흥 같은 사주만으로 fit 불가 sample 처리
+1. V1·V2·V3 병렬 실행 완료 대기 (3-4분) + 보고서 생성 확인
+2. V10 calibration 결과 확인 (재호 1-3 도달 여부)
+3. V3·V10 결과 기반 다음 액션 결정 (V11 진행 vs V2 Top 3 즉시 채택)
 
 ### 막힌 것
 
-- 사주만으로 9 sample fit 한계 (wgap 89 floor): 상관격 4티어(영진)·정재격 1티어(정환)·외부 변수 1티어(두흥) 격차 잔존
-- 사주 본질만 측정하는 시스템 vs 입시 결과 예측 시스템 본질 충돌
+- 사주만으로 9 sample fit 한계 (wgap 89 floor): 영진(상관격)·정환(정재격)·두흥(외부 변수) 격차 잔존
+- 재호 격국 정정 후 1-3 도달 여부 미확인
 
 ### 사람 판단 필요
 
-- V3 추가 calibration 진행 vs V2 Top 3 즉시 채택 결정
-- 사주만으로 1티어 5명 ≥55 도달 가능성 추가 시도 vs 외부 변수 모듈 도입
-- 영진·두흥 같은 명리 시스템 비매핑 sample을 외부 변수로 분리 처리 시점
-- 30단계 cutoff을 v7 시스템에 실제 적용 시점 (mom test 전 vs 후)
+- V3·V10 결과 확인 후 다음 방향 (V11 추가 calibration vs V2 Top 3 시스템 즉시 적용)
+- 영진·정환·두흥 사주만 fit 불가 sample에 대한 외부 변수 모듈 도입 시점
 
 ### 백로그 요약
 
@@ -110,16 +108,19 @@
 - [x] recommendedFields 환경 키워드 보강 (Phase C)
 - [x] LLM 9 sample §12 자연성 검증 — 환경 단어 9/9, 단정 0
 - [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증 + ANTHROPIC_MODEL_PREMIUM 분리 + 비용 3x 절감
-- [x] **100만 random 사주 시뮬 + 1만·10만·100만 cutoff 안정성 검증** ⭐ — 1만 정밀도 calibration loop 충분 입증
-- [x] **30단계 내부 티어 + 사회 분포 cutoff 설계** ⭐ — 10티어 × 3 (엄청 강·강·약강) + 한국 수능 등급제 기반
-- [x] **세형·윤수 sample 회고 정정** — 1티어 5명 학교 동등, 윤수 최상위 아님 (이전 세션 정정 보강)
-- [x] **시그너 50개 detector 모듈** — 격국·십성·길성귀인·12운성·대운·신살 + V2 확장 (count·combo·threshold·timing 27종)
-- [x] **V1 30회 calibration loop 자동 실행** — Top 3 wgap 106-110 (run-calibration-30.ts + CALIBRATION_LOOPS.md)
-- [x] **V2 60회 calibration loop 자동 실행 (Part A 30 + Part C 30)** ⭐ — Top 3 wgap 89-96 (Loop 58·90·88)
-- [x] **CALIBRATION_LOOPS.md + CALIBRATION_LOOPS_V2.md 자동 보고서** — 90 시나리오 가설·weight·9 sample 매핑·다음 세션 가이드
-- [ ] **V3 30-60회 calibration** — 개별 sample fine-tuning + 안 시도 8방향
-- [ ] **V2 Top 3 시스템 적용** — hagun-tier.ts 업데이트 + 30단계 cutoff 도입 결정
-- [ ] **외부 변수 (환경·노력·SES) 별도 모듈 도입 검토** — 영진·정환·두흥 같은 사주만 fit 불가 sample
+- [x] 100만 random 사주 시뮬 + 1만·10만·100만 cutoff 안정성 검증 ⭐ — 1만 정밀도 calibration loop 충분 입증
+- [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐ — 10티어 × 3 (엄청 강·강·약강) + 한국 수능 등급제 기반
+- [x] 세형·윤수 sample 회고 정정 — 1티어 5명 학교 동등, 윤수 최상위 아님 (이전 세션 정정 보강)
+- [x] 시그너 50개 detector 모듈 — 격국·십성·길성귀인·12운성·대운·신살 + V2 확장 (count·combo·threshold·timing 27종)
+- [x] V1 30회 calibration loop 자동 실행 — Top 3 wgap 106-110 (run-calibration-30.ts + CALIBRATION_LOOPS.md)
+- [x] V2 60회 calibration loop 자동 실행 (Part A 30 + Part C 30) ⭐ — Top 3 wgap 89-96 (Loop 58·90·88)
+- [x] CALIBRATION_LOOPS.md + CALIBRATION_LOOPS_V2.md 자동 보고서 — 90 시나리오 가설·weight·9 sample 매핑·다음 세션 가이드
+- [x] V1·V2·V3 모든 fix 완료 (clamp·detector 로직)
+- [ ] V1·V2·V3 병렬 실행 완료 + 보고서 생성
+- [ ] V10 calibration 완료 (비견격 학자형 detector)
+- [ ] V3 또는 V10 결과 기반 다음 액션 결정
+- [ ] V2 Top 3 시스템 적용 — hagun-tier.ts 업데이트 + 30단계 cutoff 도입 (결정 후)
+- [ ] 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토 (결정 후)
 - [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + 약 영역 Haiku narrative
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷)
