@@ -251,7 +251,7 @@ interface SampleTarget {
 const SAMPLE_TARGETS: SampleTarget[] = [
   // v2 TIER_SYSTEM 매핑 적용 (2026-05-24)
   { id: '03-self',    nickname: '홍규',  school: 'POSTECH (학과불명)',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
-  { id: '06',         nickname: '정환',  school: '포항공대',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '06',         nickname: '정환',  school: '포항공대(외부의지)',     target30Index: 2,  targetLabel: '1-2', weight: 0.5 },
   { id: '08',         nickname: '세형',  school: '연대 의예',   target30Index: 2,  targetLabel: '1-2', weight: 1 },
   { id: '10-yoonsoo', nickname: '윤수',  school: '서울대 전기전자', target30Index: 1,  targetLabel: '1-1', weight: 1 },
   { id: '11-sangsoo', nickname: '상수',  school: '서울대 대기', target30Index: 2,  targetLabel: '1-2', weight: 1 },

@@ -264,7 +264,7 @@ interface SampleTarget {
 const SAMPLE_TARGETS: SampleTarget[] = [
   // v2 TIER_SYSTEM 매핑 적용 (2026-05-24)
   { id: '03-self',    nickname: '홍규',  school: 'POSTECH (학과불명)',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
-  { id: '06',         nickname: '정환',  school: '포항공대',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '06',         nickname: '정환',  school: '포항공대(외부의지)',     target30Index: 2,  targetLabel: '1-2', weight: 0.5 },
   { id: '08',         nickname: '세형',  school: '연대 의예',   target30Index: 2,  targetLabel: '1-2', weight: 1 },
   { id: '10-yoonsoo', nickname: '윤수',  school: '서울대 전기전자', target30Index: 1,  targetLabel: '1-1', weight: 1 },
   { id: '11-sangsoo', nickname: '상수',  school: '서울대 대기', target30Index: 2,  targetLabel: '1-2', weight: 1 },
@@ -689,7 +689,7 @@ async function main() {
     allResults.push({ scenarioId: config.id, result });
   }
 
-  const sorted = [...allResults].sort((a, b) => a.result.totalWeightedGap - b.result.totalWeightedGap);
+  const sorted = [...allResults].sort((a, b) => a.result.totalGap - b.result.totalGap);
   const top3 = sorted.slice(0, 3);
 
   console.log(`\n=== V2 Top 3 ===`);
@@ -727,7 +727,7 @@ function writeReport(allResults: ScenarioResult[], top3: ScenarioResult[]) {
   lines.push('');
   lines.push('| 순위 | Loop | 시나리오 | totalGap | mean | stddev | mean−median | 경고 |');
   lines.push('|---|---|---|---|---|---|---|---|');
-  const sorted = [...allResults].sort((a, b) => a.result.totalWeightedGap - b.result.totalWeightedGap);
+  const sorted = [...allResults].sort((a, b) => a.result.totalGap - b.result.totalGap);
   for (let i = 0; i < sorted.length; i++) {
     const r = sorted[i];
     const d = r.result.distribution as { mean: number; stddev: number; median?: number; meanMedianDiff?: number };

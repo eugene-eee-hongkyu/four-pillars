@@ -126,6 +126,17 @@ export function detectAllSigils(m: ManseResult): Record<string, number> {
   const youthHasInsung = hasYouthSipsin('정인') || hasYouthSipsin('편인');
   const dYouthSalinSangsaeng = youthHasGwansung && youthHasInsung; // 청소년 대운 관인동림 (자평진전·사주첩경·김기승)
 
+  // V8: 정관격 학자 콤보 — 자평진전 「正官格은 本格 學者·官吏의 命」 + 적천수 "관성 통근 + 식상 또는 인성 = 학자형"
+  // 재호(정관격 + 관성 2 + 문창 2 + 관귀학관 2)가 시스템에 안 잡히던 케이스 fix
+  const comboJeonggwanScholar = m.gyeokguk.name === '정관격' && c.gwansung >= 2 && guiCount >= 1;
+
+  // V9: 정관격 시너지 콤보 (재호 1-3 도달 위해)
+  const comboJeonggwanGwangwi = m.gyeokguk.name === '정관격' && gwangwiCount >= 2; // 정관격 + 관귀학관 ≥ 2 (자평진전·명리정종)
+  const comboJeonggwanGeonrok = m.gyeokguk.name === '정관격' && m.unsung.dayPillar.stage === '건록'; // 정관격 + 일주 건록 (자평진전 「正官格 喜身旺」)
+  const comboJeonggwanMunchang = m.gyeokguk.name === '정관격' && munchang >= 2; // 정관격 + 문창 다중 (삼명통회)
+
+  // V10: 비견격/건록격 학자형 콤보 (gwangwiCount는 아래 V5 블록 후 사용 가능 — return 시 평가)
+
   // === V5 신규: 관귀학관 (사주첩경·명리정종·한국명리학협회·조세일보) ===
   // 일간별 정관 장생지 = 시험·합격·승진 길성
   const GWANGWI_MAP: Record<string, string> = {
@@ -146,6 +157,13 @@ export function detectAllSigils(m: ManseResult): Record<string, number> {
   const comboCheonEulHakdang = (cheonEul >= 1 && hakdang >= 2) || (cheonEul >= 1 && hakdang >= 1 && munchang >= 1); // 천을·학당 동주 (삼명통회·자평수언·한국 통설)
   const sJaeGwanInSamgwi = c.jaesung >= 1 && c.gwansung >= 1 && c.insung >= 1 && (c.bigeop >= 2 || dayTonggeun); // 재관인 삼귀 (자평진전·다시배우는사주명리)
   const comboExamGwangwi = gwangwiCount >= 1 && youthHasGwansung; // 관귀학관 + 청소년 관성 (사주첩경·명리정종·자평진전)
+
+  // V10: 비견격/건록격 학자형 콤보 — 자평진전·적천수
+  const isBigyeonGyeokguk = m.gyeokguk.name === '비견격' || m.gyeokguk.name === '건록격';
+  const comboBigyeonGwansung = isBigyeonGyeokguk && c.gwansung >= 2 && guiCount >= 1; // 비견격 학자형
+  const comboBigyeonGwangwi = isBigyeonGyeokguk && gwangwiCount >= 2; // 비견격 + 관귀학관
+  const comboBigyeonMunchang = isBigyeonGyeokguk && munchang >= 2; // 비견격 + 문창 다중
+  const comboBigyeonGeonrok = isBigyeonGyeokguk && m.unsung.dayPillar.stage === '건록'; // 비견격 + 일주 건록
 
   return {
     // === 기존 50 boolean ===
@@ -272,6 +290,18 @@ export function detectAllSigils(m: ManseResult): Record<string, number> {
     s_jaeGwanIn_samgwi: sJaeGwanInSamgwi ? 1 : 0,
     combo_examGwangwi: comboExamGwangwi ? 1 : 0,
 
+    // === V8 신규: 정관격 학자형 (자평진전·적천수) ===
+    combo_jeonggwanScholar: comboJeonggwanScholar ? 1 : 0,
+    // === V9 신규: 정관격 시너지 콤보 ===
+    combo_jeonggwanGwangwi: comboJeonggwanGwangwi ? 1 : 0,
+    combo_jeonggwanGeonrok: comboJeonggwanGeonrok ? 1 : 0,
+    combo_jeonggwanMunchang: comboJeonggwanMunchang ? 1 : 0,
+    // === V10 신규: 비견격/건록격 학자형 콤보 (자평진전·적천수) ===
+    combo_bigyeonGwansung: comboBigyeonGwansung ? 1 : 0,
+    combo_bigyeonGwangwi: comboBigyeonGwangwi ? 1 : 0,
+    combo_bigyeonMunchang: comboBigyeonMunchang ? 1 : 0,
+    combo_bigyeonGeonrok: comboBigyeonGeonrok ? 1 : 0,
+
     // 추가 카운트
     cnt_amrok: amrokCount,
     cnt_jahyeong: jahyeongCount,
@@ -366,7 +396,7 @@ interface SampleTarget {
 const SAMPLE_TARGETS: SampleTarget[] = [
   // v2 TIER_SYSTEM 매핑 적용 (2026-05-24)
   { id: '03-self',    nickname: '홍규',  school: 'POSTECH (학과불명)',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
-  { id: '06',         nickname: '정환',  school: '포항공대',     target30Index: 2,  targetLabel: '1-2', weight: 1 },
+  { id: '06',         nickname: '정환',  school: '포항공대(외부의지)',     target30Index: 2,  targetLabel: '1-2', weight: 0.5 },
   { id: '08',         nickname: '세형',  school: '연대 의예',   target30Index: 2,  targetLabel: '1-2', weight: 1 },
   { id: '10-yoonsoo', nickname: '윤수',  school: '서울대 전기전자', target30Index: 1,  targetLabel: '1-1', weight: 1 },
   { id: '11-sangsoo', nickname: '상수',  school: '서울대 대기', target30Index: 2,  targetLabel: '1-2', weight: 1 },
