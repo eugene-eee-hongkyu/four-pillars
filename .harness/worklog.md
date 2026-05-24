@@ -6,6 +6,34 @@
 
 ---
 
+## Session 2026-05-24 20:18 — tsconfig deprecated 옵션 정공 제거 + TDZ 버그 fix
+
+### 작업 요약
+- **사용자 요청 오해 → 학습**: 사용자가 IDE Problems panel에서 본 `tsconfig.json` 자체의 2개 deprecation warning (`moduleResolution=node10`·`baseUrl`) 안 보이게 하기 → 나는 `tsc --noEmit` scripts/ 9개 에러로 잘못 해석.
+- **tsconfig.json 정공 해결** ([eduluck/tsconfig.json](eduluck/tsconfig.json)):
+  - `ignoreDeprecations` silence 대신 deprecated 옵션 자체 제거 (TS 7.0 미래 호환)
+  - `baseUrl "."` 제거 — `paths` 만으로 tsconfig 위치 기준 resolve (TS 5.0+ 동작 동일)
+  - `moduleResolution "node10"` (expo base 상속) → `"bundler"` 명시 override (Metro 적합)
+  - IDE deprecation warning 2개 → 0 / npm tsc 0 에러 / selftest 13명 raw 일치 / vitest 12/12
+- **부가 fix** (사용자 오해 작업이지만 진짜 버그 발견 → 유지):
+  - `run-calibration-v3.ts:134` V9 정관격 시너지 콤보 블록이 `gwangwiCount` const 선언(line 154) 전에 참조하던 TDZ 위반 → V5 블록 아래로 이동
+  - `eval-2-new-samples.ts` 7 에러 타입 fix 시도 (`.score` → `.total`, pillars 추가, null 가드) → **사용자가 원본 복원** (V10 시점 ad-hoc script, 변경 ✗ 결정)
+- **commit + push**:
+  - `07ef4fd` fix(eduluck): tsconfig deprecated 옵션 제거 + run-calibration-v3 TDZ fix
+  - `8f49128..07ef4fd  main -> main`
+
+### 실패한 시도
+- `ignoreDeprecations: "6.0"` → npm tsc 5.9.3 거부 (TS5103 Invalid value)
+- `ignoreDeprecations: "5.0"` → IDE LSP (TS 6.x)는 "6.0"만 인정, 경고 그대로
+- → 두 LSP 버전 모두 만족하는 단일 값 ✗, 옵션 자체 제거가 정공
+
+### 다음 액션
+- (선택) UI 음력/양력 토글 추가
+- (선택) 영진 외부 의지 score 모듈
+- (선택) V11 production deploy 모바일 시각 검증
+
+---
+
 ## Session 2026-05-24 19:53 — V11 Loop 603 prod 반영 + 13명 sample 통합 + push
 
 ### 작업 요약

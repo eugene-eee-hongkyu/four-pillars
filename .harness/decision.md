@@ -27,3 +27,26 @@
   3. `data.ts`에서 13-jinwoo weight 0 또는 외부변수 표시
 - **검토 후 확장 여부**:
   - 영진 sample은 유사 패턴 (사주 본질 ✗ + SKY 도달, 외부 의지)이지만 명식 특성 다름 (상관격 + 식상강 + 일지 약). 영진용 신규 detector 추가는 별도 검토 필요. 일반화 위험으로 보류.
+
+---
+
+## 2026-05-24: tsconfig deprecation — ignoreDeprecations silence vs 옵션 정공 제거
+
+- **선택**: 옵션 정공 제거 — `baseUrl` 삭제, `moduleResolution: "bundler"` 명시 override.
+- **대안 검토**:
+  - **A: `ignoreDeprecations` 값 추가**: 한 줄 추가로 빠름. 그러나 IDE LSP (TS 6.x)는 `"6.0"`만 인정 / npm tsc 5.9.3은 `"5.0"`만 인정 → 두 LSP 모두 만족하는 단일 값 ✗. 또한 silence일 뿐 TS 7.0에서 옵션 제거되면 같은 작업 반복 필요.
+  - **B: TypeScript 6.x로 업그레이드**: 두 LSP 통일. 그러나 Expo SDK 51은 TS 5.3 권장이라 호환성 위험.
+  - **C: `.vscode/settings.json` typescript.tsdk = workspace TS 5.9.3 강제**: IDE를 npm tsc와 묶음. 그러나 VSCode 한정 (Cursor·Zed 등 다른 IDE에 안 옮겨감).
+  - **D: 옵션 정공 제거** (선택): `baseUrl` 제거, `moduleResolution "bundler"` 명시. TS 7.0 미래 호환 + IDE 경고 사라짐 + npm tsc 통과.
+- **선택 이유**:
+  1. silence는 deprecation 본질 미해결 (TS 7.0 도래 시 같은 문제 반복)
+  2. `baseUrl`은 paths만 있으면 불필요 (TS 5.0+ 위치 기반 resolve)
+  3. `moduleResolution: "bundler"`는 Metro/Vite/Webpack 등 모든 번들러 환경 표준 — Expo Metro에 적합
+  4. 13명 selftest raw 일치 + vitest 12/12 pass → 회귀 ✗
+- **영향 범위**:
+  - `eduluck/tsconfig.json` — 2 라인 변경
+  - 전체 import 동작 동일 (paths "@/*": ["./*"] 변경 ✗)
+- **되돌리는 방법**:
+  1. `tsconfig.json`에 `"baseUrl": "."` 복원
+  2. `"moduleResolution"` 라인 삭제 (expo base의 "node10" 재상속)
+  3. 정 silence 원하면 `"ignoreDeprecations": "5.0"` or `"6.0"` 추가 (LSP 버전에 맞게)

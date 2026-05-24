@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 19:53
-## 마지막 업데이트: 2026-05-24 19:53
+## 마지막 실행: 2026-05-24 20:18
+## 마지막 업데이트: 2026-05-24 20:18
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- V11 Loop 603 prod 반영 + push 완료 (`466fbf2`). `combo_jaeSiksangBigeopJarip +45` 박진우 fit detector 신규 + V8/V10 통합 weight 갱신. 13명 self-test 100% raw 일치, 박진우·김택범 모두 3-1 도달.
+- tsconfig deprecated 옵션(baseUrl·moduleResolution=node10) 정공 제거 + run-calibration-v3 TDZ 버그 fix. IDE 경고 0, npm tsc 0 에러, 13명 selftest 일치, vitest 12/12 pass. `07ef4fd` push 완료.
 
 ### 이어서 할 것
 
@@ -27,6 +27,7 @@
 ### 사람 판단 필요
 
 - 영진 패턴(사주 본질 ✗ + SKY) 외부 변수 모듈 도입 시점·범위
+- `eval-2-new-samples.ts` 처리 방향 (사용자가 원본 복원했으나 7개 타입 에러 잔존, V11 sweep으로 역할 대체됨 — 삭제 vs 라벨 갱신 후 유지)
 
 ### 백로그 요약
 
@@ -127,6 +128,7 @@
 - [x] 음력→양력 변환 lunar-typescript 활용 진단
 - [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
 - [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 + push (`466fbf2`) ⭐
+- [x] tsconfig deprecated 옵션 정공 제거 (baseUrl·moduleResolution=node10) + run-calibration-v3 TDZ fix (`07ef4fd`)
 - [ ] 음력 입력 UI 토글 추가 (선택)
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
 - [ ] V11 production deploy 모바일 시각 검증
