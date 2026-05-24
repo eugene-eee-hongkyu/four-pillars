@@ -6,7 +6,7 @@
 
 ---
 
-## Session 2026-05-24 17:50 — V11 Loop 603 prod 반영 + 13명 sample 통합
+## Session 2026-05-24 19:53 — V11 Loop 603 prod 반영 + 13명 sample 통합 + push
 
 ### 작업 요약
 - **신규 sample 추가** (`_private/calibration-samples/data.ts`):
@@ -23,6 +23,7 @@
   - Layer 3 신규: u_dayJewang +6
 - **13명 self-test 통과** (`scripts/selftest-v11-prod.ts`): prod `computeHagun` raw = V11 calibration raw 100% 일치 (Eugene 113·정환 126·세형 134·이윤수 143·류상수 122·두흥 96·승희 95·영진 21·와이프 74·재호 126·재원 35·김택범 100·박진우 101)
 - **tsc + vitest 통과**: prod 영역 0 에러, unit test 12/12 pass
+- **commit + push** (`466fbf2`): `feat(eduluck): V11 Loop 603 prod hagun-tier 반영 (박진우 fit detector + 13명 raw 100% 일치)` — 6 files / 580 insertions / 37 deletions / `ed9f33f..466fbf2  main -> main`
 
 ### 13명 최종 정규화 점수·티어 (V11 Loop 603 prod)
 | 순 | Sample | raw | 정규화 (/100) | 30단계 | 실제 목표 | gap |

@@ -6,31 +6,31 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 17:50
-## 마지막 업데이트: 2026-05-24 17:50
+## 마지막 실행: 2026-05-24 19:53
+## 마지막 업데이트: 2026-05-24 19:53
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- V11 Loop 603 prod 반영 완료 (`combo_jaeSiksangBigeopJarip +45` 박진우 fit detector 신규 + V8/V10 통합 weight 갱신). 13명 self-test 100% raw 일치, 박진우·김택범 모두 3-1 도달. tsc 0 에러 + vitest 12/12 pass.
+- V11 Loop 603 prod 반영 + push 완료 (`466fbf2`). `combo_jaeSiksangBigeopJarip +45` 박진우 fit detector 신규 + V8/V10 통합 weight 갱신. 13명 self-test 100% raw 일치, 박진우·김택범 모두 3-1 도달.
 
 ### 이어서 할 것
 
 1. (선택) UI 음력/양력 토글 추가 — `Lunar.fromYmd().getSolar()` 1줄 코드
 2. (선택) 영진 외부 의지 score 모듈 (사주 본질 학자형 ✗ + SKY 도달)
-3. (선택) V11 production deploy + 실제 사용자 케이스 검증
+3. (선택) V11 production deploy 모바일 시각 검증
 
 ### 막힌 것
 
-- 영진 sample (정규화 14.9 vs 실제 경희대 4티어, 24 단계 빗나감): 사주 본질 학자형 ✗ + SKY/상위권 도달. 사주 만으론 fit 불가, 외부 의지·환경 변수 별도 모듈 필요.
+- 영진 sample (정규화 14.9 vs 실제 경희대 4티어, 24 단계 빗나감): 사주 본질 학자형 ✗ + SKY/상위권 도달. 사주만으론 fit 불가, 외부 의지·환경 변수 별도 모듈 필요.
 
 ### 사람 판단 필요
 
-- V11 prod deploy 시점 — 지금 vs 영진 패턴 모듈까지 작업 후
+- 영진 패턴(사주 본질 ✗ + SKY) 외부 변수 모듈 도입 시점·범위
 
 ### 백로그 요약
 
-- 대기 중: 8개
+- 대기 중: 9개
 - 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 ### 진행 상황
@@ -126,12 +126,13 @@
 - [x] 김택범·박진우 신규 sample V10 평가
 - [x] 음력→양력 변환 lunar-typescript 활용 진단
 - [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
-- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 ⭐
+- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 + push (`466fbf2`) ⭐
 - [ ] 음력 입력 UI 토글 추가 (선택)
+- [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
+- [ ] V11 production deploy 모바일 시각 검증
 - [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + 약 영역 Haiku narrative
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷)
-- [ ] prod 배포 후 모바일 시각 검증
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행 + Authority·Entrepreneur·Action 5-10명 모집
 - [ ] 사주톡 10명 지인 테스트 계속 진행
