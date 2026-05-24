@@ -6,34 +6,34 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 15:59
-## 마지막 업데이트: 2026-05-24 15:59
+## 마지막 실행: 2026-05-24 17:19
+## 마지막 업데이트: 2026-05-24 17:19
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 시그너 가중치 calibration V1·V2·V3 병렬 실행 (npx tsx scripts/run-calibration-*.ts). 각 30-60회 루프. V1/V2/V3 모두 fix 완료 후 실행 시작. 동시에 V10 calibration 진행 중 (비견격 학자형 detector 신규 설계).
+- Hagun tier calibration V10 완료 (Loop 523 best, totalGap 21.5). 비견격 학자형 콤보 4개 detector 추가로 재호 1-3 도달 성공. 11명 정합 표 작성 + 김택범·박진우 신규 sample 평가 + 음력→양력 변환 진단 (lunar-typescript 활용 가능 확인).
 
 ### 이어서 할 것
 
-1. V1·V2·V3 병렬 실행 완료 대기 (3-4분) + 보고서 생성 확인
-2. V10 calibration 결과 확인 (재호 1-3 도달 여부)
-3. V3·V10 결과 기반 다음 액션 결정 (V11 진행 vs V2 Top 3 즉시 채택)
+1. V10 Loop 523 weight prod 반영 (hagun-tier.ts에 비견격 학자형 콤보 4개 detector 통합 + weight 갱신)
+2. 김택범·박진우 sample을 `_private/calibration-samples/data.ts`에 추가 (둘 다 weight 0.5 외부변수)
+3. (선택) UI에 음력/양력 토글 추가 — lunar-typescript `Lunar.fromYmd().getSolar()` 1줄 코드
 
 ### 막힌 것
 
-- 사주만으로 9 sample fit 한계 (wgap 89 floor): 영진(상관격)·정환(정재격)·두흥(외부 변수) 격차 잔존
-- 재호 격국 정정 후 1-3 도달 여부 미확인
+- 박진우 sample: 학운 7-2 (전문대~사립 하위) ↔ 실제 고려대 (1-3) — 17 단계 빗나감. 영진 패턴 (사주 본질 약 + SKY 도달, 외부 의지)
+- 김택범 sample: 학운 3-1 ↔ 실제 고려대 화공 (1-3) — 2 단계 낮음. 3수+사업 정리로 외부 환경/노력 변수
 
 ### 사람 판단 필요
 
-- V3·V10 결과 확인 후 다음 방향 (V11 추가 calibration vs V2 Top 3 시스템 즉시 적용)
-- 영진·정환·두흥 사주만 fit 불가 sample에 대한 외부 변수 모듈 도입 시점
+- V10 Loop 523 prod 반영 시점 결정 (지금 vs 김택범·박진우 추가 후 V11 cycle 한 번 더)
+- 김택범·박진우 weight 0.5 부여 — V11에서 학자형 본질 강화 필요 vs 외부변수 인정으로 끝
 
 ### 백로그 요약
 
-- 대기 중: 7개
-- 최근 추가: 2026-05-23 — 06 정환·08 세형 sample md v7 포맷 갱신
+- 대기 중: 8개
+- 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 ### 진행 상황
 
@@ -108,19 +108,28 @@
 - [x] recommendedFields 환경 키워드 보강 (Phase C)
 - [x] LLM 9 sample §12 자연성 검증 — 환경 단어 9/9, 단정 0
 - [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증 + ANTHROPIC_MODEL_PREMIUM 분리 + 비용 3x 절감
-- [x] 100만 random 사주 시뮬 + 1만·10만·100만 cutoff 안정성 검증 ⭐ — 1만 정밀도 calibration loop 충분 입증
-- [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐ — 10티어 × 3 (엄청 강·강·약강) + 한국 수능 등급제 기반
-- [x] 세형·윤수 sample 회고 정정 — 1티어 5명 학교 동등, 윤수 최상위 아님 (이전 세션 정정 보강)
-- [x] 시그너 50개 detector 모듈 — 격국·십성·길성귀인·12운성·대운·신살 + V2 확장 (count·combo·threshold·timing 27종)
-- [x] V1 30회 calibration loop 자동 실행 — Top 3 wgap 106-110 (run-calibration-30.ts + CALIBRATION_LOOPS.md)
-- [x] V2 60회 calibration loop 자동 실행 (Part A 30 + Part C 30) ⭐ — Top 3 wgap 89-96 (Loop 58·90·88)
-- [x] CALIBRATION_LOOPS.md + CALIBRATION_LOOPS_V2.md 자동 보고서 — 90 시나리오 가설·weight·9 sample 매핑·다음 세션 가이드
-- [x] V1·V2·V3 모든 fix 완료 (clamp·detector 로직)
-- [ ] V1·V2·V3 병렬 실행 완료 + 보고서 생성
-- [ ] V10 calibration 완료 (비견격 학자형 detector)
-- [ ] V3 또는 V10 결과 기반 다음 액션 결정
-- [ ] V2 Top 3 시스템 적용 — hagun-tier.ts 업데이트 + 30단계 cutoff 도입 (결정 후)
-- [ ] 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토 (결정 후)
+- [x] 100만 random 사주 시뮬 + cutoff 안정성 검증
+- [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐
+- [x] V1 30회 calibration loop 자동 실행 — Top 3 wgap 106-110
+- [x] V2 60회 calibration loop 자동 실행 — Top 3 wgap 89-96
+- [x] V1·V2 clamp fix + 정규화 + sample target v2 ⭐
+- [x] V3 75→100 detector pool + 90 시나리오 ⭐
+- [x] V4 학파 ≥ 2 검증 19 신규 detector + 60 시나리오 ⭐
+- [x] V5 관귀학관 등 4 신규 detector (라운드 2)
+- [x] V6 absolute cutoff baseline — totalGap 47 ⭐
+- [x] Prod v8 hagun-tier 반영 (V6 #266 weight + 9/9 raw 정합) ⭐
+- [x] Hagun v8 점수 0~100 정규화 + calcConfidence v8 scale
+- [x] 정환 sample weight 0.5 (외부 변수)
+- [x] V7 30 시나리오 — Loop 298 best (홍규·세형·윤수·상수 2-2 이상)
+- [x] V8 정관격 학자형 detector + 30 시나리오 (재호 격국 잘못 식별)
+- [x] V9 정관격 시너지 콤보 3 detector — 재호 = 건록격 확정 ✗
+- [x] V10 비견격 학자형 콤보 4 detector — Loop 523 totalGap 21.5, 재호 1-3 ⭐
+- [x] 11 sample 정규화 표 출력 (홍규~재원)
+- [x] 김택범·박진우 신규 sample V10 평가
+- [x] 음력→양력 변환 lunar-typescript 활용 진단
+- [ ] V10 Loop 523 weight prod 반영 (hagun-tier.ts)
+- [ ] 김택범·박진우 data.ts 추가
+- [ ] 음력 입력 UI 토글 추가 (선택)
 - [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + 약 영역 Haiku narrative
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷)
