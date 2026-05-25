@@ -85,13 +85,5 @@ for (const section of [7, 8, 9, 10]) {
   }
 }
 
-// --write 또는 WRITE_MD=1 — system prompt를 eduluck/prompts/*.md로 저장
-if (process.argv.includes('--write') || process.env.WRITE_MD === '1') {
-  const fs = require('fs');
-  fs.writeFileSync('prompts/interpret-premium-part1.md', part1Sys);
-  fs.writeFileSync('prompts/interpret-premium-part2.md', part2Sys);
-  fs.writeFileSync('prompts/interpret-deep.md', deepSys);
-  console.log('\n📝 prompts/*.md 3개 갱신 완료 (part1·part2·deep)');
-}
-
-console.log(`\n✅ Phase 1 prompt dump complete. SHOW_FULL=1로 본문 전체 확인 가능. --write 또는 WRITE_MD=1로 prompts/*.md 자동 갱신.`);
+console.log(`\n✅ Phase 1 prompt dump complete. SHOW_FULL=1로 본문 전체 확인 가능.`);
+console.log(`(prompt 원본은 lib/prompts/*.ts — 이 스크립트는 길이·구조 검증용)`);
