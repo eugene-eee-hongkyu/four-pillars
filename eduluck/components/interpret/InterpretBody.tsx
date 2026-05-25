@@ -369,8 +369,10 @@ function QuoteBox({ text }: { text: string }) {
 const CATEGORY_COLORS: Record<string, string> = {
   '본질': '#C18949',  // warm amber
   '시기': '#5F87A5',  // blue-gray
-  '신살': '#9568AE',  // soft purple
+  '기운': '#9568AE',  // soft purple (명리 정통 '신살·성'을 어머니 친화 단어로 통칭)
   '관계': '#6FA083',  // soft green
+  // backwards compat: 옛 prompt 출력 '신살'도 같은 색으로
+  '신살': '#9568AE',
 };
 
 /** evidence bullet 파싱:
