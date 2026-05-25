@@ -119,6 +119,14 @@ export default function InterpretPremium() {
 
   const handleStartSurvey = () => setSurveyStep(1);
 
+  // 테스트 기간 (2026-05-25 V12 direction-system 통합 후): 진입 시마다 cache 무효화 → 무조건 새 LLM 호출
+  // 테스트 종료 시 이 useEffect 제거하면 cache 메커니즘 자동 복원
+  useEffect(() => {
+    setPremiumInterpretText(null);
+    setStreamDone(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 캐시 hit (prefetch 완료된 정밀 텍스트) — streamDone 즉시 true로 → 본문 위 TOC + survey CTA 표시
   useEffect(() => {
     if (state.premiumInterpretText && !streamDone) {

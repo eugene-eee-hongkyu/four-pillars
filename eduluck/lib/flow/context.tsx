@@ -122,7 +122,8 @@ export interface FlowState {
 }
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시(localStorage premiumInterpretText) 자동 무효 */
-export const PREMIUM_PROMPT_VERSION = 'v3-16sections';
+// V12 direction-system 통합 (2026-05-25) + 테스트 기간 cache 매번 무효 (interpret-premium.tsx mount)
+export const PREMIUM_PROMPT_VERSION = 'v4-direction-v12';
 
 const initial: FlowState = {
   sessionId: null,
@@ -194,7 +195,7 @@ interface FlowContextValue {
   patchFatherEducation: (patch: Partial<ParentEducation>) => void;
   setParentEducationStatus: (status: 'entered' | 'skipped') => void;
   setFreeInterpretText: (t: string) => void;
-  setPremiumInterpretText: (t: string) => void;
+  setPremiumInterpretText: (t: string | null) => void;
   /** 어머니 정보·만세력 초기화 — 사용자가 옵션 입력 후 삭제 원하는 경우 */
   resetMother: () => void;
   /** 아빠 정보·만세력 초기화 */
@@ -254,8 +255,12 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   const setFreeInterpretText = useCallback((t: string) => {
     setState((s) => ({ ...s, freeInterpretText: t }));
   }, []);
-  const setPremiumInterpretText = useCallback((t: string) => {
-    setState((s) => ({ ...s, premiumInterpretText: t, premiumInterpretVersion: PREMIUM_PROMPT_VERSION }));
+  const setPremiumInterpretText = useCallback((t: string | null) => {
+    setState((s) => ({
+      ...s,
+      premiumInterpretText: t,
+      premiumInterpretVersion: t === null ? null : PREMIUM_PROMPT_VERSION,
+    }));
   }, []);
   const resetMother = useCallback(() => {
     setState((s) => ({
