@@ -85,5 +85,16 @@ for (const section of [7, 8, 9, 10]) {
   }
 }
 
-console.log(`\n✅ Phase 1 prompt dump complete. SHOW_FULL=1로 본문 전체 확인 가능.`);
-console.log(`(prompt 원본은 lib/prompts/*.ts — 이 스크립트는 길이·구조 검증용)`);
+// --write 또는 WRITE_MD=1 — system prompt를 docs/prompts/*.md로 저장 (사람이 IDE에서 markdown으로 읽기 좋게)
+if (process.argv.includes('--write') || process.env.WRITE_MD === '1') {
+  const fs = require('fs');
+  const dir = 'docs/prompts';
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(`${dir}/interpret-premium-part1.md`, part1Sys);
+  fs.writeFileSync(`${dir}/interpret-premium-part2.md`, part2Sys);
+  fs.writeFileSync(`${dir}/interpret-deep.md`, deepSys);
+  console.log(`\n📝 ${dir}/*.md 3개 갱신 (part1·part2·deep) — lib/prompts/*.ts에서 자동 dump`);
+}
+
+console.log(`\n✅ Prompt dump complete. SHOW_FULL=1로 본문 전체 확인 / --write 또는 WRITE_MD=1로 docs/prompts/*.md 갱신.`);
+console.log(`(prompt 원본은 lib/prompts/*.ts — md는 IDE 가독성용 사본)`);
