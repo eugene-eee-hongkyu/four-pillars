@@ -22,6 +22,12 @@ const DEFAULT_KEYWORDS = [
   '관인상생', '격국',
 ];
 
+interface TimelineRange {
+  ageRange: string;
+  level: string;
+  daeun: string;
+}
+
 type Block =
   | { type: 'tldr'; text: string }
   | { type: 'signature'; text: string }
@@ -30,7 +36,8 @@ type Block =
   | { type: 'paragraph'; text: string }
   | { type: 'quote'; text: string }
   | { type: 'evidence'; items: string[] }
-  | { type: 'strengthWeakness'; strengths: { title: string; signer: string }[]; weaknesses: { title: string; signer: string }[] };
+  | { type: 'strengthWeakness'; strengths: { title: string; signer: string }[]; weaknesses: { title: string; signer: string }[] }
+  | { type: 'timeline'; ranges: TimelineRange[]; currentAge: string | null; worstYear: string | null };
 
 /** '### 근거' 또는 '### 이 풀이의 명리 근거' 같은 evidence 시작 헤더 */
 const EVIDENCE_HEADER_RE = /^###\s+(이\s*풀이의\s*명리\s*)?근거\s*$/;
@@ -40,6 +47,10 @@ const EVIDENCE_BULLET_RE = /^[-·•*]\s+(.+)$/;
 const SW_HEADER_RE = /^###\s+강점\s*[·\-]\s*약점/;
 /** '- [강점] {제목} — {시그너}' 또는 '- [약점] ...' */
 const SW_BULLET_RE = /^[-·•*]\s*\[(강점|약점)\]\s*(.+?)(?:\s*[─—-]\s*(.+))?$/;
+/** '### 시기 카드' 시작 헤더 — §13 직후 */
+const TIMELINE_HEADER_RE = /^###\s+시기\s*카드/;
+/** '- [구간] 13~18세 | 중 | 식신' 같은 형식 */
+const TIMELINE_BULLET_RE = /^[-·•*]\s*\[(구간|현재|조심)\]\s*(.+)$/;
 
 function parseText(input: string): Block[] {
   const lines = input.split('\n');
@@ -51,6 +62,10 @@ function parseText(input: string): Block[] {
   let swStrengths: { title: string; signer: string }[] = [];
   let swWeaknesses: { title: string; signer: string }[] = [];
   let swMode = false;
+  let tlRanges: TimelineRange[] = [];
+  let tlCurrentAge: string | null = null;
+  let tlWorstYear: string | null = null;
+  let tlMode = false;
 
   const flushParagraph = () => {
     if (paragraphBuf.length === 0) return;
@@ -79,11 +94,21 @@ function parseText(input: string): Block[] {
     swWeaknesses = [];
     swMode = false;
   };
+  const flushTl = () => {
+    if (tlRanges.length > 0 || tlCurrentAge || tlWorstYear) {
+      blocks.push({ type: 'timeline', ranges: tlRanges, currentAge: tlCurrentAge, worstYear: tlWorstYear });
+    }
+    tlRanges = [];
+    tlCurrentAge = null;
+    tlWorstYear = null;
+    tlMode = false;
+  };
   const flushAll = () => {
     flushParagraph();
     flushQuote();
     flushEvidence();
     flushSw();
+    flushTl();
   };
 
   for (const line of lines) {
@@ -122,6 +147,34 @@ function parseText(input: string): Block[] {
       // fallthrough
     }
 
+    // 시기 카드 모드: bullet 누적 또는 종료
+    if (tlMode) {
+      const tlMatch = trimmed.match(TIMELINE_BULLET_RE);
+      if (tlMatch) {
+        const [, kind, rest] = tlMatch;
+        if (kind === '구간') {
+          // 'ageRange | level | daeun'
+          const parts = rest.split('|').map(s => s.trim());
+          tlRanges.push({
+            ageRange: parts[0] ?? '',
+            level: parts[1] ?? '',
+            daeun: parts[2] ?? '',
+          });
+        } else if (kind === '현재') {
+          tlCurrentAge = rest.trim();
+        } else if (kind === '조심') {
+          tlWorstYear = rest.trim();
+        }
+        continue;
+      }
+      if (!trimmed) {
+        flushTl();
+        continue;
+      }
+      flushTl();
+      // fallthrough
+    }
+
     // TL;DR — 본문 첫 줄 마커
     const tldrMatch = trimmed.match(/^>\s*한\s*줄\s*요약\s*[:：]\s*(.*)$/);
     if (tldrMatch) {
@@ -154,6 +207,17 @@ function parseText(input: string): Block[] {
       swMode = true;
       swStrengths = [];
       swWeaknesses = [];
+      continue;
+    }
+
+    // 시기 카드 헤더 — '### 시기 카드'
+    if (TIMELINE_HEADER_RE.test(trimmed)) {
+      flushParagraph();
+      flushQuote();
+      tlMode = true;
+      tlRanges = [];
+      tlCurrentAge = null;
+      tlWorstYear = null;
       continue;
     }
 
@@ -506,6 +570,141 @@ function SWColumn({
   );
 }
 
+/** 시간축 카드 — §13 헤더 직후 노출. 가로 3구간 + 현재 위치 + worst year ⚠. */
+function LuckTimelineCard({
+  ranges,
+  currentAge,
+  worstYear,
+}: {
+  ranges: TimelineRange[];
+  currentAge: string | null;
+  worstYear: string | null;
+}) {
+  // 현재 위치 인덱스 — currentAge가 어느 range에 속하는지
+  const currentIdx = (() => {
+    if (!currentAge) return -1;
+    const ageNum = parseInt(currentAge.match(/\d+/)?.[0] ?? '');
+    if (!ageNum) return -1;
+    return ranges.findIndex((r) => {
+      const m = r.ageRange.match(/(\d+)\s*[~-]\s*(\d+)/);
+      if (!m) return false;
+      return ageNum >= parseInt(m[1]) && ageNum <= parseInt(m[2]);
+    });
+  })();
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.surfaceContainerLow,
+        borderWidth: 1,
+        borderColor: colors.outlineWarm,
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        gap: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+      }}
+    >
+      <View className="flex-row items-center" style={{ gap: 6 }}>
+        <Text style={{ fontSize: 14, color: colors.textSub }}>🌊</Text>
+        <Text
+          style={{ fontSize: 12, fontWeight: '700', color: colors.textSub, letterSpacing: 0.3 }}
+        >
+          학운 시기 흐름
+        </Text>
+      </View>
+
+      {currentAge && (
+        <Text
+          style={{ fontSize: 12, color: colors.secondary, fontWeight: '600', marginBottom: -4 }}
+        >
+          ↓ 현재 {currentAge}
+        </Text>
+      )}
+
+      <View className="flex-row" style={{ gap: 6 }}>
+        {ranges.map((r, i) => {
+          const isCurrent = i === currentIdx;
+          const levelColor = levelToColor(r.level);
+          return (
+            <View
+              key={i}
+              className="flex-1"
+              style={{
+                borderWidth: isCurrent ? 2 : 1,
+                borderColor: isCurrent ? colors.secondary : colors.outlineWarm,
+                borderRadius: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 6,
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: isCurrent ? colors.secondaryContainer : 'transparent',
+              }}
+            >
+              <Text style={{ fontSize: 11, color: colors.textSub, fontWeight: '500' }}>
+                {r.ageRange}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '700',
+                  color: levelColor,
+                }}
+              >
+                {r.level}
+                {isCurrent && ' ⭐'}
+              </Text>
+              <Text style={{ fontSize: 11, color: colors.textSub }} numberOfLines={1}>
+                {r.daeun}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {worstYear && (
+        <View
+          style={{
+            backgroundColor: '#9568AE1A',
+            borderRadius: 6,
+            paddingVertical: 8,
+            paddingHorizontal: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <Text style={{ fontSize: 13, color: '#9568AE' }}>⚠</Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: '#7A5A98',
+              fontWeight: '600',
+              flex: 1,
+              lineHeight: 17,
+            }}
+          >
+            {worstYear}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** 학운 강약 라벨 → 색 */
+function levelToColor(level: string): string {
+  if (/매우\s*강|^강/.test(level)) return '#C18949';
+  if (/중상|^중$/.test(level)) return colors.textPri;
+  if (/중하|약상/.test(level)) return colors.textSub;
+  if (/약중|약하|매우\s*약/.test(level)) return '#8E6B5C';
+  return colors.textPri;
+}
+
 /** 섹션 헤더 v2 — '## 1. 시작 — 부제' → 좌측 원형 번호 배지 + title + subtitle + 아래 구분선. */
 function SectionHeaderV2({ text, subtitle }: { text: string; subtitle?: string }) {
   // text = "1. 시작" 형식. 번호 분리.
@@ -664,6 +863,17 @@ export function InterpretBody({ text }: Props) {
           return (
             <FadeInView key={key}>
               <StrengthWeaknessCard strengths={b.strengths} weaknesses={b.weaknesses} />
+            </FadeInView>
+          );
+        }
+        if (b.type === 'timeline') {
+          return (
+            <FadeInView key={key}>
+              <LuckTimelineCard
+                ranges={b.ranges}
+                currentAge={b.currentAge}
+                worstYear={b.worstYear}
+              />
             </FadeInView>
           );
         }
