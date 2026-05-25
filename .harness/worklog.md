@@ -6,6 +6,51 @@
 
 ---
 
+## Session 2026-05-25 19:33 — Direction UI 통합 + LLM 흐름 안정화 + 20 섹션 계획
+
+### 작업 요약
+- **Direction UI 통합 (10 카테고리 화면 적용)** (`e64e8b6`):
+  - 옛 8 카테고리(`category-score.ts` + `arts-score` + `medical-score`)을 호출하던 화면 → 새 10 카테고리 `direction-system.ts`로 교체
+  - `DirectionEntry` 10 key 타입 + `DIRECTION_UI_LABELS` + `DEFAULT_RECOMMENDED_FIELDS` 추가
+  - `engine.ts`·`hydrate.ts`에서 `buildDirectionEntries(computeDirections(m))`로 교체. 기존 `recommendedFields`는 LLM prompt baseline용으로 합성 (호환)
+- **Vercel esbuild alias 버그 fix** (`e201d7c`):
+  - `lib/manse/engine.ts`가 `@/lib/direction-system` (value import)으로 새 모듈 호출 → Vercel serverless function이 esbuild로 번들 시 paths alias 해석 ✗
+  - "가족 만세력 보기" → FUNCTION_INVOCATION_FAILED. 상대 경로(`../direction-system`)로 변경.
+  - type-only import는 OK, value import는 반드시 상대 경로 필요
+- **만세력 → 정밀 진단 직행** (`e4c37b3`): `interpret-free` 우회 (사용자 동선 단축)
+- **정밀 진단 cache 무효화** (`27cc79e`): `PREMIUM_PROMPT_VERSION` `v3-16sections` → `v4-direction-v12`, `setPremiumInterpretText(null)` 허용 + mount useEffect로 매번 새 호출 (테스트 기간)
+- **DirectionCard mid 영역 누락 버그** (`5f0850b`): `mid.length > 0 && strong.length > 0` 조건이 strong 0일 때 mid 표시 ✗. `midDisplay` 분리로 fallback 시 나머지 mid 표시
+- **LLM hang 대응** (`a2a50de`):
+  - `interpret-premium.ts:490` prompt가 옛 "진로 방향성 8가지 (학자·연구/의약·치/...)" 라벨 사용 → V12 10 카테고리 한글명으로 갱신
+  - `StreamingBody`에 90초 timeout 추가 (Vercel maxDuration 300초보다 짧게)
+- **DirectionCard 다재다능 라벨 + StreamingBody 상세 로그** (`6d70491`):
+  - strong 0이면 mid 전체를 강한 카드 fallback (정보 손실 ✗)
+  - 강한 ≥ 4개면 "🌟 다재다능 — 강한 방향 N개" 라벨 + 안내문구
+  - reader done without done event 케이스 추가 (silent close → fullText 있으면 done 처리)
+  - 클라이언트 로그: `[StreamingBody /api/...] +Nms event { ... }` 상세
+- **StreamingBody useEffect deps 폭주 fix** (`ff53a6e`):
+  - 증상: `+0ms start fetch` → `+16ms aborted` → 20분 stuck
+  - 원인: `[endpoint, body, headers, onComplete, onError]` deps + parent에서 `body={{...}}` inline object → 매 렌더마다 새 ref → useEffect re-run → cleanup `ac.abort()` → 두 번째 mount에서 `startedRef true` → early return → fetch 다시 시작 ✗
+  - 수정: deps를 `[endpoint]`만 (string literal stable), startedRef로 한 번만 fetch 보장
+- **20 섹션 계획 합의**: 16 + 신규 4 (건강·엄마합·아빠합·강요금지). Part 1 (10) + Part 2 (10) + Deep-dive (1개 8000자). Phase 1-5 단계별 plan + 각 phase 테스트 plan 합의.
+
+### 실패한 시도
+- `@/lib/direction-system` value import → Vercel esbuild가 alias 해석 ✗ (1차 배포 실패)
+- StreamingBody useEffect 첫 timeout 추가 → 근본 원인(deps 폭주) 미발견 → 90초 timeout으로 hang은 막혔으나 abort 폭주는 여전히 fetch 즉시 중단. deps 축소가 진짜 fix.
+
+### 다음 액션
+- Phase 1: 신규 4 섹션 prompt 작성 + Part 1/2 분리 명세 + 테스트 스크립트
+- Phase 2-5: API 분리 → context 확장 → UI 3개 화면 → deep-dive 통합 (사용자 결정 5가지 합의 후 즉시 진행)
+
+### 사용자 결정 대기 (5가지)
+1. 20 섹션 분류 (친구 Part 2, 부모 합 분리, 사춘기 §13 통합) — 옵션 B
+2. 아빠 사주 없음 시 placeholder + 입력 유도 — 옵션 B
+3. Part 2 자동 prefetch — 옵션 B
+4. Deep-dive 호출 제한 — 테스트 기간 무제한
+5. 테스트 결과 저장 위치 — `.harness/test-results/phaseN-*.md`
+
+---
+
 ## Session 2026-05-25 17:14 — Direction System V1-V12 calibration + perfect fit (Step 0-6)
 
 ### 작업 요약

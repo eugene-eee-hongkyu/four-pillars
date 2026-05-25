@@ -6,27 +6,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-25 17:14
-## 마지막 업데이트: 2026-05-25 17:14
+## 마지막 실행: 2026-05-25 19:33
+## 마지막 업데이트: 2026-05-25 19:33
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Direction System V12 Loop 1200 prod 반영 완료 (perfect fit 7/7). 8명 ground truth (Eugene·박진우·승희·두흥·세형·윤수·상수 + 와이프 weight 0) primary 100% 정확. 5 fit detector 누적 (V10/V11/V12).
+- Direction UI 통합 + LLM 흐름 안정화 완료. 다음: 정밀 진단 20 섹션 + Part 1/2 분리 + Deep-dive 구조 (Phase 1-5 단계별 진행).
 
 ### 이어서 할 것
 
-1. (선택) 빈 4 카테고리 sample 모집 — scholar·education·global·practical (각 1-2명)
-2. (선택) UI 통합 — `direction-system.ts`는 prod에 있지만 화면 호출 ✗, 사용자 출력에 반영
-3. (선택) Mom test 진행 — 화면 + LLM narrative 정성 검증
+1. 사용자 결정 5가지 합의 후 Phase 1 시작 (신규 4 섹션 prompt 작성 + Part 1/2 분리 명세)
+2. Phase 2-5 순차 진행 (API 분리 → context 확장 → UI 3개 화면 → deep-dive 통합) — 각 phase 끝마다 자동 테스트
+3. (선택) Mom test 진행
 
 ### 막힌 것
 
-- 없음 (V12 perfect fit 7/7 완료)
+- 없음 (사용자 결정 대기 중)
 
 ### 사람 판단 필요
 
-- 다음 작업 우선순위 결정 (빈 카테고리 sample 모집 vs UI 통합 vs Mom test)
+- 5가지 결정 (20 섹션 분류·아빠 사주 placeholder·Part 2 prefetch·deep-dive 제한·테스트 결과 저장 위치)
+- Phase 4 UI 시각·UX 자연스러움 검증
+- Mom test 어머니 5명 정성 피드백
 
 ### 백로그 요약
 
@@ -108,9 +110,8 @@
 - [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증 + ANTHROPIC_MODEL_PREMIUM 분리 + 비용 3x 절감
 - [x] 100만 random 사주 시뮬 + cutoff 안정성 검증
 - [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐
-- [x] V1 30회 calibration loop 자동 실행 — Top 3 wgap 106-110
-- [x] V2 60회 calibration loop 자동 실행 — Top 3 wgap 89-96
-- [x] V1·V2 clamp fix + 정규화 + sample target v2 ⭐
+- [x] V1 30회 calibration loop 자동 실행
+- [x] V2 60회 calibration loop 자동 실행
 - [x] V3 75→100 detector pool + 90 시나리오 ⭐
 - [x] V4 학파 ≥ 2 검증 19 신규 detector + 60 시나리오 ⭐
 - [x] V5 관귀학관 등 4 신규 detector (라운드 2)
@@ -118,37 +119,40 @@
 - [x] Prod v8 hagun-tier 반영 (V6 #266 weight + 9/9 raw 정합) ⭐
 - [x] Hagun v8 점수 0~100 정규화 + calcConfidence v8 scale
 - [x] 정환 sample weight 0.5 (외부 변수)
-- [x] V7 30 시나리오 — Loop 298 best (홍규·세형·윤수·상수 2-2 이상)
-- [x] V8 정관격 학자형 detector + 30 시나리오 (재호 격국 잘못 식별)
-- [x] V9 정관격 시너지 콤보 3 detector — 재호 = 건록격 확정 ✗
-- [x] V10 비견격 학자형 콤보 4 detector — Loop 523 totalGap 21.5, 재호 1-3 ⭐
-- [x] 11 sample 정규화 표 출력 (홍규~재원)
+- [x] V7 30 시나리오 — Loop 298 best
+- [x] V8 정관격 학자형 detector
+- [x] V9 정관격 시너지 콤보 3 detector — 재호 = 건록격 확정
+- [x] V10 비견격 학자형 콤보 4 detector — Loop 523 totalGap 21.5 ⭐
+- [x] 11 sample 정규화 표 출력
 - [x] 김택범·박진우 신규 sample V10 평가
 - [x] 음력→양력 변환 lunar-typescript 활용 진단
 - [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
-- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 + push (`466fbf2`) ⭐
-- [x] tsconfig deprecated 옵션 정공 제거 (baseUrl·moduleResolution=node10) + run-calibration-v3 TDZ fix (`07ef4fd`)
+- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 (`466fbf2`) ⭐
+- [x] tsconfig deprecated 옵션 정공 제거 + run-calibration-v3 TDZ fix (`07ef4fd`)
 - [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성 완료
 - [x] Direction System V1-V12 — Step 0-6 전체 + perfect fit 7/7 ⭐
-  - [x] DIRECTION_SYSTEM_v1.md (시스템 개요)
-  - [x] DIRECTION_SIGNERS.md (50 시그너 + weight matrix)
-  - [x] run-direction-calibration-v1.ts (V1-V12 sweep)
-  - [x] 8명 ground truth 라벨링 (data.ts directionMain/Secondary)
-  - [x] DIRECTION_CALIBRATION_V1.md (sweep 결과)
-  - [x] lib/direction-system.ts prod 통합 (`53bbe7b`)
-  - [x] V10 Eugene·박진우 engineer fit (`ccc485c`)
-  - [x] V11 윤수·상수 business fit (`9ab1631`)
-  - [x] V12 세형 medical fit — perfect 7/7 (`865489d`)
-  - [x] DIRECTION_SCORING_v1.md (prod reference)
-- [ ] 빈 4 카테고리 sample 모집 (scholar·education·global·practical)
-- [ ] Direction UI 통합 (화면 호출 + 출력 가이드)
-- [ ] 음력 입력 UI 토글 추가 (선택)
+- [x] V12 Loop 720 hagun + 14명 정합 (`cb2df11`)
+- [x] Direction System V1 Loop 700 prod 통합 (`53bbe7b`)
+- [x] Direction V10·V11·V12 — Eugene·박진우·윤수·상수·세형 fit (`ccc485c`·`9ab1631`·`865489d`) ⭐ 7/7 perfect
+- [x] Direction UI 통합 — 화면에 10 카테고리 노출 (`e64e8b6`)
+- [x] Vercel esbuild alias 버그 fix (`e201d7c`)
+- [x] 만세력 → 정밀 진단 직행 (`e4c37b3`)
+- [x] 정밀 진단 cache 무효화 — PREMIUM_PROMPT_VERSION v4 (`27cc79e`)
+- [x] DirectionCard mid 영역 누락 + 다재다능 라벨 (`5f0850b`·`6d70491`)
+- [x] LLM hang 대응 — V12 prompt 갱신 + StreamingBody 90초 timeout (`a2a50de`)
+- [x] StreamingBody useEffect deps 폭주 fix (`ff53a6e`)
+- [x] 20 섹션 계획 + Phase 1-5 단계별 plan + 테스트 plan 합의
+- [ ] Phase 1: 신규 4 섹션 prompt 작성 (건강·엄마합·아빠합·강요금지) + Part 1/2 분리 명세
+- [ ] Phase 2: API 분리 (`/api/interpret-premium-part1`·`-part2`·`-deep`) + PREMIUM_PROMPT_VERSION v5
+- [ ] Phase 3: Context 확장 (premiumPart1Text·part2Text·deepDiveTexts)
+- [ ] Phase 4: UI 3개 화면 (interpret-premium 갱신·interpret-deep-select·interpret-deep)
+- [ ] Phase 5: Deep-dive 통합 + 비용 제한 결정 + 문서
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
-- [ ] V11 production deploy 모바일 시각 검증
-- [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + 약 영역 Haiku narrative
+- [ ] 음력 입력 UI 토글 추가 (선택)
+- [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + Part 1/2 정성 검증
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
-- [ ] 06 정환·08 세형 sample md v7 포맷 갱신 (현재 v3 포맷)
+- [ ] 06 정환·08 세형 sample md v7 포맷 갱신
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
-- [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행 + Authority·Entrepreneur·Action 5-10명 모집
+- [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행
 - [ ] 사주톡 10명 지인 테스트 계속 진행
 - [ ] sajutalk v2 완료 보고

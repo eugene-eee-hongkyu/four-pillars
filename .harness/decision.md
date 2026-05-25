@@ -93,3 +93,70 @@
   3. 명리적으로도 양인격(윤수)·편인격(상수)이 권력·전략·창업과 정합
 - **영향 범위**: `data.ts` 3명의 `expected.directionMain/Secondary/Weight` 필드만
 - **되돌리는 방법**: 각 sample의 expected 필드 원복
+
+---
+
+## 2026-05-25: 정밀 진단 20 섹션 + Part 1/2 분리 + Deep-dive 구조
+
+- **선택**: 16 섹션 → 20 섹션 (신규 4 추가) + Part 1 (10) / Part 2 (10) 2단계 + Deep-dive (사용자 선택 1개를 8000자 풀이)
+- **대안 검토**:
+  - **A: 16 섹션 유지 + Mom test 피드백 후 결정** — 안전, 그러나 어머니 핵심 관심 (부모 합·강요 금지·건강) 누락 그대로
+  - **B: 16 + 신규 추가만 (단일 호출 유지)** — 분량 한계 (max_tokens 8192 = 한국어 5500자)로 섹션당 표현이 더 짧아짐
+  - **C (선택): 20 섹션 + Part 분리 + Deep-dive** — 어머니 관심 영역 100% 커버 + 섹션당 평균 분량 60% ↑ (10×800자) + 특정 영역 deep-dive 8000자
+- **선택 이유**:
+  1. 어머니 실용 관심 영역 4개 추가 (부모 합 2·강요 금지·건강) — 기존 16개 학업/진로 중심에서 누락
+  2. Part 분리로 섹션당 평균 분량 60% ↑ (압축감 ↓, narrative 자연성 ↑)
+  3. Deep-dive로 흥미 영역 16배 더 자세 (8000자) — differentiator
+  4. 비용 합리: 단일 호출 $0.045 → Part 1+2 $0.09, + deep-dive $0.045 = 총 $0.135 (3배 증가, 절대 비용은 여전히 낮음)
+- **영향 범위**:
+  - `lib/prompts/interpret-premium.ts` (584 라인) → 3개 분리 (`-part1`·`-part2`·`-deep`)
+  - `app/api/interpret-premium+api.ts` → Part 1 전용 + 신규 `-part2`·`-deep` 2개
+  - `lib/flow/context.tsx` — state 3개 (part1·part2·deepDiveTexts) + setter 3개
+  - `app/(flow)/interpret-premium.tsx` — Part 1 → 더보기 → Part 2 → 선택 화면 흐름
+  - 신규 화면 2개 — `interpret-deep-select.tsx`, `interpret-deep.tsx`
+  - DB `interpretations.kind` enum 확장 (part1·part2·deep-N)
+  - PREMIUM_PROMPT_VERSION v4 → v5
+- **되돌리는 방법**:
+  1. PREMIUM_PROMPT_VERSION을 v4로 원복 (캐시 자동 invalidate)
+  2. `app/(flow)/interpret-premium.tsx`에서 Part 2/deep-dive 분기 제거 → 단일 호출 복원
+  3. `interpret-premium.ts` 단일 prompt 유지 (Part1/2/deep 분리 파일은 살려두기)
+
+---
+
+## 2026-05-25: Direction UI 통합 — 옵션 A (10 카테고리 전면 노출)
+
+- **선택**: 옵션 A — 새 10 카테고리 한글명을 그대로 화면에 노출 (학자·인문연구·과학·공학기술·...).
+- **대안 검토**:
+  - **A (선택)**: 새 10 카테고리 한글명 (`DIRECTION_UI_LABELS`) 그대로 화면 표시.
+  - **B**: 화면은 기존 8 카테고리 한글명 유지 + 내부 10 카테고리 일부 매핑 (교육·글로벌·실무 표시 ✗).
+- **선택 이유**:
+  1. 명세 일관성 (V12 calibration 10 카테고리와 화면 일치)
+  2. 신규 카테고리(education·global·practical) 정확 표시 — 어머니 정보 손실 ✗
+  3. 옛 8 카테고리 한글명(체육·군경·외과 등)이 V12 시그너와 매핑 어색
+- **영향 범위**: `components/manse/DirectionCard.tsx` import 대상, `engine.ts`·`hydrate.ts`의 `directions` 생성 로직
+- **되돌리는 방법**: `DirectionCard.tsx` import를 `category-score.ts`로 원복 + `engine.ts`의 `buildDirectionEntries` 호출을 옛 시그너처로 원복
+
+---
+
+## 2026-05-25: 만세력 → 정밀 진단 직행 (interpret-free 우회)
+
+- **선택**: `interpret-free` 라우트 건너뛰고 만세력에서 바로 정밀 진단으로 navigate.
+- **대안 검토**:
+  - **A (선택)**: `router.push('/(flow)/interpret-premium')` 직접 이동, 무료 진단 단계 제거
+  - **B**: 무료 진단 유지 + 흐름 그대로 (변경 ✗)
+- **선택 이유**: 사용자 동선 단축 + 무료/정밀 분리 가치가 현재 prod에서 약함 (대부분 사용자가 정밀까지 봐야 의미 있는 정보 받음)
+- **영향 범위**: `app/(flow)/child-manse.tsx:122` 한 줄 변경
+- **되돌리는 방법**: `router.push('/(flow)/interpret-free')`로 원복. `interpret-free` 라우트 자체는 살려둠 (향후 free tier 재활용)
+
+---
+
+## 2026-05-25: StreamingBody useEffect deps 축소 (abort 폭주 방지)
+
+- **선택**: `useEffect` deps를 `[endpoint, body, headers, onComplete, onError]` → `[endpoint]`만 (eslint-disable react-hooks/exhaustive-deps).
+- **대안 검토**:
+  - **A (선택)**: deps `[endpoint]`만, startedRef로 한 번만 보장
+  - **B**: parent에서 `useMemo`로 body/headers stable ref 만들기 — 호출자 마다 패턴 강제 (실수 가능성 ↑)
+  - **C**: deep equality 비교 (lodash isEqual) — 비효율
+- **선택 이유**: parent가 inline object 전달해도 안전. startedRef로 한 번만 fetch 보장이라 deps 변경해도 새 fetch 안 일어남 (의도)
+- **영향 범위**: `components/interpret/StreamingBody.tsx` deps array + 주석
+- **되돌리는 방법**: deps 원복. 단 호출자(interpret-premium.tsx)에서 body/handlers를 useMemo·useCallback 처리 필요
