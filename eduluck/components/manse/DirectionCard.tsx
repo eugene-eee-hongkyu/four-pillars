@@ -45,8 +45,10 @@ export function DirectionCard({ directions, compact = true }: Props) {
   const mid = directions.filter(d => d.level === '보통');
   const weak = directions.filter(d => d.level === '약');
 
-  // 모든 sample에서 최소 1개는 "강한 방향"이 있도록 fallback: 강이 0이면 보통 최상위를 강으로 승격 표시
+  // 모든 sample에서 최소 1개는 "강한 방향"이 있도록 fallback: 강이 0이면 보통 최상위 2개를 강으로 승격 표시
   const strongDisplay = strong.length > 0 ? strong : mid.slice(0, 2);
+  // fallback 시 strongDisplay에 쓰인 2개를 제외한 나머지 mid를 가능한 방향으로 표시 (10 카테고리 모두 보이게)
+  const midDisplay = strong.length > 0 ? mid : mid.slice(2);
 
   const active = activeKey ? directions.find(d => d.key === activeKey) ?? null : null;
 
@@ -110,14 +112,14 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </View>
         )}
 
-        {/* 가능한 방향 — Chip tag (secondary) */}
-        {mid.length > 0 && strong.length > 0 && (
+        {/* 가능한 방향 — Chip tag (secondary). strong이 0이면 strongDisplay에 쓰인 2개 제외한 나머지 */}
+        {midDisplay.length > 0 && (
           <View className="gap-1.5">
             <Text className="font-body text-label-md text-text-sub">
               ✏️ 가능한 방향
             </Text>
             <View className="flex-row flex-wrap gap-1.5">
-              {mid.map(d => (
+              {midDisplay.map(d => (
                 <Pressable
                   key={d.key}
                   onPress={() => setActiveKey(d.key)}
@@ -159,7 +161,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
               방향성 점수에 대해
             </Text>
             <Text className="font-body text-body-md text-text-pri leading-relaxed">
-              이 8개 방향은 명리학(자평명리 격국론 + 김기승 명리직업상담론 한국 응용) 관점에서 사주의 강점·기질을 분류한 것이에요.
+              이 10개 방향은 명리학(자평명리 격국론 + 김기승 명리직업상담론 + Holland RIASEC 진로흥미 융합) 관점에서 사주의 강점·기질을 분류한 것이에요.
             </Text>
             <View className="px-3 py-2 rounded-md bg-surface border border-outline-warm gap-1">
               <Text className="font-body text-body-md text-text-pri">
