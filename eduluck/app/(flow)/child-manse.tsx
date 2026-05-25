@@ -119,7 +119,7 @@ export default function ChildManse() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => router.push('/(flow)/interpret-free')}>학운 진단 받기</Button>
+        <Button onPress={() => router.push('/(flow)/interpret-premium')}>정밀 진단 받기</Button>
       </StickyCTA>
     </View>
   );
