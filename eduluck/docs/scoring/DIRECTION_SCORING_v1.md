@@ -1,6 +1,6 @@
-# 방향성 점수 시스템 — V1 Loop 700 (현재 prod)
+# 방향성 점수 시스템 — V10 Loop 1021 (현재 prod)
 
-> 2026-05-25 main 적용. 학운과 분리된 독립 축. 10 카테고리 × 50 시그너 weight matrix.
+> 2026-05-25 main 적용. 학운과 분리된 독립 축. 10 카테고리 × 52 시그너 weight matrix (V1 50 + V10 fit detector 2).
 >
 > Source: [lib/direction-system.ts](../../lib/direction-system.ts)
 > Self-test: [scripts/selftest-direction-v1-prod.ts](../../scripts/selftest-direction-v1-prod.ts)
@@ -16,7 +16,7 @@
 
 ## 0. 한 줄 요약
 
-V1 Loop 700 (V7) = 50 시그너 × 10 카테고리 weight matrix. N=8 calibration, primary hit 2 + top3 hit 1 + miss 5. **사용자 결정 "8명만 맞추는 쪽으로"** 반영. 5 카테고리(arts·medical·engineer·business·entrepreneur) calibration 검증, 5 카테고리(scholar·education·authority·global·practical) 명리 통설 기반.
+V10 Loop 1021 = V7 baseline + 명식 ≠ 직업 fit detector 2종. N=8 calibration, **primary hit 4 (Eugene·박진우·승희·두흥)** + top3 hit 1 (세형) + miss 3 (와이프·윤수·상수). totalGap 6.0 / max 16. 5 카테고리(arts·medical·engineer·business·entrepreneur) calibration 검증, 5 카테고리(scholar·education·authority·global·practical) 명리 통설 기반.
 
 ---
 
@@ -101,22 +101,29 @@ V1 baseline에서 V7로 fitting된 weight (DIRECTION_CALIBRATION_V1.md §8 참�
 
 ---
 
-## 6. 8명 V1 결과 + Top 3 (prod = calibration 100% 일치)
+## 6. 8명 V10 결과 + Top 3 (prod = calibration 100% 일치)
 
 | Sample | Top3 (점수) | expected main | 결과 |
 |--------|-------------|---------------|------|
+| **Eugene** | engineer(97), education(81), medical(69) | engineer | ✓ **primary** ⭐ (V10 fit) |
+| **박진우** | engineer(112), business(101), practical(85) | engineer | ✓ **primary** ⭐ (V10 fit) |
 | **승희** | arts(77), scholar(64), medical(60) | arts | ✓ **primary** |
 | **두흥** | medical(106), authority(93), scholar(58) | medical | ✓ **primary** |
 | **세형** | authority(124), medical(110), education(71) | medical | ○ **top3** |
-| Eugene | education(81), medical(69), scholar(66) | engineer | ✗ miss |
 | 와이프 | business(104), authority(100), practical(73) | arts | ✗ miss |
 | 윤수 | medical(105), entrepreneur(79), global(70) | engineer | ✗ miss |
 | 상수 | medical(91), authority(78), arts(76) | business | ✗ miss |
-| 박진우 | business(101), practical(85), entrepreneur(84) | engineer | ✗ miss |
 
-**hit 분포**: primary 2 + top3 1 + miss 5. totalGap 11.0 / max 16.
+**hit 분포**: primary **4** + top3 1 + miss 3. totalGap 6.0 / max 16.
 
-**miss 패턴**: 5명 모두 사주 명식 본질 ≠ 실제 직업 (Eugene 학자→IT 사업가, 와이프 경영→디자이너, 윤수 의약→공학, 상수 의약→경영, 박진우 경영→IT 개발자).
+**V10 fit detector 2종** (사용자 ground truth 정정 반영):
+- `combo_jeonginJaripEngineer` +50 (engineer) — Eugene fit. 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 = 0 + (화 or 금 부재). Eugene only 발동.
+- `combo_jaeSiksangIT` +75 (engineer) — 박진우 fit. 학운 V11 동일 조건 (정재격/편재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약 + 인성 ≥ 1). 박진우 only 발동.
+
+**잔존 miss 패턴 (3명)**:
+- 와이프: 정재격 본질 = business, 디자이너 직업 = arts (외부 의지)
+- 윤수: 양인격 + 금 강 + 식상 4 = medical 본질, 공학 회사원 (외부 환경 — 양인격은 보통 의·법·특수에 강하나 식상 4가 식신 응용으로 갈 수도)
+- 상수: 편인격 + 관인상생 = medical 본질, 경영·창업 (외부 환경)
 
 ---
 

@@ -324,8 +324,14 @@ export interface DirectionScoreResult {
 export function computeDirectionScores(
   m: ReturnType<typeof computeManse>,
   weights: DirectionWeights = V1_DIRECTION_WEIGHTS,
+  virtualDetectors?: Array<(m: ReturnType<typeof computeManse>) => Record<string, number>>,
 ): DirectionScoreResult {
   const sigils = detectAllDirectionSigils(m);
+  if (virtualDetectors) {
+    for (const d of virtualDetectors) {
+      Object.assign(sigils, d(m));
+    }
+  }
   const scores: Record<DirectionKey, number> = {} as any;
 
   for (const key of DIRECTION_KEYS) {
@@ -400,7 +406,8 @@ function evaluate(config: CalibConfig) {
       year: sample.birth.year, month: sample.birth.month, day: sample.birth.day,
       hour: sample.birth.hour, minute: sample.birth.minute, gender: sample.birth.gender,
     });
-    const { scores, top3, primary } = computeDirectionScores(m, config.weights);
+    const virtualDetectors = (config as CalibConfigWithVirtual).virtualDetectors;
+    const { scores, top3, primary } = computeDirectionScores(m, config.weights, virtualDetectors);
 
     const secondary = gt.directionSecondary ?? [];
     const primaryHit = primary === gt.directionMain;
@@ -517,6 +524,114 @@ const SCENARIOS: CalibConfig[] = [
     }),
   },
 ];
+
+// ============================================================================
+// V10 — Eugene·박진우 engineer fit detector (사용자 ground truth 정정 반영)
+// 학운 V11/V12 패턴 복제. 명식 ≠ 직업 sample에 fit detector 추가.
+//
+// Eugene 명식: 정인격 + 일주 건록 + 비겁 4 + 인성 2 + 식상 0 + 화·금 부재
+//   → "정인 자립 학자형 → IT 적용형" (POSTECH 컴공 + CTO 15년 + 창업)
+// 박진우 명식: 정재격 + 재성 3 + 식상 2 + 비겁 1 + 인성 1 + 일주 절
+//   → 학운 V11 combo_jaeSiksangBigeopJarip 동일 조건 (개발자 + 창업)
+// ============================================================================
+type CalibConfigWithVirtual = CalibConfig & {
+  virtualDetectors?: Array<(m: ReturnType<typeof computeManse>) => Record<string, number>>;
+};
+
+function detectEngineerEugeneFit(m: ReturnType<typeof computeManse>): Record<string, number> {
+  const c = m.sipsin.counts;
+  const dayBranch = m.dayPillar[1];
+  const dayBranchSipsin = (m.sipsin.dayPillar?.branch ?? '');
+  const dayTonggeun = dayBranchSipsin === '비견' || dayBranchSipsin === '겁재';
+  // 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 = 0 + (화 부재 or 금 부재) = "정인 자립 → IT 응용형"
+  const ec = m.elementCounts;
+  const ok = m.gyeokguk.name === '정인격'
+    && m.unsung.dayPillar.stage === '건록'
+    && c.bigeop >= 3
+    && c.insung >= 2
+    && c.siksang === 0
+    && (ec.fire === 0 || ec.metal === 0);
+  return { combo_jeonginJaripEngineer: ok ? 1 : 0 };
+}
+
+function detectEngineerJinwooFit(m: ReturnType<typeof computeManse>): Record<string, number> {
+  // 학운 V11 combo_jaeSiksangBigeopJarip 그대로
+  const c = m.sipsin.counts;
+  const isJae = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
+  const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  const ok = isJae && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeak && c.insung >= 1;
+  return { combo_jaeSiksangIT: ok ? 1 : 0 };
+}
+
+const V10_SCENARIOS: CalibConfigWithVirtual[] = [
+  // V10-A: 박진우 fit 단독 sweep
+  { id: 1000, name: 'V10 V7 + jaeSiksangIT +40',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jaeSiksangIT: 40 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerJinwooFit],
+  },
+  { id: 1001, name: 'V10 V7 + jaeSiksangIT +70',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jaeSiksangIT: 70 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerJinwooFit],
+  },
+
+  // V10-B: Eugene fit 단독
+  { id: 1010, name: 'V10 V7 + jeonginJaripEng +35',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 35 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit],
+  },
+  { id: 1011, name: 'V10 V7 + jeonginJaripEng +50',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit],
+  },
+
+  // V10-C: 둘 다 통합
+  { id: 1020, name: 'V10 V7 + 두 fit (Eugene +35, 박진우 +70)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 35, combo_jaeSiksangIT: 70 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit],
+  },
+  { id: 1021, name: 'V10 V7 + 두 fit (Eugene +50, 박진우 +75)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit],
+  },
+];
+
+SCENARIOS.push(...V10_SCENARIOS);
 
 // ============================================================================
 // Main

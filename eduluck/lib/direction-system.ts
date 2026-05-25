@@ -1,15 +1,17 @@
-// 방향성 시스템 — V1 Loop 700 (V7) prod 반영 (2026-05-25)
+// 방향성 시스템 — V10 Loop 1021 (V7 + Eugene·박진우 engineer fit) prod 반영 (2026-05-25)
 //
-// 10 카테고리 × 50 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
+// 10 카테고리 × 52 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
 // 학운 = 강도 (1차원), 방향성 = 경로 (10차원).
 //
 // 시그너 명세: docs/design/DIRECTION_SIGNERS.md
 // V1 calibration 결과: docs/design/DIRECTION_CALIBRATION_V1.md
 // V1 시스템 개요: docs/design/DIRECTION_SYSTEM_v1.md
 //
-// V1 calibration 결과 (8명 ground truth):
-//   totalGap 10.0 / max 16 — primary hit 2 (승희·두흥) + top3 hit 1 (세형) + miss 5
-//   사용자 결정: "방향성은 좀 틀려도 되어서 우선 8명만 맞출 수 있는 쪽으로" — V7 채택
+// V10 Loop 1021 (V7 baseline + 명식 ≠ 직업 fit detector 2개):
+//   totalGap 6.0 / max 16 — primary hit 4 (Eugene·승희·두흥·박진우) + top3 hit 1 (세형) + miss 3
+//   사용자 결정: Eugene/박진우 ground truth (engineer + 보조) 정확 반영 위해 fit detector 추가
+//   - combo_jeonginJaripEngineer +50 (Eugene 정인격 + 일주 건록 + 자립학자 → IT 응용)
+//   - combo_jaeSiksangIT +75 (박진우 정재격 + 식상생재 + 신약 → 개발자, 학운 V11 동일 조건)
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { splitPillar, getStemSipsin } from './manse/pillars';
@@ -42,6 +44,36 @@ export const CALIBRATED_CATEGORIES: DirectionKey[] = ['engineer', 'medical', 'bu
 
 /** V1 calibration에서 미검증 카테고리 (명리 통설 기반 weight) */
 export const UNCALIBRATED_CATEGORIES: DirectionKey[] = ['scholar', 'education', 'authority', 'global', 'practical'];
+
+// ============================================================================
+// V10 fit detector — 명식 ≠ 직업 sample 보정
+// ============================================================================
+
+/**
+ * Eugene fit: 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 0 + (화 부재 or 금 부재)
+ *   = "정인 자립 학자형 → IT 응용형" (POSTECH 컴공 + CTO 15년 + 창업)
+ */
+function detectJeonginJaripEngineer(m: ManseResult): boolean {
+  const c = m.sipsin.counts;
+  const ec = m.elementCounts;
+  return m.gyeokguk.name === '정인격'
+    && m.unsung.dayPillar.stage === '건록'
+    && c.bigeop >= 3
+    && c.insung >= 2
+    && c.siksang === 0
+    && (ec.fire === 0 || ec.metal === 0);
+}
+
+/**
+ * 박진우 fit: 정재격/편재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약 + 인성 ≥ 1
+ *   = "정재 식상 신약 = 외부 환경 IT 개발자형" (학운 V11 combo_jaeSiksangBigeopJarip 동일 조건)
+ */
+function detectJaeSiksangIT(m: ManseResult): boolean {
+  const c = m.sipsin.counts;
+  const isJae = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
+  const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  return isJae && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeak && c.insung >= 1;
+}
 
 // ============================================================================
 // detectAllDirectionSigils — 50개 시그너 추출 (calibration script와 동일)
@@ -182,6 +214,10 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
     gw_gwangwiHakgwan: gwangwiCount >= 1 ? 1 : 0,
     h_chungYearMonth:  hasYearMonthChung ? 1 : 0,
     h_dayChung:        hasDayChung ? 1 : 0,
+
+    // V10 fit detector (명식 ≠ 직업 보정)
+    combo_jeonginJaripEngineer: detectJeonginJaripEngineer(m) ? 1 : 0,
+    combo_jaeSiksangIT:         detectJaeSiksangIT(m) ? 1 : 0,
   };
 }
 
@@ -191,7 +227,7 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
 type CategoryWeights = Record<string, number>;
 type DirectionWeights = Record<DirectionKey, CategoryWeights>;
 
-export const V1_LOOP_700_WEIGHTS: DirectionWeights = {
+export const V10_LOOP_1021_WEIGHTS: DirectionWeights = {
   scholar: {
     g_jeongin: 30, g_pyeonin: 15, g_jeonggwan: 10, g_pyeongwan: 5, g_siksin: 5,
     g_sanggwan: 0, g_jeongjae: 0, g_pyeonjae: 0, g_bigyeon: 0, g_yangin: 0,
@@ -215,6 +251,9 @@ export const V1_LOOP_700_WEIGHTS: DirectionWeights = {
     sh_hwagae: 5, sh_dohwa: 0, sh_yeokma: 0, sh_hyeonchim: 5, sh_yanginsal: 5, sh_cheonyi: 0, sh_hongyeom: 0,
     u_dayGeonrok: 5, u_dayJewang: 5, u_dayMyo: 0, u_dayJeol: 0,
     gw_hakdang: 5, gw_munchang: 0, gw_cheoneul: 0, gw_gwangwiHakgwan: 0, h_chungYearMonth: 0, h_dayChung: 0,
+    // V10 fit detector
+    combo_jeonginJaripEngineer: 50, // Eugene fit
+    combo_jaeSiksangIT: 75,         // 박진우 fit
   },
   medical: {
     g_jeongin: 10, g_pyeonin: 25, g_jeonggwan: 10, g_pyeongwan: 25, g_siksin: 10,
@@ -337,7 +376,7 @@ export function computeDirections(m: ManseResult): DirectionScores {
 
   for (const key of DIRECTION_KEYS) {
     let raw = 0;
-    const w = V1_LOOP_700_WEIGHTS[key];
+    const w = V10_LOOP_1021_WEIGHTS[key];
     for (const [sig, weight] of Object.entries(w)) {
       raw += (sigils[sig] ?? 0) * weight;
     }

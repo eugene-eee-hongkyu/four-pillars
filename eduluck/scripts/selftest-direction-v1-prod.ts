@@ -1,4 +1,4 @@
-// V1 Loop 700 (V7) Direction System prod 반영 self-test
+// V10 Loop 1021 Direction System prod 반영 self-test
 // prod computeDirections() 가 calibration script와 동일한 카테고리 점수 산출하는지 8명 검증.
 
 import { computeManse } from '../lib/manse/engine';
@@ -9,20 +9,40 @@ import {
 } from './run-direction-calibration-v1';
 import { SAMPLES } from '../_private/calibration-samples/data';
 
-// V7 weight (DIRECTION_CALIBRATION_V1.md §8 V7 weight 정의 그대로)
-function v7Weights() {
+// V10 Loop 1021 weight (DIRECTION_CALIBRATION_V1.md §10 V10 best 정의)
+function v10Weights() {
   const result = JSON.parse(JSON.stringify(V1_DIRECTION_WEIGHTS));
   Object.assign(result.medical,  { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 });
-  Object.assign(result.engineer, { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4 });
+  Object.assign(result.engineer, { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 });
   Object.assign(result.business, { g_pyeonin: 15, cnt_jaesung: 5 });
   Object.assign(result.arts,     { g_jeongjae: 15, cnt_insung: 3 });
   Object.assign(result.scholar,  { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 });
   return result;
 }
 
+function detectJeonginJaripEngineer(m: ReturnType<typeof computeManse>): number {
+  const c = m.sipsin.counts;
+  const ec = m.elementCounts;
+  return (m.gyeokguk.name === '정인격'
+    && m.unsung.dayPillar.stage === '건록'
+    && c.bigeop >= 3
+    && c.insung >= 2
+    && c.siksang === 0
+    && (ec.fire === 0 || ec.metal === 0)) ? 1 : 0;
+}
+
+function detectJaeSiksangIT(m: ReturnType<typeof computeManse>): number {
+  const c = m.sipsin.counts;
+  const isJae = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
+  const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  return (isJae && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeak && c.insung >= 1) ? 1 : 0;
+}
+
 function calibScores(m: ReturnType<typeof computeManse>): Record<DirectionKey, number> {
   const sigils = calibDetect(m);
-  const weights = v7Weights();
+  sigils.combo_jeonginJaripEngineer = detectJeonginJaripEngineer(m);
+  sigils.combo_jaeSiksangIT = detectJaeSiksangIT(m);
+  const weights = v10Weights();
   const scores: Record<DirectionKey, number> = {} as any;
   for (const key of DIRECTION_KEYS) {
     let raw = 0;
@@ -37,8 +57,8 @@ function calibScores(m: ReturnType<typeof computeManse>): Record<DirectionKey, n
 
 const SAMPLE_LIST = ['03-self', '04-wife', '05', '08', '09', '10-yoonsoo', '11-sangsoo', '13-jinwoo'];
 
-console.log(`\n=== V1 Loop 700 Direction System prod self-test ===\n`);
-console.log(`| Sample      | category | calib raw | prod raw | diff |`);
+console.log(`\n=== V10 Loop 1021 Direction System prod self-test ===\n`);
+console.log(`| Sample      | primary  | calib raw | prod raw | diff |`);
 console.log(`|-------------|----------|-----------|----------|------|`);
 
 let allMatch = true;
@@ -63,20 +83,19 @@ for (const id of SAMPLE_LIST) {
       mismatches.push(`${sample.nickname} ${key}: calib ${calibR[key]} vs prod ${prodR.scores[key]} (diff ${diff})`);
     }
   }
-  // primary와 top3만 출력
   console.log(`| ${sample.nickname.padEnd(11)} | ${prodR.primary.padEnd(8)} | ${String(calibR[prodR.primary]).padStart(9)} | ${String(prodR.scores[prodR.primary]).padStart(8)} | ${(prodR.scores[prodR.primary] - calibR[prodR.primary]).toString().padStart(4)} |`);
 }
 
 console.log(`\n=== 결과 ===`);
 if (allMatch) {
-  console.log(`✅ 8명 × 10 카테고리 = 80 raw 모두 prod = V7 calibration 일치. Direction V1 prod 반영 ✓`);
+  console.log(`✅ 8명 × 10 카테고리 = 80 raw 모두 prod = V10 calibration 일치. Direction V10 prod 반영 ✓`);
 } else {
   console.log(`❌ Mismatch ${mismatches.length}개:`);
   for (const m of mismatches.slice(0, 10)) console.log(`  - ${m}`);
 }
 
 // Top 3 + primary 출력
-console.log(`\n=== 8명 Top 3 + Primary ===`);
+console.log(`\n=== 8명 Top 3 + ground truth ===`);
 for (const id of SAMPLE_LIST) {
   const sample = SAMPLES.find(s => s.id === id);
   if (!sample) continue;

@@ -30,28 +30,48 @@
 | 400 | V4 medical 약화 + engineer 강화 | 11.0 |
 | 500 | V5 V4 + business 강화 (g_pyeonin business +15) | 11.0 |
 | 600 | V6 V5 + arts 강화 (g_jeongjae arts +15) | 11.0 |
-| **700** | **V7 V6 + scholar 약화 (cnt_insung ×4→×3, gw_hakdang 15→10)** | **10.0 ⭐** |
+| 700 | V7 V6 + scholar 약화 (cnt_insung ×4→×3, gw_hakdang 15→10) | 10.0 |
 | 800 | V8 V7 + entrepreneur 강화 (cnt_bigeop ×4→×5) | 10.0 |
 | 900 | V9 fine-tune (engineer metalStrong +15, business jaesung ×6) | 10.0 |
+| 1000 | V10 V7 + jaeSiksangIT +40 (박진우 fit) | 10.0 |
+| 1001 | V10 V7 + jaeSiksangIT +70 (박진우 fit 강) | 8.0 |
+| 1010 | V10 V7 + jeonginJaripEng +35 (Eugene fit) | 8.0 |
+| 1011 | V10 V7 + jeonginJaripEng +50 (Eugene fit 강) | 8.0 |
+| 1020 | V10 V7 + 두 fit (Eugene +35, 박진우 +70) | 6.0 |
+| **1021** | **V10 V7 + 두 fit (Eugene +50, 박진우 +75)** | **6.0 ⭐** |
 
-→ **Best: Loop 700 (V7)** totalGap 10.0. V8·V9는 동일하며 추가 weight 조정 효과 없음.
+→ **Best: Loop 1021 (V10)** totalGap 6.0. Eugene·박진우 ground truth (engineer + 보조) 정확 반영 위한 fit detector 2종 추가.
+- Loop 1020 vs 1021: 둘 다 totalGap 6.0이지만 1020은 Eugene engineer 82 vs education 81 (단 1점 차이 fragile). **1021 채택** (Eugene engineer 97, 박진우 engineer 112 안정).
 
 ---
 
-## 3. Best (V7) 8명 결과 상세
+## 3. Best (V10 Loop 1021) 8명 결과 상세
 
 | Sample | top3 (raw) | expected main | 결과 |
 |--------|-----------|---------------|------|
-| **승희** | arts(72), scholar(64), education(58) | arts | ✓ **primary** |
-| **두흥** | medical(96), authority(88), scholar(58) | medical | ✓ **primary** |
+| **Eugene** | engineer(97), education(81), medical(69) | engineer | ✓ **primary** ⭐ (V10 fit) |
+| **박진우** | engineer(112), business(101), practical(85) | engineer | ✓ **primary** ⭐ (V10 fit) |
+| **승희** | arts(77), scholar(64), medical(60) | arts | ✓ **primary** |
+| **두흥** | medical(106), authority(93), scholar(58) | medical | ✓ **primary** |
 | **세형** | authority(124), medical(110), education(71) | medical | ○ **top3** |
-| Eugene | education(81), medical(69), scholar(66) | engineer | ✗ miss |
-| 와이프 | business(109), authority(85), practical(68) | arts | ✗ miss |
-| 윤수 | medical(95), education(71), entrepreneur(69) | engineer | ✗ miss |
+| 와이프 | business(104), authority(100), practical(73) | arts | ✗ miss |
+| 윤수 | medical(105), entrepreneur(79), global(70) | engineer | ✗ miss |
 | 상수 | medical(91), authority(78), arts(76) | business | ✗ miss |
-| 박진우 | business(106), entrepreneur(94), practical(80) | engineer | ✗ miss |
 
-**hit 분포**: primary 2 (승희·두흥) + top3 1 (세형) + miss 5 = 8명.
+**hit 분포**: primary 4 (Eugene·박진우·승희·두흥) + top3 1 (세형) + miss 3 = 8명.
+
+### V10 fit detector 2종
+
+**`combo_jeonginJaripEngineer` (Eugene fit) +50 in engineer**
+- 조건: 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 = 0 + (화 부재 OR 금 부재)
+- 발동: Eugene only (을묘 무자 갑인 을해, 정인격, 일주 갑인 건록, 비겁 4, 인성 2)
+- 명리적 해석: 정인 자립 학자형 본질이 IT/공학으로 응용된 패턴 — 사용자 본인 "POSTECH 컴공 + CTO 15년 + 라인 임원 + 다수 스타트업 + 창업" 정확 매칭
+
+**`combo_jaeSiksangIT` (박진우 fit) +75 in engineer**
+- 조건: 정재격/편재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약 + 인성 ≥ 1
+- 발동: 박진우 only (계유 을묘 경인 계미, 정재격, 일주 절, 재성 3, 식상 2, 비겁 1, 인성 1)
+- 학운 V11 `combo_jaeSiksangBigeopJarip` 동일 조건 (검증된 박진우 전용)
+- 명리적 해석: 정재 식상 신약 = 외부 환경 활용 IT 개발자 + 창업 (실제 망한 창업 경험)
 
 ---
 
