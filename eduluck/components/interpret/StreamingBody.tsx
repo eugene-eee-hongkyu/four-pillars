@@ -122,6 +122,9 @@ export function StreamingBody({
   const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
 
+  // 현재 청크 시작 시점 — 청크 reveal마다 reset되어 elapsedSec이 0부터 다시 카운트
+  const chunkStartedAtMsRef = useRef(Date.now());
+
   // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). 0 = 아직 첫 청크 미reveal.
   const [revealedSectionNum, setRevealedSectionNum] = useState(0);
   const revealedSectionNumRef = useRef(0);
@@ -132,10 +135,12 @@ export function StreamingBody({
   const maxSectionNum = sectionNums.length > 0 ? Math.max(...sectionNums) : 0;
   const minSectionNum = sectionNums.length > 0 ? Math.min(...sectionNums) : 1;
 
-  // elapsed time 카운터
+  // elapsed time 카운터 — chunkStartedAtMsRef 기준 (청크 reveal마다 0부터 다시)
   useEffect(() => {
     if (status === 'done' || status === 'error') return;
-    const t = setInterval(() => setElapsedSec(s => s + 1), 1000);
+    const t = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - chunkStartedAtMsRef.current) / 1000));
+    }, 1000);
     return () => clearInterval(t);
   }, [status]);
 
@@ -164,6 +169,9 @@ export function StreamingBody({
       revealedSectionNumRef.current = newRevealed;
       setRevealedSectionNum(newRevealed);
       setDisplayedText(newText);
+      // 청크 reveal 직후 elapsed reset — progress bar 0부터 다시 카운트
+      chunkStartedAtMsRef.current = Date.now();
+      setElapsedSec(0);
     };
 
     const interval = setInterval(tryReveal, REVEAL_POLL_MS);
@@ -178,6 +186,7 @@ export function StreamingBody({
     const ac = new AbortController();
     const tag = `[StreamingBody ${endpoint}]`;
     const startedAt = Date.now();
+    chunkStartedAtMsRef.current = startedAt;  // 첫 청크 카운트 기준점
     let firstDeltaAt = 0;
     let deltaCount = 0;
     const log = (...args: unknown[]) => console.log(tag, `+${Date.now() - startedAt}ms`, ...args);
@@ -326,34 +335,47 @@ export function StreamingBody({
     );
   }
 
-  // 통합 렌더 — 본문 위 + (아직 안 나온 섹션) skeleton 아래
+  // progress bar는 hiddenHeaders가 남아 있을 때만 표시 (마지막 청크 reveal 후 = 모두 표시 = 사라짐)
+  // 위치: 본문 도착 전 = 맨 위 / 본문 도착 후 = 본문 아래 · skeleton 위
+  const showProgressBar = !!expectedDurationSec && hiddenHeaders.length > 0;
+  const nextChunkLabel = (() => {
+    if (revealedSectionNum >= maxSectionNum) return null;
+    const next1 = revealedSectionNum + 1;
+    const next2 = Math.min(revealedSectionNum + 2, maxSectionNum);
+    return next1 === next2 ? `§${next1}` : `§${next1}·§${next2}`;
+  })();
+
+  const progressBlock = showProgressBar ? (
+    <View className="gap-2">
+      <View className="flex-row items-center justify-between">
+        <Text className="font-body text-label-sm text-text-sub">분석 진행</Text>
+        <Text className="font-body text-label-sm text-text-sub">{elapsedSec}초</Text>
+      </View>
+      <View className="h-1.5 rounded-full bg-outline-warm overflow-hidden">
+        <View
+          className="h-full rounded-full"
+          style={{
+            width: `${progress}%`,
+            backgroundColor: colors.secondary,
+          }}
+        />
+      </View>
+      {nextChunkLabel && (
+        <Text className="font-body text-label-sm text-text-sub mt-1">
+          {!hasText
+            ? `첫 부분은 ${nextChunkLabel}이 모두 정리되면 한 번에 표시돼요`
+            : `다음 부분 (${nextChunkLabel}) 정리 중`}
+        </Text>
+      )}
+    </View>
+  ) : null;
+
   return (
     <ScrollView className="p-card-padding" contentContainerClassName="gap-4">
-      {/* progress bar — elapsed만 표시, '예상 60초' 부정확 표시 제거 */}
-      {expectedDurationSec && (
-        <View className="gap-2">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-body text-label-sm text-text-sub">분석 진행</Text>
-            <Text className="font-body text-label-sm text-text-sub">{elapsedSec}초</Text>
-          </View>
-          <View className="h-1.5 rounded-full bg-outline-warm overflow-hidden">
-            <View
-              className="h-full rounded-full"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: colors.secondary,
-              }}
-            />
-          </View>
-          {!hasText && minSectionNum > 0 && (
-            <Text className="font-body text-label-sm text-text-sub mt-1">
-              첫 부분은 §{minSectionNum}·§{minSectionNum + 1}이 모두 정리되면 한 번에 표시돼요
-            </Text>
-          )}
-        </View>
-      )}
+      {/* progress bar 위치 1: 본문 도착 전 = 맨 위 */}
+      {!hasText && progressBlock}
 
-      {/* 시간 기반 단계 라벨 */}
+      {/* 시간 기반 단계 라벨 — 본문 도착 전만 */}
       {stages && stages.length > 0 && !hasText && (
         <View className="gap-1.5">
           {stages.map((stage, i) => {
@@ -382,6 +404,9 @@ export function StreamingBody({
       {/* 본문 — 청크 단위 reveal */}
       {hasText && <InterpretBody text={displayedText} />}
 
+      {/* progress bar 위치 2: 본문 도착 후 = 본문 아래 · skeleton 위 (남은 청크 있을 때만) */}
+      {hasText && progressBlock}
+
       {/* 아직 안 나온 섹션 skeleton */}
       {hiddenHeaders.length > 0 && (
         <View className="mt-3 gap-3 pt-3 border-t border-outline-warm">
@@ -391,16 +416,6 @@ export function StreamingBody({
           {hiddenHeaders.map((h) => (
             <SkeletonRow key={h} title={h} />
           ))}
-        </View>
-      )}
-
-      {/* streaming 라벨 — 다음 청크 정리 중 (시간 카운트다운 없음, 헤더 등장 기반이라) */}
-      {status === 'streaming' && hiddenHeaders.length > 0 && (
-        <View className="flex-row items-center gap-2 mt-2 opacity-70">
-          <PulseDot />
-          <Text className="font-body text-label-sm text-text-sub">
-            다음 부분 정리 중
-          </Text>
         </View>
       )}
     </ScrollView>
