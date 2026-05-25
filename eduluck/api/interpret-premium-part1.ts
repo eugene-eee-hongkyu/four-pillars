@@ -2,15 +2,15 @@
 // body: { sessionId, childSubjectId, motherSubjectId?, fatherSubjectId? }
 // Part 1: 시작·본질·강점·약점·환경·훈육·건강·엄마합·아빠합·강요금지
 
-import { getAnthropicClient, ANTHROPIC_MODEL_PREMIUM } from '@/lib/llm/client';
-import { sseResponse } from '@/lib/llm/stream-sse';
+import { getAnthropicClient, ANTHROPIC_MODEL } from '../lib/llm/client';
+import { sseResponse } from '../lib/llm/stream-sse';
 import {
   getInterpretPremiumPart1System,
   buildInterpretPremiumPart1Prompt,
-} from '@/lib/prompts/interpret-premium-part1';
-import type { InterpretPremiumContext } from '@/lib/prompts/interpret-premium-shared';
-import { hydrateManse } from '@/lib/manse/hydrate';
-import { getSupabaseServer } from '@/lib/supabase/server';
+} from '../lib/prompts/interpret-premium-part1';
+import type { InterpretPremiumContext } from '../lib/prompts/interpret-premium-shared';
+import { hydrateManse } from '../lib/manse/hydrate';
+import { getSupabaseServer } from '../lib/supabase/server';
 
 interface Body {
   sessionId: string;
@@ -20,6 +20,7 @@ interface Body {
 }
 
 export async function POST(request: Request) {
+  const t0 = Date.now();
   let body: Body;
   try {
     body = await request.json();
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
   if (!body.sessionId || !body.childSubjectId) {
     return Response.json({ error: 'missing required fields (sessionId/childSubjectId)' }, { status: 400 });
   }
+
+  console.log('[part1] start', { sessionId: body.sessionId, childId: body.childSubjectId, motherId: body.motherSubjectId, fatherId: body.fatherSubjectId });
 
   const sb = getSupabaseServer();
   const { data: child } = await sb.from('subjects').select('*').eq('id', body.childSubjectId).single();
@@ -43,6 +46,8 @@ export async function POST(request: Request) {
   const { data: father } = body.fatherSubjectId
     ? await sb.from('subjects').select('*').eq('id', body.fatherSubjectId).single()
     : { data: null };
+
+  console.log('[part1] fetched subjects', { t: Date.now() - t0, hasMother: !!mother, hasFather: !!father });
 
   const ctx: InterpretPremiumContext = {
     childNickname: child.nickname ?? '아이',
@@ -65,8 +70,10 @@ export async function POST(request: Request) {
   const system = getInterpretPremiumPart1System();
   const userMsg = buildInterpretPremiumPart1Prompt(ctx);
 
+  console.log('[part1] prompt prepared', { t: Date.now() - t0, systemLen: system.length, userLen: userMsg.length });
+
   const stream = getAnthropicClient().messages.stream({
-    model: ANTHROPIC_MODEL_PREMIUM,
+    model: ANTHROPIC_MODEL,
     max_tokens: 8192,
     temperature: 0.5,
     system,
@@ -86,12 +93,12 @@ export async function POST(request: Request) {
         mother_subject_id: body.motherSubjectId ?? null,
         body_text: bodyText,
         prompt_version: 'v5-20sections-split',
-        llm_model: ANTHROPIC_MODEL_PREMIUM,
+        llm_model: ANTHROPIC_MODEL,
       });
     } catch (e) {
-      console.error('[interpret-premium-part1] save failed', e);
+      console.error('[part1] save failed', e);
     }
   })();
 
-  return sseResponse(stream, 'sse-part1');
+  return sseResponse(stream, 'part1');
 }

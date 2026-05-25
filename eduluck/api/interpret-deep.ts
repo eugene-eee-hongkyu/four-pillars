@@ -1,16 +1,16 @@
-// POST /api/interpret-deep — v5 정밀 진단 Deep-dive (단일 섹션 5500~8000자) SSE
+// POST /api/interpret-deep — v5 Deep-dive (단일 섹션 5500~8000자) SSE
 // body: { sessionId, childSubjectId, section: 1~20, motherSubjectId?, fatherSubjectId? }
 
-import { getAnthropicClient, ANTHROPIC_MODEL_PREMIUM } from '@/lib/llm/client';
-import { sseResponse } from '@/lib/llm/stream-sse';
+import { getAnthropicClient, ANTHROPIC_MODEL } from '../lib/llm/client';
+import { sseResponse } from '../lib/llm/stream-sse';
 import {
   getInterpretDeepSystem,
   buildInterpretDeepPrompt,
   DEEP_SECTIONS,
-} from '@/lib/prompts/interpret-deep';
-import type { InterpretPremiumContext } from '@/lib/prompts/interpret-premium-shared';
-import { hydrateManse } from '@/lib/manse/hydrate';
-import { getSupabaseServer } from '@/lib/supabase/server';
+} from '../lib/prompts/interpret-deep';
+import type { InterpretPremiumContext } from '../lib/prompts/interpret-premium-shared';
+import { hydrateManse } from '../lib/manse/hydrate';
+import { getSupabaseServer } from '../lib/supabase/server';
 
 interface Body {
   sessionId: string;
@@ -21,6 +21,7 @@ interface Body {
 }
 
 export async function POST(request: Request) {
+  const t0 = Date.now();
   let body: Body;
   try {
     body = await request.json();
@@ -34,6 +35,8 @@ export async function POST(request: Request) {
   if (!body.section || !DEEP_SECTIONS[body.section]) {
     return Response.json({ error: `invalid section: ${body.section} (must be 1~20)` }, { status: 400 });
   }
+
+  console.log('[deep]', `§${body.section}`, 'start', { sessionId: body.sessionId, childId: body.childSubjectId });
 
   const sb = getSupabaseServer();
   const { data: child } = await sb.from('subjects').select('*').eq('id', body.childSubjectId).single();
@@ -69,8 +72,10 @@ export async function POST(request: Request) {
   const system = getInterpretDeepSystem();
   const userMsg = buildInterpretDeepPrompt(ctx, body.section);
 
+  console.log('[deep]', `§${body.section}`, 'prompt prepared', { t: Date.now() - t0, systemLen: system.length, userLen: userMsg.length });
+
   const stream = getAnthropicClient().messages.stream({
-    model: ANTHROPIC_MODEL_PREMIUM,
+    model: ANTHROPIC_MODEL,
     max_tokens: 8192,
     temperature: 0.5,
     system,
@@ -91,12 +96,12 @@ export async function POST(request: Request) {
         mother_subject_id: body.motherSubjectId ?? null,
         body_text: bodyText,
         prompt_version: 'v5-20sections-split',
-        llm_model: ANTHROPIC_MODEL_PREMIUM,
+        llm_model: ANTHROPIC_MODEL,
       });
     } catch (e) {
-      console.error(`[interpret-deep §${section}] save failed`, e);
+      console.error(`[deep] §${section} save failed`, e);
     }
   })();
 
-  return sseResponse(stream, `sse-deep-${section}`);
+  return sseResponse(stream, `deep-${section}`);
 }
