@@ -25,11 +25,19 @@ function loadInitial(): FlowState {
       if (merged.childManse) merged.childManse = hydrateManse(merged.childManse);
       if (merged.motherManse) merged.motherManse = hydrateManse(merged.motherManse);
       if (merged.fatherManse) merged.fatherManse = hydrateManse(merged.fatherManse);
-      // premium prompt 구조 버전 mismatch 시 캐시 무효 — 옛 14섹션 결과가
-      // 새 16섹션 prompt 도입 후에도 그대로 표시되는 문제 방지
+      // premium prompt 구조 버전 mismatch 시 모든 캐시 무효 (legacy + v5 part1/part2/deep)
       if (merged.premiumInterpretVersion !== PREMIUM_PROMPT_VERSION) {
         merged.premiumInterpretText = null;
         merged.premiumInterpretVersion = null;
+        merged.premiumPart1Text = null;
+        merged.premiumPart2Text = null;
+        merged.deepDiveTexts = {};
+      }
+      // 옛 schema는 신규 필드가 없으니 hydrate (Persistent 스키마 확장 시 hydrate 원칙)
+      if (merged.premiumPart1Text === undefined) merged.premiumPart1Text = null;
+      if (merged.premiumPart2Text === undefined) merged.premiumPart2Text = null;
+      if (!merged.deepDiveTexts || typeof merged.deepDiveTexts !== 'object') {
+        merged.deepDiveTexts = {};
       }
       return merged;
     }
@@ -116,14 +124,21 @@ export interface FlowState {
   parentEducationStatus: 'pending' | 'entered' | 'skipped';
 
   freeInterpretText: string | null;
+  /** v4 legacy 정밀 진단 (16섹션 단일 호출) — v5 전환 후 새 진단은 part1/part2/deep에 저장 */
   premiumInterpretText: string | null;
   /** premiumInterpretText의 prompt 버전 — 코드 PREMIUM_PROMPT_VERSION과 mismatch 시 캐시 무효 */
   premiumInterpretVersion: string | null;
+  /** v5 정밀 진단 Part 1 (10 섹션 — 본질·인성·관계·즉시 행동) */
+  premiumPart1Text: string | null;
+  /** v5 정밀 진단 Part 2 (10 섹션 — 학원·진로·미래) */
+  premiumPart2Text: string | null;
+  /** v5 Deep-dive 캐시 — section number → 풀이 텍스트 */
+  deepDiveTexts: Record<number, string>;
 }
 
-/** Premium prompt 구조 버전. 변경 시 클라이언트 캐시(localStorage premiumInterpretText) 자동 무효 */
-// V12 direction-system 통합 (2026-05-25) + 테스트 기간 cache 매번 무효 (interpret-premium.tsx mount)
-export const PREMIUM_PROMPT_VERSION = 'v4-direction-v12';
+/** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumInterpretText·premiumPart1Text·premiumPart2Text·deepDiveTexts 모두) */
+// v5-20sections-split — Part 1(10) + Part 2(10) + Deep-dive 분리 구조 (2026-05-25)
+export const PREMIUM_PROMPT_VERSION = 'v5-20sections-split';
 
 const initial: FlowState = {
   sessionId: null,
@@ -176,6 +191,9 @@ const initial: FlowState = {
   freeInterpretText: null,
   premiumInterpretText: null,
   premiumInterpretVersion: null,
+  premiumPart1Text: null,
+  premiumPart2Text: null,
+  deepDiveTexts: {},
 };
 
 interface FlowContextValue {
@@ -196,6 +214,14 @@ interface FlowContextValue {
   setParentEducationStatus: (status: 'entered' | 'skipped') => void;
   setFreeInterpretText: (t: string) => void;
   setPremiumInterpretText: (t: string | null) => void;
+  /** v5 Part 1 텍스트 설정. null 시 캐시 클리어 */
+  setPremiumPart1Text: (t: string | null) => void;
+  /** v5 Part 2 텍스트 설정. null 시 캐시 클리어 */
+  setPremiumPart2Text: (t: string | null) => void;
+  /** v5 Deep-dive 섹션별 텍스트 설정. text=null 시 그 섹션만 클리어 */
+  setDeepDiveText: (section: number, text: string | null) => void;
+  /** v5 모든 정밀 진단 캐시 초기화 (재진단·테스트용) */
+  resetPremiumV5: () => void;
   /** 어머니 정보·만세력 초기화 — 사용자가 옵션 입력 후 삭제 원하는 경우 */
   resetMother: () => void;
   /** 아빠 정보·만세력 초기화 */
@@ -262,6 +288,45 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       premiumInterpretVersion: t === null ? null : PREMIUM_PROMPT_VERSION,
     }));
   }, []);
+  const setPremiumPart1Text = useCallback((t: string | null) => {
+    setState((s) => ({
+      ...s,
+      premiumPart1Text: t,
+      premiumInterpretVersion: t === null && s.premiumPart2Text === null
+        ? null
+        : PREMIUM_PROMPT_VERSION,
+    }));
+  }, []);
+  const setPremiumPart2Text = useCallback((t: string | null) => {
+    setState((s) => ({
+      ...s,
+      premiumPart2Text: t,
+      premiumInterpretVersion: t === null && s.premiumPart1Text === null
+        ? null
+        : PREMIUM_PROMPT_VERSION,
+    }));
+  }, []);
+  const setDeepDiveText = useCallback((section: number, text: string | null) => {
+    setState((s) => {
+      const next = { ...s.deepDiveTexts };
+      if (text === null) {
+        delete next[section];
+      } else {
+        next[section] = text;
+      }
+      return { ...s, deepDiveTexts: next };
+    });
+  }, []);
+  const resetPremiumV5 = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      premiumPart1Text: null,
+      premiumPart2Text: null,
+      deepDiveTexts: {},
+      premiumInterpretText: null,
+      premiumInterpretVersion: null,
+    }));
+  }, []);
   const resetMother = useCallback(() => {
     setState((s) => ({
       ...s,
@@ -291,6 +356,9 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       freeInterpretText: null,
       premiumInterpretText: null,
       premiumInterpretVersion: null,
+      premiumPart1Text: null,
+      premiumPart2Text: null,
+      deepDiveTexts: {},
     }));
   }, []);
   const resetAll = useCallback(() => {
@@ -321,6 +389,10 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         resetAll,
         setFreeInterpretText,
         setPremiumInterpretText,
+        setPremiumPart1Text,
+        setPremiumPart2Text,
+        setDeepDiveText,
+        resetPremiumV5,
       }}
     >
       {children}
