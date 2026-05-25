@@ -6,33 +6,33 @@
 
 ---
 
-## 마지막 실행: 2026-05-24 20:18
-## 마지막 업데이트: 2026-05-24 20:18
+## 마지막 실행: 2026-05-25 15:59
+## 마지막 업데이트: 2026-05-25 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- tsconfig deprecated 옵션(baseUrl·moduleResolution=node10) 정공 제거 + run-calibration-v3 TDZ 버그 fix. IDE 경고 0, npm tsc 0 에러, 13명 selftest 일치, vitest 12/12 pass. `07ef4fd` push 완료.
+- DIRECTION_SYSTEM_v3 연구 및 구현 — 학운 30 티어와 방향성 10개 카테고리 분리 모델, 명리학·사회과학 진영 우려 5가지씩 통합 해결안 수립. N=7 ground truth (세형·두흥·윤수·박진우·Eugene·와이프·승희) 확정.
 
 ### 이어서 할 것
 
-1. (선택) UI 음력/양력 토글 추가 — `Lunar.fromYmd().getSolar()` 1줄 코드
-2. (선택) 영진 외부 의지 score 모듈 (사주 본질 학자형 ✗ + SKY 도달)
-3. (선택) V11 production deploy 모바일 시각 검증
+1. Eugene 복수 카테고리 매핑 케이스 결정 (A: 주 카테고리 1개 선택 vs B: 복수 카테고리 동시 기록)
+2. DIRECTION_SYSTEM_v3.md 구현 명세 작성 (10개 카테고리·점수 계산·UI 매핑)
+3. (선택) Mom test 10명 진행 — DirectionCard ⓘ + 환경 표현 검증
 
 ### 막힌 것
 
-- 영진 sample (정규화 14.9 vs 실제 경희대 4티어, 24 단계 빗나감): 사주 본질 학자형 ✗ + SKY/상위권 도달. 사주만으론 fit 불가, 외부 의지·환경 변수 별도 모듈 필요.
+- Eugene 카테고리 매핑 (과학·공학기술 + 경영·사업상경 vs 비대학·창업자립형 단일화): A/B 선택 필요
 
 ### 사람 판단 필요
 
-- 영진 패턴(사주 본질 ✗ + SKY) 외부 변수 모듈 도입 시점·범위
-- `eval-2-new-samples.ts` 처리 방향 (사용자가 원본 복원했으나 7개 타입 에러 잔존, V11 sweep으로 역할 대체됨 — 삭제 vs 라벨 갱신 후 유지)
+- Eugene 복수 카테고리 케이스 처리 방식 (학운은 hagunTier 1개, 방향성은 카테고리 10개 — 어떻게 매핑할지)
+- DIRECTION_SYSTEM_v3 구현 명세 우선순위 (즉시 시작 vs 다른 작업 후)
 
 ### 백로그 요약
 
-- 대기 중: 9개
-- 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
+- 대기 중: 11개
+- 최근 추가: 2026-05-25 — DIRECTION_SYSTEM_v3 구현 명세, Eugene 카테고리 케이스 결정
 
 ### 진행 상황
 
@@ -129,6 +129,9 @@
 - [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
 - [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 + push (`466fbf2`) ⭐
 - [x] tsconfig deprecated 옵션 정공 제거 (baseUrl·moduleResolution=node10) + run-calibration-v3 TDZ fix (`07ef4fd`)
+- [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성 완료
+- [ ] Eugene 복수 카테고리 매핑 케이스 (A vs B) 결정
+- [ ] DIRECTION_SYSTEM_v3.md 구현 명세 작성
 - [ ] 음력 입력 UI 토글 추가 (선택)
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
 - [ ] V11 production deploy 모바일 시각 검증
