@@ -185,8 +185,15 @@ interface Props {
   text: string;
 }
 
+/** LLM이 일부 섹션에서 출력하는 raw markdown bold(`**...**`)를 제거.
+ *  InterpretBody는 인라인 마크다운 파서가 없어 그대로 노출되므로 진입 단계에서 strip.
+ *  prompt 톤 가이드에서도 `**` 사용 금지를 강조하지만 LLM이 가끔 출력 → 클라이언트 safeguard. */
+function stripInlineMarkdown(input: string): string {
+  return input.replace(/\*\*/g, '');
+}
+
 export function InterpretBody({ text }: Props) {
-  const blocks = parseText(text);
+  const blocks = parseText(stripInlineMarkdown(text));
   const tldr = blocks.find(b => b.type === 'tldr');
   const signature = blocks.find(b => b.type === 'signature');
   const body = blocks.filter(b => b.type !== 'tldr' && b.type !== 'signature');
