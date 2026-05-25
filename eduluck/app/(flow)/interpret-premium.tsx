@@ -26,11 +26,12 @@ const PART1_SECTION_HEADERS = [
   '1. 시작', '2. 본질', '3. 강점', '4. 약점·주의', '5. 환경 설계',
   '6. 훈육 가이드', '7. 건강', '8. 엄마-자녀 합', '9. 아빠-자녀 합', '10. 강요 금지',
 ];
+// 첫 청크(§1·§2)가 reveal되기 전까지만 노출되는 stages.
+// 그 이후 단계는 본문이 직접 보여주고 progress bar 라벨이 '다음 부분 (§3·§4) 정리 중'으로
+// 표시되므로 stages로 가짜 진행을 미리 띄울 필요 ✗.
 const PART1_STAGES = [
   { at: 0, label: '사주 정리 중' },
-  { at: 10, label: '본질·강점·약점 풀이 중' },
-  { at: 25, label: '환경·훈육·건강 정리 중' },
-  { at: 45, label: '엄마·아빠 합 + 강요 금지 마무리' },
+  { at: 8, label: '시작·본질 정리 중' },
 ];
 
 // Part 2 — 10 섹션 skeleton 헤더
@@ -40,9 +41,7 @@ const PART2_SECTION_HEADERS = [
 ];
 const PART2_STAGES = [
   { at: 0, label: '진로·미래 정리 중' },
-  { at: 12, label: '학원·흐름·해외 풀이 중' },
-  { at: 28, label: '전공·학교 권유 정리 중' },
-  { at: 48, label: '조심한 해·효과적 액션·마무리' },
+  { at: 8, label: '친구·학원 정리 중' },
 ];
 
 export default function InterpretPremium() {
