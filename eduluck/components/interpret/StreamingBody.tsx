@@ -1,10 +1,22 @@
-// SSE 스트리밍 본문 — perception 최적화 (UX research v2 적용)
-// 미니/정밀 진단 둘 다 사용. 변경 사항:
+// SSE 스트리밍 본문 — 청크 reveal 모드 (글자 단위 streaming ✗)
+//   - 처음 10초: skeleton + progress bar + 단계 라벨 (본문 노출 ✗)
+//   - 10초 시점: 그때까지 수신된 본문 첫 청크로 한 번에 표시
+//   - 이후 20초 간격: 누적 수신분을 추가 청크로 한 번에 표시
+//   - stream done: 남은 본문 즉시 표시
+//
+//   이유: 글자 단위 갱신은 visual noise·읽기 방해. 청크로 모아 보여주면 한 호흡씩 차분히 읽을 수 있음.
+//
+// 그 외 perception 보조:
 //   A. 구조화 skeleton — 실제 섹션 헤더(예: "1. 본질", "2. 강점" ...)를 미리 노출
 //   C. 시간 기반 단계 라벨 — elapsed time → "사주 정리 중 → 본질 풀이 중" 진행 표시
 //   D. 정직한 progress bar — expectedDurationSec 기반 0~95% 비례 (가짜 100% ✗)
 //
 // 근거: Nielsen "Slow AI", Perplexity intermediate steps, NN/G structural skeleton
+
+/** 첫 청크 reveal까지 대기 (ms). 사용자가 본문 정리 중 인식. */
+const INITIAL_HOLD_MS = 10_000;
+/** 그 후 청크 간격 (ms). 사용자가 한 청크 읽는 동안 다음 청크 누적 수신. */
+const CHUNK_INTERVAL_MS = 20_000;
 
 import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, Animated } from 'react-native';
@@ -101,7 +113,12 @@ export function StreamingBody({
   stages,
   expectedDurationSec,
 }: Props) {
-  const [text, setText] = useState('');
+  // displayedText = 사용자에게 실제 보이는 본문 (청크 단위로만 갱신)
+  // fullTextRef = SSE 실시간 누적 (display는 안 됨)
+  const [displayedText, setDisplayedText] = useState('');
+  const fullTextRef = useRef('');
+  const displayedLenRef = useRef(0);
+  const [chunkCount, setChunkCount] = useState(0);
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
   const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
@@ -111,6 +128,31 @@ export function StreamingBody({
     if (status === 'done' || status === 'error') return;
     const t = setInterval(() => setElapsedSec(s => s + 1), 1000);
     return () => clearInterval(t);
+  }, [status]);
+
+  // 청크 reveal 타이머 — INITIAL_HOLD_MS 후 첫 청크, 이후 CHUNK_INTERVAL_MS 간격
+  useEffect(() => {
+    if (status === 'done' || status === 'error') return;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const revealLatest = () => {
+      const next = fullTextRef.current;
+      if (next.length > displayedLenRef.current) {
+        displayedLenRef.current = next.length;
+        setDisplayedText(next);
+        setChunkCount(c => c + 1);
+      }
+    };
+
+    const initialTimer = setTimeout(() => {
+      revealLatest();
+      interval = setInterval(revealLatest, CHUNK_INTERVAL_MS);
+    }, INITIAL_HOLD_MS);
+
+    return () => {
+      clearTimeout(initialTimer);
+      if (interval) clearInterval(interval);
+    };
   }, [status]);
 
   useEffect(() => {
@@ -159,6 +201,14 @@ export function StreamingBody({
         let fullText = '';
         setStatus('streaming');
 
+        const finalize = (finalText: string) => {
+          // 청크 reveal과 무관하게 done 시점에 즉시 전체 노출
+          fullTextRef.current = finalText;
+          displayedLenRef.current = finalText.length;
+          setDisplayedText(finalText);
+          if (chunkCount === 0) setChunkCount(1);
+        };
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -166,6 +216,7 @@ export function StreamingBody({
             log('reader done (without done event)', { deltaCount, fullTextLen: fullText.length });
             clearTimeout(timeoutId);
             if (fullText.length > 0) {
+              finalize(fullText);
               setStatus('done');
               onComplete?.(fullText);
             } else {
@@ -184,17 +235,19 @@ export function StreamingBody({
           for (const ev of parseSseChunk(ready)) {
             if (ev.event === 'delta' && ev.data.text) {
               fullText += ev.data.text;
+              fullTextRef.current = fullText;  // reveal timer가 polling
               deltaCount++;
               if (firstDeltaAt === 0) {
                 firstDeltaAt = Date.now() - startedAt;
                 log('FIRST delta', { firstDeltaAt });
               }
-              setText(fullText);
+              // setDisplayedText 호출 ✗ — reveal timer가 청크 단위로 갱신
             } else if (ev.event === 'done') {
               log('DONE event', { deltaCount, fullTextLen: fullText.length, elapsedMs: Date.now() - startedAt });
               clearTimeout(timeoutId);
-              setStatus('done');
               const final = ev.data.fullText ?? fullText;
+              finalize(final);
+              setStatus('done');
               onComplete?.(final);
             } else if (ev.event === 'error') {
               log('ERROR event', { message: ev.data.message, deltaCount });
@@ -227,11 +280,13 @@ export function StreamingBody({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
-  // 첫 본문이 도착했는지
-  const hasText = text.length > 0;
+  // 첫 청크 reveal 후 본문 노출. SSE는 더 빨리 수신되지만 청크 전까지 안 보임.
+  const hasText = displayedText.length > 0;
   const progress = status === 'done' ? 100 : (expectedDurationSec ? calcProgress(elapsedSec, expectedDurationSec) : 0);
   const stageIdx = stages ? currentStageIndex(elapsedSec, stages) : 0;
   const hasProgressUI = !!(expectedDurationSec || stages?.length || sectionHeaders?.length);
+  // 첫 청크 대기 중 남은 초 (10초 카운트다운)
+  const initialHoldRemainSec = Math.max(0, Math.ceil(INITIAL_HOLD_MS / 1000) - elapsedSec);
 
   if (status === 'error') {
     return (
@@ -279,6 +334,11 @@ export function StreamingBody({
                 }}
               />
             </View>
+            {initialHoldRemainSec > 0 && (
+              <Text className="font-body text-label-sm text-text-sub mt-1">
+                첫 부분이 {initialHoldRemainSec}초 후 한 번에 표시돼요
+              </Text>
+            )}
           </View>
         )}
 
@@ -321,15 +381,15 @@ export function StreamingBody({
     );
   }
 
-  // 본문 도착 후 — InterpretBody 렌더 (B·E는 InterpretBody 내부)
+  // 본문 도착 후 — InterpretBody 렌더 (청크 단위 갱신)
   return (
     <ScrollView className="p-card-padding" contentContainerClassName="gap-4">
-      <InterpretBody text={text} />
+      <InterpretBody text={displayedText} />
       {status === 'streaming' && (
         <View className="flex-row items-center gap-2 mt-2 opacity-70">
           <PulseDot />
           <Text className="font-body text-label-sm text-text-sub">
-            {stages?.[stageIdx]?.label ?? '정리 중...'} · {elapsedSec}초
+            다음 부분 정리 중 · {elapsedSec}초
           </Text>
         </View>
       )}
