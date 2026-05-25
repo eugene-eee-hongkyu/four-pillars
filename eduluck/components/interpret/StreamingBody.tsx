@@ -13,10 +13,10 @@
 //
 // 근거: Nielsen "Slow AI", Perplexity intermediate steps, NN/G structural skeleton
 
-/** 첫 청크 reveal까지 대기 (ms). 사용자가 본문 정리 중 인식. */
-const INITIAL_HOLD_MS = 10_000;
-/** 그 후 청크 간격 (ms). 사용자가 한 청크 읽는 동안 다음 청크 누적 수신. */
+/** 청크 간격 (ms). 첫 청크·이후 청크 모두 동일 — 사용자가 한 청크 읽는 동안 다음 청크 수신.
+ *  10초로 짧게 했더니 첫 청크 분량이 적어 읽을거리 부족 (사용자 피드백). */
 const CHUNK_INTERVAL_MS = 20_000;
+const CHUNK_INTERVAL_SEC = CHUNK_INTERVAL_MS / 1000;
 
 import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, Animated } from 'react-native';
@@ -122,6 +122,8 @@ export function StreamingBody({
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
   const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
+  // 마지막 청크 reveal 시점 (또는 fetch 시작 시점) — 다음 청크까지 카운트다운 계산용
+  const lastRevealAtMsRef = useRef<number>(0);
 
   // elapsed time 카운터 — 1초마다 갱신 (단계 라벨·progress bar 둘 다 사용)
   useEffect(() => {
@@ -130,10 +132,9 @@ export function StreamingBody({
     return () => clearInterval(t);
   }, [status]);
 
-  // 청크 reveal 타이머 — INITIAL_HOLD_MS 후 첫 청크, 이후 CHUNK_INTERVAL_MS 간격
+  // 청크 reveal 타이머 — CHUNK_INTERVAL_MS 간격 (첫 청크도 동일 간격)
   useEffect(() => {
     if (status === 'done' || status === 'error') return;
-    let interval: ReturnType<typeof setInterval> | null = null;
 
     const revealLatest = () => {
       const next = fullTextRef.current;
@@ -142,17 +143,11 @@ export function StreamingBody({
         setDisplayedText(next);
         setChunkCount(c => c + 1);
       }
+      lastRevealAtMsRef.current = Date.now();
     };
 
-    const initialTimer = setTimeout(() => {
-      revealLatest();
-      interval = setInterval(revealLatest, CHUNK_INTERVAL_MS);
-    }, INITIAL_HOLD_MS);
-
-    return () => {
-      clearTimeout(initialTimer);
-      if (interval) clearInterval(interval);
-    };
+    const interval = setInterval(revealLatest, CHUNK_INTERVAL_MS);
+    return () => clearInterval(interval);
   }, [status]);
 
   useEffect(() => {
@@ -162,6 +157,7 @@ export function StreamingBody({
     const ac = new AbortController();
     const tag = `[StreamingBody ${endpoint}]`;
     const startedAt = Date.now();
+    lastRevealAtMsRef.current = startedAt;  // 첫 청크 카운트다운 기준점
     let firstDeltaAt = 0;
     let deltaCount = 0;
     const log = (...args: unknown[]) => console.log(tag, `+${Date.now() - startedAt}ms`, ...args);
@@ -285,8 +281,16 @@ export function StreamingBody({
   const progress = status === 'done' ? 100 : (expectedDurationSec ? calcProgress(elapsedSec, expectedDurationSec) : 0);
   const stageIdx = stages ? currentStageIndex(elapsedSec, stages) : 0;
   const hasProgressUI = !!(expectedDurationSec || stages?.length || sectionHeaders?.length);
-  // 첫 청크 대기 중 남은 초 (10초 카운트다운)
-  const initialHoldRemainSec = Math.max(0, Math.ceil(INITIAL_HOLD_MS / 1000) - elapsedSec);
+  // 다음 청크까지 남은 초 카운트다운 (CHUNK_INTERVAL_SEC → 0)
+  // elapsedSec dep으로 매초 re-render되므로 Date.now() 기반 derived 값 자연 갱신
+  const nextChunkRemainSec = (() => {
+    if (status === 'done' || status === 'error') return 0;
+    if (lastRevealAtMsRef.current === 0) return CHUNK_INTERVAL_SEC;
+    const remainMs = CHUNK_INTERVAL_MS - (Date.now() - lastRevealAtMsRef.current);
+    return Math.max(0, Math.ceil(remainMs / 1000));
+  })();
+  // elapsedSec를 hook deps에 명시적으로 참조해 매초 derived 재계산 보장
+  void elapsedSec;
 
   if (status === 'error') {
     return (
@@ -334,9 +338,9 @@ export function StreamingBody({
                 }}
               />
             </View>
-            {initialHoldRemainSec > 0 && (
+            {!hasText && (
               <Text className="font-body text-label-sm text-text-sub mt-1">
-                첫 부분이 {initialHoldRemainSec}초 후 한 번에 표시돼요
+                첫 부분이 {nextChunkRemainSec}초 후 한 번에 표시돼요
               </Text>
             )}
           </View>
@@ -389,7 +393,7 @@ export function StreamingBody({
         <View className="flex-row items-center gap-2 mt-2 opacity-70">
           <PulseDot />
           <Text className="font-body text-label-sm text-text-sub">
-            다음 부분 정리 중 · {elapsedSec}초
+            다음 부분 {nextChunkRemainSec}초 후 표시
           </Text>
         </View>
       )}
