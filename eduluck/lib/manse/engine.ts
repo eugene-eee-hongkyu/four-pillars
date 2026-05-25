@@ -13,7 +13,8 @@ import { calcNapum, type NapumResult } from './napum';
 import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
-import { calcCategoryScores, buildDirectionEntries, type CategoryScores, type DirectionEntry } from './category-score';
+import { calcCategoryScores, type CategoryScores } from './category-score';
+import { computeDirections, buildDirectionEntries, type DirectionEntry } from '@/lib/direction-system';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';
@@ -186,7 +187,21 @@ export function computeManse(input: ManseInput): ManseResult {
     unsung,
     elementCounts,
   });
-  const directions = buildDirectionEntries(categoryScores, artsScore, medicalScore);
+  // V12 Direction System (10 카테고리) — UI directions 생성
+  // computeDirections는 ManseResult 완전체에서 필요 필드만 사용 — partial로 충분
+  const directionScores = computeDirections({
+    yearPillar: raw.yearPillar, monthPillar: raw.monthPillar, dayPillar: raw.dayPillar, hourPillar,
+    shensha, sipsin, gyeokguk, unsung, elementCounts,
+  } as any);
+  const directions = buildDirectionEntries(directionScores, {
+    scholar:      categoryScores.scholar.recommendedFields,
+    engineer:     categoryScores.engineer.recommendedFields,
+    business:     categoryScores.business.recommendedFields,
+    authority:    categoryScores.authority.recommendedFields,
+    entrepreneur: categoryScores.entrepreneur.recommendedFields,
+    arts:         artsScore.recommendedFields,
+    medical:      medicalScore.recommendedFields,
+  });
   const studentTraits = calcStudentTraitsWithPercentile({
     shensha,
     sipsin,

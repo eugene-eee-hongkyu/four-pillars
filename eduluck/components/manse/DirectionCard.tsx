@@ -12,7 +12,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Modal } from '@/components/ui/Modal';
-import type { DirectionEntry, CategoryLevel } from '@/lib/manse/category-score';
+import type { DirectionEntry, DirectionLevel as CategoryLevel } from '@/lib/direction-system';
 
 interface Props {
   directions: DirectionEntry[];

@@ -18,7 +18,8 @@ import { calcHapchunh } from './hapchunh';
 import { calcAbroadScore } from './abroad-score';
 import { calcArtsScore } from './arts-score';
 import { calcMedicalScore } from './medical-score';
-import { calcCategoryScores, buildDirectionEntries } from './category-score';
+import { calcCategoryScores } from './category-score';
+import { computeDirections, buildDirectionEntries } from '@/lib/direction-system';
 import { calcStudentTraitsWithPercentile } from './student-traits';
 import { splitPillar, countElements, BRANCH_ELEMENT, STEM_ELEMENT } from './pillars';
 import { calcAllJijanggan } from './jijanggan';
@@ -103,7 +104,21 @@ export function hydrateManse(m: ManseResult): ManseResult {
   const categoryScores = m.categoryScores ?? calcCategoryScores({
     shensha, sipsin, gyeokguk, unsung, elementCounts,
   });
-  const directions = m.directions ?? buildDirectionEntries(categoryScores, artsScore, medicalScore);
+  const directions = m.directions ?? (() => {
+    const directionScores = computeDirections({
+      yearPillar: m.yearPillar, monthPillar: m.monthPillar, dayPillar: m.dayPillar, hourPillar: m.hourPillar,
+      shensha, sipsin, gyeokguk, unsung, elementCounts,
+    } as any);
+    return buildDirectionEntries(directionScores, {
+      scholar:      categoryScores.scholar.recommendedFields,
+      engineer:     categoryScores.engineer.recommendedFields,
+      business:     categoryScores.business.recommendedFields,
+      authority:    categoryScores.authority.recommendedFields,
+      entrepreneur: categoryScores.entrepreneur.recommendedFields,
+      arts:         artsScore.recommendedFields,
+      medical:      medicalScore.recommendedFields,
+    });
+  })();
   const studentTraits = m.studentTraits ?? calcStudentTraitsWithPercentile({
     shensha, sipsin, gyeokguk, unsung, elementCounts,
   });

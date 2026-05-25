@@ -12,12 +12,13 @@
 
 import { computeManse } from '../lib/manse/engine';
 import { SAMPLES } from '../_private/calibration-samples/data';
-import type { DirectionEntry } from '../lib/manse/category-score';
+import type { DirectionEntry } from '../lib/direction-system';
 
 const TIER1_IDS = ['03-self', '06', '08', '10-yoonsoo', '11-sangsoo'];
 const CATEGORY_ORDER: DirectionEntry['key'][] = [
   'scholar', 'medical', 'authority', 'engineer',
-  'business', 'entrepreneur', 'arts', 'action',
+  'business', 'entrepreneur', 'arts',
+  'education', 'global', 'practical',
 ];
 
 // LCG seed-able PRNG

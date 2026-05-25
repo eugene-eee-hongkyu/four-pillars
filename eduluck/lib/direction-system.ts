@@ -455,6 +455,85 @@ export interface DirectionScores {
   paerin: 'stable' | 'risk' | 'mixed';
 }
 
+// ============================================================================
+// UI 통합 — DirectionEntry (10 카테고리) + buildDirectionEntries
+// ============================================================================
+export type DirectionLevel = '약' | '보통' | '강' | '매우 강';
+
+export interface DirectionEntry {
+  key: DirectionKey;
+  label: string;
+  emoji: string;
+  level: DirectionLevel;
+  total: number;
+  recommendedFields: string[];
+}
+
+export const DIRECTION_UI_LABELS: Record<DirectionKey, { label: string; emoji: string }> = {
+  scholar:      { label: '학자·인문연구', emoji: '🎓' },
+  engineer:     { label: '과학·공학기술', emoji: '💻' },
+  medical:      { label: '의약·생명정밀', emoji: '⚕️' },
+  business:     { label: '경영·사업상경', emoji: '💼' },
+  arts:         { label: '예술·표현창작', emoji: '🎨' },
+  education:    { label: '교육·상담돌봄', emoji: '👨‍🏫' },
+  authority:    { label: '공무·법·조직', emoji: '⚖️' },
+  global:       { label: '글로벌·유학외국', emoji: '🌏' },
+  practical:    { label: '실무·현장기술', emoji: '🔧' },
+  entrepreneur: { label: '비대학·창업자립', emoji: '🚀' },
+};
+
+const DEFAULT_RECOMMENDED_FIELDS: Record<DirectionKey, string[]> = {
+  scholar:      ['인문·사회과학', '연구·학술', '환경: 깊이 파고드는 자율 공간'],
+  engineer:     ['공학·컴퓨터·데이터', '기술·제조', '환경: 만들고 분해하는 실습 환경'],
+  medical:      ['의예·약학·간호', '생명과학·돌봄', '환경: 정밀·헌신·생명 중심'],
+  business:     ['경영·경제', '전략·기획·금융', '환경: 사람·돈·조직 흐름'],
+  arts:         ['미술·디자인', '음악·공연·콘텐츠', '환경: 표현·창작 자유'],
+  education:    ['교사·교수·상담사', '복지·돌봄·간호', '환경: 안정·인간관계·장기 신뢰'],
+  authority:    ['공무원·법조', '경찰·군인·외교', '환경: 규율·권위·안정 조직'],
+  global:       ['해외대·국제학', '외국어·통상·외교', '환경: 이동·다양성·외부 도전'],
+  practical:    ['전문대·폴리텍', '기술자격·현장직', '환경: 손기술·실용성·즉시 결과'],
+  entrepreneur: ['창업·자영업', '가업·조기 취업', '환경: 자기 페이스·위험 감수'],
+};
+
+/** raw 점수 → 강도 level. cutoff: 매우 강 ≥100, 강 ≥75, 보통 ≥50, 약 <50 */
+function scoreToLevel(score: number): DirectionLevel {
+  if (score >= 100) return '매우 강';
+  if (score >= 75) return '강';
+  if (score >= 50) return '보통';
+  return '약';
+}
+
+/** 10 카테고리 점수를 UI용 DirectionEntry[]로 변환. 기존 categoryScores·artsScore·medicalScore의
+ *  recommendedFields가 있으면 우선 사용 (LLM prompt와 일관), 없는 신규 4 카테고리는 기본값. */
+export function buildDirectionEntries(
+  scores: DirectionScores,
+  existingRecommendedFields?: Partial<Record<DirectionKey, string[]>>,
+): DirectionEntry[] {
+  const entries: DirectionEntry[] = DIRECTION_KEYS.map(key => {
+    const total = scores.scores[key];
+    const ui = DIRECTION_UI_LABELS[key];
+    const existing = existingRecommendedFields?.[key];
+    // 기존 모듈이 빈 배열을 반환하는 경우(약·보통 level)에도 default로 fallback
+    const recommendedFields = (existing && existing.length > 0) ? existing : DEFAULT_RECOMMENDED_FIELDS[key];
+    return {
+      key, label: ui.label, emoji: ui.emoji,
+      level: scoreToLevel(total),
+      total, recommendedFields,
+    };
+  });
+  // 정렬: 강도 우선 (매우 강 > 강 > 보통 > 약), 동률 시 total 큰 순
+  const levelRank = (l: DirectionLevel): number =>
+    l === '매우 강' ? 4 : l === '강' ? 3 : l === '보통' ? 2 : 1;
+  return entries.sort((a, b) => {
+    const r = levelRank(b.level) - levelRank(a.level);
+    if (r !== 0) return r;
+    return b.total - a.total;
+  });
+}
+
+// ============================================================================
+// computeDirections — 카테고리별 raw 점수 산출
+// ============================================================================
 export function computeDirections(m: ManseResult): DirectionScores {
   const sigils = detectAllDirectionSigils(m);
   const scores: Record<DirectionKey, number> = {} as any;
