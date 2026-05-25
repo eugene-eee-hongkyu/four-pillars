@@ -45,10 +45,14 @@ export function DirectionCard({ directions, compact = true }: Props) {
   const mid = directions.filter(d => d.level === '보통');
   const weak = directions.filter(d => d.level === '약');
 
-  // 모든 sample에서 최소 1개는 "강한 방향"이 있도록 fallback: 강이 0이면 보통 최상위 2개를 강으로 승격 표시
-  const strongDisplay = strong.length > 0 ? strong : mid.slice(0, 2);
-  // fallback 시 strongDisplay에 쓰인 2개를 제외한 나머지 mid를 가능한 방향으로 표시 (10 카테고리 모두 보이게)
-  const midDisplay = strong.length > 0 ? mid : mid.slice(2);
+  // strong이 0이면 mid 전체를 fallback (재호처럼 모두 보통 동률 sample에서 임의 2개만 뽑으면 정보 손실)
+  // 4개 이상 강하면 "다재다능" 라벨 (긍정 해석 — 여러 영역 골고루 강함)
+  const strongDisplay = strong.length > 0 ? strong : mid;
+  const midDisplay = strong.length > 0 ? mid : [];
+  const isVersatile = strongDisplay.length >= 4;
+  const strongHeaderLabel = isVersatile
+    ? `🌟 다재다능 — 강한 방향 ${strongDisplay.length}개`
+    : `🌟 강한 방향 (${strongDisplay.length})`;
 
   const active = activeKey ? directions.find(d => d.key === activeKey) ?? null : null;
 
@@ -99,15 +103,22 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </Text>
         </View>
 
-        {/* 강한 방향 — Filled card (primary) */}
+        {/* 강한 방향 — Filled card (primary). 4+ 카테고리면 "다재다능" 라벨 */}
         {strongDisplay.length > 0 && (
           <View className="gap-2">
             <View className="flex-row items-baseline justify-between">
               <Text className="font-body-bold text-label-md text-text-sub">
-                🌟 강한 방향 ({strongDisplay.length})
+                {strongHeaderLabel}
               </Text>
-              <Text className="font-body text-label-sm text-text-sub">사주가 받쳐주는 트랙</Text>
+              <Text className="font-body text-label-sm text-text-sub">
+                {isVersatile ? '여러 영역 골고루 강함' : '사주가 받쳐주는 트랙'}
+              </Text>
             </View>
+            {isVersatile && (
+              <Text className="font-body text-label-sm text-text-sub leading-relaxed">
+                💡 사주가 어느 한 방향으로 치우치지 않고 여러 영역에 골고루 강해요. 어디로 갈지는 흥미·환경·시기 운까지 함께 봐야 해요.
+              </Text>
+            )}
             {strongDisplay.map(d => renderDirectionCell(d, true))}
           </View>
         )}

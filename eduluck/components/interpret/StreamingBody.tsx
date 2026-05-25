@@ -118,14 +118,21 @@ export function StreamingBody({
     startedRef.current = true;
 
     const ac = new AbortController();
+    const tag = `[StreamingBody ${endpoint}]`;
+    const startedAt = Date.now();
+    let firstDeltaAt = 0;
+    let deltaCount = 0;
+    const log = (...args: unknown[]) => console.log(tag, `+${Date.now() - startedAt}ms`, ...args);
+
+    log('start fetch', { body });
 
     // 90초 timeout — Vercel maxDuration 300초보다 짧게. SSE stream이 hang 시 강제 종료 + 에러 표시
-    // (이전: stream done/error 신호 없이 멈추면 사용자 영원히 대기 — 264초 이상 hang 케이스 발생)
     const timeoutMs = 90000;
     const timeoutId = setTimeout(() => {
+      log('TIMEOUT', { deltaCount, firstDeltaAt, elapsedMs: Date.now() - startedAt });
       ac.abort();
       setStatus('error');
-      onError?.('응답이 지연되고 있어요. 다시 시도해주세요. (timeout)');
+      onError?.(`응답이 지연되고 있어요. 다시 시도해주세요. (timeout, deltas: ${deltaCount})`);
     }, timeoutMs);
 
     (async () => {
@@ -136,10 +143,13 @@ export function StreamingBody({
           body: JSON.stringify(body),
           signal: ac.signal,
         });
+        log('fetch response', { status: res.status, ok: res.ok, hasBody: !!res.body });
         if (!res.ok || !res.body) {
           const err = await res.text().catch(() => res.statusText);
+          log('ERROR — bad response', { status: res.status, err });
+          clearTimeout(timeoutId);
           setStatus('error');
-          onError?.(err);
+          onError?.(`서버 응답 오류 ${res.status}: ${err}`);
           return;
         }
 
@@ -151,7 +161,19 @@ export function StreamingBody({
 
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            // stream이 done event 없이 끝나면 여기로
+            log('reader done (without done event)', { deltaCount, fullTextLen: fullText.length });
+            clearTimeout(timeoutId);
+            if (fullText.length > 0) {
+              setStatus('done');
+              onComplete?.(fullText);
+            } else {
+              setStatus('error');
+              onError?.('서버가 응답을 끝까지 못 보냈어요. (stream closed without done)');
+            }
+            break;
+          }
           buffer += decoder.decode(value, { stream: true });
 
           const lastSplit = buffer.lastIndexOf('\n\n');
@@ -162,13 +184,20 @@ export function StreamingBody({
           for (const ev of parseSseChunk(ready)) {
             if (ev.event === 'delta' && ev.data.text) {
               fullText += ev.data.text;
+              deltaCount++;
+              if (firstDeltaAt === 0) {
+                firstDeltaAt = Date.now() - startedAt;
+                log('FIRST delta', { firstDeltaAt });
+              }
               setText(fullText);
             } else if (ev.event === 'done') {
+              log('DONE event', { deltaCount, fullTextLen: fullText.length, elapsedMs: Date.now() - startedAt });
               clearTimeout(timeoutId);
               setStatus('done');
               const final = ev.data.fullText ?? fullText;
               onComplete?.(final);
             } else if (ev.event === 'error') {
+              log('ERROR event', { message: ev.data.message, deltaCount });
               clearTimeout(timeoutId);
               setStatus('error');
               onError?.(ev.data.message ?? 'stream error');
@@ -177,9 +206,14 @@ export function StreamingBody({
         }
       } catch (e) {
         clearTimeout(timeoutId);
-        if ((e as { name?: string }).name === 'AbortError') return;
+        if ((e as { name?: string }).name === 'AbortError') {
+          log('aborted', { deltaCount });
+          return;
+        }
+        const msg = e instanceof Error ? e.message : 'unknown error';
+        log('EXCEPTION', { msg, deltaCount });
         setStatus('error');
-        onError?.(e instanceof Error ? e.message : 'unknown error');
+        onError?.(msg);
       }
     })();
 
