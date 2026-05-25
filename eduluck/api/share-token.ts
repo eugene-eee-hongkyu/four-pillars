@@ -12,11 +12,12 @@ export async function GET(request: Request) {
   }
 
   const sb = getSupabaseServer();
+  // v4 legacy 'premium' + v5 'premium-part1'/'premium-part2' 모두 후보
   const { data, error } = await sb
     .from('interpretations')
     .select('share_token')
     .eq('session_id', sessionId)
-    .eq('kind', 'premium')
+    .in('kind', ['premium', 'premium-part1', 'premium-part2'])
     .order('created_at', { ascending: false })
     .limit(1)
     .single();

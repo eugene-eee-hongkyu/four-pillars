@@ -56,22 +56,15 @@ export default function InterpretPremium() {
   const [part2Visible, setPart2Visible] = useState(false);
   const [part2Done, setPart2Done] = useState(false);
 
-  // 테스트 기간: 진입 시 캐시 무효 — 무조건 새 LLM 호출. 테스트 종료 시 이 effect 제거.
-  useEffect(() => {
-    setPremiumPart1Text(null);
-    setPremiumPart2Text(null);
-    setPart1Done(false);
-    setPart2Visible(false);
-    setPart2Done(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // 캐시 hit → 즉시 done
+  // 캐시 hit (또는 동일 자녀 재진입) → 즉시 done + Part 2 보이기 (이미 본 적 있음)
   useEffect(() => {
     if (state.premiumPart1Text && !part1Done) setPart1Done(true);
   }, [state.premiumPart1Text, part1Done]);
   useEffect(() => {
-    if (state.premiumPart2Text && !part2Done) setPart2Done(true);
+    if (state.premiumPart2Text && !part2Done) {
+      setPart2Done(true);
+      setPart2Visible(true);  // 캐시 있으면 자동 노출
+    }
   }, [state.premiumPart2Text, part2Done]);
 
   const sessionReady = !!(state.sessionId && state.childSubjectId);

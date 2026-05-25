@@ -24,6 +24,9 @@ const REVEAL_POLL_MS = 1_000;
 /** 한 청크에 reveal할 섹션 개수. 2 = §1·§2 → §3·§4 → ... */
 const SECTIONS_PER_CHUNK = 2;
 
+/** sectionHeaders 없는 경우 (deep-dive 등 단일 섹션) — 시간 기반 fallback 청크 간격 */
+const TIME_FALLBACK_INTERVAL_MS = 30_000;
+
 export interface StreamingStage {
   /** 이 단계가 시작되는 elapsed seconds (0부터) */
   at: number;
@@ -117,6 +120,7 @@ export function StreamingBody({
   expectedDurationSec,
 }: Props) {
   const [displayedText, setDisplayedText] = useState('');
+  const displayedLenRef = useRef(0);
   const fullTextRef = useRef('');
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -144,37 +148,50 @@ export function StreamingBody({
     return () => clearInterval(t);
   }, [status]);
 
-  // reveal polling — fullTextRef에서 다음 trigger 헤더 등장 체크
+  // reveal polling — 모드 분기
+  //   - 섹션 모드 (sectionHeaders 있음): "## N." 헤더 등장 trigger
+  //   - 시간 모드 (sectionHeaders 없음 — deep-dive 등): 30초 간격으로 그때까지 누적 fullText reveal
   useEffect(() => {
     if (status === 'done' || status === 'error') return;
-    if (sectionNums.length === 0) return; // sectionHeaders 없으면 stream done 시 한 번에
 
-    const tryReveal = () => {
-      const text = fullTextRef.current;
-      if (!text) return;
-      const lastRevealed = revealedSectionNumRef.current;
-      const nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1;
-      // 첫 청크: lastRevealed=0 → trigger §3. "## 3." 등장하면 그 직전(= §1·§2)까지 reveal.
-      // 그 다음: lastRevealed=2 → trigger §5. "## 5." 등장하면 §3·§4 추가.
-      // ... lastRevealed=8 → trigger §11 (maxSectionNum=10 초과) → trigger 없음, stream done 대기.
-      if (nextTriggerSectionNum > maxSectionNum) return;
+    if (sectionNums.length > 0) {
+      // 섹션 헤더 기반
+      const tryReveal = () => {
+        const text = fullTextRef.current;
+        if (!text) return;
+        const lastRevealed = revealedSectionNumRef.current;
+        const nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1;
+        if (nextTriggerSectionNum > maxSectionNum) return;
 
-      const marker = `## ${nextTriggerSectionNum}.`;
-      const idx = text.indexOf(marker);
-      if (idx < 0) return;
+        const marker = `## ${nextTriggerSectionNum}.`;
+        const idx = text.indexOf(marker);
+        if (idx < 0) return;
 
-      const newText = text.slice(0, idx).trimEnd();
-      if (newText.length === 0) return;
-      const newRevealed = nextTriggerSectionNum - 1;
-      revealedSectionNumRef.current = newRevealed;
-      setRevealedSectionNum(newRevealed);
-      setDisplayedText(newText);
-      // 청크 reveal 직후 elapsed reset — progress bar 0부터 다시 카운트
-      chunkStartedAtMsRef.current = Date.now();
-      setElapsedSec(0);
+        const newText = text.slice(0, idx).trimEnd();
+        if (newText.length === 0) return;
+        const newRevealed = nextTriggerSectionNum - 1;
+        revealedSectionNumRef.current = newRevealed;
+        setRevealedSectionNum(newRevealed);
+        setDisplayedText(newText);
+        displayedLenRef.current = newText.length;
+        chunkStartedAtMsRef.current = Date.now();
+        setElapsedSec(0);
+      };
+      const interval = setInterval(tryReveal, REVEAL_POLL_MS);
+      return () => clearInterval(interval);
+    }
+
+    // 시간 기반 fallback — deep-dive 단일 섹션
+    const revealLatest = () => {
+      const next = fullTextRef.current;
+      if (next.length > 0 && next.length > displayedLenRef.current) {
+        setDisplayedText(next);
+        displayedLenRef.current = next.length;
+        chunkStartedAtMsRef.current = Date.now();
+        setElapsedSec(0);
+      }
     };
-
-    const interval = setInterval(tryReveal, REVEAL_POLL_MS);
+    const interval = setInterval(revealLatest, TIME_FALLBACK_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [status, sectionNums.length, maxSectionNum]);
 
@@ -229,6 +246,7 @@ export function StreamingBody({
           // stream done 시 남은 본문 즉시 전체 reveal
           fullTextRef.current = finalText;
           setDisplayedText(finalText);
+          displayedLenRef.current = finalText.length;
           revealedSectionNumRef.current = maxSectionNum || 0;
           setRevealedSectionNum(maxSectionNum || 0);
         };
@@ -335,10 +353,16 @@ export function StreamingBody({
     );
   }
 
-  // progress bar는 hiddenHeaders가 남아 있을 때만 표시 (마지막 청크 reveal 후 = 모두 표시 = 사라짐)
-  // 위치: 본문 도착 전 = 맨 위 / 본문 도착 후 = 본문 아래 · skeleton 위
-  const showProgressBar = !!expectedDurationSec && hiddenHeaders.length > 0;
+  // progress bar 표시 조건:
+  //   - 섹션 모드: hiddenHeaders 있을 때만 (마지막 청크 reveal 후 = 사라짐)
+  //   - 시간 모드 (deep-dive): stream 진행중 (streaming/loading) 일 때
+  const showProgressBar = !!expectedDurationSec && (
+    sectionNums.length > 0
+      ? hiddenHeaders.length > 0
+      : (status === 'streaming' || status === 'loading')
+  );
   const nextChunkLabel = (() => {
+    if (sectionNums.length === 0) return null;  // 시간 모드엔 §N 라벨 없음
     if (revealedSectionNum >= maxSectionNum) return null;
     const next1 = revealedSectionNum + 1;
     const next2 = Math.min(revealedSectionNum + 2, maxSectionNum);
@@ -360,13 +384,15 @@ export function StreamingBody({
           }}
         />
       </View>
-      {nextChunkLabel && (
-        <Text className="font-body text-label-sm text-text-sub mt-1">
-          {!hasText
-            ? `첫 부분은 ${nextChunkLabel}이 모두 정리되면 한 번에 표시돼요`
-            : `다음 부분 (${nextChunkLabel}) 정리 중`}
-        </Text>
-      )}
+      <Text className="font-body text-label-sm text-text-sub mt-1">
+        {nextChunkLabel
+          ? (!hasText
+              ? `첫 부분은 ${nextChunkLabel}이 모두 정리되면 한 번에 표시돼요`
+              : `다음 부분 (${nextChunkLabel}) 정리 중`)
+          : (!hasText
+              ? '곧 첫 부분이 표시돼요'
+              : '다음 부분 정리 중')}
+      </Text>
     </View>
   ) : null;
 
