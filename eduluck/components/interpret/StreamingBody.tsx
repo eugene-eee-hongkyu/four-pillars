@@ -119,6 +119,15 @@ export function StreamingBody({
 
     const ac = new AbortController();
 
+    // 90초 timeout — Vercel maxDuration 300초보다 짧게. SSE stream이 hang 시 강제 종료 + 에러 표시
+    // (이전: stream done/error 신호 없이 멈추면 사용자 영원히 대기 — 264초 이상 hang 케이스 발생)
+    const timeoutMs = 90000;
+    const timeoutId = setTimeout(() => {
+      ac.abort();
+      setStatus('error');
+      onError?.('응답이 지연되고 있어요. 다시 시도해주세요. (timeout)');
+    }, timeoutMs);
+
     (async () => {
       try {
         const res = await fetch(endpoint, {
@@ -155,23 +164,29 @@ export function StreamingBody({
               fullText += ev.data.text;
               setText(fullText);
             } else if (ev.event === 'done') {
+              clearTimeout(timeoutId);
               setStatus('done');
               const final = ev.data.fullText ?? fullText;
               onComplete?.(final);
             } else if (ev.event === 'error') {
+              clearTimeout(timeoutId);
               setStatus('error');
               onError?.(ev.data.message ?? 'stream error');
             }
           }
         }
       } catch (e) {
+        clearTimeout(timeoutId);
         if ((e as { name?: string }).name === 'AbortError') return;
         setStatus('error');
         onError?.(e instanceof Error ? e.message : 'unknown error');
       }
     })();
 
-    return () => ac.abort();
+    return () => {
+      clearTimeout(timeoutId);
+      ac.abort();
+    };
   }, [endpoint, body, headers, onComplete, onError]);
 
   // 첫 본문이 도착했는지

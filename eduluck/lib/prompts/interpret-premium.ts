@@ -487,7 +487,7 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
     `  최종 추천 티어 범위: ${tierResult.finalTierRange[0] === tierResult.finalTierRange[1] ? `${tierResult.finalTierRange[0]}티어` : `${tierResult.finalTierRange[0]}~${tierResult.finalTierRange[1]}티어`}`,
     `  Confidence 표현 (§13에서 이 표현으로 권유): "${tierResult.confidenceLabel}"`,
     ``,
-    `[진로 방향성 8가지 — 백엔드 결정성 (학자·연구 / 의약·치 / 법조·관료 / 이공계·기술 / 경영·실무 / 사업·자영업 / 예술·미디어 / 체육·군경·외과). §12 "전공 볼게요" 1차 baseline. 강도 순으로 정렬되어 있으니 위에서부터 Top 2-3을 메인 권유, 그 다음 보통 등급을 보조 권유로 사용. 약은 본문 언급 ✗]`,
+    `[진로 방향성 10가지 — 백엔드 결정성 (학자·인문연구 / 과학·공학기술 / 의약·생명정밀 / 경영·사업상경 / 예술·표현창작 / 교육·상담돌봄 / 공무·법·조직 / 글로벌·유학외국 / 실무·현장기술 / 비대학·창업자립). §12 "전공 볼게요" 1차 baseline. 강도 순으로 정렬되어 있으니 위에서부터 Top 2-3을 메인 권유, 그 다음 보통 등급을 보조 권유로 사용. 약은 본문 언급 ✗]`,
     ...c.directions.map((d) =>
       `  ${d.emoji} ${d.label} — ${d.level}${d.recommendedFields.length > 0 ? ` (${d.recommendedFields.slice(0, 3).join(' · ')})` : ''}`,
     ),
