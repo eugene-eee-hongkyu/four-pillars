@@ -36,6 +36,8 @@ yarn-error.*
 test-results/
 playwright-report/
 coverage/
+# 단, docs/test-results/는 phase 검증 결과 문서로 추적
+!docs/test-results/
 
 # Dependencies
 node_modules/
