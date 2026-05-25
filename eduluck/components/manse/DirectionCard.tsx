@@ -43,7 +43,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
 
   const strong = directions.filter(d => d.level === '매우 강' || d.level === '강');
   const mid = directions.filter(d => d.level === '보통');
-  const weak = directions.filter(d => d.level === '약');
+  // const weak = directions.filter(d => d.level === '약');  // 사용자 피드백으로 약 영역 표시 제거
 
   // strong이 0이면 mid 전체를 fallback (재호처럼 모두 보통 동률 sample에서 임의 2개만 뽑으면 정보 손실)
   // 4개 이상 강하면 "다재다능" 라벨 (긍정 해석 — 여러 영역 골고루 강함)
@@ -144,26 +144,8 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </View>
         )}
 
-        {/* 약한 방향 — Chip tag (회색·작게, "참고" 라벨로 리프레이밍, negativity bias 완충) */}
-        {weak.length > 0 && (
-          <View className="gap-1">
-            <Text className="font-body text-label-sm text-text-sub">
-              참고: 약한 방향
-            </Text>
-            <View className="flex-row flex-wrap gap-1.5">
-              {weak.map(d => (
-                <View key={d.key} className="px-2 py-1 rounded-full bg-surface border border-outline-warm">
-                  <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>
-                    {d.emoji} {d.label}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
-              사주는 위 강한 방향에서 빛나요.
-            </Text>
-          </View>
-        )}
+        {/* 약한 방향 영역 제거 (사용자 피드백) — negativity bias 완충 차원에서 표시했으나
+            사용자가 화면에 노출되는 정보 최소화 선호. weak 정보는 면책 모달에서만 일반론 설명. */}
 
         {/* 면책 모달 — 방향성 시스템 전체 설명 */}
         <Modal visible={infoOpen} onClose={() => setInfoOpen(false)}>

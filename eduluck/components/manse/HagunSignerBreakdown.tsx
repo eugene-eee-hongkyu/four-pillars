@@ -11,7 +11,8 @@
 //   - 한국 운세 시장(포스텔러·점신·플러스운세력): 분해 UI 표준 ✗ — 점수와 텍스트 분리
 //   - UX: 학부모는 "관인상생" 용어 모름, 수치 노출 시 혼란 위험
 
-import { View, Text } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Pressable } from 'react-native';
 import type { ManseResult } from '@/lib/manse/engine';
 import { computeHagun, scoreToGrade } from '@/lib/prompts/hagun-tier';
 
@@ -101,11 +102,15 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
   const gauge = gradeToGauge(grade.label);
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
-  const negative = breakdown.hits.filter(h => h.value < 0);
   const top3 = positive.slice(0, 3);
   const rest = positive.slice(3);
+  // 음의 값(페널티) — 화면 표시 제거 (사용자 피드백 2026-05-25)
+  // const negative = breakdown.hits.filter(h => h.value < 0);
 
   const isWeakScholar = gauge === 0;
+
+  // 함께 작용 영역 — 기본 접힘 (사용자 피드백: 정보 과다, 토글로)
+  const [restOpen, setRestOpen] = useState(false);
 
   // 핵심 자리 — Filled card (elevation 1, primary)
   const renderPrimaryCell = (h: { signer: string; value: number }) => (
@@ -202,36 +207,28 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
         </View>
       )}
 
-      {/* ===== 함께 작용 — Outlined card (secondary, 위계 격하) ===== */}
+      {/* ===== 함께 작용 — 토글 (기본 접힘, 사용자 피드백) ===== */}
       {rest.length > 0 && (
         <View className="gap-1.5">
-          <Text className="font-body text-label-md text-text-sub">
-            🔹 함께 작용하는 자리
-          </Text>
-          {rest.map(renderSecondaryRow)}
+          <Pressable
+            onPress={() => setRestOpen(o => !o)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: restOpen }}
+            className="flex-row items-center justify-between py-1"
+          >
+            <Text className="font-body text-label-md text-text-sub">
+              🔹 함께 작용하는 자리 <Text className="font-body text-label-sm text-text-sub">({rest.length}개)</Text>
+            </Text>
+            <Text className="font-body text-label-md text-text-sub">
+              {restOpen ? '접기 ▴' : '펼치기 ▾'}
+            </Text>
+          </Pressable>
+          {restOpen && rest.map(renderSecondaryRow)}
         </View>
       )}
 
-      {/* ===== 페널티 — Chip tag (가볍게, negativity bias 완충) ===== */}
-      {negative.length > 0 && (
-        <View className="gap-1">
-          <Text className="font-body text-label-sm text-text-sub">
-            참고: 약한 자리
-          </Text>
-          <View className="flex-row flex-wrap gap-1.5">
-            {negative.map(h => (
-              <View key={h.signer} className="px-2 py-1 rounded-full bg-surface border border-outline-warm">
-                <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>
-                  {h.signer}
-                </Text>
-              </View>
-            ))}
-          </View>
-          <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
-            이 자리는 약하지만, 위 핵심 자리로 보강돼요.
-          </Text>
-        </View>
-      )}
+      {/* '약한 자리'(페널티) 영역 제거 (사용자 피드백 2026-05-25) — negativity bias 완충 위해 표시했으나
+          정보 과다라 비노출. 페널티는 백엔드 계산에만 반영. */}
     </View>
   );
 }
