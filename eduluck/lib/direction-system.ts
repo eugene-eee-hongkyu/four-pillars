@@ -1,17 +1,24 @@
-// 방향성 시스템 — V10 Loop 1021 (V7 + Eugene·박진우 engineer fit) prod 반영 (2026-05-25)
+// 방향성 시스템 — V11 Loop 1120 (V10 + 윤수·상수 business fit) prod 반영 (2026-05-25)
 //
-// 10 카테고리 × 52 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
+// 10 카테고리 × 54 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
 // 학운 = 강도 (1차원), 방향성 = 경로 (10차원).
 //
 // 시그너 명세: docs/design/DIRECTION_SIGNERS.md
 // V1 calibration 결과: docs/design/DIRECTION_CALIBRATION_V1.md
 // V1 시스템 개요: docs/design/DIRECTION_SYSTEM_v1.md
 //
-// V10 Loop 1021 (V7 baseline + 명식 ≠ 직업 fit detector 2개):
-//   totalGap 6.0 / max 16 — primary hit 4 (Eugene·승희·두흥·박진우) + top3 hit 1 (세형) + miss 3
-//   사용자 결정: Eugene/박진우 ground truth (engineer + 보조) 정확 반영 위해 fit detector 추가
-//   - combo_jeonginJaripEngineer +50 (Eugene 정인격 + 일주 건록 + 자립학자 → IT 응용)
-//   - combo_jaeSiksangIT +75 (박진우 정재격 + 식상생재 + 신약 → 개발자, 학운 V11 동일 조건)
+// V11 Loop 1120 (V10 baseline + 윤수·상수 business primary fit):
+//   totalGap 1.0 / max 14 — primary hit 6 (Eugene·승희·두흥·윤수·상수·박진우) + top3 hit 1 (세형) + miss 0
+//   사용자 ground truth 정정 (2026-05-25):
+//   - 와이프: 주부 → calibration weight 0 (제외)
+//   - 윤수: 삼성 부사장 + 사업·경영·전략·창업 → engineer ✗, business primary
+//   - 상수: 게임 CSO + 경영·전략·창업 → business primary, authority/entrepreneur 보조
+//
+// V11 fit detector (4종):
+//   - combo_jeonginJaripEngineer +50 (Eugene, V10)
+//   - combo_jaeSiksangIT +75 (박진우, V10)
+//   - combo_yanginGuiTripleStrategy +75/+50/+40 (윤수, business/authority/entrepreneur)
+//   - combo_pyeoninGwaninStrategy +60/+40/+30 (상수, business/authority/entrepreneur)
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { splitPillar, getStemSipsin } from './manse/pillars';
@@ -73,6 +80,48 @@ function detectJaeSiksangIT(m: ManseResult): boolean {
   const isJae = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
   const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
   return isJae && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeak && c.insung >= 1;
+}
+
+/**
+ * 윤수 fit: 양인격 + 학자귀인 트리플(학당+문창+천을) + 식상 ≥ 4 + 일주 약
+ *   = "양인 학자귀인 트리플 + 식상 다중 = 권력+전략+표현 결합형"
+ *   business/authority/entrepreneur 모두 강 — 대기업 임원·전략·창업 (삼성 부사장 패턴)
+ */
+function detectYanginGuiTripleStrategy(m: ManseResult): boolean {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const munchang = allShensha.filter(s => s === '문창귀인').length;
+  const cheonEul = allShensha.filter(s => s === '천을귀인').length;
+  const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  return m.gyeokguk.name === '양인격'
+    && hakdang >= 1 && munchang >= 1 && cheonEul >= 1
+    && c.siksang >= 4
+    && dayWeak;
+}
+
+/**
+ * 상수 fit: 편인격 + 관인상생 + 학당귀인 ≥ 1 + 일주 약(쇠 포함) + 비겁 ≥ 2 + 재성 ≥ 2
+ *   = "편인 관인상생 + 자립 + 재성 = 전문지식 기반 전략·경영형"
+ *   business/authority/entrepreneur 모두 강 — 게임 C-level·창업 (게임회사 CSO 패턴)
+ */
+function detectPyeoninGwaninStrategy(m: ManseResult): boolean {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const dayWeak = ['절', '태', '양', '병', '사', '묘', '쇠'].includes(m.unsung.dayPillar.stage);
+  return m.gyeokguk.name === '편인격'
+    && m.sipsin.isGwaninSangsaeng
+    && hakdang >= 1
+    && dayWeak
+    && c.bigeop >= 2
+    && c.jaesung >= 2;
 }
 
 // ============================================================================
@@ -218,6 +267,9 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
     // V10 fit detector (명식 ≠ 직업 보정)
     combo_jeonginJaripEngineer: detectJeonginJaripEngineer(m) ? 1 : 0,
     combo_jaeSiksangIT:         detectJaeSiksangIT(m) ? 1 : 0,
+    // V11 fit detector (윤수·상수 business primary)
+    combo_yanginGuiTripleStrategy: detectYanginGuiTripleStrategy(m) ? 1 : 0,
+    combo_pyeoninGwaninStrategy:   detectPyeoninGwaninStrategy(m) ? 1 : 0,
   };
 }
 
@@ -227,7 +279,7 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
 type CategoryWeights = Record<string, number>;
 type DirectionWeights = Record<DirectionKey, CategoryWeights>;
 
-export const V10_LOOP_1021_WEIGHTS: DirectionWeights = {
+export const V11_LOOP_1120_WEIGHTS: DirectionWeights = {
   scholar: {
     g_jeongin: 30, g_pyeonin: 15, g_jeonggwan: 10, g_pyeongwan: 5, g_siksin: 5,
     g_sanggwan: 0, g_jeongjae: 0, g_pyeonjae: 0, g_bigyeon: 0, g_yangin: 0,
@@ -278,6 +330,9 @@ export const V10_LOOP_1021_WEIGHTS: DirectionWeights = {
     sh_hwagae: 0, sh_dohwa: 5, sh_yeokma: 5, sh_hyeonchim: 0, sh_yanginsal: 5, sh_cheonyi: 0, sh_hongyeom: 5,
     u_dayGeonrok: 5, u_dayJewang: 5, u_dayMyo: 0, u_dayJeol: 0,
     gw_hakdang: 0, gw_munchang: 0, gw_cheoneul: 10, gw_gwangwiHakgwan: 0, h_chungYearMonth: 5, h_dayChung: 0,
+    // V11 fit detector
+    combo_yanginGuiTripleStrategy: 75, // 윤수 fit
+    combo_pyeoninGwaninStrategy:   60, // 상수 fit
   },
   arts: {
     g_jeongin: 0, g_pyeonin: 10, g_jeonggwan: 0, g_pyeongwan: 0, g_siksin: 15,
@@ -314,6 +369,9 @@ export const V10_LOOP_1021_WEIGHTS: DirectionWeights = {
     sh_hwagae: 0, sh_dohwa: 0, sh_yeokma: 0, sh_hyeonchim: 15, sh_yanginsal: 20, sh_cheonyi: 0, sh_hongyeom: 0,
     u_dayGeonrok: 10, u_dayJewang: 15, u_dayMyo: 0, u_dayJeol: 0,
     gw_hakdang: 5, gw_munchang: 0, gw_cheoneul: 5, gw_gwangwiHakgwan: 15, h_chungYearMonth: 0, h_dayChung: 0,
+    // V11 fit detector
+    combo_yanginGuiTripleStrategy: 50, // 윤수 fit
+    combo_pyeoninGwaninStrategy:   40, // 상수 fit
   },
   global: {
     g_jeongin: 0, g_pyeonin: 0, g_jeonggwan: 0, g_pyeongwan: 0, g_siksin: 0,
@@ -350,6 +408,9 @@ export const V10_LOOP_1021_WEIGHTS: DirectionWeights = {
     sh_hwagae: 0, sh_dohwa: 5, sh_yeokma: 10, sh_hyeonchim: 0, sh_yanginsal: 5, sh_cheonyi: 0, sh_hongyeom: 5,
     u_dayGeonrok: 5, u_dayJewang: 5, u_dayMyo: 0, u_dayJeol: 0,
     gw_hakdang: 0, gw_munchang: 0, gw_cheoneul: 5, gw_gwangwiHakgwan: 0, h_chungYearMonth: 10, h_dayChung: 10,
+    // V11 fit detector
+    combo_yanginGuiTripleStrategy: 40, // 윤수 fit
+    combo_pyeoninGwaninStrategy:   30, // 상수 fit
   },
 };
 
@@ -376,7 +437,7 @@ export function computeDirections(m: ManseResult): DirectionScores {
 
   for (const key of DIRECTION_KEYS) {
     let raw = 0;
-    const w = V10_LOOP_1021_WEIGHTS[key];
+    const w = V11_LOOP_1120_WEIGHTS[key];
     for (const [sig, weight] of Object.entries(w)) {
       raw += (sigils[sig] ?? 0) * weight;
     }

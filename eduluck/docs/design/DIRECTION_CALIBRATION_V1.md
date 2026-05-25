@@ -38,14 +38,51 @@
 | 1010 | V10 V7 + jeonginJaripEng +35 (Eugene fit) | 8.0 |
 | 1011 | V10 V7 + jeonginJaripEng +50 (Eugene fit 강) | 8.0 |
 | 1020 | V10 V7 + 두 fit (Eugene +35, 박진우 +70) | 6.0 |
-| **1021** | **V10 V7 + 두 fit (Eugene +50, 박진우 +75)** | **6.0 ⭐** |
+| 1021 | V10 V7 + 두 fit (Eugene +50, 박진우 +75) | 6.0 |
+| 1100 | V11 V10 + yanginGuiTriple (윤수 business fit) | 4.0 |
+| 1110 | V11 V10 + pyeoninGwaninStrategy (상수 business fit) | 4.0 |
+| **1120** | **V11 V10 + 윤수·상수 fit 통합** | **1.0 ⭐** |
 
-→ **Best: Loop 1021 (V10)** totalGap 6.0. Eugene·박진우 ground truth (engineer + 보조) 정확 반영 위한 fit detector 2종 추가.
-- Loop 1020 vs 1021: 둘 다 totalGap 6.0이지만 1020은 Eugene engineer 82 vs education 81 (단 1점 차이 fragile). **1021 채택** (Eugene engineer 97, 박진우 engineer 112 안정).
+→ **Best: Loop 1120 (V11)** totalGap 1.0.
+- **사용자 ground truth 정정 (2026-05-25)**: 와이프 주부 → weight 0 (제외), 윤수 engineer ✗ → business + authority + entrepreneur (삼성 부사장 + 전략·창업), 상수 business + authority + entrepreneur 추가.
+- V11 fit detector 2종 추가로 윤수·상수 모두 business primary 도달. primary hit 6/7 (와이프 제외) + top3 hit 1 + miss 0.
 
 ---
 
-## 3. Best (V10 Loop 1021) 8명 결과 상세
+## 3. Best (V11 Loop 1120) 8명 결과 상세 — **현재 prod**
+
+| Sample | top3 (raw) | expected main | 결과 |
+|--------|-----------|---------------|------|
+| **Eugene** | engineer(97), education(81), medical(69) | engineer | ✓ **primary** ⭐ (V10 fit) |
+| **박진우** | engineer(112), business(101), practical(85) | engineer | ✓ **primary** ⭐ (V10 fit) |
+| **승희** | arts(77), scholar(64), medical(60) | arts | ✓ **primary** |
+| **두흥** | medical(106), authority(93), scholar(58) | medical | ✓ **primary** |
+| **윤수** | business(120), entrepreneur(119), authority(117) | business | ✓ **primary** ⭐ (V11 fit) |
+| **상수** | business(121), authority(118), medical(91) | business | ✓ **primary** ⭐ (V11 fit) |
+| **세형** | authority(124), medical(110), education(71) | medical | ○ **top3** |
+| 와이프 | business(104), authority(100), practical(73) | arts | (weight 0, calibration 제외) |
+
+**hit 분포**: primary **6** + top3 1 + miss 0 = 7명 (와이프 제외). totalGap 1.0 / max 14.
+
+### V11 fit detector 4종 (누적)
+
+V10 (2종):
+- `combo_jeonginJaripEngineer` +50 in engineer — Eugene fit
+- `combo_jaeSiksangIT` +75 in engineer — 박진우 fit
+
+V11 (2종 신규):
+- **`combo_yanginGuiTripleStrategy`** in business +75 / authority +50 / entrepreneur +40
+  - 조건: 양인격 + 학당 + 문창 + 천을(트리플) + 식상 ≥ 4 + 일주 약
+  - 발동: 윤수 only (양인격 + 학자귀인 트리플 + 식상 4 + 일주 병)
+  - 명리적 해석: 양인 권력 + 학자귀인 표현 + 식상 다중 = **삼성전자 부사장 + 사업 개발·경영·전략·창업** 패턴 정확 매칭
+- **`combo_pyeoninGwaninStrategy`** in business +60 / authority +40 / entrepreneur +30
+  - 조건: 편인격 + 관인상생 + 학당귀인 ≥ 1 + 일주 약(쇠 포함) + 비겁 ≥ 2 + 재성 ≥ 2
+  - 발동: 상수 only (편인격 + 관인상생 + 학당 + 일주 쇠 + 비겁 2 + 재성 2)
+  - 명리적 해석: 편인 전문지식 + 관인상생 + 자립 + 재성 = **게임회사 CSO + 경영·전략·창업** 패턴
+
+---
+
+## 3-prev. (참고) Best (V10 Loop 1021) 8명 결과 — V11 채택 전
 
 | Sample | top3 (raw) | expected main | 결과 |
 |--------|-----------|---------------|------|

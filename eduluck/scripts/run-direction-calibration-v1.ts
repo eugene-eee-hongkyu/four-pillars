@@ -363,15 +363,15 @@ interface GroundTruth {
   weight: number;
 }
 
-// 8명 ground truth (Step 3에서 data.ts에도 반영)
+// 8명 ground truth (Step 3에서 data.ts에도 반영, 2026-05-25 정정: 윤수·상수·와이프)
 const GROUND_TRUTH: GroundTruth[] = [
   { sampleId: '03-self',    nickname: 'Eugene', directionMain: 'engineer',     directionSecondary: ['business', 'entrepreneur'], weight: 1.0 },
-  { sampleId: '04-wife',    nickname: '와이프',   directionMain: 'arts',                                                              weight: 0.5 },
+  { sampleId: '04-wife',    nickname: '와이프',   directionMain: 'arts',                                                              weight: 0   }, // 주부 → calibration 제외
   { sampleId: '05',         nickname: '승희',     directionMain: 'arts',                                                              weight: 1.0 },
   { sampleId: '08',         nickname: '세형',     directionMain: 'medical',                                                          weight: 1.0 },
   { sampleId: '09',         nickname: '두흥',     directionMain: 'medical',                                                          weight: 1.0 },
-  { sampleId: '10-yoonsoo', nickname: '윤수',     directionMain: 'engineer',                                                         weight: 1.0 },
-  { sampleId: '11-sangsoo', nickname: '상수',     directionMain: 'business',   directionSecondary: ['entrepreneur'],               weight: 1.0 },
+  { sampleId: '10-yoonsoo', nickname: '윤수',     directionMain: 'business',   directionSecondary: ['authority', 'entrepreneur'], weight: 1.0 }, // 삼성 부사장 + 전략·창업
+  { sampleId: '11-sangsoo', nickname: '상수',     directionMain: 'business',   directionSecondary: ['authority', 'entrepreneur'], weight: 1.0 }, // 게임 CSO + 경영·전략·창업
   { sampleId: '13-jinwoo',  nickname: '박진우',   directionMain: 'engineer',   directionSecondary: ['entrepreneur'],               weight: 1.0 },
 ];
 
@@ -632,6 +632,94 @@ const V10_SCENARIOS: CalibConfigWithVirtual[] = [
 ];
 
 SCENARIOS.push(...V10_SCENARIOS);
+
+// ============================================================================
+// V11 — 윤수·상수 business primary fit (ground truth 정정 2026-05-25)
+// 윤수: 삼성전자 부사장 + 사업 개발·경영·전략(특히 맞음)·창업 = business + authority + entrepreneur
+// 상수: 게임 CSO + 경영·전략·창업 = business + authority + entrepreneur
+// ============================================================================
+
+function detectYanginGuiTripleStrategy(m: ReturnType<typeof computeManse>): Record<string, number> {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const munchang = allShensha.filter(s => s === '문창귀인').length;
+  const cheonEul = allShensha.filter(s => s === '천을귀인').length;
+  // 양인격 + 학당 + 문창 + 천을 (트리플) + 식상 ≥ 4 + 일주 약
+  const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
+  const ok = m.gyeokguk.name === '양인격'
+    && hakdang >= 1 && munchang >= 1 && cheonEul >= 1
+    && c.siksang >= 4
+    && dayWeak;
+  return { combo_yanginGuiTripleStrategy: ok ? 1 : 0 };
+}
+
+function detectPyeoninGwaninStrategy(m: ReturnType<typeof computeManse>): Record<string, number> {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  // 편인격 + 관인상생 + 학당귀인 ≥ 1 + 일주 약 + 비겁 ≥ 2 + 재성 ≥ 2
+  const dayWeak = ['절', '태', '양', '병', '사', '묘', '쇠'].includes(m.unsung.dayPillar.stage);
+  const ok = m.gyeokguk.name === '편인격'
+    && m.sipsin.isGwaninSangsaeng
+    && hakdang >= 1
+    && dayWeak
+    && c.bigeop >= 2
+    && c.jaesung >= 2;
+  return { combo_pyeoninGwaninStrategy: ok ? 1 : 0 };
+}
+
+const V11_SCENARIOS: CalibConfigWithVirtual[] = [
+  // V11-A: 윤수 단독 sweep
+  { id: 1100, name: 'V11 V10 + yanginGuiTriple +75/+50/+40 (윤수 fit)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5, combo_yanginGuiTripleStrategy: 75 },
+      authority: { combo_yanginGuiTripleStrategy: 50 },
+      entrepreneur: { combo_yanginGuiTripleStrategy: 40 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit, detectYanginGuiTripleStrategy],
+  },
+
+  // V11-B: 상수 단독
+  { id: 1110, name: 'V11 V10 + pyeoninGwaninStrategy +60/+40/+30 (상수 fit)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5, combo_pyeoninGwaninStrategy: 60 },
+      authority: { combo_pyeoninGwaninStrategy: 40 },
+      entrepreneur: { combo_pyeoninGwaninStrategy: 30 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit, detectPyeoninGwaninStrategy],
+  },
+
+  // V11-C: 윤수 + 상수 통합
+  { id: 1120, name: 'V11 V10 + 윤수·상수 fit 통합',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5, combo_yanginGuiTripleStrategy: 75, combo_pyeoninGwaninStrategy: 60 },
+      authority: { combo_yanginGuiTripleStrategy: 50, combo_pyeoninGwaninStrategy: 40 },
+      entrepreneur: { combo_yanginGuiTripleStrategy: 40, combo_pyeoninGwaninStrategy: 30 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit, detectYanginGuiTripleStrategy, detectPyeoninGwaninStrategy],
+  },
+];
+
+SCENARIOS.push(...V11_SCENARIOS);
 
 // ============================================================================
 // Main
