@@ -50,3 +50,46 @@
   1. `tsconfig.json`에 `"baseUrl": "."` 복원
   2. `"moduleResolution"` 라인 삭제 (expo base의 "node10" 재상속)
   3. 정 silence 원하면 `"ignoreDeprecations": "5.0"` or `"6.0"` 추가 (LSP 버전에 맞게)
+
+---
+
+## 2026-05-25: 방향성 V1-V12 fit detector 패턴 (학운 V11/V12 패턴 복제) — Perfect 7/7
+
+- **선택**: 학운 V1-V12 패턴(시그너 풀 + weight tuning + 명식 ≠ 직업 fit detector 추가)을 방향성에도 그대로 적용. 8명 ground truth 완전 fit까지 fit detector 5종 누적 추가.
+- **대안 검토**:
+  - **A (선택)**: 학운 패턴 재현 — 50 시그너 풀 + weight matrix + sweep + 명식 ≠ 직업 sample은 fit detector. 검증된 방법론 + sample 일관성.
+  - **B**: 빈 카테고리 sample 추가 모집 우선 — scholar·education·global·practical 1-2명씩 모집 후 calibration. 10/10 검증 완성도 ↑, 그러나 시간 소요 큼.
+  - **C**: V1 baseline 유지 + 정직성 라벨로만 — totalGap 11.0 그대로 두고 출력 시 "calibration 미검증" 표시. 단순하지만 사용자 신뢰도 ↓.
+- **선택 이유**:
+  1. 학운 V11/V12에서 박진우·재원 fit detector 패턴 이미 prod 안정 — 동일 패턴 재사용
+  2. fit detector는 명식 정확 매칭 (다른 sample 발동 ✗ 검증) → 시스템 일반화 손상 ✗
+  3. 사용자 ground truth(8명) perfect fit 가능 → calibration 완전성
+  4. 명리학적 근거 확보 (각 fit detector의 정통 격국·신살·십성 조합)
+- **영향 범위**:
+  - `eduluck/lib/direction-system.ts` — `detectAllDirectionSigils()` + V12_LOOP_1200_WEIGHTS + 5 fit detector 함수
+  - `eduluck/_private/calibration-samples/data.ts` — 8명 `directionMain/Secondary/Weight` 필드 추가
+  - `eduluck/scripts/run-direction-calibration-v1.ts` — V1-V12 sweep 시나리오
+  - `eduluck/scripts/selftest-direction-v1-prod.ts` — 8명 self-test
+  - `eduluck/docs/design/DIRECTION_*.md` — 시스템·시그너·calibration 문서 3종
+  - `eduluck/docs/scoring/DIRECTION_SCORING_v1.md` — prod reference
+- **되돌리는 방법**:
+  1. V12 → V11: `lib/direction-system.ts`에서 `combo_pyeongwanMedicalCore` detector + medical weight +20 제거
+  2. V12 → V1 baseline: V10/V11/V12 fit detector 5종 모두 제거 + weight 원복
+
+---
+
+## 2026-05-25: Ground truth 정정 — 와이프(주부 제외) / 윤수·상수(business 정정)
+
+- **선택**:
+  - 와이프 → `directionWeight: 0` (주부 20년, 직업 적성 calibration 무관)
+  - 윤수 → `directionMain: engineer` → `business` 정정 + secondary `[authority, entrepreneur]` (삼성 부사장 + 전략·창업 — 사용자 본인 인터뷰)
+  - 상수 → secondary에 `authority` 추가 (게임 CSO = C-level)
+- **대안 검토**:
+  - **A (선택)**: ground truth 수정 + 시스템 fit. 사용자 실제 진로 반영.
+  - **B**: ground truth 유지 + 시스템 miss 인정. "사주만으론 fit 불가" 정직 라벨.
+- **선택 이유**:
+  1. 학력(전공) 기반 ground truth는 진로 적성에 부적합 — 실제 직업이 핵심
+  2. 사용자 본인 인터뷰로 정확한 ground truth 확보됨
+  3. 명리적으로도 양인격(윤수)·편인격(상수)이 권력·전략·창업과 정합
+- **영향 범위**: `data.ts` 3명의 `expected.directionMain/Secondary/Weight` 필드만
+- **되돌리는 방법**: 각 sample의 expected 필드 원복

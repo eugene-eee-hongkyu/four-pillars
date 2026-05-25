@@ -6,33 +6,32 @@
 
 ---
 
-## 마지막 실행: 2026-05-25 15:59
-## 마지막 업데이트: 2026-05-25 15:59
+## 마지막 실행: 2026-05-25 17:14
+## 마지막 업데이트: 2026-05-25 17:14
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- DIRECTION_SYSTEM_v3 연구 및 구현 — 학운 30 티어와 방향성 10개 카테고리 분리 모델, 명리학·사회과학 진영 우려 5가지씩 통합 해결안 수립. N=7 ground truth (세형·두흥·윤수·박진우·Eugene·와이프·승희) 확정.
+- Direction System V12 Loop 1200 prod 반영 완료 (perfect fit 7/7). 8명 ground truth (Eugene·박진우·승희·두흥·세형·윤수·상수 + 와이프 weight 0) primary 100% 정확. 5 fit detector 누적 (V10/V11/V12).
 
 ### 이어서 할 것
 
-1. Eugene 복수 카테고리 매핑 케이스 결정 (A: 주 카테고리 1개 선택 vs B: 복수 카테고리 동시 기록)
-2. DIRECTION_SYSTEM_v3.md 구현 명세 작성 (10개 카테고리·점수 계산·UI 매핑)
-3. (선택) Mom test 10명 진행 — DirectionCard ⓘ + 환경 표현 검증
+1. (선택) 빈 4 카테고리 sample 모집 — scholar·education·global·practical (각 1-2명)
+2. (선택) UI 통합 — `direction-system.ts`는 prod에 있지만 화면 호출 ✗, 사용자 출력에 반영
+3. (선택) Mom test 진행 — 화면 + LLM narrative 정성 검증
 
 ### 막힌 것
 
-- Eugene 카테고리 매핑 (과학·공학기술 + 경영·사업상경 vs 비대학·창업자립형 단일화): A/B 선택 필요
+- 없음 (V12 perfect fit 7/7 완료)
 
 ### 사람 판단 필요
 
-- Eugene 복수 카테고리 케이스 처리 방식 (학운은 hagunTier 1개, 방향성은 카테고리 10개 — 어떻게 매핑할지)
-- DIRECTION_SYSTEM_v3 구현 명세 우선순위 (즉시 시작 vs 다른 작업 후)
+- 다음 작업 우선순위 결정 (빈 카테고리 sample 모집 vs UI 통합 vs Mom test)
 
 ### 백로그 요약
 
-- 대기 중: 11개
-- 최근 추가: 2026-05-25 — DIRECTION_SYSTEM_v3 구현 명세, Eugene 카테고리 케이스 결정
+- 대기 중: 9개
+- 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 ### 진행 상황
 
@@ -130,8 +129,19 @@
 - [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 + push (`466fbf2`) ⭐
 - [x] tsconfig deprecated 옵션 정공 제거 (baseUrl·moduleResolution=node10) + run-calibration-v3 TDZ fix (`07ef4fd`)
 - [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성 완료
-- [ ] Eugene 복수 카테고리 매핑 케이스 (A vs B) 결정
-- [ ] DIRECTION_SYSTEM_v3.md 구현 명세 작성
+- [x] Direction System V1-V12 — Step 0-6 전체 + perfect fit 7/7 ⭐
+  - [x] DIRECTION_SYSTEM_v1.md (시스템 개요)
+  - [x] DIRECTION_SIGNERS.md (50 시그너 + weight matrix)
+  - [x] run-direction-calibration-v1.ts (V1-V12 sweep)
+  - [x] 8명 ground truth 라벨링 (data.ts directionMain/Secondary)
+  - [x] DIRECTION_CALIBRATION_V1.md (sweep 결과)
+  - [x] lib/direction-system.ts prod 통합 (`53bbe7b`)
+  - [x] V10 Eugene·박진우 engineer fit (`ccc485c`)
+  - [x] V11 윤수·상수 business fit (`9ab1631`)
+  - [x] V12 세형 medical fit — perfect 7/7 (`865489d`)
+  - [x] DIRECTION_SCORING_v1.md (prod reference)
+- [ ] 빈 4 카테고리 sample 모집 (scholar·education·global·practical)
+- [ ] Direction UI 통합 (화면 호출 + 출력 가이드)
 - [ ] 음력 입력 UI 토글 추가 (선택)
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
 - [ ] V11 production deploy 모바일 시각 검증

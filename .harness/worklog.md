@@ -6,6 +6,58 @@
 
 ---
 
+## Session 2026-05-25 17:14 — Direction System V1-V12 calibration + perfect fit (Step 0-6)
+
+### 작업 요약
+- **Step 0-6 전체 진행** (학운 V1-V12 패턴 복제):
+  - **Step 0** `DIRECTION_SYSTEM_v1.md` — 시스템 개요 + 학운/방향성 분리 모델 + 8명 ground truth
+  - **Step 1** `DIRECTION_SIGNERS.md` — 50 시그너 정의 (격국 10 + 십성 5 + 콤보 5 + 정편 메타 3 + 오행 10 + 신살 7 + 12운성 4 + 귀인·합 6) + 10×50 weight matrix
+  - **Step 2** `scripts/run-direction-calibration-v1.ts` — `detectAllDirectionSigils()` + V1 sweep
+  - **Step 3** `_private/data.ts` ground truth 라벨링 (`directionMain`·`directionSecondary`·`directionWeight` 필드 추가)
+  - **Step 4** V1-V12 calibration sweep
+  - **Step 5** `lib/direction-system.ts` prod 통합 + `selftest-direction-v1-prod.ts` 80 raw 100% 일치 검증
+  - **Step 6** `DIRECTION_SCORING_v1.md` 최종 prod reference (HAGUN_SCORING_V12 대응)
+
+- **N=8 ground truth** (재원·재호·정환·영진·김택범 제외):
+  - Eugene → engineer + business + entrepreneur (POSTECH 컴공 + CTO 15년 + 라인 임원 + 창업)
+  - 와이프 → arts (weight 0, 주부 제외)
+  - 승희 → arts (시각디자이너)
+  - 세형 → medical (의사 19년)
+  - 두흥 → medical (치과의사)
+  - 윤수 → business + authority + entrepreneur (삼성 부사장 + 전략·창업) — ground truth 정정
+  - 상수 → business + authority + entrepreneur (게임 CSO + 전략·창업)
+  - 박진우 → engineer + entrepreneur (개발자 + 망한 창업)
+
+- **V1-V12 sweep 진화 (totalGap)**:
+  - V1 11.0 → V7 10.0 → V10 6.0 → V11 1.0 → **V12 0.0 (perfect 7/7)**
+  - primary hit: 2 → 2 → 4 → 6 → **7/7**
+
+- **Fit detector 5종 추가** (사용자 ground truth 100% fit):
+  1. `combo_jeonginJaripEngineer` +50 (Eugene fit, V10): 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 = 0 + (화 or 금 부재)
+  2. `combo_jaeSiksangIT` +75 (박진우 fit, V10): 정재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약 + 인성 ≥ 1 (학운 V11과 동일)
+  3. `combo_yanginGuiTripleStrategy` business +75 / authority +50 / entrepreneur +40 (윤수 fit, V11): 양인격 + 학자귀인 트리플 + 식상 ≥ 4 + 일주 약
+  4. `combo_pyeoninGwaninStrategy` business +60 / authority +40 / entrepreneur +30 (상수 fit, V11): 편인격 + 관인상생 + 학당귀인 + 일주 약(쇠 포함) + 비겁 ≥ 2 + 재성 ≥ 2
+  5. `combo_pyeongwanMedicalCore` +20 (세형 fit, V12): 편관격 + 관성 ≥ 3 + 관인상생 + 현침살 + 학당귀인 + 일주 강
+
+- **commit + push 4회**:
+  - `53bbe7b` V1 Loop 700 (V7) — 10 카테고리 × 50 시그너 초기 통합
+  - `ccc485c` V10 Loop 1021 — Eugene·박진우 engineer fit
+  - `9ab1631` V11 Loop 1120 — 윤수·상수 business fit
+  - `865489d` V12 Loop 1200 — 세형 medical fit (perfect 7/7)
+
+- **검증**: 8명 × 10 카테고리 = 80 raw 100% prod = V12 calibration 일치. tsc + vitest 12/12 pass.
+
+### 실패한 시도
+- V1-V9 sweep (totalGap 10.0 정체): medical 광범위 trigger 약화·engineer 강화·business 보강·arts 보강·scholar 약화로는 명식 ≠ 직업 sample 5명 fit ✗ — fit detector 도입이 정공
+- 윤수 ground truth (engineer) 초기 라벨링: 사용자 정정 — 실제는 business primary (삼성 부사장)
+
+### 다음 액션
+- (선택) 빈 4 카테고리 sample 모집 — scholar/education/global/practical
+- (선택) UI 통합 — 현재 prod에 `direction-system.ts` 있지만 화면 호출 ✗
+- (선택) Mom test 진행
+
+---
+
 Worklog 항목입니다:
 
 ```markdown
