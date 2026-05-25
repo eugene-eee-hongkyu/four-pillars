@@ -27,27 +27,71 @@ type Block =
   | { type: 'signature'; text: string }
   | { type: 'h2'; text: string; subtitle?: string }
   | { type: 'h3'; text: string }
-  | { type: 'paragraph'; text: string };
+  | { type: 'paragraph'; text: string }
+  | { type: 'quote'; text: string }
+  | { type: 'evidence'; items: string[] };
+
+/** '### 근거' 또는 '### 이 풀이의 명리 근거' 같은 evidence 시작 헤더 */
+const EVIDENCE_HEADER_RE = /^###\s+(이\s*풀이의\s*명리\s*)?근거\s*$/;
+/** evidence bullet — '-' '·' '•' '*' 다 인식 */
+const EVIDENCE_BULLET_RE = /^[-·•*]\s+(.+)$/;
 
 function parseText(input: string): Block[] {
   const lines = input.split('\n');
   const blocks: Block[] = [];
-  let buf: string[] = [];
+  let paragraphBuf: string[] = [];
+  let quoteBuf: string[] = [];
+  let evidenceItems: string[] = [];
+  let evidenceMode = false;
 
-  const flush = () => {
-    if (buf.length === 0) return;
-    const merged = buf.join(' ').trim();
+  const flushParagraph = () => {
+    if (paragraphBuf.length === 0) return;
+    const merged = paragraphBuf.join(' ').trim();
     if (merged) blocks.push({ type: 'paragraph', text: merged });
-    buf = [];
+    paragraphBuf = [];
+  };
+  const flushQuote = () => {
+    if (quoteBuf.length === 0) return;
+    const merged = quoteBuf.join(' ').trim();
+    if (merged) blocks.push({ type: 'quote', text: merged });
+    quoteBuf = [];
+  };
+  const flushEvidence = () => {
+    if (evidenceItems.length > 0) {
+      blocks.push({ type: 'evidence', items: evidenceItems });
+    }
+    evidenceItems = [];
+    evidenceMode = false;
+  };
+  const flushAll = () => {
+    flushParagraph();
+    flushQuote();
+    flushEvidence();
   };
 
   for (const line of lines) {
     const trimmed = line.trim();
 
+    // evidence 모드에서: bullet 누적 또는 종료
+    if (evidenceMode) {
+      const bulletMatch = trimmed.match(EVIDENCE_BULLET_RE);
+      if (bulletMatch) {
+        evidenceItems.push(bulletMatch[1].trim());
+        continue;
+      }
+      // bullet 아니거나 빈 줄 → evidence 종료. 그 후 일반 처리로 fallthrough
+      if (!trimmed) {
+        flushEvidence();
+        continue;
+      }
+      flushEvidence();
+      // fallthrough to general logic
+    }
+
     // TL;DR — 본문 첫 줄 마커
     const tldrMatch = trimmed.match(/^>\s*한\s*줄\s*요약\s*[:：]\s*(.*)$/);
     if (tldrMatch) {
-      flush();
+      flushAll();
       blocks.push({ type: 'tldr', text: tldrMatch[1] });
       continue;
     }
@@ -55,21 +99,40 @@ function parseText(input: string): Block[] {
     // 마무리 시그니처 — 본문 맨 끝 마커
     const sigMatch = trimmed.match(/^—\s*이\s*사주의\s*한\s*줄\s*[:：]\s*(.*)$/);
     if (sigMatch) {
-      flush();
+      flushAll();
       blocks.push({ type: 'signature', text: sigMatch[1] });
       continue;
     }
 
+    // evidence 헤더 — '### 근거' 또는 '### 이 풀이의 명리 근거'
+    if (EVIDENCE_HEADER_RE.test(trimmed)) {
+      flushParagraph();
+      flushQuote();
+      evidenceMode = true;
+      evidenceItems = [];
+      continue;
+    }
+
+    // 일반 quote — '> ...' (TL;DR 마커 외)
+    if (/^>\s+/.test(trimmed)) {
+      flushParagraph();
+      quoteBuf.push(trimmed.replace(/^>\s+/, '').trim());
+      continue;
+    } else if (quoteBuf.length > 0) {
+      // quote 단락 종료
+      flushQuote();
+    }
+
     // h3 (### 먼저 체크)
     if (/^###\s+/.test(trimmed)) {
-      flush();
+      flushAll();
       blocks.push({ type: 'h3', text: trimmed.replace(/^###\s+/, '') });
       continue;
     }
 
     // h2 — "## 1. 헤더 — 부제" 형식
     if (/^##\s+/.test(trimmed)) {
-      flush();
+      flushAll();
       const content = trimmed.replace(/^##\s+/, '');
       const dashIdx = content.indexOf(' — ');
       if (dashIdx >= 0) {
@@ -86,14 +149,15 @@ function parseText(input: string): Block[] {
 
     // 빈 줄 또는 horizontal rule (---·***·___) — 단락 break
     if (!trimmed || /^[-*_]{3,}$/.test(trimmed)) {
-      flush();
+      flushParagraph();
+      flushQuote();
       continue;
     }
 
     // 본문 누적
-    buf.push(trimmed);
+    paragraphBuf.push(trimmed);
   }
-  flush();
+  flushAll();
   return blocks;
 }
 
@@ -141,6 +205,69 @@ function FadeInView({ children, delay = 0 }: { children: React.ReactNode; delay?
     ]).start();
   }, [opacity, translateY, delay]);
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
+}
+
+/** 본문 인용 박스 — '> ...' 마크다운. 좌측 secondary strip + 베이지 배경. 섹션 핵심 한 줄 anchor. */
+function QuoteBox({ text }: { text: string }) {
+  return (
+    <View
+      style={{
+        backgroundColor: colors.secondaryContainer,
+        borderLeftWidth: 3,
+        borderLeftColor: colors.secondary,
+        borderRadius: 6,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+      }}
+    >
+      <Text
+        className="font-body text-body-lg text-text-pri"
+        style={{ lineHeight: 26, fontWeight: '500' }}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+/** 명리 근거 박스 — '### 근거' 헤더 + bullet. 회색 배경, 작은 폰트. "사주 시그너에서 도출" 신뢰 단서. */
+function EvidenceBox({ items }: { items: string[] }) {
+  return (
+    <View
+      style={{
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.outlineWarm,
+        borderRadius: 6,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        gap: 6,
+      }}
+    >
+      <Text
+        className="font-body text-label-sm"
+        style={{ color: colors.textSub, fontWeight: '600', marginBottom: 2 }}
+      >
+        이 풀이의 명리 근거
+      </Text>
+      {items.map((it, i) => (
+        <View key={i} className="flex-row" style={{ gap: 6 }}>
+          <Text
+            className="font-body text-label-md"
+            style={{ color: colors.textSub }}
+          >
+            ·
+          </Text>
+          <Text
+            className="font-body text-label-md flex-1"
+            style={{ color: colors.textSub, lineHeight: 22 }}
+          >
+            {it}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 /** TL;DR 도착 시 fade-in + scale 0.96 → 1 (400ms) — "여기 핵심" 강조 진입 효과. */
@@ -231,6 +358,20 @@ export function InterpretBody({ text }: Props) {
               <Text className="font-body-bold text-label-md text-text-pri mt-2">
                 {b.text}
               </Text>
+            </FadeInView>
+          );
+        }
+        if (b.type === 'quote') {
+          return (
+            <FadeInView key={key}>
+              <QuoteBox text={b.text} />
+            </FadeInView>
+          );
+        }
+        if (b.type === 'evidence') {
+          return (
+            <FadeInView key={key}>
+              <EvidenceBox items={b.items} />
             </FadeInView>
           );
         }
