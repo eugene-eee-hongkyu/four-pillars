@@ -207,22 +207,50 @@ function FadeInView({ children, delay = 0 }: { children: React.ReactNode; delay?
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
 }
 
-/** 본문 인용 박스 — '> ...' 마크다운. 좌측 secondary strip + 베이지 배경. 섹션 핵심 한 줄 anchor. */
+/** 본문 인용 박스 v2 — '> ...' 마크다운.
+ *  좌상단 큰 전각 따옴표 + indent 본문 + secondaryContainer 배경 + rounded + 그림자. */
 function QuoteBox({ text }: { text: string }) {
   return (
     <View
       style={{
         backgroundColor: colors.secondaryContainer,
-        borderLeftWidth: 3,
-        borderLeftColor: colors.secondary,
-        borderRadius: 6,
-        paddingVertical: 12,
-        paddingHorizontal: 14,
+        borderRadius: 12,
+        paddingTop: 28,
+        paddingBottom: 18,
+        paddingLeft: 28,
+        paddingRight: 20,
+        position: 'relative',
+        // soft shadow (web: boxShadow; native: elevation)
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 1,
       }}
     >
       <Text
-        className="font-body text-body-lg text-text-pri"
-        style={{ lineHeight: 26, fontWeight: '500' }}
+        style={{
+          position: 'absolute',
+          top: -2,
+          left: 12,
+          fontSize: 48,
+          lineHeight: 48,
+          color: colors.secondary,
+          opacity: 0.35,
+          fontWeight: '700',
+        }}
+        // 전각 따옴표
+      >
+        ❝
+      </Text>
+      <Text
+        className="font-body text-text-pri"
+        style={{
+          fontSize: 15,
+          lineHeight: 26,
+          fontWeight: '500',
+          letterSpacing: -0.1,
+        }}
       >
         {text}
       </Text>
@@ -230,42 +258,177 @@ function QuoteBox({ text }: { text: string }) {
   );
 }
 
-/** 명리 근거 박스 — '### 근거' 헤더 + bullet. 회색 배경, 작은 폰트. "사주 시그너에서 도출" 신뢰 단서. */
+const CATEGORY_COLORS: Record<string, string> = {
+  '본질': '#C18949',  // warm amber
+  '시기': '#5F87A5',  // blue-gray
+  '신살': '#9568AE',  // soft purple
+  '관계': '#6FA083',  // soft green
+};
+
+/** evidence bullet 파싱:
+ *   '[본질] 일간 병화 · 건록격 ─ 강한 자기 주도·표현력'
+ *     → { category: '본질', signer: '일간 병화 · 건록격', meaning: '강한 자기 주도·표현력' }
+ *  카테고리 prefix 없으면 fallback (옛 format 호환). */
+function parseEvidenceItem(item: string): {
+  category: string | null;
+  signer: string;
+  meaning: string | null;
+} {
+  const withCat = item.match(/^\[(.+?)\]\s*(.+?)(?:\s*─\s*(.+))?$/);
+  if (withCat) {
+    return {
+      category: withCat[1].trim(),
+      signer: withCat[2].trim(),
+      meaning: withCat[3]?.trim() ?? null,
+    };
+  }
+  const noCat = item.match(/^(.+?)(?:\s*─\s*(.+))?$/);
+  return {
+    category: null,
+    signer: noCat?.[1]?.trim() ?? item,
+    meaning: noCat?.[2]?.trim() ?? null,
+  };
+}
+
+/** 명리 근거 박스 v2 — 카테고리 chip + 시그너 + 의미 row 리스트. */
 function EvidenceBox({ items }: { items: string[] }) {
+  const parsed = items.map(parseEvidenceItem);
   return (
     <View
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceContainerLow,
         borderWidth: 1,
         borderColor: colors.outlineWarm,
-        borderRadius: 6,
-        paddingVertical: 12,
-        paddingHorizontal: 14,
-        gap: 6,
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        gap: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
       }}
     >
-      <Text
-        className="font-body text-label-sm"
-        style={{ color: colors.textSub, fontWeight: '600', marginBottom: 2 }}
-      >
-        이 풀이의 명리 근거
-      </Text>
-      {items.map((it, i) => (
-        <View key={i} className="flex-row" style={{ gap: 6 }}>
-          <Text
-            className="font-body text-label-md"
-            style={{ color: colors.textSub }}
+      <View className="flex-row items-center" style={{ gap: 6, marginBottom: 2 }}>
+        <Text style={{ fontSize: 14, color: colors.textSub }}>⚖</Text>
+        <Text
+          className="font-body"
+          style={{ fontSize: 12, fontWeight: '700', color: colors.textSub, letterSpacing: 0.5 }}
+        >
+          명리 근거
+        </Text>
+      </View>
+      {parsed.map((row, i) => {
+        const chipColor = row.category ? CATEGORY_COLORS[row.category] ?? colors.textSub : colors.textSub;
+        return (
+          <View key={i} className="flex-row items-start" style={{ gap: 10 }}>
+            {row.category ? (
+              <View
+                style={{
+                  backgroundColor: chipColor + '1A',
+                  borderRadius: 4,
+                  paddingHorizontal: 7,
+                  paddingVertical: 3,
+                  minWidth: 38,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '700', color: chipColor }}>
+                  {row.category}
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: colors.textSub,
+                  marginTop: 8,
+                }}
+              />
+            )}
+            <View className="flex-1" style={{ gap: 2 }}>
+              <Text
+                className="font-body"
+                style={{ fontSize: 14, fontWeight: '600', color: colors.textPri, lineHeight: 20 }}
+              >
+                {row.signer}
+              </Text>
+              {row.meaning && (
+                <Text
+                  className="font-body"
+                  style={{ fontSize: 13, color: colors.textSub, lineHeight: 19 }}
+                >
+                  {row.meaning}
+                </Text>
+              )}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/** 섹션 헤더 v2 — '## 1. 시작 — 부제' → 좌측 원형 번호 배지 + title + subtitle + 아래 구분선. */
+function SectionHeaderV2({ text, subtitle }: { text: string; subtitle?: string }) {
+  // text = "1. 시작" 형식. 번호 분리.
+  const m = text.match(/^(\d+)\.\s*(.*)$/);
+  const num = m?.[1];
+  const title = m?.[2] ?? text;
+  return (
+    <View style={{ marginTop: 16 }}>
+      <View className="flex-row items-center" style={{ gap: 14 }}>
+        {num && (
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: colors.secondary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.surface,
+            }}
           >
-            ·
-          </Text>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '700',
+                color: colors.secondary,
+              }}
+            >
+              {num}
+            </Text>
+          </View>
+        )}
+        <View className="flex-1" style={{ gap: 3 }}>
           <Text
-            className="font-body text-label-md flex-1"
-            style={{ color: colors.textSub, lineHeight: 22 }}
+            className="font-heading-bold text-text-pri"
+            style={{ fontSize: 20, lineHeight: 26 }}
           >
-            {it}
+            {title}
           </Text>
+          {subtitle && (
+            <Text
+              className="font-body"
+              style={{ fontSize: 13, color: colors.secondary, fontWeight: '600', letterSpacing: -0.1 }}
+            >
+              {subtitle}
+            </Text>
+          )}
         </View>
-      ))}
+      </View>
+      <View
+        style={{
+          height: 1,
+          backgroundColor: colors.outlineWarm,
+          marginTop: 14,
+        }}
+      />
     </View>
   );
 }
@@ -336,19 +499,7 @@ export function InterpretBody({ text }: Props) {
         if (b.type === 'h2') {
           return (
             <FadeInView key={key}>
-              <View className="mt-3 gap-1">
-                <Text className="font-heading-bold text-headline-md text-text-pri">
-                  {b.text}
-                </Text>
-                {b.subtitle && (
-                  <Text
-                    className="font-body text-label-md"
-                    style={{ color: colors.secondary, fontWeight: '600' }}
-                  >
-                    {b.subtitle}
-                  </Text>
-                )}
-              </View>
+              <SectionHeaderV2 text={b.text} subtitle={b.subtitle} />
             </FadeInView>
           );
         }
