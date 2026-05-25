@@ -1,7 +1,12 @@
-// 화면 11 ★: 정밀 진단 결과 + mom test 2차 + 결제 의향
-// UX 옵션 B #9·#10 적용:
-//  - 본문 위에 sticky mini TOC (4 섹션 anchor) — 긴 본문 navigation
-//  - 별점 시점 분리 (step 1: 결제 가치 → 답변 → step 2: 결제 의향)
+// 화면 11 ★ v5: 정밀 진단 Part 1 (10 섹션) + Part 2 prefetch + deep-dive 진입
+//
+// v5 흐름:
+//   1. Part 1 (10 섹션) StreamingBody — 본질·인성·관계·즉시 행동
+//   2. Part 1 완료 → "📖 더 자세한 진로·미래 보기" 버튼 노출
+//      + 5초 후 Part 2 백그라운드 prefetch (옵션 B 확정)
+//   3. "더 자세히" 클릭 → Part 2 표시 (캐시 hit 즉시 / 미캐시 시 StreamingBody)
+//   4. Part 2 완료 → "📋 더 자세히 알고 싶은 영역 선택" → interpret-deep-select 진입
+//   5. 결제 가치 survey 2단계 (기존 유지) — Part 1 완료 후 노출
 
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
@@ -11,6 +16,7 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { ShareButton } from '@/components/interpret/ShareButton';
+import { SilentSsePrefetch } from '@/components/interpret/SilentSsePrefetch';
 import { TraitScoreCard } from '@/components/manse/TraitScoreCard';
 import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
 import { DirectionCard } from '@/components/manse/DirectionCard';
@@ -47,42 +53,40 @@ function StarRow({ value, onChange }: { value: number; onChange: (n: number) => 
   );
 }
 
-// 정밀 진단 16섹션 — skeleton에 미리 노출되는 구조 헤더 (StreamingBody A)
-const PREMIUM_SECTION_HEADERS = [
-  '1. 시작',
-  '2. 본질',
-  '3. 강점',
-  '4. 약점·주의',
-  '5. 환경 설계',
-  '6. 훈육 가이드',
-  '7. 친구·또래',
-  '8. 학원·선생님',
-  '9. 현재~앞으로의 흐름',
-  '10. 국가·해외 운',
-  '11. 직업·진로 흐름',
-  '12. 전공 볼게요',
-  '13. 학교 볼게요',
-  '14. 가장 조심해야 하는 한 해',
-  '15. 본질을 깨우는 가장 효과적 액션',
-  '16. 어머니께 한 마디',
+// Part 1 — 10 섹션 skeleton 헤더
+const PART1_SECTION_HEADERS = [
+  '1. 시작', '2. 본질', '3. 강점', '4. 약점·주의', '5. 환경 설계',
+  '6. 훈육 가이드', '7. 건강', '8. 엄마-자녀 합', '9. 아빠-자녀 합', '10. 강요 금지',
 ];
-
-// 정밀 진단 ~45초 평균 — 시간 기반 단계 라벨 (StreamingBody C)
-const PREMIUM_STAGES = [
+const PART1_STAGES = [
   { at: 0, label: '사주 정리 중' },
-  { at: 8, label: '본질·강점 풀이 중' },
-  { at: 18, label: '환경·훈육 가이드 정리 중' },
-  { at: 28, label: '운기·진로 흐름 풀이 중' },
-  { at: 38, label: '학교·종합 조언 마무리' },
+  { at: 6, label: '본질·강점·약점 풀이 중' },
+  { at: 16, label: '환경·훈육·건강 정리 중' },
+  { at: 26, label: '엄마·아빠 합 + 강요 금지 마무리' },
 ];
 
-// 진단 완료 후 본문 위 mini TOC (긴 본문 navigation)
-const SECTIONS = ['종합 분석', '학년대별 가이드', '어머니-자녀 합 시기', '종합 조언'];
+// Part 2 — 10 섹션 skeleton 헤더
+const PART2_SECTION_HEADERS = [
+  '11. 친구·또래', '12. 학원·선생님', '13. 현재~앞으로의 흐름', '14. 국가·해외 운', '15. 직업·진로 흐름',
+  '16. 전공 볼게요', '17. 학교 볼게요', '18. 가장 조심해야 하는 한 해', '19. 본질을 깨우는 효과적 액션', '20. 어머니께 한 마디',
+];
+const PART2_STAGES = [
+  { at: 0, label: '진로·미래 정리 중' },
+  { at: 8, label: '학원·흐름·해외 풀이 중' },
+  { at: 18, label: '전공·학교 권유 정리 중' },
+  { at: 28, label: '조심한 해·효과적 액션·마무리' },
+];
 
 export default function InterpretPremium() {
   const router = useRouter();
-  const { state, setPremiumInterpretText } = useFlow();
-  const [streamDone, setStreamDone] = useState(false);
+  const {
+    state,
+    setPremiumPart1Text,
+    setPremiumPart2Text,
+  } = useFlow();
+  const [part1Done, setPart1Done] = useState(false);
+  const [part2Visible, setPart2Visible] = useState(false);
+  const [part2Done, setPart2Done] = useState(false);
   /** 0 = 진단 읽는 중, 1 = step1 (결제 가치), 2 = step2 (결제 의향), 3 = 제출 완료 */
   const [surveyStep, setSurveyStep] = useState<0 | 1 | 2 | 3>(0);
   const [valueScore, setValueScore] = useState(0);
@@ -119,20 +123,31 @@ export default function InterpretPremium() {
 
   const handleStartSurvey = () => setSurveyStep(1);
 
-  // 테스트 기간 (2026-05-25 V12 direction-system 통합 후): 진입 시마다 cache 무효화 → 무조건 새 LLM 호출
-  // 테스트 종료 시 이 useEffect 제거하면 cache 메커니즘 자동 복원
+  // 테스트 기간: 진입 시 캐시 무효 — 무조건 새 LLM 호출. 테스트 종료 시 이 effect 제거.
   useEffect(() => {
-    setPremiumInterpretText(null);
-    setStreamDone(false);
+    setPremiumPart1Text(null);
+    setPremiumPart2Text(null);
+    setPart1Done(false);
+    setPart2Visible(false);
+    setPart2Done(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 캐시 hit (prefetch 완료된 정밀 텍스트) — streamDone 즉시 true로 → 본문 위 TOC + survey CTA 표시
+  // 캐시 hit (이미 part1Text 있음) → 즉시 part1Done
   useEffect(() => {
-    if (state.premiumInterpretText && !streamDone) {
-      setStreamDone(true);
-    }
-  }, [state.premiumInterpretText, streamDone]);
+    if (state.premiumPart1Text && !part1Done) setPart1Done(true);
+  }, [state.premiumPart1Text, part1Done]);
+  useEffect(() => {
+    if (state.premiumPart2Text && !part2Done) setPart2Done(true);
+  }, [state.premiumPart2Text, part2Done]);
+
+  const sessionReady = !!(state.sessionId && state.childSubjectId);
+  const part2Body = sessionReady ? {
+    sessionId: state.sessionId,
+    childSubjectId: state.childSubjectId,
+    motherSubjectId: state.motherSubjectId,
+    fatherSubjectId: state.fatherSubjectId,
+  } : null;
 
   return (
     <View className="flex-1 bg-surface">
@@ -144,67 +159,119 @@ export default function InterpretPremium() {
           </Text>
         </View>
 
-        {/* Hero — 학운 그릇 (등급·게이지·핵심 시그너 + 함께 작용 모두 노출, 펼침 ✗) */}
+        {/* Hero — 학운 그릇 */}
         {state.childManse && (
           <View className="px-container-padding">
             <HagunSignerBreakdown manse={state.childManse} />
           </View>
         )}
 
-        {/* 진로 방향성 8가지 — Hero 다음 위치 (사용자 피드백: 맨 아래 ✗, 중간 적절) */}
+        {/* 진로 방향성 10가지 */}
         {state.childManse?.directions && (
           <View className="px-container-padding">
             <DirectionCard directions={state.childManse.directions} compact={true} />
           </View>
         )}
 
-        {/* mini TOC — 진단 완료 후 본문 위 navigation */}
-        {streamDone && (
-          <View className="px-container-padding">
-            <View className="flex-row flex-wrap gap-2 p-3 bg-secondary-container/40 rounded-md border border-outline-warm">
-              <Text className="font-body text-label-sm text-text-sub w-full mb-1">📑 진단 구성</Text>
-              {SECTIONS.map((s) => (
-                <View
-                  key={s}
-                  className="bg-surface-container-low px-3 py-1 rounded-full border border-outline-warm"
-                >
-                  <Text className="font-body text-label-sm text-text-pri">{s}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* LLM 본문 — cache 효과로 wait 0초 */}
-        {state.premiumInterpretText ? (
+        {/* === Part 1 (10 섹션) === */}
+        <View className="px-container-padding">
+          <Text className="font-body-bold text-label-md text-text-pri mb-1">
+            📖 Part 1 · 본질·관계·즉시 행동 (10 섹션)
+          </Text>
+        </View>
+        {state.premiumPart1Text ? (
           <View className="p-card-padding gap-4">
-            <InterpretBody text={state.premiumInterpretText} />
+            <InterpretBody text={state.premiumPart1Text} />
           </View>
-        ) : state.sessionId && state.childSubjectId ? (
+        ) : sessionReady ? (
           <StreamingBody
-            endpoint="/api/interpret-premium"
+            endpoint="/api/interpret-premium-part1"
             body={{
               sessionId: state.sessionId,
               childSubjectId: state.childSubjectId,
               motherSubjectId: state.motherSubjectId,
               fatherSubjectId: state.fatherSubjectId,
             }}
-            sectionHeaders={PREMIUM_SECTION_HEADERS}
-            stages={PREMIUM_STAGES}
-            expectedDurationSec={45}
-            onComplete={(text) => { setPremiumInterpretText(text); setStreamDone(true); }}
+            sectionHeaders={PART1_SECTION_HEADERS}
+            stages={PART1_STAGES}
+            expectedDurationSec={35}
+            onComplete={(text) => {
+              setPremiumPart1Text(text);
+              setPart1Done(true);
+            }}
           />
         ) : null}
 
-        {/* 학습 특성 4가지 — 본문 후 공통 보조 (시험·끈기·자기주도·회복) */}
-        {streamDone && state.childManse?.studentTraits && (
+        {/* Part 2 백그라운드 prefetch — Part 1 완료 + Part 2 미완 + part2Body 있을 때 */}
+        {part1Done && !state.premiumPart2Text && part2Body && (
+          <SilentSsePrefetch
+            endpoint="/api/interpret-premium-part2"
+            body={part2Body}
+            delayMs={5000}
+            onComplete={(text) => setPremiumPart2Text(text)}
+          />
+        )}
+
+        {/* === Part 1 완료 → "더 자세히 진로·미래 보기" 버튼 === */}
+        {part1Done && !part2Visible && !state.premiumPart2Text && (
+          <View className="px-container-padding mt-4">
+            <Button onPress={() => setPart2Visible(true)}>
+              📖 더 자세한 진로·미래 보기 (10 섹션)
+            </Button>
+          </View>
+        )}
+
+        {/* === Part 2 (10 섹션) — 버튼 누른 후 또는 캐시 hit 시 === */}
+        {(part2Visible || state.premiumPart2Text) && (
+          <>
+            <View className="px-container-padding mt-2">
+              <Text className="font-body-bold text-label-md text-text-pri mb-1">
+                🔮 Part 2 · 학원·진로·미래 (10 섹션)
+              </Text>
+            </View>
+            {state.premiumPart2Text ? (
+              <View className="p-card-padding gap-4">
+                <InterpretBody text={state.premiumPart2Text} />
+              </View>
+            ) : sessionReady ? (
+              <StreamingBody
+                endpoint="/api/interpret-premium-part2"
+                body={{
+                  sessionId: state.sessionId,
+                  childSubjectId: state.childSubjectId,
+                  motherSubjectId: state.motherSubjectId,
+                  fatherSubjectId: state.fatherSubjectId,
+                }}
+                sectionHeaders={PART2_SECTION_HEADERS}
+                stages={PART2_STAGES}
+                expectedDurationSec={35}
+                onComplete={(text) => {
+                  setPremiumPart2Text(text);
+                  setPart2Done(true);
+                }}
+              />
+            ) : null}
+          </>
+        )}
+
+        {/* === Part 2 완료 → "20 섹션 자세히 보기" 버튼 === */}
+        {part2Done && (
+          <View className="px-container-padding mt-4">
+            <Button onPress={() => router.push('/interpret-deep-select')}>
+              📋 더 자세히 알고 싶은 영역 선택 (20 섹션)
+            </Button>
+          </View>
+        )}
+
+        {/* 학습 특성 4가지 — Part 1 완료 후 공통 보조 */}
+        {part1Done && state.childManse?.studentTraits && (
           <View className="px-container-padding">
             <TraitScoreCard traits={state.childManse.studentTraits} compact={true} />
           </View>
         )}
 
-        {/* 공유 버튼 — streamDone 후 (캐시 hit 또는 stream 완료) */}
-        {streamDone && state.sessionId && (
+        {/* 공유 버튼 — Part 1 완료 후 */}
+        {part1Done && state.sessionId && (
           <View className="px-container-padding mt-2">
             <ShareButton
               sessionId={state.sessionId}
@@ -213,8 +280,8 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {/* survey 시점 분리 — 한 단계씩 */}
-        {streamDone && surveyStep === 0 && (
+        {/* survey — Part 1 완료 후 (Part 2 안 보기로 결정한 사용자도 즉시 응답 가능) */}
+        {part1Done && surveyStep === 0 && (
           <View className="px-container-padding pt-6 border-t border-outline-warm mt-4">
             <Text className="font-body text-body-md text-text-sub text-center mb-3">
               진단 다 보셨으면 짧은 응답 부탁드려요 (2가지)
@@ -223,7 +290,7 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {streamDone && surveyStep === 1 && (
+        {part1Done && surveyStep === 1 && (
           <View className="px-container-padding gap-2 pt-6 border-t border-outline-warm mt-4">
             <Text className="font-body text-label-sm text-text-sub">1 / 2</Text>
             <Text className="font-heading text-headline-md text-text-pri">
@@ -239,7 +306,7 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {streamDone && surveyStep === 2 && (
+        {part1Done && surveyStep === 2 && (
           <View className="px-container-padding gap-2 pt-6 border-t border-outline-warm mt-4">
             <Text className="font-body text-label-sm text-text-sub">2 / 2</Text>
             <Text className="font-heading text-headline-md text-text-pri">
@@ -255,7 +322,7 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {streamDone && surveyStep === 3 && (
+        {part1Done && surveyStep === 3 && (
           <View className="px-container-padding pt-6 border-t border-outline-warm mt-4">
             <Toast kind="success" message="응답 감사합니다. 진단이 도움 됐길 바라요." />
           </View>
