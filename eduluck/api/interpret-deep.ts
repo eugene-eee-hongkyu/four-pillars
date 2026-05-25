@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       const bodyText = final.content
         .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
         .join('');
-      await sb.from('interpretations').insert({
+      const { error: insertErr } = await sb.from('interpretations').insert({
         session_id: body.sessionId,
         kind: `deep-${section}`,
         child_subject_id: body.childSubjectId,
@@ -98,6 +98,11 @@ export async function POST(request: Request) {
         prompt_version: 'v5-20sections-split',
         llm_model: ANTHROPIC_MODEL,
       });
+      if (insertErr) {
+        console.error(`[deep] §${section} insert error`, { code: insertErr.code, message: insertErr.message, details: insertErr.details, sessionId: body.sessionId });
+      } else {
+        console.log(`[deep] §${section} insert OK`, { sessionId: body.sessionId, chars: bodyText.length });
+      }
     } catch (e) {
       console.error(`[deep] §${section} save failed`, e);
     }
