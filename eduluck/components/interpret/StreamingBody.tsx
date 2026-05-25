@@ -126,8 +126,8 @@ export function StreamingBody({
 
     log('start fetch', { body });
 
-    // 90초 timeout — Vercel maxDuration 300초보다 짧게. SSE stream이 hang 시 강제 종료 + 에러 표시
-    const timeoutMs = 90000;
+    // 180초 timeout — v5 max_tokens 16000 (긴 본문) 대비. Vercel maxDuration 300초보다 짧게.
+    const timeoutMs = 180000;
     const timeoutId = setTimeout(() => {
       log('TIMEOUT', { deltaCount, firstDeltaAt, elapsedMs: Date.now() - startedAt });
       ac.abort();

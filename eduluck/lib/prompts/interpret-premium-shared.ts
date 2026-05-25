@@ -102,39 +102,40 @@ export function fatherChildSyncLine(child: ManseResult, father: ManseResult): st
 }
 
 /** 학년 → (분량 문장 범위, 학교 예측 분기 가이드 문장).
- *  Part 1·Part 2 각각 분량의 절반을 권장 (Part 1 ≈ 본질·인성·관계 / Part 2 ≈ 진로·미래). */
+ *  Part 1·Part 2 각각 한 화면 ~8000자 목표 (한글 ~120~160문장).
+ *  각 섹션 평균 12~16문장 (10 섹션 × 12~16 = 120~160). */
 export function gradeSpec(grade: string): { sentenceRangePart1: string; sentenceRangePart2: string; schoolGuide: string } {
   if (grade === 'adult') {
     return {
-      sentenceRangePart1: '35~45문장 (10 섹션, A4 1~1.5p)',
-      sentenceRangePart2: '40~50문장 (10 섹션, A4 1.5~2p)',
+      sentenceRangePart1: '110~140문장 (10 섹션, 섹션당 11~14문장, ~7000~8500자, A4 3~4p)',
+      sentenceRangePart2: '120~150문장 (10 섹션, 섹션당 12~15문장, ~7500~9000자, A4 3~4p)',
       schoolGuide: '성인 회고용 — Part 2 §17 학교는 "사주상 어울렸을 대학·전공" 회고 톤. "실제 어디 가셨든 사주는 ○○대 자리예요". §20은 본인에게 한 마디 (어머니 대신 본인 청자).',
     };
   }
   if (grade === 'elem-1' || grade === 'elem-2' || grade === 'elem-3') {
     return {
-      sentenceRangePart1: '30~40문장 (10 섹션, A4 1~1.5p)',
-      sentenceRangePart2: '35~45문장 (10 섹션, A4 1.5p)',
+      sentenceRangePart1: '100~130문장 (10 섹션, 섹션당 10~13문장, ~6500~8000자, A4 3p)',
+      sentenceRangePart2: '110~140문장 (10 섹션, 섹션당 11~14문장, ~7000~8500자, A4 3p)',
       schoolGuide: '초저학년 — Part 2 §17 중학교 "가능성으로 열려" 톤, 고·대학 "큰 그림" 1줄.',
     };
   }
   if (grade.startsWith('elem')) {
     return {
-      sentenceRangePart1: '32~42문장 (10 섹션, A4 1~1.5p)',
-      sentenceRangePart2: '38~50문장 (10 섹션, A4 1.5~2p)',
+      sentenceRangePart1: '110~140문장 (10 섹션, 섹션당 11~14문장, ~7000~8500자, A4 3~4p)',
+      sentenceRangePart2: '120~150문장 (10 섹션, 섹션당 12~15문장, ~7500~9000자, A4 3~4p)',
       schoolGuide: '초고학년 — Part 2 §17 중학교 특목·국제중 구체 학교명. 고·대학은 가능성 톤.',
     };
   }
   if (grade.startsWith('middle')) {
     return {
-      sentenceRangePart1: '35~45문장 (10 섹션, A4 1.5p)',
-      sentenceRangePart2: '40~55문장 (10 섹션, A4 2p)',
+      sentenceRangePart1: '115~145문장 (10 섹션, 섹션당 11~15문장, ~7200~8700자, A4 3~4p)',
+      sentenceRangePart2: '125~155문장 (10 섹션, 섹션당 12~16문장, ~7800~9300자, A4 3~4p)',
       schoolGuide: '중학 — Part 2 §17 고등학교까지 구체 (외고·자사고·일반고). 대학 1~2곳 "안정·가능·도전" 톤 1회.',
     };
   }
   return {
-    sentenceRangePart1: '40~50문장 (10 섹션, A4 1.5~2p)',
-    sentenceRangePart2: '45~60문장 (10 섹션, A4 2~2.5p)',
+    sentenceRangePart1: '120~150문장 (10 섹션, 섹션당 12~15문장, ~7500~9000자, A4 4p)',
+    sentenceRangePart2: '130~160문장 (10 섹션, 섹션당 13~16문장, ~8000~9500자, A4 4p)',
     schoolGuide: '고등 — Part 2 §17 대학까지 구체 (SKY · 상위권 사립 · 해외). "안정·가능·도전" 3구간 1~2회.',
   };
 }
