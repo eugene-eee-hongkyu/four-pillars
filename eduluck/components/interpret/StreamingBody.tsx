@@ -221,7 +221,11 @@ export function StreamingBody({
       clearTimeout(timeoutId);
       ac.abort();
     };
-  }, [endpoint, body, headers, onComplete, onError]);
+    // 의도적으로 deps에 endpoint만 포함 — body/headers/onComplete/onError가 inline이라
+    // 매 렌더마다 새 ref가 되어 useEffect re-run + cleanup abort 발생 (이전: +16ms aborted).
+    // startedRef로 한 번만 시작하므로 deps 변경해도 새 fetch 안 일어남.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint]);
 
   // 첫 본문이 도착했는지
   const hasText = text.length > 0;
