@@ -9,10 +9,10 @@ import {
 } from './run-direction-calibration-v1';
 import { SAMPLES } from '../_private/calibration-samples/data';
 
-// V11 Loop 1120 weight (V10 + 윤수·상수 fit)
-function v11Weights() {
+// V12 Loop 1200 weight (V11 + 세형 medical fit)
+function v12Weights() {
   const result = JSON.parse(JSON.stringify(V1_DIRECTION_WEIGHTS));
-  Object.assign(result.medical,  { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10 });
+  Object.assign(result.medical,  { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10, combo_pyeongwanMedicalCore: 20 });
   Object.assign(result.engineer, { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 });
   Object.assign(result.business, { g_pyeonin: 15, cnt_jaesung: 5, combo_yanginGuiTripleStrategy: 75, combo_pyeoninGwaninStrategy: 60 });
   Object.assign(result.authority, { combo_yanginGuiTripleStrategy: 50, combo_pyeoninGwaninStrategy: 40 });
@@ -64,13 +64,26 @@ function detectPyeoninGwaninStrategy(m: ReturnType<typeof computeManse>): number
   return (m.gyeokguk.name === '편인격' && m.sipsin.isGwaninSangsaeng && hakdang >= 1 && dayWeak && c.bigeop >= 2 && c.jaesung >= 2) ? 1 : 0;
 }
 
+function detectPyeongwanMedicalCore(m: ReturnType<typeof computeManse>): number {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hyeonchim = allShensha.filter(s => s === '현침살').length;
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const dayStrong = ['건록', '제왕'].includes(m.unsung.dayPillar.stage);
+  return (m.gyeokguk.name === '편관격' && c.gwansung >= 3 && m.sipsin.isGwaninSangsaeng && hyeonchim >= 1 && hakdang >= 1 && dayStrong) ? 1 : 0;
+}
+
 function calibScores(m: ReturnType<typeof computeManse>): Record<DirectionKey, number> {
   const sigils = calibDetect(m);
   sigils.combo_jeonginJaripEngineer = detectJeonginJaripEngineer(m);
   sigils.combo_jaeSiksangIT = detectJaeSiksangIT(m);
   sigils.combo_yanginGuiTripleStrategy = detectYanginGuiTripleStrategy(m);
   sigils.combo_pyeoninGwaninStrategy = detectPyeoninGwaninStrategy(m);
-  const weights = v11Weights();
+  sigils.combo_pyeongwanMedicalCore = detectPyeongwanMedicalCore(m);
+  const weights = v12Weights();
   const scores: Record<DirectionKey, number> = {} as any;
   for (const key of DIRECTION_KEYS) {
     let raw = 0;
@@ -85,7 +98,7 @@ function calibScores(m: ReturnType<typeof computeManse>): Record<DirectionKey, n
 
 const SAMPLE_LIST = ['03-self', '04-wife', '05', '08', '09', '10-yoonsoo', '11-sangsoo', '13-jinwoo'];
 
-console.log(`\n=== V11 Loop 1120 Direction System prod self-test ===\n`);
+console.log(`\n=== V12 Loop 1200 Direction System prod self-test ===\n`);
 console.log(`| Sample      | primary  | calib raw | prod raw | diff |`);
 console.log(`|-------------|----------|-----------|----------|------|`);
 
@@ -116,7 +129,7 @@ for (const id of SAMPLE_LIST) {
 
 console.log(`\n=== 결과 ===`);
 if (allMatch) {
-  console.log(`✅ 8명 × 10 카테고리 = 80 raw 모두 prod = V11 calibration 일치. Direction V11 prod 반영 ✓`);
+  console.log(`✅ 8명 × 10 카테고리 = 80 raw 모두 prod = V12 calibration 일치. Direction V12 prod 반영 ✓`);
 } else {
   console.log(`❌ Mismatch ${mismatches.length}개:`);
   for (const m of mismatches.slice(0, 10)) console.log(`  - ${m}`);

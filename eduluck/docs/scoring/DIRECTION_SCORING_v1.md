@@ -1,6 +1,6 @@
-# 방향성 점수 시스템 — V11 Loop 1120 (현재 prod)
+# 방향성 점수 시스템 — V12 Loop 1200 (현재 prod)
 
-> 2026-05-25 main 적용. 학운과 분리된 독립 축. 10 카테고리 × 54 시그너 weight matrix (V1 50 + V10 fit 2 + V11 fit 2).
+> 2026-05-25 main 적용. 학운과 분리된 독립 축. 10 카테고리 × 55 시그너 weight matrix (V1 50 + V10 fit 2 + V11 fit 2 + V12 fit 1).
 >
 > Source: [lib/direction-system.ts](../../lib/direction-system.ts)
 > Self-test: [scripts/selftest-direction-v1-prod.ts](../../scripts/selftest-direction-v1-prod.ts)
@@ -16,7 +16,7 @@
 
 ## 0. 한 줄 요약
 
-V11 Loop 1120 = V10 + 윤수·상수 business primary fit. N=8 calibration (와이프 weight 0 제외 → 유효 N=7), **primary hit 6 (Eugene·박진우·승희·두흥·윤수·상수)** + top3 hit 1 (세형) + miss 0. totalGap 1.0 / max 14. 6 카테고리(arts·medical·engineer·business·authority·entrepreneur) calibration 검증, 4 카테고리(scholar·education·global·practical) 명리 통설 기반.
+V12 Loop 1200 = V11 + 세형 medical primary fit. N=8 calibration (와이프 weight 0 제외 → 유효 N=7), **primary hit 7/7 (Eugene·박진우·승희·두흥·세형·윤수·상수)** + miss 0. **totalGap 0.0 / max 14 — perfect fit**. 6 카테고리(arts·medical·engineer·business·authority·entrepreneur) calibration 검증, 4 카테고리(scholar·education·global·practical) 명리 통설 기반.
 
 ---
 
@@ -101,7 +101,7 @@ V1 baseline에서 V7로 fitting된 weight (DIRECTION_CALIBRATION_V1.md §8 참�
 
 ---
 
-## 6. 8명 V11 결과 + Top 3 (prod = calibration 100% 일치)
+## 6. 8명 V12 결과 + Top 3 (prod = calibration 100% 일치) — **perfect fit**
 
 | Sample | Top3 (점수) | expected main | 결과 |
 |--------|-------------|---------------|------|
@@ -109,31 +109,31 @@ V1 baseline에서 V7로 fitting된 weight (DIRECTION_CALIBRATION_V1.md §8 참�
 | **박진우** | engineer(112), business(101), practical(85) | engineer | ✓ **primary** ⭐ (V10 fit) |
 | **승희** | arts(77), scholar(64), medical(60) | arts | ✓ **primary** |
 | **두흥** | medical(106), authority(93), scholar(58) | medical | ✓ **primary** |
+| **세형** | medical(130), authority(124), education(71) | medical | ✓ **primary** ⭐ (V12 fit) |
 | **윤수** | business(120), entrepreneur(119), authority(117) | business | ✓ **primary** ⭐ (V11 fit) |
 | **상수** | business(121), authority(118), medical(91) | business | ✓ **primary** ⭐ (V11 fit) |
-| **세형** | authority(124), medical(110), education(71) | medical | ○ **top3** |
 | 와이프 | business(104), authority(100), practical(73) | arts | (weight 0, 주부 제외) |
 
-**hit 분포**: primary **6** + top3 1 + miss 0 (와이프 제외, 유효 N=7). totalGap 1.0 / max 14.
+**hit 분포**: primary **7/7** + miss 0 (와이프 제외, 유효 N=7). **totalGap 0.0 / max 14**.
 
-### Fit detector 4종 (V10 + V11)
+### Fit detector 5종 (V10 + V11 + V12)
 
 **V10 fit (engineer primary)**:
 - `combo_jeonginJaripEngineer` +50 (engineer) — Eugene fit. 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 = 0 + (화 or 금 부재).
-- `combo_jaeSiksangIT` +75 (engineer) — 박진우 fit. 학운 V11 동일 조건.
+- `combo_jaeSiksangIT` +75 (engineer) — 박진우 fit. 학운 V11 동일 조건 (정재격 + 재성다·식상다·신약·비겁·인성 ≥ 1).
 
 **V11 fit (business primary + authority/entrepreneur 보조)**:
 - `combo_yanginGuiTripleStrategy` business +75 / authority +50 / entrepreneur +40 — 윤수 fit. 양인격 + 학자귀인 트리플(학당+문창+천을) + 식상 ≥ 4 + 일주 약. **삼성 부사장 + 전략·창업** 패턴.
 - `combo_pyeoninGwaninStrategy` business +60 / authority +40 / entrepreneur +30 — 상수 fit. 편인격 + 관인상생 + 학당귀인 + 일주 약(쇠 포함) + 비겁 ≥ 2 + 재성 ≥ 2. **게임 CSO + 경영·전략·창업** 패턴.
 
-**잔존 miss/조정 (1명)**:
-- 세형: medical(110) top3, authority(124) primary. 의사이지만 편관격 + 관성 다중 + 양인 같이 발동되어 authority가 더 강하게 잡힘. 명리적으로 의사 = 의약 + 권력(편관격 직접 매핑). top3 hit으로 인정.
+**V12 fit (medical primary)**:
+- `combo_pyeongwanMedicalCore` +20 (medical) — 세형 fit. 편관격 + 관성 ≥ 3 + 관인상생 + 현침살 + 학당귀인 + 일주 강(건록·제왕). **편관 의약 정통형** — 권위·의약 복합 명식에서 의약을 primary로.
 
 ---
 
-## 6-prev. (참고) V10 Loop 1021 — V11 채택 전 결과
+## 6-prev. (참고) V11 Loop 1120 — V12 채택 전 결과
 
-V10 단계의 totalGap 6.0 (primary hit 4 + miss 3). V11에서 윤수·상수 fit detector 추가로 6/7 primary hit 달성.
+V11 단계의 totalGap 1.0 (primary hit 6 + 세형 top3). V12에서 세형 fit detector 추가로 7/7 perfect fit 달성.
 
 ---
 

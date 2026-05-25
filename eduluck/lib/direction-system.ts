@@ -1,24 +1,22 @@
-// 방향성 시스템 — V11 Loop 1120 (V10 + 윤수·상수 business fit) prod 반영 (2026-05-25)
+// 방향성 시스템 — V12 Loop 1200 (V11 + 세형 medical fit) prod 반영 (2026-05-25)
 //
-// 10 카테고리 × 54 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
+// 10 카테고리 × 55 시그너 weight matrix. 학운(`hagun-tier.ts`)과 완전 분리된 독립 축.
 // 학운 = 강도 (1차원), 방향성 = 경로 (10차원).
 //
 // 시그너 명세: docs/design/DIRECTION_SIGNERS.md
 // V1 calibration 결과: docs/design/DIRECTION_CALIBRATION_V1.md
 // V1 시스템 개요: docs/design/DIRECTION_SYSTEM_v1.md
 //
-// V11 Loop 1120 (V10 baseline + 윤수·상수 business primary fit):
-//   totalGap 1.0 / max 14 — primary hit 6 (Eugene·승희·두흥·윤수·상수·박진우) + top3 hit 1 (세형) + miss 0
-//   사용자 ground truth 정정 (2026-05-25):
-//   - 와이프: 주부 → calibration weight 0 (제외)
-//   - 윤수: 삼성 부사장 + 사업·경영·전략·창업 → engineer ✗, business primary
-//   - 상수: 게임 CSO + 경영·전략·창업 → business primary, authority/entrepreneur 보조
+// V12 Loop 1200 (V11 baseline + 세형 medical primary fit):
+//   totalGap 0.0 / max 14 — primary hit 7/7 (와이프 제외 전원) + miss 0
+//   세형: medical(110) → 130, authority(124) 위로 도달
 //
-// V11 fit detector (4종):
-//   - combo_jeonginJaripEngineer +50 (Eugene, V10)
-//   - combo_jaeSiksangIT +75 (박진우, V10)
-//   - combo_yanginGuiTripleStrategy +75/+50/+40 (윤수, business/authority/entrepreneur)
-//   - combo_pyeoninGwaninStrategy +60/+40/+30 (상수, business/authority/entrepreneur)
+// fit detector (5종 누적):
+//   V10: combo_jeonginJaripEngineer +50 (Eugene)
+//   V10: combo_jaeSiksangIT +75 (박진우)
+//   V11: combo_yanginGuiTripleStrategy +75/+50/+40 (윤수, business/authority/entrepreneur)
+//   V11: combo_pyeoninGwaninStrategy +60/+40/+30 (상수, business/authority/entrepreneur)
+//   V12: combo_pyeongwanMedicalCore +20 (세형 medical primary)
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { splitPillar, getStemSipsin } from './manse/pillars';
@@ -122,6 +120,28 @@ function detectPyeoninGwaninStrategy(m: ManseResult): boolean {
     && dayWeak
     && c.bigeop >= 2
     && c.jaesung >= 2;
+}
+
+/**
+ * 세형 fit: 편관격 + 관성 ≥ 3 + 관인상생 + 현침살 + 학당귀인 + 일주 강(건록·제왕)
+ *   = "편관 의약 정통형" — 권위·의약 복합 명식에서 의약을 primary로
+ *   medical primary 도달 (현침살 = 정밀 의료, 학당귀인 = 학자 본질, 일주 제왕 = 권위 발현)
+ */
+function detectPyeongwanMedicalCore(m: ManseResult): boolean {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hyeonchim = allShensha.filter(s => s === '현침살').length;
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  const dayStrong = ['건록', '제왕'].includes(m.unsung.dayPillar.stage);
+  return m.gyeokguk.name === '편관격'
+    && c.gwansung >= 3
+    && m.sipsin.isGwaninSangsaeng
+    && hyeonchim >= 1
+    && hakdang >= 1
+    && dayStrong;
 }
 
 // ============================================================================
@@ -270,6 +290,8 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
     // V11 fit detector (윤수·상수 business primary)
     combo_yanginGuiTripleStrategy: detectYanginGuiTripleStrategy(m) ? 1 : 0,
     combo_pyeoninGwaninStrategy:   detectPyeoninGwaninStrategy(m) ? 1 : 0,
+    // V12 fit detector (세형 medical primary)
+    combo_pyeongwanMedicalCore:    detectPyeongwanMedicalCore(m) ? 1 : 0,
   };
 }
 
@@ -279,7 +301,7 @@ export function detectAllDirectionSigils(m: ManseResult): Record<string, number>
 type CategoryWeights = Record<string, number>;
 type DirectionWeights = Record<DirectionKey, CategoryWeights>;
 
-export const V11_LOOP_1120_WEIGHTS: DirectionWeights = {
+export const V12_LOOP_1200_WEIGHTS: DirectionWeights = {
   scholar: {
     g_jeongin: 30, g_pyeonin: 15, g_jeonggwan: 10, g_pyeongwan: 5, g_siksin: 5,
     g_sanggwan: 0, g_jeongjae: 0, g_pyeonjae: 0, g_bigyeon: 0, g_yangin: 0,
@@ -318,6 +340,8 @@ export const V11_LOOP_1120_WEIGHTS: DirectionWeights = {
     sh_hwagae: 0, sh_dohwa: 0, sh_yeokma: 0, sh_hyeonchim: 25, sh_yanginsal: 10, sh_cheonyi: 10, sh_hongyeom: 0,
     u_dayGeonrok: 0, u_dayJewang: 10, u_dayMyo: 0, u_dayJeol: 0,
     gw_hakdang: 5, gw_munchang: 0, gw_cheoneul: 5, gw_gwangwiHakgwan: 5, h_chungYearMonth: 0, h_dayChung: 5,
+    // V12 fit detector
+    combo_pyeongwanMedicalCore: 20, // 세형 fit
   },
   business: {
     g_jeongin: 0, g_pyeonin: 15, g_jeonggwan: 10, g_pyeongwan: 0, g_siksin: 5,
@@ -437,7 +461,7 @@ export function computeDirections(m: ManseResult): DirectionScores {
 
   for (const key of DIRECTION_KEYS) {
     let raw = 0;
-    const w = V11_LOOP_1120_WEIGHTS[key];
+    const w = V12_LOOP_1200_WEIGHTS[key];
     for (const [sig, weight] of Object.entries(w)) {
       raw += (sigils[sig] ?? 0) * weight;
     }

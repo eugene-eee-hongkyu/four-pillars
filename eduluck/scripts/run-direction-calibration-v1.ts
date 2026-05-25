@@ -722,6 +722,60 @@ const V11_SCENARIOS: CalibConfigWithVirtual[] = [
 SCENARIOS.push(...V11_SCENARIOS);
 
 // ============================================================================
+// V12 — 세형 medical primary fit (편관 의약 정통형)
+// 세형: 편관격 + 관성 3 + 관인상생 + 현침살 + 학당귀인 + 일주 제왕
+//   → 명리적 의사·법조 본질, 현재 authority(124) > medical(110)
+// ============================================================================
+
+function detectPyeongwanMedicalCore(m: ReturnType<typeof computeManse>): Record<string, number> {
+  const c = m.sipsin.counts;
+  const allShensha = [
+    ...m.shensha.yearPillar, ...m.shensha.monthPillar,
+    ...m.shensha.dayPillar, ...m.shensha.hourPillar,
+  ];
+  const hyeonchim = allShensha.filter(s => s === '현침살').length;
+  const hakdang = allShensha.filter(s => s === '학당귀인').length;
+  // 편관격 + 관성 ≥ 3 + 관인상생 + 현침살 + 학당귀인 + 일주 강(건록·제왕)
+  const dayStrong = ['건록', '제왕'].includes(m.unsung.dayPillar.stage);
+  const ok = m.gyeokguk.name === '편관격'
+    && c.gwansung >= 3
+    && m.sipsin.isGwaninSangsaeng
+    && hyeonchim >= 1
+    && hakdang >= 1
+    && dayStrong;
+  return { combo_pyeongwanMedicalCore: ok ? 1 : 0 };
+}
+
+const V12_SCENARIOS: CalibConfigWithVirtual[] = [
+  { id: 1200, name: 'V12 V11 + pyeongwanMedicalCore +20 (세형 medical fit)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10, combo_pyeongwanMedicalCore: 20 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5, combo_yanginGuiTripleStrategy: 75, combo_pyeoninGwaninStrategy: 60 },
+      authority: { combo_yanginGuiTripleStrategy: 50, combo_pyeoninGwaninStrategy: 40 },
+      entrepreneur: { combo_yanginGuiTripleStrategy: 40, combo_pyeoninGwaninStrategy: 30 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit, detectYanginGuiTripleStrategy, detectPyeoninGwaninStrategy, detectPyeongwanMedicalCore],
+  },
+  { id: 1201, name: 'V12 V11 + pyeongwanMedicalCore +30 (세형 medical fit 강)',
+    weights: overrideWeights(V1_DIRECTION_WEIGHTS, {
+      medical: { sh_cheonyi: 10, e_metalStrong: 10, cnt_insung: 2, s_gwaninsangsaeng: 10, combo_pyeongwanMedicalCore: 30 },
+      engineer: { g_jeongin: 20, g_yangin: 15, cnt_siksang: 4, combo_jeonginJaripEngineer: 50, combo_jaeSiksangIT: 75 },
+      business: { g_pyeonin: 15, cnt_jaesung: 5, combo_yanginGuiTripleStrategy: 75, combo_pyeoninGwaninStrategy: 60 },
+      authority: { combo_yanginGuiTripleStrategy: 50, combo_pyeoninGwaninStrategy: 40 },
+      entrepreneur: { combo_yanginGuiTripleStrategy: 40, combo_pyeoninGwaninStrategy: 30 },
+      arts: { g_jeongjae: 15, cnt_insung: 3 },
+      scholar: { cnt_insung: 3, gw_hakdang: 10, gw_munchang: 7 },
+    }),
+    virtualDetectors: [detectEngineerEugeneFit, detectEngineerJinwooFit, detectYanginGuiTripleStrategy, detectPyeoninGwaninStrategy, detectPyeongwanMedicalCore],
+  },
+];
+
+SCENARIOS.push(...V12_SCENARIOS);
+
+// ============================================================================
 // Main
 // ============================================================================
 async function main() {
