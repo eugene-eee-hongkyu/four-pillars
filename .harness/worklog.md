@@ -6,7 +6,68 @@
 
 ---
 
-## Session 2026-05-25 19:33 — Direction UI 통합 + LLM 흐름 안정화 + 20 섹션 계획
+## Session 2026-05-26 00:17 — v5 정밀 진단 20섹션 분리 + 디자인 v2 + 시각 anchor 카드 + UI 정제
+
+### 작업 요약
+
+**A. Phase 1-5 v5 정밀 진단 분리 구조 합의·구현** (commits `78b71fe`·`32805f1`·`0fdc044`·`09e489c`·`bae0c46`):
+- 정밀 진단 16섹션 단일 호출 → Part 1 (10섹션) + Part 2 (10섹션) + Deep-dive 분리
+- 신규 4섹션: §7 건강 · §8 엄마-자녀 합 · §9 아빠-자녀 합 · §10 강요 금지 (Part 1)
+- `lib/prompts/interpret-premium-shared.ts` (context·tier·tone·tier guide) + `-part1.ts` + `-part2.ts` + `interpret-deep.ts` (단일 섹션 5500~8000자, 20섹션 모두 가능)
+- 3개 vercel endpoint (`/api/interpret-premium-part1·part2·interpret-deep`), `vercel.json` functions 등록
+- `lib/flow/context.tsx`: `premiumPart1Text`·`part2Text`·`deepDiveTexts` 필드 추가 + hydrate 안전 처리
+- UI 3개 화면 (interpret-premium 갱신 + interpret-deep-select + interpret-deep) + `SilentSsePrefetch` (Part 2 백그라운드 prefetch)
+
+**B. v5 endpoint vercel 위치 fix** (`532a793`): Phase 2에서 만든 `app/api/*+api.ts`는 Expo Router 형식이라 Vercel 미인식 → 404. `eduluck/api/*.ts`로 이동 + `vercel.json` functions 등록.
+
+**C. 분량 8000자 + UI 재배치** (`c0d7c2a`):
+- `gradeSpec` 110~160문장 (~7000~9000자), 각 섹션 10~18문장 강조
+- `max_tokens` 8192 → 16000, `StreamingBody` timeout 90s → 180s
+- survey 2단계 (결제 가치·결제 의향) 전체 삭제
+- 학습 특성·공유 버튼·"20섹션 자세히" 버튼을 Part 2 완료 후로 이동
+- Part 1 화면 끝 = "더 자세한 진로·미래 보기" 버튼
+
+**D. prompts 디렉토리 → docs/prompts/로 이동** (`9d61c8b`→`679f721`):
+- `prompts/*.md`가 `lib/prompts/*.ts`의 단순 plain text 사본임 확인
+- `docs/prompts/`로 이동 + README + dump-prompts-v5 `--write` 옵션 부활
+
+**E. StreamingBody 청크 reveal 모드** (`dc467fd`·`636764d`·`8576419`·`b6cc9f1`·`51ad624`·`48f5070`):
+- 글자 단위 streaming 폐기 → 청크 단위 reveal
+- 첫 청크 10s → 20s로 변경 → 시간 기반 폐기 → 섹션 헤더 기반 (`"## (N+3)."` 등장 trigger, 2섹션씩)
+- progress bar 청크별 reset + 위치 이동 (본문 도착 후 본문 아래로) + 마지막 청크 reveal 후 사라짐
+- skeleton 잔존 (안 reveal된 섹션만)
+- stages 4단계 → 2단계 (첫 청크 직전까지)
+- "다음 부분 (§3·§4) 정리 중" 라벨
+
+**F. 인용 박스 + 명리 근거 박스 v1** (`4497235`):
+- LLM prompt 가이드: 각 ## 섹션에 `> ...` 인용 1~2 + `### 근거` bullet 3~5
+- `InterpretBody` parseText 확장 (quote·evidence Block 타입)
+- `QuoteBox`·`EvidenceBox` 컴포넌트
+
+**G. 디자인 v2 (사용자 "허접" 피드백 → 전면 polish)** (`c1d37ec`):
+- `SectionHeaderV2`: 좌측 원형 번호 배지(40x40, secondary border) + title 20px bold + subtitle secondary + 아래 1px 구분선
+- `QuoteBox` v2: 좌상단 큰 전각 ❝ (48px, opacity 0.35) + secondaryContainer + rounded 12 + 그림자
+- `EvidenceBox` v2 + 카테고리 chip: 본질·시기·신살·관계 4종 색별 chip, 시그너·의미 row layout
+- raw markdown ** strip + prompt 강화
+
+**H. §18 → §14 섹션 재배열** (`97d63fc`): §13 흐름 직후 §14 조심한 해 (worst year zoom in) 자연 연결. §14~§17 → §15~§18 시프트. `PREMIUM_PROMPT_VERSION` v5 → `v5.1-section-reorder` (캐시 자동 invalidate).
+
+**I. 4분면 카드** (`70479e4`): §3 헤더 직후 `### 강점·약점 카드` 마커 → `StrengthWeaknessCard` (좌 강점 / 우 보강할 곳).
+
+**J. 시간축 카드** (`e3fefe3`): §13 헤더 직후 `### 시기 카드` 마커 → `LuckTimelineCard` (3구간 + 현재 ⭐ + worst year ⚠).
+
+**K. 약한 자리·약한 방향 제거 + 함께 작용 토글** (`388509c`): `HagunSignerBreakdown` 페널티 chip + `DirectionCard` weak chip 영역 모두 제거. "함께 작용하는 자리"는 토글로 기본 접힘.
+
+**L. 카테고리 chip "신살" → "기운"** (`f696c16`): 명리 정통 신살(神煞)을 어머니 친화 단어 "기운"으로 통칭. 본질·시기·관계와 한자어 2자 톤 통일.
+
+**M. share-token race retry + 로깅 강화** (`d9077ba`): 가족 공유 버튼 → 'not found' 에러. `.maybeSingle()` + 1초 retry (race condition 대응) + sessionId·errorCode 자세한 로그. interpret-premium-part1/part2/deep insert error 결과 로깅 추가.
+
+### 다음 액션
+
+1. (배포 검증) 사용자 새 진단 + 공유 버튼 시도 → vercel logs로 share-token race 해결 또는 schema 이슈 원인 확인 (`[part1] insert OK` vs `[part1] insert error` 분기)
+2. v5.1 prod 사용성 검증 (4분면 카드 + 시간축 카드 LLM 출력 자연성 + 디자인 v2 모바일 viewport)
+3. Mom test 5~10명 — 정성 피드백 (Part 1/2 분리·시각 anchor 카드·신규 4섹션)
+
 
 ### 작업 요약
 - **Direction UI 통합 (10 카테고리 화면 적용)** (`e64e8b6`):

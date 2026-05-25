@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-05-26: 정밀 진단 v5 — 16섹션 단일 호출 → Part 1/2/Deep-dive 분리 구조
+
+- **선택**: Part 1 (10섹션) + Part 2 (10섹션) + Deep-dive (단일 섹션 5500~8000자) 3-layer 구조. 신규 4섹션 추가 (건강·엄마합·아빠합·강요금지). Part 2는 Part 1 완료 5초 후 자동 prefetch.
+- **대안 검토**:
+  - **A. 단일 호출 16섹션 유지 (v4)**: 한 번 LLM 호출로 16섹션. 단순. 단 분량 길어지면 4096 tokens 초과·일부 섹션 누락 위험. 사용자가 한 화면 스크롤 부담.
+  - **B. Part 1/2 분리만 (Deep-dive 없음)**: 두 화면. 진로·미래 보고 싶으면 한 번 더 클릭. Deep-dive 영역 깊이 풀이 ✗.
+  - **C. Part 1/2 + Deep-dive (선택)**: 3-layer. 사용자가 본 적 있는 영역을 더 깊게 (~8000자). 비용 ↑ but UX ↑.
+- **선택 이유**: 분량 8000자 목표 + 어머니가 한 화면에 다 안 읽고 "더 자세히" 패턴 학습 + 명리 상담 정통 흐름 (큰 그림 → 시기 zoom → 영역별 깊이). prefetch 옵션 B로 클릭 시 즉시 표시 (UX 최적).
+- **영향 범위**: lib/prompts/* (4 파일 신규) · api/* (3 endpoint 신규) · lib/flow/context.tsx (3 필드 추가) · app/(flow)/* (3 화면 신규/갱신) · components/interpret/SilentSsePrefetch (신규).
+- **되돌리는 방법**: PREMIUM_PROMPT_VERSION을 v4로 되돌리고 `/api/interpret-premium` legacy endpoint 사용. 단, 신규 4섹션 풀이는 잃음.
+
+---
+
+## 2026-05-26: §18 조심한 해 → §14로 이동 (Part 2 섹션 재배열)
+
+- **선택**: §18 (가장 조심해야 하는 한 해)를 §13 (현재~앞으로의 흐름) 직후 §14로 이동. §14~§17 (해외·직업·전공·학교) → §15~§18로 시프트.
+- **대안 검토**:
+  - **A. 원래 순서 유지**: §13 흐름 → §14 해외 → §15 직업 → §16 전공 → §17 학교 → §18 조심한해. 진로 흐름(해외→직업→전공→학교)이 한 chunk로 이어짐. 단 §13과 §18 사이 4섹션이 끼어 시기 anchor 분리.
+  - **B. §18 → §14 이동**: §13 흐름 → §14 조심한 해 (worst year zoom in) → 진로 묶음. 시간축 카드(시기 chart + ⚠ worst year)와 §14 본문이 한 chapter로 묶이는 디자인 자연 연결.
+- **선택 이유**: 명리 상담 정통 흐름 — "시기 큰 그림 → worst year zoom in → 진로 묶음". 시간축 카드의 ⚠ 마커가 §14 본문으로 바로 연결되어 인지 부담 ✗. 사용자도 강하게 동의.
+- **영향 범위**: lib/prompts/interpret-premium-part2.ts (§13~§18 재정의), lib/prompts/interpret-deep.ts (DEEP_SECTIONS 14~18 재배열), app/(flow)/interpret-premium.tsx (PART2_SECTION_HEADERS), lib/flow/context.tsx (PREMIUM_PROMPT_VERSION v5.1).
+- **되돌리는 방법**: 옛 순서로 재배열, PREMIUM_PROMPT_VERSION revert.
+
+---
+
+## 2026-05-26: 명리 근거 카테고리 chip — "신살" → "기운"
+
+- **선택**: 카테고리 chip 4종 = 본질·시기·**기운**·관계 (옛 신살을 "기운"으로 통칭).
+- **대안 검토**:
+  - **A. "신살" 유지 (명리 정통)**: 명리학 정통 핵심 용어. 단 어머니에게 한자 학술 톤, "살(煞)"이 흉함 연상.
+  - **B. "별"**: 명리 commercial 시장(포스텔러·점신 등)에서 문창성·천을귀인을 "별"로 통칭하는 관습. 친근하지만 1자라 다른 chip(2자)과 톤 불균형.
+  - **C. "기운"**: 어머니 친화 일반어. 본질·시기·관계와 한자어 2자 톤 통일. 명리 정통 용어 ✗지만 "이 기운이 받쳐줘요" 화법 자연.
+  - **D. "특성"**: 사주 고유 자리 의미. 약간 학술·일반론.
+- **선택 이유**: 한자어 2자 톤 통일 + "기운" 화법이 어머니 화법에 자연. 명리 정통에서 살짝 벗어나지만 commercial 사주 시장의 어머니 친화 단어로 자리 잡음. UX 우선.
+- **영향 범위**: lib/prompts/interpret-premium-shared.ts SHARED_TONE_GUIDE 카테고리 정의 + §3·§7·§13 예시, components/interpret/InterpretBody.tsx CATEGORY_COLORS (옛 '신살' 키도 backwards compat 유지).
+- **되돌리는 방법**: SHARED_TONE_GUIDE에서 '기운' → '신살' 일괄 치환, CATEGORY_COLORS에서 '기운' 키 제거.
+
+---
+
+## 2026-05-26: StreamingBody reveal 방식 — 글자 단위 → 청크 (섹션 헤더 기반)
+
+- **선택**: SSE delta는 백그라운드 수신, 화면 노출은 "## (N+3)." 헤더 등장 trigger로 2섹션씩 청크 reveal. 마지막 청크는 stream done 시. Deep-dive는 sectionHeaders 없으므로 30초 시간 기반 fallback.
+- **대안 검토**:
+  - **A. 글자 단위 streaming (기본 SSE)**: 토큰 단위로 즉시 화면 갱신. ChatGPT 패턴. 단 visual noise ↑·읽기 방해.
+  - **B. 시간 기반 청크 (10s → 20s)**: 일정 간격 reveal. 단순. 단 첫 청크가 너무 짧으면 분량 부족, 너무 길면 대기.
+  - **C. 섹션 헤더 기반 (LLM 출력 기반)**: 다음 섹션 등장 시 직전 청크 reveal. 자연적 단위·분량 균형. 단 sectionHeaders 없는 deep-dive는 fallback 필요.
+- **선택 이유**: 사용자 피드백 "글자 단위 streaming 보기 안 좋음" + "10초로 첫 청크 하면 분량 부족". 명리 섹션 단위가 의미 단위라 자연. 클라이언트가 "## N." marker로 LLM 출력 진행 자체를 reveal 트리거로 활용.
+- **영향 범위**: components/interpret/StreamingBody.tsx (전면 재작성). SECTIONS_PER_CHUNK=2, REVEAL_POLL_MS=1s, TIME_FALLBACK_INTERVAL_MS=30s. progress bar 청크별 reset + 위치 이동.
+- **되돌리는 방법**: setInterval(20s)로 시간 기반 reveal로 되돌림. SSE delta 시 setText 즉시 호출 (글자 단위로 되돌리려면).
+
+---
+
 ## 2026-05-24: V11 Loop 603 — 박진우 fit detector 도입 (옵션 A) vs 외부변수 인정 (옵션 B)
 
 - **선택**: 옵션 A — `combo_jaeSiksangBigeopJarip +45` 신규 detector를 prod hagun-tier에 도입. 박진우 raw 56 → 101 (3-1) 직접 fit.

@@ -6,29 +6,30 @@
 
 ---
 
-## 마지막 실행: 2026-05-25 19:33
-## 마지막 업데이트: 2026-05-25 19:33
+## 마지막 실행: 2026-05-26 00:17
+## 마지막 업데이트: 2026-05-26 00:17
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Direction UI 통합 + LLM 흐름 안정화 완료. 다음: 정밀 진단 20 섹션 + Part 1/2 분리 + Deep-dive 구조 (Phase 1-5 단계별 진행).
+- v5.1 정밀 진단 prod 검증 단계 — Part 1/2 분리 + Deep-dive + 디자인 v2 + 4분면·시간축 카드 + 인용·근거 박스 모두 prod 배포 완료. share-token race fix까지 push.
 
 ### 이어서 할 것
 
-1. 사용자 결정 5가지 합의 후 Phase 1 시작 (신규 4 섹션 prompt 작성 + Part 1/2 분리 명세)
-2. Phase 2-5 순차 진행 (API 분리 → context 확장 → UI 3개 화면 → deep-dive 통합) — 각 phase 끝마다 자동 테스트
-3. (선택) Mom test 진행
+1. 사용자 새 진단 + 가족 공유 시도 → vercel logs로 share-token race 해결 또는 schema 이슈 원인 판별 (`[part1] insert OK` vs `[part1] insert error`)
+2. v5.1 prod 사용성 검증 — 4분면 카드·시간축 카드 LLM 출력 자연성 + 디자인 v2 모바일 viewport
+3. Mom test 5~10명 — Part 1/2 분리·시각 anchor 카드·신규 4섹션 정성 피드백
 
 ### 막힌 것
 
-- 없음 (사용자 결정 대기 중)
+- 없음 (사용자 검증 대기)
 
 ### 사람 판단 필요
 
-- 5가지 결정 (20 섹션 분류·아빠 사주 placeholder·Part 2 prefetch·deep-dive 제한·테스트 결과 저장 위치)
-- Phase 4 UI 시각·UX 자연스러움 검증
-- Mom test 어머니 5명 정성 피드백
+- 가족 공유 동작 확인 (race 가설 검증)
+- LLM이 prompt 가이드 따라 `### 강점·약점 카드` + `### 시기 카드` + `### 근거` 자연 출력하는지 어머니 톤 검증
+- Mom test 어머니 5~10명 정성 피드백
+- Deep-dive 일 N회 cap 운영 결정
 
 ### 백로그 요약
 
@@ -107,52 +108,51 @@
 - [x] 분포 시뮬 스크립트 — eval-direction-distribution
 - [x] recommendedFields 환경 키워드 보강 (Phase C)
 - [x] LLM 9 sample §12 자연성 검증 — 환경 단어 9/9, 단정 0
-- [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증 + ANTHROPIC_MODEL_PREMIUM 분리 + 비용 3x 절감
+- [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증
 - [x] 100만 random 사주 시뮬 + cutoff 안정성 검증
 - [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐
-- [x] V1 30회 calibration loop 자동 실행
-- [x] V2 60회 calibration loop 자동 실행
-- [x] V3 75→100 detector pool + 90 시나리오 ⭐
-- [x] V4 학파 ≥ 2 검증 19 신규 detector + 60 시나리오 ⭐
-- [x] V5 관귀학관 등 4 신규 detector (라운드 2)
-- [x] V6 absolute cutoff baseline — totalGap 47 ⭐
-- [x] Prod v8 hagun-tier 반영 (V6 #266 weight + 9/9 raw 정합) ⭐
-- [x] Hagun v8 점수 0~100 정규화 + calcConfidence v8 scale
-- [x] 정환 sample weight 0.5 (외부 변수)
-- [x] V7 30 시나리오 — Loop 298 best
-- [x] V8 정관격 학자형 detector
-- [x] V9 정관격 시너지 콤보 3 detector — 재호 = 건록격 확정
-- [x] V10 비견격 학자형 콤보 4 detector — Loop 523 totalGap 21.5 ⭐
-- [x] 11 sample 정규화 표 출력
-- [x] 김택범·박진우 신규 sample V10 평가
-- [x] 음력→양력 변환 lunar-typescript 활용 진단
-- [x] 김택범·박진우 data.ts 추가 + V11 calibration sweep
-- [x] V11 Loop 603 prod hagun-tier 반영 + 13명 self-test 100% raw 일치 (`466fbf2`) ⭐
-- [x] tsconfig deprecated 옵션 정공 제거 + run-calibration-v3 TDZ fix (`07ef4fd`)
-- [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성 완료
-- [x] Direction System V1-V12 — Step 0-6 전체 + perfect fit 7/7 ⭐
+- [x] V1-V12 calibration loop · 30~100 시나리오 sweep
+- [x] V11 Loop 603 prod hagun-tier + 13명 self-test 100% 일치 (`466fbf2`) ⭐
+- [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성
+- [x] Direction System V1-V12 — Step 0-6 + perfect fit 7/7 ⭐
 - [x] V12 Loop 720 hagun + 14명 정합 (`cb2df11`)
-- [x] Direction System V1 Loop 700 prod 통합 (`53bbe7b`)
-- [x] Direction V10·V11·V12 — Eugene·박진우·윤수·상수·세형 fit (`ccc485c`·`9ab1631`·`865489d`) ⭐ 7/7 perfect
-- [x] Direction UI 통합 — 화면에 10 카테고리 노출 (`e64e8b6`)
+- [x] Direction UI 통합 — 10 카테고리 화면 노출 (`e64e8b6`)
 - [x] Vercel esbuild alias 버그 fix (`e201d7c`)
 - [x] 만세력 → 정밀 진단 직행 (`e4c37b3`)
-- [x] 정밀 진단 cache 무효화 — PREMIUM_PROMPT_VERSION v4 (`27cc79e`)
 - [x] DirectionCard mid 영역 누락 + 다재다능 라벨 (`5f0850b`·`6d70491`)
 - [x] LLM hang 대응 — V12 prompt 갱신 + StreamingBody 90초 timeout (`a2a50de`)
 - [x] StreamingBody useEffect deps 폭주 fix (`ff53a6e`)
-- [x] 20 섹션 계획 + Phase 1-5 단계별 plan + 테스트 plan 합의
-- [ ] Phase 1: 신규 4 섹션 prompt 작성 (건강·엄마합·아빠합·강요금지) + Part 1/2 분리 명세
-- [ ] Phase 2: API 분리 (`/api/interpret-premium-part1`·`-part2`·`-deep`) + PREMIUM_PROMPT_VERSION v5
-- [ ] Phase 3: Context 확장 (premiumPart1Text·part2Text·deepDiveTexts)
-- [ ] Phase 4: UI 3개 화면 (interpret-premium 갱신·interpret-deep-select·interpret-deep)
-- [ ] Phase 5: Deep-dive 통합 + 비용 제한 결정 + 문서
+- [x] Phase 1: 신규 4섹션 prompt + Part 1/2 분리 명세 (`78b71fe`) ⭐
+- [x] Phase 2: API 분리 3 endpoint (`32805f1`)
+- [x] Phase 3: Context 확장 + hydrate (`0fdc044`)
+- [x] Phase 4: UI 3개 화면 + SilentSsePrefetch (`09e489c`)
+- [x] Phase 5: INTERPRET_FLOW_v5.md + self-test 회귀 ✗ (`bae0c46`)
+- [x] v5 endpoint vercel 위치 fix — 404 해결 (`532a793`)
+- [x] 분량 8000자 + survey 제거 + max_tokens 16000 (`c0d7c2a`)
+- [x] prompts/ → docs/prompts/ 이동 + README + dump --write (`9d61c8b`·`679f721`)
+- [x] StreamingBody 청크 reveal 모드 — 글자 streaming 폐기 (`dc467fd`)
+- [x] StreamingBody 섹션 헤더 기반 reveal (2섹션씩) (`b6cc9f1`)
+- [x] progress bar 청크 reset + 위치 이동 + 마지막 청크 사라짐 (`51ad624`)
+- [x] stages 4단계 → 2단계 (첫 청크 직전까지) (`48f5070`)
+- [x] InterpretBody markdown ** strip + prompt 강화 (`636764d`)
+- [x] 인용 박스 + 명리 근거 박스 v1 (`4497235`)
+- [x] 디자인 v2 — 섹션헤더·QuoteBox·EvidenceBox 카테고리 chip 전면 polish (`c1d37ec`) ⭐
+- [x] §18 → §14 섹션 재배열 + PROMPT_VERSION v5.1 (`97d63fc`) ⭐
+- [x] 4분면 카드 §3 (StrengthWeaknessCard) (`70479e4`) ⭐
+- [x] 시간축 카드 §13 (LuckTimelineCard) — 3구간 + 현재 ⭐ + worst year ⚠ (`e3fefe3`) ⭐
+- [x] 약한 자리·약한 방향 제거 + 함께 작용 토글 (`388509c`)
+- [x] 카테고리 chip "신살" → "기운" (`f696c16`)
+- [x] share-token race retry + insert error 로깅 (`d9077ba`)
+- [ ] (검증) 가족 공유 race 해결 또는 schema 이슈 원인 판별
+- [ ] (검증) v5.1 4분면·시간축 카드 LLM 출력 자연성 + 모바일 viewport
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
 - [ ] 음력 입력 UI 토글 추가 (선택)
-- [ ] Mom test 10명 — DirectionCard ⓘ + 환경 표현 + Part 1/2 정성 검증
+- [ ] Mom test 10명 — 시각 anchor 카드 + Part 1/2 정성 검증
 - [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행
 - [ ] 사주톡 10명 지인 테스트 계속 진행
 - [ ] sajutalk v2 완료 보고
+- [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
+- [ ] legacy /api/interpret-premium 정리 (사용처 0 확인 후)
