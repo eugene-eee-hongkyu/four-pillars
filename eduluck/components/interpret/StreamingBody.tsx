@@ -1,27 +1,28 @@
-// SSE 스트리밍 본문 — 청크 reveal 모드 (글자 단위 streaming ✗)
-//   - 처음 10초: skeleton + progress bar + 단계 라벨 (본문 노출 ✗)
-//   - 10초 시점: 그때까지 수신된 본문 첫 청크로 한 번에 표시
-//   - 이후 20초 간격: 누적 수신분을 추가 청크로 한 번에 표시
-//   - stream done: 남은 본문 즉시 표시
+// SSE 스트리밍 본문 — 섹션 헤더 기반 청크 reveal (시간 기반 ✗)
 //
-//   이유: 글자 단위 갱신은 visual noise·읽기 방해. 청크로 모아 보여주면 한 호흡씩 차분히 읽을 수 있음.
+// reveal trigger:
+//   - sectionHeaders prop (예: ['1. 시작', '2. 본질', ..., '10. 강요 금지'])에서 헤더 번호 추출
+//   - LLM 본문에 "## (N+3)." 헤더가 등장하면 §1~§(N+2)까지 reveal
+//     (= 한 번에 섹션 2개씩 reveal. 직전 섹션이 완료된 게 확인된 시점)
+//   - 예: "## 3." 등장 → §1·§2 reveal / "## 5." 등장 → §3·§4 추가 / ... / "## 9." → §7·§8
+//   - 마지막 청크 (§9·§10)는 다음 trigger 없으므로 stream done 시 reveal
 //
-// 그 외 perception 보조:
-//   A. 구조화 skeleton — 실제 섹션 헤더(예: "1. 본질", "2. 강점" ...)를 미리 노출
-//   C. 시간 기반 단계 라벨 — elapsed time → "사주 정리 중 → 본질 풀이 중" 진행 표시
-//   D. 정직한 progress bar — expectedDurationSec 기반 0~95% 비례 (가짜 100% ✗)
+// skeleton:
+//   - 아직 reveal 안 된 sectionHeaders는 본문 아래에 회색 bar로 잔존
+//   - 사용자가 "총 10섹션 중 지금 몇 번째까지 나왔구나" 인식 + 다음 기대감
 //
-// 근거: Nielsen "Slow AI", Perplexity intermediate steps, NN/G structural skeleton
-
-/** 청크 간격 (ms). 첫 청크·이후 청크 모두 동일 — 사용자가 한 청크 읽는 동안 다음 청크 수신.
- *  10초로 짧게 했더니 첫 청크 분량이 적어 읽을거리 부족 (사용자 피드백). */
-const CHUNK_INTERVAL_MS = 20_000;
-const CHUNK_INTERVAL_SEC = CHUNK_INTERVAL_MS / 1000;
+// 글자 단위 streaming 폐기 이유: visual noise + 읽기 방해. 사용자가 한 호흡씩 차분히 읽음.
 
 import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, Animated } from 'react-native';
 import { InterpretBody } from './InterpretBody';
 import { colors } from '@/design-tokens/tokens';
+
+/** reveal polling 간격. delta가 더 자주 들어와도 1초 단위로 헤더 등장 체크. */
+const REVEAL_POLL_MS = 1_000;
+
+/** 한 청크에 reveal할 섹션 개수. 2 = §1·§2 → §3·§4 → ... */
+const SECTIONS_PER_CHUNK = 2;
 
 export interface StreamingStage {
   /** 이 단계가 시작되는 elapsed seconds (0부터) */
@@ -40,18 +41,17 @@ interface Props {
   onComplete?: (fullText: string) => void;
   onError?: (message: string) => void;
   /**
-   * 구조화 skeleton에 미리 노출할 섹션 헤더.
-   * 정밀: ['1. 시작', '2. 본질', ..., '14. 어머니께'] (14개)
-   * 미니: ['1. 본질', '2. 강점', '3. 약점·주의', '4. 현재 운기', '5. 어머니께'] (5개)
-   * 짧은 hook(relation-mini 등)에서는 생략 가능 — 간단 skeleton fallback.
+   * 구조화 skeleton에 미리 노출할 섹션 헤더 (예: ['1. 시작', '2. 본질', ...]).
+   * reveal trigger 기준 — 헤더 번호 추출해 "## N." 등장 시점 추적.
+   * 생략 시 reveal은 stream done 시 한 번에.
    */
   sectionHeaders?: string[];
   /**
-   * 시간 기반 단계 라벨. 첫 항목 at=0 권장. 도착한 단계 = ✓, 현재 단계 = ⋯, 대기 = (회색)
+   * 시간 기반 단계 라벨. 첫 항목 at=0 권장.
    * 생략 시 단계 라벨 영역 미표시.
    */
   stages?: StreamingStage[];
-  /** 예상 총 응답 시간(초). progress bar 분모. 정밀 ~45, 미니 ~18. 생략 시 progress bar 미표시. */
+  /** progress bar 분모. 표시 텍스트는 elapsed만 (예상은 부정확해서 제외). */
   expectedDurationSec?: number;
 }
 
@@ -85,15 +85,12 @@ function parseSseChunk(chunk: string): SseEvent[] {
 /** 시간 기반 progress (0~95%). 95% 이후는 stream 완료 시 100%. */
 function calcProgress(elapsedSec: number, expectedSec: number): number {
   if (elapsedSec <= 0) return 0;
-  // 0~80% 구간: 선형. 80~95% 구간: 감속 (long tail 자연 처리)
   const ratio = elapsedSec / expectedSec;
   if (ratio <= 0.8) return Math.min(80, ratio * 100);
-  // 80% 이후는 천천히 95%까지
-  const tailRatio = Math.min(1, (ratio - 0.8) / 0.4); // 1.0x → 1.2x expectedSec까지 천천히
+  const tailRatio = Math.min(1, (ratio - 0.8) / 0.4);
   return 80 + tailRatio * 15;
 }
 
-/** elapsed sec 기준 현재 단계 index. */
 function currentStageIndex(elapsedSec: number, stages: StreamingStage[]): number {
   let idx = 0;
   for (let i = 0; i < stages.length; i++) {
@@ -101,6 +98,12 @@ function currentStageIndex(elapsedSec: number, stages: StreamingStage[]): number
     else break;
   }
   return idx;
+}
+
+/** 헤더 문자열에서 섹션 번호 추출 ("1. 시작" → 1). */
+function extractSectionNum(header: string): number | null {
+  const m = header.match(/^(\d+)\./);
+  return m ? parseInt(m[1], 10) : null;
 }
 
 export function StreamingBody({
@@ -113,43 +116,61 @@ export function StreamingBody({
   stages,
   expectedDurationSec,
 }: Props) {
-  // displayedText = 사용자에게 실제 보이는 본문 (청크 단위로만 갱신)
-  // fullTextRef = SSE 실시간 누적 (display는 안 됨)
   const [displayedText, setDisplayedText] = useState('');
   const fullTextRef = useRef('');
-  const displayedLenRef = useRef(0);
-  const [chunkCount, setChunkCount] = useState(0);
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
   const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
-  // 마지막 청크 reveal 시점 (또는 fetch 시작 시점) — 다음 청크까지 카운트다운 계산용
-  const lastRevealAtMsRef = useRef<number>(0);
 
-  // elapsed time 카운터 — 1초마다 갱신 (단계 라벨·progress bar 둘 다 사용)
+  // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). 0 = 아직 첫 청크 미reveal.
+  const [revealedSectionNum, setRevealedSectionNum] = useState(0);
+  const revealedSectionNumRef = useRef(0);
+
+  const sectionNums = (sectionHeaders ?? [])
+    .map(extractSectionNum)
+    .filter((n): n is number => n !== null);
+  const maxSectionNum = sectionNums.length > 0 ? Math.max(...sectionNums) : 0;
+  const minSectionNum = sectionNums.length > 0 ? Math.min(...sectionNums) : 1;
+
+  // elapsed time 카운터
   useEffect(() => {
     if (status === 'done' || status === 'error') return;
     const t = setInterval(() => setElapsedSec(s => s + 1), 1000);
     return () => clearInterval(t);
   }, [status]);
 
-  // 청크 reveal 타이머 — CHUNK_INTERVAL_MS 간격 (첫 청크도 동일 간격)
+  // reveal polling — fullTextRef에서 다음 trigger 헤더 등장 체크
   useEffect(() => {
     if (status === 'done' || status === 'error') return;
+    if (sectionNums.length === 0) return; // sectionHeaders 없으면 stream done 시 한 번에
 
-    const revealLatest = () => {
-      const next = fullTextRef.current;
-      if (next.length > displayedLenRef.current) {
-        displayedLenRef.current = next.length;
-        setDisplayedText(next);
-        setChunkCount(c => c + 1);
-      }
-      lastRevealAtMsRef.current = Date.now();
+    const tryReveal = () => {
+      const text = fullTextRef.current;
+      if (!text) return;
+      const lastRevealed = revealedSectionNumRef.current;
+      const nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1;
+      // 첫 청크: lastRevealed=0 → trigger §3. "## 3." 등장하면 그 직전(= §1·§2)까지 reveal.
+      // 그 다음: lastRevealed=2 → trigger §5. "## 5." 등장하면 §3·§4 추가.
+      // ... lastRevealed=8 → trigger §11 (maxSectionNum=10 초과) → trigger 없음, stream done 대기.
+      if (nextTriggerSectionNum > maxSectionNum) return;
+
+      const marker = `## ${nextTriggerSectionNum}.`;
+      const idx = text.indexOf(marker);
+      if (idx < 0) return;
+
+      const newText = text.slice(0, idx).trimEnd();
+      if (newText.length === 0) return;
+      const newRevealed = nextTriggerSectionNum - 1;
+      revealedSectionNumRef.current = newRevealed;
+      setRevealedSectionNum(newRevealed);
+      setDisplayedText(newText);
     };
 
-    const interval = setInterval(revealLatest, CHUNK_INTERVAL_MS);
+    const interval = setInterval(tryReveal, REVEAL_POLL_MS);
     return () => clearInterval(interval);
-  }, [status]);
+  }, [status, sectionNums.length, maxSectionNum]);
 
+  // SSE fetch
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
@@ -157,14 +178,12 @@ export function StreamingBody({
     const ac = new AbortController();
     const tag = `[StreamingBody ${endpoint}]`;
     const startedAt = Date.now();
-    lastRevealAtMsRef.current = startedAt;  // 첫 청크 카운트다운 기준점
     let firstDeltaAt = 0;
     let deltaCount = 0;
     const log = (...args: unknown[]) => console.log(tag, `+${Date.now() - startedAt}ms`, ...args);
 
     log('start fetch', { body });
 
-    // 180초 timeout — v5 max_tokens 16000 (긴 본문) 대비. Vercel maxDuration 300초보다 짧게.
     const timeoutMs = 180000;
     const timeoutId = setTimeout(() => {
       log('TIMEOUT', { deltaCount, firstDeltaAt, elapsedMs: Date.now() - startedAt });
@@ -198,17 +217,16 @@ export function StreamingBody({
         setStatus('streaming');
 
         const finalize = (finalText: string) => {
-          // 청크 reveal과 무관하게 done 시점에 즉시 전체 노출
+          // stream done 시 남은 본문 즉시 전체 reveal
           fullTextRef.current = finalText;
-          displayedLenRef.current = finalText.length;
           setDisplayedText(finalText);
-          if (chunkCount === 0) setChunkCount(1);
+          revealedSectionNumRef.current = maxSectionNum || 0;
+          setRevealedSectionNum(maxSectionNum || 0);
         };
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            // stream이 done event 없이 끝나면 여기로
             log('reader done (without done event)', { deltaCount, fullTextLen: fullText.length });
             clearTimeout(timeoutId);
             if (fullText.length > 0) {
@@ -231,13 +249,12 @@ export function StreamingBody({
           for (const ev of parseSseChunk(ready)) {
             if (ev.event === 'delta' && ev.data.text) {
               fullText += ev.data.text;
-              fullTextRef.current = fullText;  // reveal timer가 polling
+              fullTextRef.current = fullText; // reveal polling 대상
               deltaCount++;
               if (firstDeltaAt === 0) {
                 firstDeltaAt = Date.now() - startedAt;
                 log('FIRST delta', { firstDeltaAt });
               }
-              // setDisplayedText 호출 ✗ — reveal timer가 청크 단위로 갱신
             } else if (ev.event === 'done') {
               log('DONE event', { deltaCount, fullTextLen: fullText.length, elapsedMs: Date.now() - startedAt });
               clearTimeout(timeoutId);
@@ -270,27 +287,19 @@ export function StreamingBody({
       clearTimeout(timeoutId);
       ac.abort();
     };
-    // 의도적으로 deps에 endpoint만 포함 — body/headers/onComplete/onError가 inline이라
-    // 매 렌더마다 새 ref가 되어 useEffect re-run + cleanup abort 발생 (이전: +16ms aborted).
-    // startedRef로 한 번만 시작하므로 deps 변경해도 새 fetch 안 일어남.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
-  // 첫 청크 reveal 후 본문 노출. SSE는 더 빨리 수신되지만 청크 전까지 안 보임.
   const hasText = displayedText.length > 0;
   const progress = status === 'done' ? 100 : (expectedDurationSec ? calcProgress(elapsedSec, expectedDurationSec) : 0);
   const stageIdx = stages ? currentStageIndex(elapsedSec, stages) : 0;
   const hasProgressUI = !!(expectedDurationSec || stages?.length || sectionHeaders?.length);
-  // 다음 청크까지 남은 초 카운트다운 (CHUNK_INTERVAL_SEC → 0)
-  // elapsedSec dep으로 매초 re-render되므로 Date.now() 기반 derived 값 자연 갱신
-  const nextChunkRemainSec = (() => {
-    if (status === 'done' || status === 'error') return 0;
-    if (lastRevealAtMsRef.current === 0) return CHUNK_INTERVAL_SEC;
-    const remainMs = CHUNK_INTERVAL_MS - (Date.now() - lastRevealAtMsRef.current);
-    return Math.max(0, Math.ceil(remainMs / 1000));
-  })();
-  // elapsedSec를 hook deps에 명시적으로 참조해 매초 derived 재계산 보장
-  void elapsedSec;
+
+  // 아직 reveal 안 된 sectionHeaders — skeleton으로 표시
+  const hiddenHeaders = (sectionHeaders ?? []).filter(h => {
+    const num = extractSectionNum(h);
+    return num !== null && num > revealedSectionNum;
+  });
 
   if (status === 'error') {
     return (
@@ -302,98 +311,95 @@ export function StreamingBody({
     );
   }
 
-  // 본문 도착 전 — 구조화 skeleton + progress + 단계 라벨
-  if (!hasText) {
-    // sectionHeaders·stages·expectedDuration 모두 없으면 간단 skeleton (relation-mini 등)
-    if (!hasProgressUI) {
-      return (
-        <View className="gap-3 p-card-padding">
-          {[90, 70, 85].map((w, i) => (
-            <View
-              key={i}
-              className="h-3 rounded-sm bg-outline-warm"
-              style={{ width: `${w}%` }}
-            />
-          ))}
-        </View>
-      );
-    }
+  // sectionHeaders·stages·expectedDuration 모두 없으면 간단 fallback (relation-mini 등)
+  if (!hasText && !hasProgressUI) {
     return (
-      <View className="gap-4 p-card-padding">
-        {/* === D. progress bar === */}
-        {expectedDurationSec && (
-          <View className="gap-2">
-            <View className="flex-row items-center justify-between">
-              <Text className="font-body text-label-sm text-text-sub">분석 진행</Text>
-              <Text className="font-body text-label-sm text-text-sub">
-                {elapsedSec}초 · 예상 {expectedDurationSec}초
-              </Text>
-            </View>
-            <View className="h-1.5 rounded-full bg-outline-warm overflow-hidden">
-              <View
-                className="h-full rounded-full"
-                style={{
-                  width: `${progress}%`,
-                  backgroundColor: colors.secondary,
-                }}
-              />
-            </View>
-            {!hasText && (
-              <Text className="font-body text-label-sm text-text-sub mt-1">
-                첫 부분이 {nextChunkRemainSec}초 후 한 번에 표시돼요
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* === C. 시간 기반 단계 라벨 === */}
-        {stages && stages.length > 0 && (
-          <View className="gap-1.5">
-            {stages.map((stage, i) => {
-              const isDone = i < stageIdx;
-              const isCurrent = i === stageIdx;
-              const marker = isDone ? '✓' : isCurrent ? '⋯' : '○';
-              const color = isDone ? colors.secondary : isCurrent ? colors.textPri : colors.textSub;
-              const weight = isCurrent ? '600' : '400';
-              return (
-                <View key={i} className="flex-row items-center gap-2">
-                  <Text style={{ color, fontWeight: weight, width: 16 }} className="font-body text-label-md">
-                    {marker}
-                  </Text>
-                  <Text
-                    className="font-body text-label-md flex-1"
-                    style={{ color, fontWeight: weight }}
-                  >
-                    {stage.label}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
-
-        {/* === A. 구조화 skeleton (실제 섹션 윤곽) === */}
-        {sectionHeaders && sectionHeaders.length > 0 && (
-          <View className="mt-3 gap-3 pt-3 border-t border-outline-warm">
-            <Text className="font-body text-label-sm text-text-sub mb-1">진단 구성</Text>
-            {sectionHeaders.map((h, i) => (
-              <SkeletonRow key={i} title={h} />
-            ))}
-          </View>
-        )}
+      <View className="gap-3 p-card-padding">
+        {[90, 70, 85].map((w, i) => (
+          <View
+            key={i}
+            className="h-3 rounded-sm bg-outline-warm"
+            style={{ width: `${w}%` }}
+          />
+        ))}
       </View>
     );
   }
 
-  // 본문 도착 후 — InterpretBody 렌더 (청크 단위 갱신)
+  // 통합 렌더 — 본문 위 + (아직 안 나온 섹션) skeleton 아래
   return (
     <ScrollView className="p-card-padding" contentContainerClassName="gap-4">
-      <InterpretBody text={displayedText} />
-      {status === 'streaming' && (
+      {/* progress bar — elapsed만 표시, '예상 60초' 부정확 표시 제거 */}
+      {expectedDurationSec && (
+        <View className="gap-2">
+          <View className="flex-row items-center justify-between">
+            <Text className="font-body text-label-sm text-text-sub">분석 진행</Text>
+            <Text className="font-body text-label-sm text-text-sub">{elapsedSec}초</Text>
+          </View>
+          <View className="h-1.5 rounded-full bg-outline-warm overflow-hidden">
+            <View
+              className="h-full rounded-full"
+              style={{
+                width: `${progress}%`,
+                backgroundColor: colors.secondary,
+              }}
+            />
+          </View>
+          {!hasText && minSectionNum > 0 && (
+            <Text className="font-body text-label-sm text-text-sub mt-1">
+              첫 부분은 §{minSectionNum}·§{minSectionNum + 1}이 모두 정리되면 한 번에 표시돼요
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* 시간 기반 단계 라벨 */}
+      {stages && stages.length > 0 && !hasText && (
+        <View className="gap-1.5">
+          {stages.map((stage, i) => {
+            const isDone = i < stageIdx;
+            const isCurrent = i === stageIdx;
+            const marker = isDone ? '✓' : isCurrent ? '⋯' : '○';
+            const color = isDone ? colors.secondary : isCurrent ? colors.textPri : colors.textSub;
+            const weight = isCurrent ? '600' : '400';
+            return (
+              <View key={i} className="flex-row items-center gap-2">
+                <Text style={{ color, fontWeight: weight, width: 16 }} className="font-body text-label-md">
+                  {marker}
+                </Text>
+                <Text
+                  className="font-body text-label-md flex-1"
+                  style={{ color, fontWeight: weight }}
+                >
+                  {stage.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* 본문 — 청크 단위 reveal */}
+      {hasText && <InterpretBody text={displayedText} />}
+
+      {/* 아직 안 나온 섹션 skeleton */}
+      {hiddenHeaders.length > 0 && (
+        <View className="mt-3 gap-3 pt-3 border-t border-outline-warm">
+          {!hasText && (
+            <Text className="font-body text-label-sm text-text-sub mb-1">진단 구성</Text>
+          )}
+          {hiddenHeaders.map((h) => (
+            <SkeletonRow key={h} title={h} />
+          ))}
+        </View>
+      )}
+
+      {/* streaming 라벨 — 다음 청크 정리 중 (시간 카운트다운 없음, 헤더 등장 기반이라) */}
+      {status === 'streaming' && hiddenHeaders.length > 0 && (
         <View className="flex-row items-center gap-2 mt-2 opacity-70">
           <PulseDot />
           <Text className="font-body text-label-sm text-text-sub">
-            다음 부분 {nextChunkRemainSec}초 후 표시
+            다음 부분 정리 중
           </Text>
         </View>
       )}
