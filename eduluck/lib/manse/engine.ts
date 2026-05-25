@@ -14,7 +14,7 @@ import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
 import { calcCategoryScores, type CategoryScores } from './category-score';
-import { computeDirections, buildDirectionEntries, type DirectionEntry } from '@/lib/direction-system';
+import { computeDirections, buildDirectionEntries, type DirectionEntry } from '../direction-system';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
 import { calcYearPillar, calcMonthPillar, pillarToHanja } from './solar-terms';

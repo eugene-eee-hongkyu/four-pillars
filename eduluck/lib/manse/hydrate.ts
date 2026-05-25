@@ -19,7 +19,7 @@ import { calcAbroadScore } from './abroad-score';
 import { calcArtsScore } from './arts-score';
 import { calcMedicalScore } from './medical-score';
 import { calcCategoryScores } from './category-score';
-import { computeDirections, buildDirectionEntries } from '@/lib/direction-system';
+import { computeDirections, buildDirectionEntries } from '../direction-system';
 import { calcStudentTraitsWithPercentile } from './student-traits';
 import { splitPillar, countElements, BRANCH_ELEMENT, STEM_ELEMENT } from './pillars';
 import { calcAllJijanggan } from './jijanggan';

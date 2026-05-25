@@ -18,7 +18,7 @@
 //   V11: combo_pyeoninGwaninStrategy +60/+40/+30 (상수, business/authority/entrepreneur)
 //   V12: combo_pyeongwanMedicalCore +20 (세형 medical primary)
 
-import type { ManseResult } from '@/lib/manse/engine';
+import type { ManseResult } from './manse/engine';
 import { splitPillar, getStemSipsin } from './manse/pillars';
 
 export type DirectionKey =
