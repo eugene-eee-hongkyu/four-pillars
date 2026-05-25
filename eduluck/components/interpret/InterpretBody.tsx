@@ -29,12 +29,17 @@ type Block =
   | { type: 'h3'; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'quote'; text: string }
-  | { type: 'evidence'; items: string[] };
+  | { type: 'evidence'; items: string[] }
+  | { type: 'strengthWeakness'; strengths: { title: string; signer: string }[]; weaknesses: { title: string; signer: string }[] };
 
 /** '### 근거' 또는 '### 이 풀이의 명리 근거' 같은 evidence 시작 헤더 */
 const EVIDENCE_HEADER_RE = /^###\s+(이\s*풀이의\s*명리\s*)?근거\s*$/;
 /** evidence bullet — '-' '·' '•' '*' 다 인식 */
 const EVIDENCE_BULLET_RE = /^[-·•*]\s+(.+)$/;
+/** '### 강점·약점 카드' 시작 헤더 — § 3 직후 카드 */
+const SW_HEADER_RE = /^###\s+강점\s*[·\-]\s*약점/;
+/** '- [강점] {제목} — {시그너}' 또는 '- [약점] ...' */
+const SW_BULLET_RE = /^[-·•*]\s*\[(강점|약점)\]\s*(.+?)(?:\s*[─—-]\s*(.+))?$/;
 
 function parseText(input: string): Block[] {
   const lines = input.split('\n');
@@ -43,6 +48,9 @@ function parseText(input: string): Block[] {
   let quoteBuf: string[] = [];
   let evidenceItems: string[] = [];
   let evidenceMode = false;
+  let swStrengths: { title: string; signer: string }[] = [];
+  let swWeaknesses: { title: string; signer: string }[] = [];
+  let swMode = false;
 
   const flushParagraph = () => {
     if (paragraphBuf.length === 0) return;
@@ -63,10 +71,19 @@ function parseText(input: string): Block[] {
     evidenceItems = [];
     evidenceMode = false;
   };
+  const flushSw = () => {
+    if (swStrengths.length > 0 || swWeaknesses.length > 0) {
+      blocks.push({ type: 'strengthWeakness', strengths: swStrengths, weaknesses: swWeaknesses });
+    }
+    swStrengths = [];
+    swWeaknesses = [];
+    swMode = false;
+  };
   const flushAll = () => {
     flushParagraph();
     flushQuote();
     flushEvidence();
+    flushSw();
   };
 
   for (const line of lines) {
@@ -79,13 +96,30 @@ function parseText(input: string): Block[] {
         evidenceItems.push(bulletMatch[1].trim());
         continue;
       }
-      // bullet 아니거나 빈 줄 → evidence 종료. 그 후 일반 처리로 fallthrough
       if (!trimmed) {
         flushEvidence();
         continue;
       }
       flushEvidence();
-      // fallthrough to general logic
+      // fallthrough
+    }
+
+    // 강점·약점 카드 모드: bullet 누적 또는 종료
+    if (swMode) {
+      const swMatch = trimmed.match(SW_BULLET_RE);
+      if (swMatch) {
+        const [, kind, title, signer] = swMatch;
+        const row = { title: title.trim(), signer: (signer ?? '').trim() };
+        if (kind === '강점') swStrengths.push(row);
+        else swWeaknesses.push(row);
+        continue;
+      }
+      if (!trimmed) {
+        flushSw();
+        continue;
+      }
+      flushSw();
+      // fallthrough
     }
 
     // TL;DR — 본문 첫 줄 마커
@@ -110,6 +144,16 @@ function parseText(input: string): Block[] {
       flushQuote();
       evidenceMode = true;
       evidenceItems = [];
+      continue;
+    }
+
+    // 강점·약점 카드 헤더 — '### 강점·약점 카드'
+    if (SW_HEADER_RE.test(trimmed)) {
+      flushParagraph();
+      flushQuote();
+      swMode = true;
+      swStrengths = [];
+      swWeaknesses = [];
       continue;
     }
 
@@ -372,6 +416,96 @@ function EvidenceBox({ items }: { items: string[] }) {
   );
 }
 
+/** 강점·약점 4분면 카드 — §3 헤더 직후 노출. 좌(강점)/우(약점) 분할. */
+function StrengthWeaknessCard({
+  strengths,
+  weaknesses,
+}: {
+  strengths: { title: string; signer: string }[];
+  weaknesses: { title: string; signer: string }[];
+}) {
+  const STRENGTH_COLOR = '#C18949';
+  const WEAKNESS_COLOR = '#8E6B5C';
+  return (
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: colors.outlineWarm,
+        borderRadius: 12,
+        backgroundColor: colors.surfaceContainerLow,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+      }}
+    >
+      <View className="flex-row">
+        <SWColumn
+          label="강점"
+          icon="✨"
+          color={STRENGTH_COLOR}
+          items={strengths}
+          borderRight
+        />
+        <SWColumn
+          label="보강할 곳"
+          icon="⚠"
+          color={WEAKNESS_COLOR}
+          items={weaknesses}
+        />
+      </View>
+    </View>
+  );
+}
+
+function SWColumn({
+  label,
+  icon,
+  color,
+  items,
+  borderRight,
+}: {
+  label: string;
+  icon: string;
+  color: string;
+  items: { title: string; signer: string }[];
+  borderRight?: boolean;
+}) {
+  return (
+    <View
+      className="flex-1"
+      style={{
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        borderRightWidth: borderRight ? 1 : 0,
+        borderRightColor: colors.outlineWarm,
+        gap: 10,
+      }}
+    >
+      <View className="flex-row items-center" style={{ gap: 6 }}>
+        <Text style={{ fontSize: 13, color }}>{icon}</Text>
+        <Text style={{ fontSize: 12, fontWeight: '700', color, letterSpacing: 0.3 }}>
+          {label}
+        </Text>
+      </View>
+      {items.map((row, i) => (
+        <View key={i} style={{ gap: 2 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPri, lineHeight: 19 }}>
+            {row.title}
+          </Text>
+          {row.signer && (
+            <Text style={{ fontSize: 12, color: colors.textSub, lineHeight: 17 }}>
+              {row.signer}
+            </Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** 섹션 헤더 v2 — '## 1. 시작 — 부제' → 좌측 원형 번호 배지 + title + subtitle + 아래 구분선. */
 function SectionHeaderV2({ text, subtitle }: { text: string; subtitle?: string }) {
   // text = "1. 시작" 형식. 번호 분리.
@@ -523,6 +657,13 @@ export function InterpretBody({ text }: Props) {
           return (
             <FadeInView key={key}>
               <EvidenceBox items={b.items} />
+            </FadeInView>
+          );
+        }
+        if (b.type === 'strengthWeakness') {
+          return (
+            <FadeInView key={key}>
+              <StrengthWeaknessCard strengths={b.strengths} weaknesses={b.weaknesses} />
             </FadeInView>
           );
         }
