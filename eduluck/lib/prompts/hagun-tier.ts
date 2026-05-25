@@ -1,4 +1,8 @@
-// 학운 단계 + 추천 베이스 티어 결정성 계산 — v11 (2026-05-24)
+// 학운 단계 + 추천 베이스 티어 결정성 계산 — v12 (2026-05-24)
+//
+// v12 Loop 720 (V11 Loop 603 + combo_yanginBigeopGuiSelfMade +65):
+//   14 sample calibration totalGap 21.5 유지 (재원 raw 100 fit).
+//   김택범 raw 100 / 박진우 raw 101 / 재원 raw 100 모두 3-1 도달 (외부변수 weight 0.5 인정).
 //
 // v11 Loop 603 (V8_BEST_335 + 비견 콤보 3개 +6 + combo_jaeSiksangBigeopJarip +45):
 //   13 sample calibration totalGap 21.5 (V6 #266 totalGap 47 대비 -25.5).
@@ -17,6 +21,7 @@
 //   ✅ combo_jeonggwanScholar +25 (V8 신규) — 정관격 학자형 (재호 1-3 직접 fit)
 //   ✅ combo_bigyeon{Gwansung,Gwangwi,Munchang} +6 (V10 신규) — 비견격 학자형 3 콤보
 //   ✅ combo_jaeSiksangBigeopJarip +45 (V11 신규) — 박진우 fit (정재격/편재격 + 재성≥3 + 식상≥2 + 비겁≥1 + 일주 약)
+//   ✅ combo_yanginBigeopGuiSelfMade +65 (V12 신규) — 재원 fit (양인격 + 비겁≥4 + 천을귀인≥1)
 //
 // 명리 출처: 자평진전·적천수·삼명통회·연해자평·다시 배우는 사주명리·sajustudy·healerlee
 // 13명 정합: 7명 gap 0 / 4명 gap 1-3 / 2명 외부변수 fit (영진은 사주 학자형 ✗, 재원은 ground truth 미확정)
@@ -277,6 +282,12 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   if (isJaeGyeokguk && c.jaesung >= 3 && c.siksang >= 2 && c.bigeop >= 1 && dayWeakV11) {
     layer1 += 45;
     hits.push({ signer: 'combo_jaeSiksangBigeopJarip (재·식·비 자수성가형)', value: 45, layer: 1 });
+  }
+  // V12 신규: 양인격 + 비겁≥4 + 천을귀인≥1 = 양인 자기 페이스 자수성가형
+  //   (비겁 다중 = 자기주도·고집 + 천을 = 외부 인덕 = 의지·노력형, 학자형 본질은 약하나 인서울 상위권 도전 영역)
+  if (m.gyeokguk.name === '양인격' && c.bigeop >= 4 && cheonEulCount >= 1) {
+    layer1 += 65;
+    hits.push({ signer: 'combo_yanginBigeopGuiSelfMade (양인 자기주도 자수성가형)', value: 65, layer: 1 });
   }
   // V8 신규: cnt_gwansung × 5 (관성 중첩 multiplier)
   if (c.gwansung > 0) {
