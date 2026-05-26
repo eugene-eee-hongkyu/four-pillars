@@ -1,5 +1,6 @@
 // GET /api/share-token?sessionId={uuid} — 본인 session의 최신 premium 진단 share_token 조회
 // 공유 버튼이 호출하여 share URL 생성용.
+// v3: race retry + 자세한 error message + vercel functions 등록 (rebuild trigger).
 
 import { getSupabaseServer } from '../lib/supabase/server';
 
