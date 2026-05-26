@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 13:43
-## 마지막 업데이트: 2026-05-26 13:43
+## 마지막 실행: 2026-05-26 15:59
+## 마지막 업데이트: 2026-05-26 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 가족 공유·UX 버그 정리 완료 (`3184c80`~`169a363` 8 commit). prod e2e 검증 후 mom test 진입.
+- v2 30 sub-tier 시스템 완전 도입 완료 (`d8c2307`). 빌드 진행 중 — Vercel 배포 후 prod 검증.
 
 ### 이어서 할 것
 
-1. `169a363` 배포 완료 후 prod e2e — Part 2 청크 reveal, §N 이름 정상, navigation 동작, 공유 흐름
-2. Mom test 5~10명 — 가족 공유·v5.3 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
-3. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs enum/regex CHECK 재도입
+1. Vercel 배포 완료 후 prod 신정아(3-2) 등으로 재진단 검증 — v2 학교명 출력 정상화
+2. Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
+3. interpretations.kind 정책 결정
 
 ### 막힌 것
 
@@ -27,7 +27,6 @@
 ### 사람 판단 필요
 
 - Mom test 어머니 5~10명 모집·정성 피드백
-- `interpretations.kind` schema 정책 (현재 free text)
 - Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 
 ### 백로그 요약
@@ -153,6 +152,7 @@
 - [x] Part 2 reveal 트리거 fix — minSectionNum 기반 (`3b90623`)
 - [x] '재호' 이름 leak fix — prompt 예시 placeholder + PROMPT_VERSION v5.3 (`aa7d6e0`) ⭐
 - [x] 진단 화면 navigation 추가 — 영역 선택·처음으로 (`169a363`)
+- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 ~ 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PREMIUM_PROMPT_VERSION v5.4 (`d8c2307`) ⭐
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)

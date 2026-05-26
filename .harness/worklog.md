@@ -6,6 +6,24 @@
 
 ---
 
+```markdown
+## Session 2026-05-26 15:59 — v2 30 sub-tier 시스템 도입 및 배포 준비
+
+### 작업 요약
+- hagun-tier.ts: sub-tier (1-1 ~ 10-3) 계산 로직 추가
+- interpret-premium-shared.ts: SHARED_UNIVERSITY_TIER_GUIDE를 v2 표로 교체
+- buildSharedManseContext: sub-tier를 LLM에 전달하도록 수정
+- PREMIUM_PROMPT_VERSION v5.4로 bump (프롬프트 캐시 자동 무효화)
+- 사용자 UI: "1티어, 2티어" 표기 유지, sub-tier는 비노출
+- LLM 분기 로직: sub-tier 기반 v2 표의 일반 대학군 및 별도 트랙 선택 구현
+- 커밋 푸시: d8c2307
+
+### 다음 액션
+- Vercel 배포 완료 대기
+- prod (luck.z21labs.world)에서 신정아(3-2) 등으로 재진단하여 v2 학교명 출력 정상화 검증
+```
+
+
 ## Session 2026-05-26 13:43 — UX 버그·navigation 4건 (Part 2 reveal·이름 leak·길찾기)
 
 ### 작업 요약

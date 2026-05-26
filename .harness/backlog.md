@@ -62,36 +62,36 @@
 
 ### 2026-05-26 정리 시 완료 처리
 
-~~[2] 2026-05-20: v5 prompt 어미 일관성 metric 미세 조정~~ → 2026-05-22 "Mom test 10명 결과 기반 trait weight/라벨 조정" 항목에 통합 (중복 sub-task).
+~~[1] 2026-05-20: v5 prompt 어미 일관성 metric 미세 조정~~ → 2026-05-22 "Mom test 10명 결과 기반 trait weight/라벨 조정" 항목에 통합 (중복 sub-task).
 
-~~[2] 2026-05-06: 사주톡 10명 지인 테스트~~ → sajutalk 자체 hold 결정 (decision.md 2026-05-26). 검증 단계 자체 보류.
+~~[1] 2026-05-06: 사주톡 10명 지인 테스트~~ → sajutalk 자체 hold 결정 (decision.md 2026-05-26). 검증 단계 자체 보류.
 
-~~[2] 2026-04-24: 과거 사건 검증 엔진~~ → sajutalk 관련 장기 로드맵이었으나 sajutalk hold로 무의미.
+~~[1] 2026-04-24: 과거 사건 검증 엔진~~ → sajutalk 관련 장기 로드맵이었으나 sajutalk hold로 무의미.
 
 
-~~[2] 2026-05-20: 한의대·의대 격국 매핑 검토~~ → `medical-score` 모듈 도입으로 흡수 (N=9 학운 시스템 단계). 추가 의대 sample 2개 받기는 state.md `의대 sample 2개 → N=5 의약 재검증` 항목으로 별도.
+~~[1] 2026-05-20: 한의대·의대 격국 매핑 검토~~ → `medical-score` 모듈 도입으로 흡수 (N=9 학운 시스템 단계). 추가 의대 sample 2개 받기는 state.md `의대 sample 2개 → N=5 의약 재검증` 항목으로 별도.
 
-~~[2] 2026-05-19: UI 시각 검증 & LLM 정확도 (Phase A~F)~~ → Phase A~F 종료, v5.1까지 발전.
+~~[1] 2026-05-19: UI 시각 검증 & LLM 정확도 (Phase A~F)~~ → Phase A~F 종료, v5.1까지 발전.
 
-~~[2] 2026-05-19: 정밀 진단 전체 출력 검증~~ → v5에서 max_tokens 16000 + 청크 reveal로 해결.
+~~[1] 2026-05-19: 정밀 진단 전체 출력 검증~~ → v5에서 max_tokens 16000 + 청크 reveal로 해결.
 
-~~[2] 2026-05-20: 새 deploy 5-스텝 흐름 정밀 검증~~ → 안정화 완료, v5.1로 발전.
+~~[1] 2026-05-20: 새 deploy 5-스텝 흐름 정밀 검증~~ → 안정화 완료, v5.1로 발전.
 
-~~[2] 2026-05-21: 실제 모바일 & 가족 공유 검증~~ → state.md "이어서 할 것" 항목으로 흡수 (가족 공유 race fix 진행 중).
+~~[1] 2026-05-21: 실제 모바일 & 가족 공유 검증~~ → state.md "이어서 할 것" 항목으로 흡수 (가족 공유 race fix 진행 중).
 
-~~[2] 2026-05-22: 명리 점수 계산 gap 규명 (재호 11→12점)~~ → V11·V12 calibration loop로 14명 self-test 100% raw 일치, 무의미.
+~~[1] 2026-05-22: 명리 점수 계산 gap 규명 (재호 11→12점)~~ → V11·V12 calibration loop로 14명 self-test 100% raw 일치, 무의미.
 
-~~[2] 2026-05-23: 외부 변수(두흥) 기준 문서화~~ → 2026-05-24 "외부 변수 모듈 도입 검토" 항목에 통합 (중복).
+~~[1] 2026-05-23: 외부 변수(두흥) 기준 문서화~~ → 2026-05-24 "외부 변수 모듈 도입 검토" 항목에 통합 (중복).
 
-~~[2] 2026-05-25: DIRECTION_SYSTEM_v3 구현 명세 작성~~ → Direction System V1-V12 코드 구현 완료 (perfect fit 7/7). 별도 명세 .md 우선순위 ✗.
+~~[1] 2026-05-25: DIRECTION_SYSTEM_v3 구현 명세 작성~~ → Direction System V1-V12 코드 구현 완료 (perfect fit 7/7). 별도 명세 .md 우선순위 ✗.
 
-~~[2] 2026-04-25: daily 톤 회귀 테스트~~ → 의미 불명, 옛 항목 정리.
+~~[1] 2026-04-25: daily 톤 회귀 테스트~~ → 의미 불명, 옛 항목 정리.
 
 ### 이전 정리
 
-~~[2] 2026-05-20: 추가 calibration sample 5명+~~ → 2026-05-21 N=7 도달 완료.
+~~[1] 2026-05-20: 추가 calibration sample 5명+~~ → 2026-05-21 N=7 도달 완료.
 
-~~[2] 2026-05-21: 통합 회귀 스크립트 (N=7+)~~ → scripts/eval-all-calibration.ts + _private/calibration-samples/data.ts 완료.
+~~[1] 2026-05-21: 통합 회귀 스크립트 (N=7+)~~ → scripts/eval-all-calibration.ts + _private/calibration-samples/data.ts 완료.
 
 ~~localhost:3002 E2E 확인~~ → 2026-04-28 Chrome DevTools MCP 스크린샷 완료
 
