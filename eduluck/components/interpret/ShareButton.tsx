@@ -8,11 +8,16 @@ import { colors } from '@/design-tokens/tokens';
 interface Props {
   sessionId: string;
   nickname: string;
+  /** backfill 대비 캐시 텍스트·subject ID. share-link가 404일 때 backfill endpoint로 자동 폴백. */
+  childSubjectId?: string;
+  motherSubjectId?: string | null;
+  premiumPart1Text?: string | null;
+  premiumPart2Text?: string | null;
 }
 
 type ShareStatus = 'idle' | 'loading' | 'shared' | 'copied' | 'error';
 
-export function ShareButton({ sessionId, nickname }: Props) {
+export function ShareButton({ sessionId, nickname, childSubjectId, motherSubjectId, premiumPart1Text, premiumPart2Text }: Props) {
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -21,12 +26,34 @@ export function ShareButton({ sessionId, nickname }: Props) {
     setErrMsg(null);
     try {
       // 1. share token 조회
+      let token: string | null = null;
       const tokenRes = await fetch(`/api/share-link?sessionId=${encodeURIComponent(sessionId)}`);
-      if (!tokenRes.ok) {
+      if (tokenRes.ok) {
+        const j = await tokenRes.json();
+        token = j.token ?? null;
+      } else if (tokenRes.status === 404 && childSubjectId && (premiumPart1Text || premiumPart2Text)) {
+        // share-link가 row를 못 찾았지만 클라이언트 캐시는 살아있음 → backfill 시도
+        const backfillRes = await fetch('/api/share-backfill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            childSubjectId,
+            motherSubjectId: motherSubjectId ?? null,
+            part1Text: premiumPart1Text ?? null,
+            part2Text: premiumPart2Text ?? null,
+          }),
+        });
+        if (!backfillRes.ok) {
+          const body = await backfillRes.json().catch(() => ({}));
+          throw new Error(body.error ?? '공유 링크를 만들 수 없어요');
+        }
+        const j = await backfillRes.json();
+        token = j.token ?? null;
+      } else {
         const body = await tokenRes.json().catch(() => ({}));
         throw new Error(body.error ?? '공유 링크를 만들 수 없어요');
       }
-      const { token } = await tokenRes.json();
       if (!token) throw new Error('공유 링크가 없어요');
 
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://luck.z21labs.world';

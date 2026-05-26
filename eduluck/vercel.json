@@ -13,6 +13,7 @@
     "api/interpret-deep.ts": { "maxDuration": 300 },
     "api/interpret-free.ts": { "maxDuration": 120 },
     "api/relation-mini.ts": { "maxDuration": 60 },
-    "api/share-link.ts": { "maxDuration": 30 }
+    "api/share-link.ts": { "maxDuration": 30 },
+    "api/share-backfill.ts": { "maxDuration": 30 }
   }
 }
