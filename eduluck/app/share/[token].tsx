@@ -9,7 +9,10 @@ import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { Logo } from '@/components/ui/Logo';
 
 interface SharePayload {
-  bodyText: string;
+  // v5: part1·part2 분리. v4 legacy: bodyText. 셋 모두 null 가능 (없을 시).
+  part1Text: string | null;
+  part2Text: string | null;
+  bodyText: string | null;
   nickname: string | null;
   createdAt: string;
 }
@@ -64,25 +67,61 @@ export default function SharePage() {
           </View>
         )}
 
-        {data && (
-          <>
-            <Text className="font-heading-bold text-headline-lg text-text-pri">
-              {data.nickname ? `${data.nickname}의 정밀 학운` : '정밀 학운'}
-            </Text>
-            <View className="gap-5">
-              <InterpretBody text={data.bodyText} />
-            </View>
+        {data && (() => {
+          // v5 우선, 없으면 v4 legacy bodyText.
+          const hasV5 = !!(data.part1Text || data.part2Text);
+          const showLegacy = !hasV5 && !!data.bodyText;
+          return (
+            <>
+              <Text className="font-heading-bold text-headline-lg text-text-pri">
+                {data.nickname ? `${data.nickname}의 정밀 학운` : '정밀 학운'}
+              </Text>
 
-            <View className="mt-8 pt-4 border-t border-outline-warm items-center">
-              <Text className="font-body text-label-sm text-text-sub text-center">
-                eduluck에서 받은 정밀 사주 진단이에요
-              </Text>
-              <Text className="font-body text-label-sm text-text-sub text-center mt-1">
-                나도 받아보고 싶다면 luck.z21labs.world
-              </Text>
-            </View>
-          </>
-        )}
+              {data.part1Text && (
+                <View className="gap-2">
+                  <Text className="font-body-bold text-label-md text-text-pri">
+                    📖 Part 1 · 본질·관계·즉시 행동
+                  </Text>
+                  <View className="gap-5">
+                    <InterpretBody text={data.part1Text} />
+                  </View>
+                </View>
+              )}
+
+              {data.part2Text && (
+                <View className="gap-2 mt-4">
+                  <Text className="font-body-bold text-label-md text-text-pri">
+                    🔮 Part 2 · 학원·진로·미래
+                  </Text>
+                  <View className="gap-5">
+                    <InterpretBody text={data.part2Text} />
+                  </View>
+                </View>
+              )}
+
+              {showLegacy && (
+                <View className="gap-5">
+                  <InterpretBody text={data.bodyText!} />
+                </View>
+              )}
+
+              {!hasV5 && !showLegacy && (
+                <Text className="font-body text-body-md text-text-sub text-center py-8">
+                  진단 본문이 비어있어요.
+                </Text>
+              )}
+
+              <View className="mt-8 pt-4 border-t border-outline-warm items-center">
+                <Text className="font-body text-label-sm text-text-sub text-center">
+                  eduluck에서 받은 정밀 사주 진단이에요
+                </Text>
+                <Text className="font-body text-label-sm text-text-sub text-center mt-1">
+                  나도 받아보고 싶다면 luck.z21labs.world
+                </Text>
+              </View>
+            </>
+          );
+        })()}
       </ScrollView>
     </View>
   );
