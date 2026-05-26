@@ -80,30 +80,20 @@ export async function POST(request: Request) {
     messages: [{ role: 'user', content: userMsg }],
   });
 
-  void (async () => {
-    try {
-      const final = await stream.finalMessage();
-      const bodyText = final.content
-        .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
-        .join('');
-      const { error: insertErr } = await sb.from('interpretations').insert({
-        session_id: body.sessionId,
-        kind: 'premium-part1',
-        child_subject_id: body.childSubjectId,
-        mother_subject_id: body.motherSubjectId ?? null,
-        body_text: bodyText,
-        prompt_version: 'v5-20sections-split',
-        llm_model: ANTHROPIC_MODEL,
-      });
-      if (insertErr) {
-        console.error('[part1] insert error', { code: insertErr.code, message: insertErr.message, details: insertErr.details, sessionId: body.sessionId });
-      } else {
-        console.log('[part1] insert OK', { sessionId: body.sessionId, chars: bodyText.length });
-      }
-    } catch (e) {
-      console.error('[part1] save failed', e);
+  return sseResponse(stream, 'part1', async (bodyText) => {
+    const { error: insertErr } = await sb.from('interpretations').insert({
+      session_id: body.sessionId,
+      kind: 'premium-part1',
+      child_subject_id: body.childSubjectId,
+      mother_subject_id: body.motherSubjectId ?? null,
+      body_text: bodyText,
+      prompt_version: 'v5-20sections-split',
+      llm_model: ANTHROPIC_MODEL,
+    });
+    if (insertErr) {
+      console.error('[part1] insert error', { code: insertErr.code, message: insertErr.message, details: insertErr.details, sessionId: body.sessionId });
+    } else {
+      console.log('[part1] insert OK', { sessionId: body.sessionId, chars: bodyText.length });
     }
-  })();
-
-  return sseResponse(stream, 'part1');
+  });
 }

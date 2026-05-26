@@ -14,16 +14,20 @@ type MessageStream = ReturnType<Anthropic['messages']['stream']>;
  * 클라이언트는 EventSource 또는 fetch + ReadableStream으로 수신.
  *
  * SSE 이벤트 형식:
- *   event: delta
- *   data: {"text":"..."}
+ *   event: delta  · data: {"text":"..."}
+ *   event: done   · data: {"fullText":"..."}
+ *   event: error  · data: {"message":"..."}
  *
- *   event: done
- *   data: {"fullText":"..."}
- *
- *   event: error
- *   data: {"message":"..."}
+ * onComplete callback:
+ *   stream done 후 같은 함수 lifetime 안에서 실행. Vercel serverless function이
+ *   response 끝나면 background promise를 버리는 문제를 회피 (예: DB insert).
+ *   `void (async () => {...})` IIFE 패턴 ✗ — onComplete 사용하라.
  */
-export function sseResponse(stream: MessageStream, tag = 'sse'): Response {
+export function sseResponse(
+  stream: MessageStream,
+  tag = 'sse',
+  onComplete?: (fullText: string) => Promise<void> | void,
+): Response {
   const encoder = new TextEncoder();
   const startedAt = Date.now();
 
@@ -48,6 +52,17 @@ export function sseResponse(stream: MessageStream, tag = 'sse'): Response {
           }
         }
         console.log(`[${tag}] stream done`, { ms: Date.now() - startedAt, deltas: deltaCount, chars: fullText.length });
+
+        // onComplete를 done event 전에 await — 같은 함수 lifetime 안에서 보장 (DB insert 등).
+        // 실패해도 client에 done event는 보냄 (사용자 화면 표시 우선).
+        if (onComplete) {
+          try {
+            await onComplete(fullText);
+          } catch (e) {
+            console.error(`[${tag}] onComplete failed`, e);
+          }
+        }
+
         controller.enqueue(
           encoder.encode(`event: done\ndata: ${JSON.stringify({ fullText })}\n\n`),
         );
