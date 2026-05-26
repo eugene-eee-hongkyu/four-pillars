@@ -119,6 +119,15 @@ export function StreamingBody({
   stages,
   expectedDurationSec,
 }: Props) {
+  const sectionNums = (sectionHeaders ?? [])
+    .map(extractSectionNum)
+    .filter((n): n is number => n !== null);
+  const maxSectionNum = sectionNums.length > 0 ? Math.max(...sectionNums) : 0;
+  const minSectionNum = sectionNums.length > 0 ? Math.min(...sectionNums) : 1;
+  // reveal 시작 기준점. Part 1 (1-10) → 0, Part 2 (11-20) → 10.
+  // nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1 이라 Part 2 에선 첫 trigger 가 "## 13." 이어야 §11·§12 reveal.
+  const initialRevealed = sectionNums.length > 0 ? minSectionNum - 1 : 0;
+
   const [displayedText, setDisplayedText] = useState('');
   const displayedLenRef = useRef(0);
   const fullTextRef = useRef('');
@@ -129,15 +138,9 @@ export function StreamingBody({
   // 현재 청크 시작 시점 — 청크 reveal마다 reset되어 elapsedSec이 0부터 다시 카운트
   const chunkStartedAtMsRef = useRef(Date.now());
 
-  // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). 0 = 아직 첫 청크 미reveal.
-  const [revealedSectionNum, setRevealedSectionNum] = useState(0);
-  const revealedSectionNumRef = useRef(0);
-
-  const sectionNums = (sectionHeaders ?? [])
-    .map(extractSectionNum)
-    .filter((n): n is number => n !== null);
-  const maxSectionNum = sectionNums.length > 0 ? Math.max(...sectionNums) : 0;
-  const minSectionNum = sectionNums.length > 0 ? Math.min(...sectionNums) : 1;
+  // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). Part 2 시작 시 10 (= §10 까지 다 봤다 가정).
+  const [revealedSectionNum, setRevealedSectionNum] = useState(initialRevealed);
+  const revealedSectionNumRef = useRef(initialRevealed);
 
   // elapsed time 카운터 — chunkStartedAtMsRef 기준 (청크 reveal마다 0부터 다시)
   useEffect(() => {
