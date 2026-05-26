@@ -152,7 +152,6 @@
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행
-- [ ] 사주톡 10명 지인 테스트 계속 진행
-- [ ] sajutalk v2 완료 보고
+- [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 - [ ] legacy /api/interpret-premium 정리 (사용처 0 확인 후)

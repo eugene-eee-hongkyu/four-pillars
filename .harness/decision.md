@@ -6,6 +6,21 @@
 
 ---
 
+## 2026-05-26: sajutalk 프로젝트 hold
+
+- **선택**: sajutalk (사주톡) 프로젝트를 hold. 검증 단계(10명 지인 테스트) 및 후속 작업 (과거 사건 검증 엔진 등 sajutalk 종속 로드맵) 모두 보류.
+- **대안 검토**:
+  - **A. sajutalk 검증 계속**: 10명 지인 테스트 → v2 완료 판단 → 외부 검증. eduluck와 병행. 단 두 프로젝트 동시 진행 시 mom test 대상자·시간·정성 피드백 분산.
+  - **B. eduluck에 집중·sajutalk hold**: eduluck v5.1 prod 검증 + mom test에 자원 집중. sajutalk은 코드·DB 보존하되 사용자 모집·검증 멈춤.
+- **선택 이유**: eduluck이 정밀 진단 v5.1 + 디자인 v2 + 시각 anchor 카드까지 완성된 단계라 mom test 진입이 자연. 두 프로젝트 동시 진행 시 어머니 모집·피드백 분산되어 둘 다 약한 검증. eduluck 먼저 mom test 완료 후 결과로 sajutalk 재개 여부 결정.
+- **영향 범위**:
+  - backlog.md: `2026-05-06 사주톡 10명 지인 테스트` + `2026-04-24 과거 사건 검증 엔진` (sajutalk 종속) 제거
+  - state.md 진행 상황: `사주톡 10명 지인 테스트 계속 진행` + `sajutalk v2 완료 보고` 미완 항목 제거 (또는 hold 표시)
+  - 코드·DB는 보존 (sajutalk.vercel.app prod 그대로 유지, 사용자 진단 가능)
+- **되돌리는 방법**: mom test 완료 후 eduluck 결과 검토. sajutalk 재개 결정 시 backlog에 항목 재등록 + 사용자 모집 재개.
+
+---
+
 ## 2026-05-26: 정밀 진단 v5 — 16섹션 단일 호출 → Part 1/2/Deep-dive 분리 구조
 
 - **선택**: Part 1 (10섹션) + Part 2 (10섹션) + Deep-dive (단일 섹션 5500~8000자) 3-layer 구조. 신규 4섹션 추가 (건강·엄마합·아빠합·강요금지). Part 2는 Part 1 완료 5초 후 자동 prefetch.
