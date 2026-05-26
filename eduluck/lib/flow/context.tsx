@@ -249,7 +249,26 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, child: { ...s.child, ...patch } }));
   }, []);
   const setChildSubject = useCallback((id: string, manse: ManseResult) => {
-    setState((s) => ({ ...s, childSubjectId: id, childManse: manse }));
+    setState((s) => {
+      // 자녀가 바뀌면 옛 자녀 진단 cache 모두 invalidate.
+      // 같은 자녀 재계산(같은 id)이면 cache 유지.
+      const isNewChild = s.childSubjectId !== null && s.childSubjectId !== id;
+      return {
+        ...s,
+        childSubjectId: id,
+        childManse: manse,
+        ...(isNewChild
+          ? {
+              freeInterpretText: null,
+              premiumInterpretText: null,
+              premiumInterpretVersion: null,
+              premiumPart1Text: null,
+              premiumPart2Text: null,
+              deepDiveTexts: {},
+            }
+          : {}),
+      };
+    });
   }, []);
   const patchMother = useCallback((patch: Partial<MotherInput>) => {
     setState((s) => ({ ...s, mother: { ...s.mother, ...patch } }));
