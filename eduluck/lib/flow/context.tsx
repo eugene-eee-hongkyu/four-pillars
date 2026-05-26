@@ -137,8 +137,8 @@ export interface FlowState {
 }
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumInterpretText·premiumPart1Text·premiumPart2Text·deepDiveTexts 모두) */
-// v5.1: §14 = 조심한 해로 이동, §15~§18 시프트 (해외·직업·전공·학교). 디자인 v2 + 카테고리 chip 근거 박스 적용.
-export const PREMIUM_PROMPT_VERSION = 'v5.1-section-reorder';
+// v5.2: §10 '강요 금지' → '양육 경계' 리프레임 (긍정·중립 톤, 명리 중도 개념).
+export const PREMIUM_PROMPT_VERSION = 'v5.2-care-boundary';
 
 const initial: FlowState = {
   sessionId: null,

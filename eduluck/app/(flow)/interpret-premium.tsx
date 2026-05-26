@@ -24,7 +24,7 @@ import { StepIndicator } from '@/components/ui/StepIndicator';
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
   '1. 시작', '2. 본질', '3. 강점', '4. 약점·주의', '5. 환경 설계',
-  '6. 훈육 가이드', '7. 건강', '8. 엄마-자녀 합', '9. 아빠-자녀 합', '10. 강요 금지',
+  '6. 훈육 가이드', '7. 건강', '8. 엄마-자녀 합', '9. 아빠-자녀 합', '10. 양육 경계',
 ];
 // 첫 청크(§1·§2)가 reveal되기 전까지만 노출되는 stages.
 // 그 이후 단계는 본문이 직접 보여주고 progress bar 라벨이 '다음 부분 (§3·§4) 정리 중'으로
