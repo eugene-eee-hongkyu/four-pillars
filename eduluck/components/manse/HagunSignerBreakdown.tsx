@@ -247,7 +247,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
         <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
           {isWeakScholar
             ? '학자 트랙이 약한 자리예요. 다른 트랙(예술·실무·운동 등)에서 빛나는 사주일 수 있어요.'
-            : '실제 입시는 환경·노력에 따라 ±1단계 움직일 수 있어요.'}
+            : '실제 입시는 환경·노력에 따라 ±1~2단계 움직일 수 있어요.'}
         </Text>
       </View>
 

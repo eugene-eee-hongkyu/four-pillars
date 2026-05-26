@@ -268,15 +268,26 @@ export const SHARED_UNIVERSITY_TIER_GUIDE = `## 대학 명시 가이드 — v2 3
 
 **user message 에 코드 계산 [학운 sub-tier] (예: '4-2') 가 직접 주어집니다.** 그 sub-tier 를 §17 권유 baseline 으로 사용. LLM 자체 판정 ✗.
 
-### 출력 표기 규칙 — 매우 중요
+### 출력 표기 규칙 — 매우 중요 (위반 시 어머니 신뢰 손상)
 
-- **본문에는 학교 이름만 등장. "○티어" 같은 숫자 라벨 직접 노출 ✗**.
-  - ❌ "4~5티어 창작 계열 대학" / "5티어 안정 영역" / "이 자리는 3티어예요"
-  - ✅ "한양대 ERICA·울산대·계명대 같은 자리예요" / "부산대까지 노릴 만한 자리예요"
-- sub-tier 표기 ('1-2', '4-3') · "엄청 강·강·약강" 라벨도 본문 노출 ✗ (내부 분기용 only).
-- 단, **§0 TL;DR / §17 학교 권유** 처럼 학교명 다수 묶을 때만 "안정·가능·도전" 톤 어휘 사용 OK. 숫자 ✗.
-- 점수·"부모 학력 +1" 같은 메타정보 본문 노출 ✗.
-- hero UI 가 이미 "안정·가능·도전 + 대학명" chip 으로 한번 보여주므로, 본문은 학교명 + 명리 이유 + 어머니 액션 위주로.
+**본문 전체에서 다음 표현 절대 ✗:**
+- "○티어" / "○~○티어" / "○티어 안정" / "○티어 가능" / "○티어 도전" 같은 숫자/순위 표현
+- "중상위권 대학" / "상위권 대학" / "중위권" / "하위권" 같은 정성 순위 표현
+- sub-tier 표기 ('1-2', '4-3' 등) / "엄청 강·강·약강" 라벨
+- 점수·"부모 학력 +1"·"baseline" 같은 메타 표현
+
+**대신 학교 이름 + 톤 어휘로만 표현:**
+- ❌ "정아는 4~5티어 대학 자리가 어울렸어요"
+- ❌ "중상위권 대학에서 진학할 수 있었던 자리"
+- ❌ "5티어 안정 영역이에요"
+- ✅ "정아는 한림대·울산대·조선대 같은 자리가 안정적으로 보여요"
+- ✅ "영남대·계명대까지 노릴 만한 자리예요"
+- ✅ "부산대는 조금 어렵지만 도전해볼 만하고요"
+
+§17·§18 학교 본문 작성 시:
+- user message [학운 sub-tier] (예: 4-2) → SHARED_UNIVERSITY_TIER_GUIDE 표의 해당 sub-tier 행에서 학교명 직접 가져오기
+- "안정·가능·도전" 어휘는 OK, 그 뒤에는 항상 **학교명** 이 와야 함. "안정적으로 ○○대" / "○○대·○○대도 가능"
+- hero UI 가 이미 "안정·가능·도전 + 대학명" chip 으로 한번 보여주므로, 본문은 같은 학교명 + 명리 이유 + 어머니 액션 위주로.
 
 ### §17 학교 권유 톤 — "안정·가능·도전" 3구간
 
@@ -397,12 +408,10 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
           ``,
         ]
       : []),
-    `[학운 단계·추천 티어 — 백엔드 계산. §17 권유 baseline. 점수·조정 내역·sub-tier 본문 노출 ✗]`,
-    `  v2 sub-tier (내부 분기용, 본문 노출 ✗): ${tierResult.subTier} (${tierResult.subTierLabel})`,
-    `  → SHARED_UNIVERSITY_TIER_GUIDE 표에서 sub-tier ${tierResult.subTier} 행의 일반 대학군 + (조건 부합 시) 별도 트랙 사용`,
-    `  최종 추천 티어 범위 (본문 표기용): ${tierResult.finalTierRange[0] === tierResult.finalTierRange[1] ? `${tierResult.finalTierRange[0]}티어` : `${tierResult.finalTierRange[0]}~${tierResult.finalTierRange[1]}티어`}`,
-    `  Confidence 표현 (§17 권유 톤): "${tierResult.confidenceLabel}"`,
-    `  학운 라벨: ${tierResult.hagunLabel}`,
+    `[학운 sub-tier — 백엔드 계산. §17·§18 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
+    `  v2 sub-tier: ${tierResult.subTier} (${tierResult.subTierLabel}) ← SHARED_UNIVERSITY_TIER_GUIDE 표의 이 행에서 학교명 추출`,
+    `  Confidence: ${tierResult.confidence} (내부 라벨 — 본문에 '${tierResult.confidenceLabel}' 같은 표현 ✗)`,
+    `  본문 표기: 학교명 + '안정·가능·도전' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
     `[진로 방향성 10가지 — 백엔드 결정성. §16 "전공 볼게요" 1차 baseline. 강도순 정렬, Top 2~3 메인, 그 다음 보통 등급 보조. 약은 본문 언급 ✗]`,
     ...c.directions.map((d) =>
