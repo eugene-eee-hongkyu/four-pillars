@@ -111,7 +111,8 @@ function parseText(input: string): Block[] {
     flushTl();
   };
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmed = line.trim();
 
     // evidence 모드에서: bullet 누적 또는 종료
@@ -188,10 +189,13 @@ function parseText(input: string): Block[] {
     }
 
     // 마무리 시그니처 — 본문 맨 끝 마커
-    const sigMatch = trimmed.match(/^—\s*이\s*사주의\s*한\s*줄\s*[:：]\s*(.*)$/);
+    // - premium part2: '— 이 사주의 한 줄: ...'
+    // - deep: '— 이 섹션의 한 줄: ...'
+    // - hyphen 변형 '-' / em dash '—' / en dash '–' 모두 매칭
+    const sigMatch = trimmed.match(/^[—–-]\s*이\s*(사주|섹션)의\s*한\s*줄\s*[:：]\s*(.*)$/);
     if (sigMatch) {
       flushAll();
-      blocks.push({ type: 'signature', text: sigMatch[1] });
+      blocks.push({ type: 'signature', text: sigMatch[2] });
       continue;
     }
 
@@ -270,6 +274,16 @@ function parseText(input: string): Block[] {
     paragraphBuf.push(trimmed);
   }
   flushAll();
+
+  // post-process: 마지막 paragraph 가 '— xxx' 또는 '— ...:' 마커 없는 단일 한 줄이면 signature 박스로 변환.
+  // LLM 이 마무리 마커 ('이 사주의 한 줄' / '이 섹션의 한 줄') 누락하고 '— ...' 만 출력하는 케이스 fallback.
+  if (blocks.length > 0) {
+    const last = blocks[blocks.length - 1];
+    if (last.type === 'paragraph' && /^[—–]\s+\S/.test(last.text) && !/[:：]/.test(last.text)) {
+      blocks[blocks.length - 1] = { type: 'signature', text: last.text.replace(/^[—–]\s+/, '') };
+    }
+  }
+
   return blocks;
 }
 
