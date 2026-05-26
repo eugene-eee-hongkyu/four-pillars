@@ -74,7 +74,7 @@ export async function POST(request: Request) {
 
   const stream = getAnthropicClient().messages.stream({
     model: ANTHROPIC_MODEL,
-    max_tokens: 16000,
+    max_tokens: 12000,
     temperature: 0.5,
     system,
     messages: [{ role: 'user', content: userMsg }],

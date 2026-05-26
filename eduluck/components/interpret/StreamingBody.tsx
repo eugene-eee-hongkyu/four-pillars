@@ -210,7 +210,8 @@ export function StreamingBody({
 
     log('start fetch', { body });
 
-    const timeoutMs = 180000;
+    // 270초 — v5 max_tokens 16000 (Sonnet 4.5) 응답 시간 대응. Vercel maxDuration 300초보다 짧게.
+    const timeoutMs = 270000;
     const timeoutId = setTimeout(() => {
       log('TIMEOUT', { deltaCount, firstDeltaAt, elapsedMs: Date.now() - startedAt });
       ac.abort();
