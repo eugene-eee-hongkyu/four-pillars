@@ -138,7 +138,8 @@ export interface FlowState {
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumInterpretText·premiumPart1Text·premiumPart2Text·deepDiveTexts 모두) */
 // v5.2: §10 '강요 금지' → '양육 경계' 리프레임 (긍정·중립 톤, 명리 중도 개념).
-export const PREMIUM_PROMPT_VERSION = 'v5.2-care-boundary';
+// v5.3: prompt 예시의 '재호' → '{자녀}' placeholder. 다른 자녀에서 재호 이름이 leak 되던 버그 fix.
+export const PREMIUM_PROMPT_VERSION = 'v5.3-no-name-leak';
 
 const initial: FlowState = {
   sessionId: null,
