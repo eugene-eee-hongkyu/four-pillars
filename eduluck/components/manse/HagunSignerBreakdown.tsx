@@ -44,6 +44,26 @@ const SIGNER_EXPLAIN: Record<string, string> = {
   '학자형 부재 (귀인0+격국✗+일지약)': '학자형 시그너가 부족한 자리.',
 };
 
+/** raw signer 라벨에서 영문 detector ID prefix 제거.
+ *  - 'combo_xxx (한국어 라벨)' 형식 → '한국어 라벨' (괄호 안만)
+ *  - 'combo_xxx' 같이 괄호 없는 영문 키 → SIGNER_LABELS dict lookup
+ *  - 그 외(한글만) → 그대로
+ *
+ *  hagun-tier.ts signer 라벨은 calibration·self-test에서 detector ID로 쓰이므로
+ *  변경 불가. UI 표시 단계에서만 사람 친화 한국어로 변환. */
+const SIGNER_LABELS: Record<string, string> = {
+  'combo_yanginScholar': '양인 학자형',
+};
+
+function displaySigner(raw: string): string {
+  const m = raw.match(/\((.+?)\)\s*$/);
+  if (m) return m[1].trim();
+  if (/^[a-z_]+$/i.test(raw)) {
+    return SIGNER_LABELS[raw] ?? raw;
+  }
+  return raw;
+}
+
 function explainSigner(name: string): string {
   // 정확 매칭 우선
   if (SIGNER_EXPLAIN[name]) return SIGNER_EXPLAIN[name];
@@ -120,7 +140,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-body-bold text-body-md text-text-pri flex-1">
-          {h.signer}
+          {displaySigner(h.signer)}
         </Text>
         <StrengthDots value={h.value} />
       </View>
@@ -139,7 +159,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-body text-body-sm text-text-sub flex-1">
-          {h.signer}
+          {displaySigner(h.signer)}
         </Text>
         <StrengthDots value={h.value} />
       </View>
