@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 15:59
-## 마지막 업데이트: 2026-05-26 15:59
+## 마지막 실행: 2026-05-26 18:51
+## 마지막 업데이트: 2026-05-26 18:51
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- v2 30 sub-tier 시스템 완전 도입 완료 (`d8c2307`). 빌드 진행 중 — Vercel 배포 후 prod 검증.
+- v2 30 sub-tier 풀스택 정착 완료 (`d8c2307`~`f42b134` 10 commit). PROMPT_VERSION v5.3 → v5.8. prod 정아 e2e 검증 후 mom test 진입.
 
 ### 이어서 할 것
 
-1. Vercel 배포 완료 후 prod 신정아(3-2) 등으로 재진단 검증 — v2 학교명 출력 정상화
-2. Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
-3. interpretations.kind 정책 결정
+1. prod e2e 재검증 (`f42b134` 배포 후) — 정아 §18 학교명 (울산대·한림대) + evidence chip 분리 + signature anchor 박스
+2. Mom test 5~10명 — v5.8 prompt + hero chip + 시각 anchor 카드 + 별도 트랙 분기 정성 검증
+3. (선택) interpretations.kind 정책 결정
 
 ### 막힌 것
 
@@ -152,9 +152,16 @@
 - [x] Part 2 reveal 트리거 fix — minSectionNum 기반 (`3b90623`)
 - [x] '재호' 이름 leak fix — prompt 예시 placeholder + PROMPT_VERSION v5.3 (`aa7d6e0`) ⭐
 - [x] 진단 화면 navigation 추가 — 영역 선택·처음으로 (`169a363`)
-- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 ~ 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PREMIUM_PROMPT_VERSION v5.4 (`d8c2307`) ⭐
+- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 ~ 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PROMPT_VERSION v5.4 (`d8c2307`) ⭐
+- [x] prompt template literal backtick 빌드 깨짐 fix (`075c69b`)
+- [x] StreamingBody error UI 구체 메시지 5경로 (`3ceb3d5`)
+- [x] check-jeongah / check-tier-groups 진단 스크립트 (`902f49c`)
+- [x] 학운 그릇 hero 안정·가능·도전 chip + 본문 ○티어 금지 + ±1~2단계 (`76b0c08`·`f4c5849`)
+- [x] tier-schools 옵션 A — sub-tier 별 3~5개 학교 chip (v2 표 정확 매핑) (`473b5c0`) ⭐
+- [x] 별도 트랙 (예술·의약) 발현 조건 학운 sub-tier 구간별 분리 — 거짓 희망 fix (`8935155`) ⭐
+- [x] evidence bullet split + 줄바꿈 룰 + signature anchor 박스 fallback (`536a69f`·`f42b134`)
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
-- [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
+- [ ] Mom test 5~10명 — v5.8 prompt + hero chip + 별도 트랙 분기 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
 - [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24

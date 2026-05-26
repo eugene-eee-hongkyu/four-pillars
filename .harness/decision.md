@@ -45,6 +45,61 @@
 
 ---
 
+## 2026-05-26: 대학 티어 시스템 — v2 30 sub-tier 풀스택 정착
+
+- **선택**: TIER_SYSTEM_v2.md §3 표 (30 sub-tier × 일반/별도 트랙 컬럼) 를 LLM prompt 에 그대로 주입 + scoring 의 subTier 산출 + hero 의 sub-tier 별 학교 chip 으로 풀스택 연결. 사용자 노출은 '1티어/2티어' 만, sub-tier (1-2, 4-3 등) 은 LLM 내부 분기용 only.
+- **대안 검토**:
+  - **A. 옛 10티어 단순 매핑 유지**: scoring 의 NORMALIZED_CUTOFFS (30개 사회 분포 cutoff) 와 prompt (1티어=의대+SNU+KAIST 한 묶음) 불일치 유지. 정아 (5-1) 에 LLM 이 '4~5티어' 같이 모호 표현. 사용자가 "왜 다른 티어로 이야기?" 지적.
+  - **B. v2 30 sub-tier prompt 만 변경, hero 는 옛 텍스트**: hero 의 '중 · 4~5티어' 가 직관 안 됨. 어머니에게 학교 자리 즉시 안 보임.
+  - **C. v2 30 sub-tier 풀스택 (선택안)**: prompt + scoring 노출 + hero chip + 본문 룰 모두 v2 정합. 한 번 정비 후 long-term 안정.
+- **선택 이유**:
+  - scoring·prompt·UI 가 한 시스템(v2)을 공유해야 일관성. 부분 도입은 모순 발생 (사용자 지적의 정확한 원인).
+  - 옵션 A (sub-tier 별 학교) 채택 시 hero·본문이 sub-tier 5-1 → 울산대·조선대 같이 실제 진학과 정합 (정아 케이스 검증).
+  - PROMPT_VERSION bump (v5.3 → v5.4) 로 클라이언트 캐시 자동 invalidate. 점진적 마이그레이션 부담 ✗.
+- **영향 범위**:
+  - [hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) — calcConfidence 에 subTier·subTierLabel 산출 + FinalTierResult 확장
+  - [interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) — SHARED_UNIVERSITY_TIER_GUIDE 전면 교체 (v2 표) + buildSharedManseContext 에 sub-tier 노출
+  - [tier-schools.ts](../eduluck/lib/manse/tier-schools.ts) — SUB_TIER_SCHOOLS Record (30 sub-tier × 학교 1~5개, v2 표 §3 행 추출)
+  - [HagunSignerBreakdown.tsx](../eduluck/components/manse/HagunSignerBreakdown.tsx) — 안정·가능·도전 chip 그룹
+- **되돌리는 방법**: PROMPT_VERSION 만 v5.2 로 되돌리고 SHARED_UNIVERSITY_TIER_GUIDE 옛 텍스트 복원. tier-schools.ts·calcConfidence subTier 필드는 후방 호환이라 그대로 둬도 무관.
+
+---
+
+## 2026-05-26: hero 학교 chip — sub-tier 별 학교 (옵션 A) vs 티어 인지도 대표 (옵션 C)
+
+- **선택**: 옵션 A — SUB_TIER_SCHOOLS Record 30 sub-tier × 학교 3~5개 (v2 표 §3 행에서 직접 추출).
+- **대안 검토**:
+  - **C. 10티어별 인지도 대표 학교 2개 (이전 안)**: 데이터 가벼움 (20개). 단 v2 표와 임의 매핑 ('5티어=건국·부산' 인데 v2 기준 건국=3티어·부산=4티어). 정아 (5-1) 에 울산대 안 보임.
+  - **A. sub-tier 별 학교 (선택안)**: 데이터 60개. v2 표 정확 매핑. 같은 5티어라도 5-1·5-2·5-3 chip 이 다름. 정아 (5-1) chip 에 울산대 직접 노출 → 실제 진학과 정합.
+  - **B. 단순 텍스트 (티어 정보 없이)**: UX 디테일 ↓.
+- **선택 이유**:
+  - 사용자 명시 요청 ("3~5개씩 박는 게 더 안전 / 옵션 A 진행").
+  - 학교명 가독성: 한 줄에 5개 학교 (flex-wrap) 까지 모바일 width 수용.
+  - v2 표가 이미 docs/scoring/TIER_SYSTEM_v2.md 에 있어 데이터 추출 1회성 비용 작음.
+- **영향 범위**: [tier-schools.ts](../eduluck/lib/manse/tier-schools.ts), [HagunSignerBreakdown.tsx](../eduluck/components/manse/HagunSignerBreakdown.tsx), [check-tier-groups.ts](../eduluck/scripts/check-tier-groups.ts)
+- **되돌리는 방법**: TIER_SCHOOLS 10티어 lookup 으로 다시 단순화 가능 (코드 단순화 한 차례 진행 이력 있음 → 되돌리기 쉬움).
+
+---
+
+## 2026-05-26: LLM 형식 어김 대응 — prompt 룰 + 파서 fallback 동시 (2 layer)
+
+- **선택**: prompt 룰 강화 + InterpretBody 파서 fallback 둘 다 적용. evidence bullet 한 줄 split, signature 마커 fallback 모두 같은 패턴.
+- **대안 검토**:
+  - **A. prompt 룰만 강화**: 단순. 단 Haiku 4.5 가 markdown 형식 가끔 어김 (한 줄에 bullet 붙임 / signature 마커 누락 등). LLM 출력 변형에 취약.
+  - **B. 파서 fallback 만 추가**: 코드만 변경. 단 prompt 가 일관된 형식 유도 ✗ → 새 형식 출현 시 또 fix 필요.
+  - **C. 둘 다 (선택안)**: prompt 가 정상 출력 유도 + 파서가 변형 흡수. 사용자 화면이 안정.
+- **선택 이유**:
+  - 사용자 mom test 진입 직전 안정성 우선.
+  - LLM 출력 신뢰도 100% ✗ — 파서가 last line of defense.
+  - 두 layer 비용 작음 (각 fix 코드 5~15 라인).
+- **적용 사례**:
+  - evidence bullet (`536a69f`): parser split `/\s+-\s+/` + prompt '각 bullet 새 줄' 룰
+  - signature 마커 (`f42b134`): regex 확장 (사주·섹션 둘 다) + post-process fallback ('— xxx' 콜론 없으면 signature) + prompt 마커 강제
+- **영향 범위**: [InterpretBody.tsx](../eduluck/components/interpret/InterpretBody.tsx), prompt 파일들
+- **되돌리는 방법**: 두 layer 중 하나만 유지해도 부분 동작. fallback 만 제거 시 LLM 형식 어김 케이스 사용자 화면 영향.
+
+---
+
 ## 2026-05-26: SSE insert 누락 fix — server waitUntil 도입 대신 client abort 방지
 
 - **선택**: 두 클라이언트 컴포넌트 (`SilentSsePrefetch`·`StreamingBody`)에 `serverInsertProtected` flag 추가 — done event 또는 reader 정상 종료 후 cleanup 에서 `ac.abort()` skip. server stream-sse.ts 의 onComplete await 흐름을 보호.

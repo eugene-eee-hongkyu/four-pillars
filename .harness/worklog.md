@@ -6,8 +6,41 @@
 
 ---
 
-```markdown
-## Session 2026-05-26 15:59 — v2 30 sub-tier 시스템 도입 및 배포 준비
+## Session 2026-05-26 18:51 — v2 sub-tier 정밀화 + hero 학교 chip + LLM 거짓 희망 fix + UI 폴리시 (10 commit)
+
+### 작업 요약
+
+배포 빌드 깨짐 fix 1건 + v2 30 sub-tier 시스템 풀스택 정착 + LLM 거짓 희망 패턴 4건 fix + UI 렌더링 fix 3건. PROMPT_VERSION v5.3 → v5.8 (5번 bump). 핵심 commit:
+
+- **`075c69b` backtick 빌드 깨짐 fix**: aa7d6e0 이후 모든 Vercel 빌드 ERROR. 원인: prompt 본문에 backtick `[자녀 ...]` 표기 추가했는데 그 prompt 가 template literal 안이라 escape 안 된 backtick 이 template 을 닫음. tsc 는 통과 (Babel 보다 lenient) 했으나 Vercel 빌드 실패. 3 파일 backtick → single quote.
+
+- **`d8c2307` v2 30 sub-tier 시스템 도입**: scoring 코드(NORMALIZED_CUTOFFS 30개) 는 이미 v2 사회 분포 매핑인데 prompt 의 SHARED_UNIVERSITY_TIER_GUIDE 는 옛 10티어 단순 매핑이라 LLM 이 다른 학교명 추천. TIER_SYSTEM_v2.md §3 표(sub-tier × 일반/별도 트랙) 전면 주입 + calcConfidence 에 subTier·subTierLabel 산출 + buildSharedManseContext 에 sub-tier 노출. PROMPT_VERSION v5.4.
+
+- **`76b0c08` 학운 그릇 hero 안정·가능·도전 chip**: "중 · 4~5티어" 같이 티어 숫자만 보여서 어머니가 직관 못함. lib/manse/tier-schools.ts 신규 (1~10 티어별 학교 lookup) + HagunSignerBreakdown hero 에 안정·가능·도전 chip 추가. reach 케이스 '가능' 미표시 (거짓 희망 방지). v5.5.
+
+- **`473b5c0` tier-schools 옵션 A — sub-tier별 3~5개 학교**: 옵션 C 임의 10티어 매핑(5티어=건국·부산) 이 v2 표와 mismatch. SUB_TIER_SCHOOLS Record<string, string[]> 30 sub-tier × 학교 1~5개 (v2 표 §3 행에서 추출). 정아(5-1) chip 에 울산대 직접 노출 검증.
+
+- **`f4c5849` 본문 ○티어·중상위권 표현 모순 제거 + ±1~2단계**: v5.5 적용 후에도 §18 본문에 '4~5티어 대학', '중상위권' 노출. 원인: interpret-premium-part2.ts §18 가이드의 'Confidence 표현 「○티어 안정 영역」' 가 v5.5 룰과 모순. SHARED_UNIVERSITY_TIER_GUIDE 금지 표현 5종 명시 + ❌/✅ 예시 강화 + buildSharedManseContext '본문 노출 ✗' 명시. hero 안내문 ±1단계 → ±1~2단계. v5.6.
+
+- **`8935155` 별도 트랙 발현 조건 학운 sub-tier 구간별 분리**: 정아(5-1, arts 매우 강) §18 본문에 한국예종·홍익 미대 (2-1, 2-2) 권유 — 4~5 단계 위 거짓 희망. 원인: 예체능 트랙 발현 조건 '전 구간' + '격국보다 예술 우선' 표현이 학운 sub-tier 무시 유도. 예체능 4 구간 분리 (1-1~2-3 / 3-1~4-3 / 5-1~6-3 / 7-1~10-3) + 의약 동일 패턴 (학운 1-1~2-2 만 본과). '학운 sub-tier 는 사주 본질이라 절대 무시 ✗' 룰 명시. v5.7.
+
+- **`536a69f` evidence bullet 한 줄 multiple split + 줄바꿈 룰**: §18 명리 근거 박스 본문이 한 줄로 깨져 보임 — LLM 이 bullet 7개를 ' - ' 로 붙여 출력. InterpretBody 파서가 첫 '-' 만 인식해서 통째로 한 항목 렌더. fix 2 layer: 파서가 `/\s+-\s+/` split + prompt 에 '각 bullet 새 줄' 룰 + ❌/✅ 예시. v5.8.
+
+- **`f42b134` 깊이보기 마무리 시그니처 anchor 박스 렌더**: §18 마지막 '— 정아는 ...' 한 줄이 anchor 박스가 아닌 평문 단락 렌더. 원인 둘: signature regex 가 '이 사주의 한 줄' 만 매칭 (deep 은 '이 섹션의 한 줄') + LLM 이 마커 자체 누락. fix 3 layer: regex 확장 ('(사주|섹션)의 한 줄'·hyphen 변형) + post-process fallback (마지막 paragraph '— xxx' 콜론 없으면 signature 변환) + prompt 마커 강제.
+
+- **`3ceb3d5` StreamingBody error UI 구체 메시지**: 진단 실패 시 'generic 오류' 만 보여 원인 추적 불가. 5가지 onError 경로 (timeout / HTTP / stream closed / server error event / fetch exception) 모두 errorMessage state 에 자세한 메시지 (deltas·elapsedMs 포함) 저장 + error UI 에 두 줄 (제목 + 상세) 노출.
+
+- **`902f49c` check-jeongah 진단 스크립트**: 신정아 (1979-08-05, 여) hagun 점수·v2 sub-tier 직접 계산용. 결과: hagun 52.50 / 학운 중 / sub-tier 5-1 / artsScore 매우 강 6점. 울산대 시각디자인이 v2 표 5-1 행과 정확히 일치 확인.
+
+### 다음 액션
+
+- prod e2e 재진단 (`f42b134` 배포 완료 후): 정아 §18 깊이보기 → 학교명 (울산대·한림대) + evidence chip 4-5개 분리 + signature anchor 박스
+- Mom test 5~10명 — v5.8 prompt + hero chip + 시각 anchor 카드 + 새 별도 트랙 분기 정성 검증
+- (선택) interpretations.kind schema 정책 결정
+
+---
+
+## Session 2026-05-26 15:59 — v2 30 sub-tier 시스템 도입 및 배포 준비 (인터럽트, 위 세션에 통합)
 
 ### 작업 요약
 - hagun-tier.ts: sub-tier (1-1 ~ 10-3) 계산 로직 추가
