@@ -76,7 +76,14 @@ export default function InterpretPremium() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView contentContainerClassName="pt-8 pb-32 gap-6">
+      <ScrollView contentContainerClassName="pt-6 pb-32 gap-6">
+        {/* 상단 navigation — 새 자녀로 시작하려면 처음으로 */}
+        <View className="px-container-padding flex-row items-center justify-end">
+          <Button variant="ghost" size="md" onPress={() => router.replace('/')}>
+            🏠 처음으로
+          </Button>
+        </View>
+
         <View className="px-container-padding gap-2">
           <StepIndicator current={5} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">
@@ -198,9 +205,12 @@ export default function InterpretPremium() {
             )}
 
             {part2Done && (
-              <View className="px-container-padding mt-4">
+              <View className="px-container-padding mt-4 gap-2">
                 <Button onPress={() => router.push('/interpret-deep-select')}>
                   📋 더 자세히 알고 싶은 영역 선택 (20 섹션)
+                </Button>
+                <Button variant="ghost" onPress={() => router.replace('/')}>
+                  🏠 처음으로
                 </Button>
               </View>
             )}
