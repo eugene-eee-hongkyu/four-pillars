@@ -35,22 +35,16 @@
 
 ---
 
-## 2026-05-22: Mom test 10명 결과 기반 trait weight/라벨 조정
+## 2026-05-22: Mom test 10명 결과 기반 trait weight/라벨 조정 + 어미 일관성 metric
 
 - **백로그 이유**: mom test 10명 데이터 수집 대기 중
-- **할 것**: 결과 수집 후 trait weight와 라벨링 시스템 재조정 (현재는 정성적 규칙 기반). v5.1 4분면 카드·시간축 카드·인용 박스·근거 박스 모두 어머니 perception 검증 필요.
-- **필요한 것**: mom test 참여자 10명의 피드백 데이터
-- **이전 검토**: 명리 엔진 기본 로직은 완성됨. weight 조정은 실제 사용자 피드백 기반 데이터 드리븐으로 진행 필요
-
----
-
-## 2026-05-20: v5 prompt 어미 일관성 metric 미세 조정 (옛 v7 reframe)
-
-- **백로그 이유**: v6 92.8/100 달성 후 v5에서 SHARED_TONE_GUIDE의 시그니처 어미 가이드(`보여요/나와요/맞아요` 매 섹션 ≥2개)로 보강했지만 mom test 실 사용자 perception metric 측정은 아직.
-- **할 것**: mom test 결과로 어미 시그니처 비율 (목표 25%+ vs 실제) 측정 + 격차 있으면 v5 SHARED_TONE_GUIDE 보강 (현재 "≥2개" → "≥3개" 또는 in-context 예시 강화)
-- **필요한 것**: mom test 10명 결과 + 어미 비율 자동 측정 스크립트 갱신 (v5 part1/part2 분리 구조 대응)
-- **이전 검토**: v4 75.8 → v5(읽기) 84.8 → v6 92.8. v5(prompt 분리) 단계에선 별도 metric 측정 안 함. 격차 없으면 유지.
-- **관련 파일**: [eduluck/lib/prompts/interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) SHARED_TONE_GUIDE, [eduluck/scripts/eval-readability-v4.ts](../eduluck/scripts/eval-readability-v4.ts) (v5 분리 구조 대응 갱신 필요)
+- **할 것**:
+  1. trait weight·라벨링 시스템 재조정 (현재 정성적 규칙 기반)
+  2. v5.1 4분면 카드·시간축 카드·인용 박스·근거 박스 어머니 perception 검증
+  3. v5 SHARED_TONE_GUIDE 어미 시그니처 비율 측정 (`보여요/나와요/맞아요` 목표 25%+ vs 실제). 격차 있으면 "≥2개" → "≥3개" 또는 in-context 예시 강화. (옛 2026-05-20 #5 흡수, 2026-05-26 통합)
+- **필요한 것**: mom test 참여자 10명의 피드백 데이터 + 어미 비율 자동 측정 스크립트 갱신 (v5 part1/part2 분리 구조 대응)
+- **이전 검토**: 명리 엔진 기본 로직은 완성됨. weight 조정은 실제 사용자 피드백 기반. 어미: v4 75.8 → v5(읽기) 84.8 → v6 92.8. v5(prompt 분리) 단계엔 별도 metric 측정 ✗.
+- **관련 파일**: [eduluck/lib/prompts/interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) SHARED_TONE_GUIDE, [eduluck/scripts/eval-readability-v4.ts](../eduluck/scripts/eval-readability-v4.ts)
 
 ---
 
@@ -67,6 +61,8 @@
 ## 완료/취소
 
 ### 2026-05-26 정리 시 완료 처리
+
+~~[2] 2026-05-20: v5 prompt 어미 일관성 metric 미세 조정~~ → 2026-05-22 "Mom test 10명 결과 기반 trait weight/라벨 조정" 항목에 통합 (중복 sub-task).
 
 ~~[2] 2026-05-06: 사주톡 10명 지인 테스트~~ → sajutalk 자체 hold 결정 (decision.md 2026-05-26). 검증 단계 자체 보류.
 

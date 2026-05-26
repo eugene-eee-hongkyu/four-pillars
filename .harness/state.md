@@ -32,7 +32,7 @@
 
 ### 백로그 요약
 
-- 대기 중: 6개
+- 대기 중: 5개
 - 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 ### 진행 상황
@@ -154,9 +154,9 @@
 - [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
 - [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토
-- [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
+- [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
 - [ ] 음력 입력 UI 토글 추가 (선택)
-- [ ] 06 정환·08 세형 sample md v7 포맷 갱신
+- [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
-- [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행
+- [ ] 외부 100명 검증 (Holland Interest Profiler 동시) → backlog 2026-05-20
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
