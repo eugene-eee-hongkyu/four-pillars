@@ -118,7 +118,11 @@ function parseText(input: string): Block[] {
     if (evidenceMode) {
       const bulletMatch = trimmed.match(EVIDENCE_BULLET_RE);
       if (bulletMatch) {
-        evidenceItems.push(bulletMatch[1].trim());
+        // LLM 이 가끔 한 줄에 여러 bullet 을 ' - ' 로 붙여 출력. ' - ' 로 split 해서 여러 item 처리.
+        // 의미 구분자 '─' / '—' 는 split 대상 ✗ (item 내부 normal 사용).
+        const rest = bulletMatch[1].trim();
+        const items = rest.split(/\s+-\s+/).map(s => s.trim()).filter(Boolean);
+        evidenceItems.push(...items);
         continue;
       }
       if (!trimmed) {
