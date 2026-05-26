@@ -130,7 +130,12 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
     motherEducation: null,
     fatherEducation: null,
   });
-  const tierGroups = getTierSchoolGroups(finalTier.primaryTier, finalTier.safetyTier, finalTier.confidence);
+  const tierGroups = getTierSchoolGroups(
+    finalTier.primaryTier,
+    finalTier.safetyTier,
+    finalTier.confidence,
+    finalTier.subTier,
+  );
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const top3 = positive.slice(0, 3);
@@ -211,15 +216,15 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
 
         {/* 안정·가능·도전 3구간 chip — 어머니가 "어느 대학 자리" 한눈에 인식 */}
         {!isWeakScholar && tierGroups.length > 0 && (
-          <View className="gap-1.5 mt-1">
+          <View className="gap-2 mt-1">
             {tierGroups.map(g => (
-              <View key={g.label} className="flex-row items-center gap-2 flex-wrap">
+              <View key={g.label} className="flex-row items-start gap-2 flex-wrap">
                 <View className="px-2 py-0.5 rounded-sm bg-secondary-container min-w-[44px]">
                   <Text className="font-body-bold text-label-sm text-primary text-center">
                     {g.label}
                   </Text>
                 </View>
-                <Text className="font-body text-body-sm text-text-pri flex-1" numberOfLines={1}>
+                <Text className="font-body text-body-sm text-text-pri flex-1 leading-relaxed">
                   {g.schools.join(' · ')}
                 </Text>
               </View>
