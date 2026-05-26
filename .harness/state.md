@@ -6,34 +6,33 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 00:17
-## 마지막 업데이트: 2026-05-26 00:17
+## 마지막 실행: 2026-05-26 10:14
+## 마지막 업데이트: 2026-05-26 10:14
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- v5.1 정밀 진단 prod 검증 단계 — Part 1/2 분리 + Deep-dive + 디자인 v2 + 4분면·시간축 카드 + 인용·근거 박스 모두 prod 배포 완료. share-token race fix까지 push.
+- v5.2 정밀 진단 + 디자인 v2 + 가족 공유 풀스택 fix 완료. e2e 검증 통과 (Haiku 4.5 90초·9907자·share-link 200). Mom test 진입 대기.
 
 ### 이어서 할 것
 
-1. 사용자 새 진단 + 가족 공유 시도 → vercel logs로 share-token race 해결 또는 schema 이슈 원인 판별 (`[part1] insert OK` vs `[part1] insert error`)
-2. v5.1 prod 사용성 검증 — 4분면 카드·시간축 카드 LLM 출력 자연성 + 디자인 v2 모바일 viewport
-3. Mom test 5~10명 — Part 1/2 분리·시각 anchor 카드·신규 4섹션 정성 피드백
+1. Mom test 5~10명 — 가족 공유·v5.2 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
+2. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs enum/regex CHECK 재도입
+3. legacy cleanup — v4 `api/interpret-premium.ts`·`interpret-free`·`relation-mini` 사용처 검토 후 제거
 
 ### 막힌 것
 
-- 없음 (사용자 검증 대기)
+- 없음
 
 ### 사람 판단 필요
 
-- 가족 공유 동작 확인 (race 가설 검증)
-- LLM이 prompt 가이드 따라 `### 강점·약점 카드` + `### 시기 카드` + `### 근거` 자연 출력하는지 어머니 톤 검증
-- Mom test 어머니 5~10명 정성 피드백
-- Deep-dive 일 N회 cap 운영 결정
+- Mom test 어머니 5~10명 모집·정성 피드백
+- `interpretations.kind` schema 정책 (현재 free text)
+- Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 
 ### 백로그 요약
 
-- 대기 중: 9개
+- 대기 중: 6개
 - 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 ### 진행 상황
@@ -128,7 +127,7 @@
 - [x] Phase 4: UI 3개 화면 + SilentSsePrefetch (`09e489c`)
 - [x] Phase 5: INTERPRET_FLOW_v5.md + self-test 회귀 ✗ (`bae0c46`)
 - [x] v5 endpoint vercel 위치 fix — 404 해결 (`532a793`)
-- [x] 분량 8000자 + survey 제거 + max_tokens 16000 (`c0d7c2a`)
+- [x] 분량 8000자 + survey 제거 + max_tokens 12000 (`c0d7c2a`·`969b599`)
 - [x] prompts/ → docs/prompts/ 이동 + README + dump --write (`9d61c8b`·`679f721`)
 - [x] StreamingBody 청크 reveal 모드 — 글자 streaming 폐기 (`dc467fd`)
 - [x] StreamingBody 섹션 헤더 기반 reveal (2섹션씩) (`b6cc9f1`)
@@ -142,16 +141,22 @@
 - [x] 시간축 카드 §13 (LuckTimelineCard) — 3구간 + 현재 ⭐ + worst year ⚠ (`e3fefe3`) ⭐
 - [x] 약한 자리·약한 방향 제거 + 함께 작용 토글 (`388509c`)
 - [x] 카테고리 chip "신살" → "기운" (`f696c16`)
-- [x] share-token race retry + insert error 로깅 (`d9077ba`)
-- [ ] (검증) 가족 공유 race 해결 또는 schema 이슈 원인 판별
-- [ ] (검증) v5.1 4분면·시간축 카드 LLM 출력 자연성 + 모바일 viewport
+- [x] §10 '강요 금지' → '양육 경계' 리프레임 + PROMPT_VERSION v5.2 (`05af1ec`) ⭐
+- [x] backlog 정리 + sajutalk hold 결정 (`feb01ff`·`b80bcda`)
+- [x] setChildSubject 자녀 변경 cache invalidate (`2b4a1c2`)
+- [x] HagunSignerBreakdown displaySigner — raw detector ID prefix 제거 (`d4d2728`)
+- [x] @tailwind warning suppression (eduluck/.vscode/settings.json)
+- [x] StreamingBody timeout 180s → 270s + max_tokens 16000 → 12000 (`969b599`)
+- [x] 모든 LLM 호출 Sonnet → Haiku 4.5 통일 + env safeguard (`cc126d8`·`d737b4f`·`88c70a9`) ⭐
+- [x] 가족 공유 풀스택 fix — onComplete · CHECK constraint · share-link rename · ENV 제거 (`d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`) ⭐
+- [x] e2e 검증 — Haiku 4.5 90초·9907자·share-link 200 ⭐
+- [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
+- [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
+- [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
+- [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토
 - [ ] 영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)
 - [ ] 음력 입력 UI 토글 추가 (선택)
-- [ ] Mom test 10명 — 시각 anchor 카드 + Part 1/2 정성 검증
-- [ ] 무료 진단·관계 분석 Haiku 검증 → 추가 비용 절감
 - [ ] 06 정환·08 세형 sample md v7 포맷 갱신
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 단계 — Holland Interest Profiler 동시 시행
-- [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
-- [ ] legacy /api/interpret-premium 정리 (사용처 0 확인 후)

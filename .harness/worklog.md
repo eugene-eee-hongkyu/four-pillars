@@ -6,6 +6,73 @@
 
 ---
 
+## Session 2026-05-26 10:14 — v5 디자인 polish + 가족 공유 풀스택 진단 (race·schema·build cache)
+
+### 작업 요약
+
+**A. v5 디자인 v2 polish + 시각 anchor 카드** (commits `c1d37ec`·`97d63fc`·`70479e4`·`e3fefe3`·`388509c`·`f696c16`·`48f5070`·`05af1ec`):
+- `SectionHeaderV2`: 좌측 원형 번호 배지(40x40 secondary border) + title 20px bold + subtitle + 1px 구분선
+- `QuoteBox` v2: 좌상단 큰 전각 ❝ (48px opacity 0.35) + secondaryContainer + rounded 12 + 그림자
+- `EvidenceBox` v2 + 카테고리 chip 4종: 본질(amber) · 시기(blue-gray) · **기운(soft purple, '신살' 리네임)** · 관계(soft green)
+- `StrengthWeaknessCard` (§3 4분면 카드, 좌 강점·우 보강할 곳)
+- `LuckTimelineCard` (§13 가로 3구간 + 현재 ⭐ + worst year ⚠)
+- §18 조심한 해 → **§14로 재배열** (§13 흐름 직후 worst year zoom in 자연 연결, §14~§17 → §15~§18 시프트)
+- §10 **'강요 금지' → '양육 경계'** 리프레임 (긍정·중립 톤, 명리 중도(中道)·분(分) 개념)
+- 약한 자리·약한 방향 제거 (`HagunSignerBreakdown`·`DirectionCard`) + 함께 작용 토글로 접기
+- `HagunSignerBreakdown` `displaySigner()` 헬퍼: raw `combo_*` detector ID prefix UI에서만 한국어 라벨로 변환 (data·calibration scripts 영향 0)
+- `PART1_STAGES` 4단계 → 2단계 (첫 청크 직전까지만)
+- `PREMIUM_PROMPT_VERSION` v5 → v5.1 → v5.2 (캐시 자동 invalidate)
+
+**B. backlog 정리 + sajutalk hold 결정** (`feb01ff`·`b80bcda`):
+- 완료 처리 8건 (medical-score 흡수·Phase A-F 종료·share 검증 흡수·V12 calibration 종료 등)
+- **sajutalk 프로젝트 hold** — eduluck mom test 집중을 위해 (decision.md 명시)
+- backlog 대기 8건 → **6건** (모두 eduluck 관련, 5개가 mom test 트리거)
+- `과거 사건 검증 엔진`·`사주톡 10명 지인 테스트` 제거
+
+**C. UX 정제 — 자녀 변경 cache invalidate + ShareButton 흐름 + raw markdown strip** (`2b4a1c2`·`d4d2728`):
+- `setChildSubject` 자녀 변경 시 premium 캐시 모두 invalidate (재호 → 재원 cache hit 문제 해결)
+- IDE `@tailwind` warning suppression (`eduluck/.vscode/settings.json` 신규)
+
+**D. 모델 통일 — Sonnet → Haiku** (`cc126d8`·`d737b4f`·`88c70a9`):
+- `ANTHROPIC_MODEL` 'sonnet-4-5' → 'claude-haiku-latest' alias → 'claude-haiku-4-5-20251001' 명시 버전 → env safeguard (env가 Haiku 아니면 강제)
+- 검증 결과: `claude-haiku-latest` alias가 Anthropic API에서 Sonnet 4.6으로 resolve됨 (alias 미스터리). 명시 버전 pin이 결정성 보장
+- 무료 진단·관계 분석·v4 legacy도 모두 같은 ANTHROPIC_MODEL 사용 → 전체 Haiku 통일
+
+**E. 가족 공유 풀스택 진단 + 4중 fix** (commits `d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`):
+
+증상: prod ShareButton → `not found` 404 반복.
+
+진단 4단계:
+1. vercel runtime logs로 `[part1] insert OK / error` 로그 0건 → background insert 미실행 의심
+2. supabase 직접 조회 → v5 row 0건 (interpretations.kind 분포: `free`·`premium`·`relation-mini`만)
+3. **CHECK constraint 발견**: `interpretations_kind_check (kind = ANY (ARRAY['free', 'relation-mini', 'premium']))` → v5 `premium-part1` reject
+4. 코드 패치 후에도 404 → Vercel build cache가 share-token.ts 옛 컴파일 그대로 사용
+
+Fix 4종:
+1. **Supabase CHECK constraint 제거** (`ALTER TABLE interpretations DROP CONSTRAINT interpretations_kind_check`)
+2. **`sseResponse` onComplete callback** — stream done 직전에 await insert (같은 Vercel function lifetime 안에서 보장)
+3. **`share-token` → `share-link` 파일 rename** — Vercel build cache 회피 (vercel.json functions 명시 + 파일 이름 자체 변경)
+4. **Vercel ENV `ANTHROPIC_MODEL` 제거** (사용자 수동) — 코드 default 무효화 원인
+
+**F. e2e curl 자동화 검증** (3회):
+- session → subjects → interpret-premium-part1 → share-link 완전 흐름
+- 1회차: row 0 (CHECK constraint reject) → ALTER 후 row 정상
+- 2회차: row 1 정상 + share-link 404 → rename 후 share-link 200
+- 3회차 (env 제거 후): **응답 시간 90초 (Sonnet 174s 대비 -48%) + `llm_model: claude-haiku-4-5-20251001` ✓**
+
+### 실패한 시도
+- share-token.ts 변경 (v2→v3→v4 trigger 다섯 번) — 매번 Vercel build cache로 옛 컴파일 사용. 결국 파일 rename으로만 해결.
+- alias `claude-haiku-latest`로 모델 전환 — Anthropic API가 Sonnet 4.6으로 resolve (alias 동작 검증 부족).
+- 코드에서 ANTHROPIC_MODEL 강제 Haiku — Vercel build cache가 client.ts 옛 컴파일 그대로. env 직접 제거가 본질.
+
+### 다음 액션
+
+1. Mom test 5~10명 진행 — 가족 공유·v5.2 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
+2. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs 새 enum 또는 regex CHECK 도입 (현재 제거됨)
+3. legacy cleanup — v4 `api/interpret-premium.ts` 사용처 0 확인 후 제거 + 옛 share-token.ts (rename으로 제거됨, 별도 확인 불필요)
+
+---
+
 ## Session 2026-05-26 00:17 — v5 정밀 진단 20섹션 분리 + 디자인 v2 + 시각 anchor 카드 + UI 정제
 
 ### 작업 요약

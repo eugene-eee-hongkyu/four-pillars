@@ -6,6 +6,58 @@
 
 ---
 
+## 2026-05-26: Vercel build cache 회피 — share-token → share-link 파일 rename
+
+- **선택**: 파일 이름 자체 변경 (`api/share-token.ts` → `api/share-link.ts`) + 클라이언트 fetch URL + vercel.json functions 일괄 갱신.
+- **대안 검토**:
+  - **A. 코드 본문 trigger (주석·BUILD_TAG 등 미세 변경)**: v2·v3·v4 다섯 번 시도. 매번 응답 형식이 옛 코드 그대로 (Vercel build가 file modification time 또는 hash 무시).
+  - **B. vercel.json functions에 share-token.ts 추가**: 등록만 됐을 뿐 build cache 무력화 안 됨.
+  - **C. 파일 rename**: 새 파일 이름이라 Vercel build가 무조건 fresh 컴파일. 단 클라이언트·vercel.json·코드 일괄 변경 필요.
+- **선택 이유**: A·B가 5회 시도 후 실패 — Vercel 빌드 시스템이 file content hash가 아닌 다른 캐시 키 사용으로 추정. rename은 가장 robust한 강제 rebuild. trade-off는 import 경로·fetch URL 일괄 갱신 1회 비용.
+- **영향 범위**: `api/share-link.ts` (신규, 옛 share-token.ts와 코드 동일), `components/interpret/ShareButton.tsx` (fetch URL), `vercel.json` (functions 명시).
+- **되돌리는 방법**: rename revert 가능하지만 다시 cache hit 위험. 새 파일 이름 유지 권장.
+
+---
+
+## 2026-05-26: 모델 통일 — Sonnet → Haiku 4.5 (명시 버전 + env safeguard)
+
+- **선택**: `ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001'` 명시 버전 pin + env safeguard (env가 Haiku 아니면 강제 default).
+- **대안 검토**:
+  - **A. `claude-haiku-latest` alias**: Anthropic이 minor/major update 자동 따라감. 단 검증 결과 alias가 Sonnet 4.6으로 resolve됨 (Anthropic API 동작 불확실, response.model에 sonnet 저장).
+  - **B. 명시 버전 'claude-haiku-4-5-20251001'**: 결정성·재현성 보장. prompt 동작 안정. minor update는 수동 추적.
+  - **C. 정밀만 Haiku + 무료·관계는 Sonnet 유지**: client.ts 옛 주석 패턴. 단 사용자가 "전체 통일" 결정.
+- **선택 이유**: B + env safeguard. alias 미스터리 + Vercel ENV에 옛 Sonnet override 잔존으로 strict pin 필요. env safeguard는 옛 ENV 자동 무력화 + Haiku 다른 버전 테스트 시 override 가능 (env가 'haiku' 포함이면 통과).
+- **영향 범위**: `lib/llm/client.ts` (ANTHROPIC_MODEL default · env safeguard). 모든 api/*.ts가 ANTHROPIC_MODEL import.
+- **되돌리는 방법**: Sonnet 회귀 원하면 lib/llm/client.ts DEFAULT 값 변경 + 추가로 Vercel ENV에 'claude-sonnet-4-6' 설정 (safeguard는 sonnet도 'haiku' 미포함이라 무시함 → 코드 변경 필수).
+
+---
+
+## 2026-05-26: Vercel serverless background work 미보장 — sseResponse onComplete callback
+
+- **선택**: `sseResponse(stream, tag, onComplete)` 형태로 callback 인자 추가. stream done 직전에 await onComplete (같은 함수 lifetime).
+- **대안 검토**:
+  - **A. `void (async () => { insert })` background IIFE (기존)**: 코드 단순. 단 Vercel serverless function이 response 반환 후 함수 종료 → IIFE 미실행.
+  - **B. `waitUntil` API**: Vercel/Edge runtime에서 background promise 보장. 단 Node serverless에선 미지원.
+  - **C. sseResponse 안에서 stream consume → onComplete await → done event 순차 처리 (선택)**: response stream 안에서 모든 작업 처리. lifetime 안에서 보장.
+- **선택 이유**: C가 Vercel serverless Node runtime에서 가장 robust. waitUntil 호환성 이슈 없음. 단 클라이언트 대기 시간이 onComplete (~1초) 만큼 증가 — DB insert 빠르므로 무시할 만함.
+- **영향 범위**: `lib/llm/stream-sse.ts` (sseResponse signature) · `api/interpret-premium-part1.ts`·`part2.ts`·`interpret-deep.ts` (3 endpoint에서 IIFE 제거 + onComplete 전달).
+- **되돌리는 방법**: onComplete 인자 제거 + IIFE 패턴 복귀. 단 insert 미실행 회귀.
+
+---
+
+## 2026-05-26: Supabase interpretations.kind CHECK constraint 제거
+
+- **선택**: `ALTER TABLE interpretations DROP CONSTRAINT interpretations_kind_check`. kind를 free text로.
+- **대안 검토**:
+  - **A. CHECK constraint 확장 (enum or regex)**: 'premium-part1', 'premium-part2', 'deep-1'..'deep-20' 등 명시. 미래 deep-N 범위 변경 시 ALTER 필요.
+  - **B. CHECK constraint 제거 (free text)**: 미래 동적 kind 자유 추가. typo prevention은 코드 단에서.
+  - **C. v5 kind를 옛 'premium'으로 통일 + prompt_version 컬럼으로 구분**: schema 변경 없음. 단 hacky·구분 약함.
+- **선택 이유**: B가 가장 유연. v5 분리·v6 가능성 등 미래 kind 추가 자유. typo는 코드 review·tsc로 충분.
+- **영향 범위**: Supabase `interpretations` 테이블. 옛 row 영향 0.
+- **되돌리는 방법**: 새 CHECK constraint 추가 SQL — 단 운영 중 추가 시 기존 row 검증 fail 가능. 권장 안 함.
+
+---
+
 ## 2026-05-26: sajutalk 프로젝트 hold
 
 - **선택**: sajutalk (사주톡) 프로젝트를 hold. 검증 단계(10명 지인 테스트) 및 후속 작업 (과거 사건 검증 엔진 등 sajutalk 종속 로드맵) 모두 보류.
