@@ -21,7 +21,7 @@ export function ShareButton({ sessionId, nickname }: Props) {
     setErrMsg(null);
     try {
       // 1. share token 조회
-      const tokenRes = await fetch(`/api/share-token?sessionId=${encodeURIComponent(sessionId)}`);
+      const tokenRes = await fetch(`/api/share-link?sessionId=${encodeURIComponent(sessionId)}`);
       if (!tokenRes.ok) {
         const body = await tokenRes.json().catch(() => ({}));
         throw new Error(body.error ?? '공유 링크를 만들 수 없어요');
