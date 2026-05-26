@@ -3,10 +3,11 @@
 // 세션·로그인 ✗ — token 자체가 인증.
 
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { Logo } from '@/components/ui/Logo';
+import { Button } from '@/components/ui/Button';
 
 interface SharePayload {
   // v5: part1·part2 분리. v4 legacy: bodyText. 셋 모두 null 가능 (없을 시).
@@ -18,10 +19,13 @@ interface SharePayload {
 }
 
 export default function SharePage() {
+  const router = useRouter();
   const { token } = useLocalSearchParams<{ token: string }>();
   const [data, setData] = useState<SharePayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const goHome = () => router.push('/');
 
   useEffect(() => {
     if (!token) {
@@ -50,10 +54,15 @@ export default function SharePage() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-8 pb-24 px-container-padding gap-4">
-        <View className="items-center gap-2 mb-4">
+        <Pressable
+          onPress={goHome}
+          accessibilityRole="link"
+          accessibilityLabel="eduluck 홈으로 이동"
+          className="items-center gap-2 mb-4"
+        >
           <Logo size={56} />
           <Text className="font-heading text-headline-md text-text-sub">eduluck</Text>
-        </View>
+        </Pressable>
 
         {loading && (
           <View className="items-center py-8">
@@ -111,13 +120,13 @@ export default function SharePage() {
                 </Text>
               )}
 
-              <View className="mt-8 pt-4 border-t border-outline-warm items-center">
+              <View className="mt-8 pt-4 border-t border-outline-warm items-center gap-3">
                 <Text className="font-body text-label-sm text-text-sub text-center">
                   eduluck에서 받은 정밀 사주 진단이에요
                 </Text>
-                <Text className="font-body text-label-sm text-text-sub text-center mt-1">
-                  나도 받아보고 싶다면 luck.z21labs.world
-                </Text>
+                <Button onPress={goHome} variant="primary" size="md">
+                  내 아이도 진단 받아보기
+                </Button>
               </View>
             </>
           );
