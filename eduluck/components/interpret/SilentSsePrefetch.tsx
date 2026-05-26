@@ -16,6 +16,10 @@ export function SilentSsePrefetch({ endpoint, body, delayMs = 5000, onComplete, 
   useEffect(() => {
     const ac = new AbortController();
     let started = false;
+    // server가 stream을 끝까지 보내고 onComplete (DB insert) await 단계에 들어간 뒤
+    // unmount cleanup이 ac.abort()를 부르면 Vercel function이 cancel되어 insert가 누락된다.
+    // done event 수신 시점부터는 abort를 막아 server lifetime을 보호한다.
+    let serverInsertProtected = false;
     const tag = `[SilentPrefetch ${endpoint}]`;
 
     const startTimer = setTimeout(async () => {
@@ -45,6 +49,7 @@ export function SilentSsePrefetch({ endpoint, body, delayMs = 5000, onComplete, 
           const { done, value } = await reader.read();
           if (done) {
             console.log(tag, 'reader done', { ms: Date.now() - t0, chars: fullText.length });
+            serverInsertProtected = true;
             if (fullText.length > 0) onComplete?.(fullText);
             return;
           }
@@ -69,6 +74,7 @@ export function SilentSsePrefetch({ endpoint, body, delayMs = 5000, onComplete, 
                 fullText += parsed.text;
               } else if (event === 'done') {
                 console.log(tag, 'done event', { ms: Date.now() - t0, chars: (parsed.fullText ?? fullText).length });
+                serverInsertProtected = true;
                 onComplete?.(parsed.fullText ?? fullText);
                 return;
               } else if (event === 'error') {
@@ -94,7 +100,7 @@ export function SilentSsePrefetch({ endpoint, body, delayMs = 5000, onComplete, 
 
     return () => {
       clearTimeout(startTimer);
-      ac.abort();
+      if (!serverInsertProtected) ac.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);

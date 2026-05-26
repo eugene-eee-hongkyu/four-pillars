@@ -206,6 +206,10 @@ export function StreamingBody({
     chunkStartedAtMsRef.current = startedAt;  // 첫 청크 카운트 기준점
     let firstDeltaAt = 0;
     let deltaCount = 0;
+    // server가 stream done 후 onComplete(DB insert)를 await 하는 단계에서
+    // cleanup이 ac.abort()를 부르면 Vercel function이 cancel되어 insert가 누락된다.
+    // done event 수신 시점부터는 abort를 막아 server lifetime을 보호한다.
+    let serverInsertProtected = false;
     const log = (...args: unknown[]) => console.log(tag, `+${Date.now() - startedAt}ms`, ...args);
 
     log('start fetch', { body });
@@ -258,6 +262,7 @@ export function StreamingBody({
             log('reader done (without done event)', { deltaCount, fullTextLen: fullText.length });
             clearTimeout(timeoutId);
             if (fullText.length > 0) {
+              serverInsertProtected = true;
               finalize(fullText);
               setStatus('done');
               onComplete?.(fullText);
@@ -286,6 +291,7 @@ export function StreamingBody({
             } else if (ev.event === 'done') {
               log('DONE event', { deltaCount, fullTextLen: fullText.length, elapsedMs: Date.now() - startedAt });
               clearTimeout(timeoutId);
+              serverInsertProtected = true;
               const final = ev.data.fullText ?? fullText;
               finalize(final);
               setStatus('done');
@@ -313,7 +319,7 @@ export function StreamingBody({
 
     return () => {
       clearTimeout(timeoutId);
-      ac.abort();
+      if (!serverInsertProtected) ac.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
