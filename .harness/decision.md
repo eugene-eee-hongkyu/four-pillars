@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-05-26: SSE insert 누락 fix — server waitUntil 도입 대신 client abort 방지
+
+- **선택**: 두 클라이언트 컴포넌트 (`SilentSsePrefetch`·`StreamingBody`)에 `serverInsertProtected` flag 추가 — done event 또는 reader 정상 종료 후 cleanup 에서 `ac.abort()` skip. server stream-sse.ts 의 onComplete await 흐름을 보호.
+- **대안 검토**:
+  - **A. Vercel `@vercel/functions` `waitUntil`**: SSE 응답 후에도 background 에서 insert 보장. 가장 robust 하지만 패키지 미설치 + import 추가 + 다른 endpoint 도 함께 마이그레이션 필요. 변경 범위 큼.
+  - **B. 별도 endpoint 로 client 가 insert 호출**: SSE 끝난 후 client 가 `/api/save-interpretation` 호출. 책임 분리 깔끔. free·premium·part1·part2·deep 모든 흐름 손봐야 함. 큰 변경.
+  - **C. client abort 방지 (선택안)**: 가장 작은 변경. 두 컴포넌트만 수정. SSE done event 수신 == server insert 이미 완료된 시점이므로 abort 안전. cleanup race window 만 닫음.
+  - **D. 서버 stream-sse.ts 에서 onComplete 를 background fire-and-forget**: Vercel function 종료되면 background 도 죽음. 6cb36b4 이전 패턴으로 회귀라 후퇴.
+- **선택 이유**:
+  - C 가 정확한 race condition 만 닫고, 다른 기능 영향 ✗. SSE 코드 흐름 변경 없음.
+  - 함께 추가한 `share-backfill` endpoint 가 과거 피해 사용자 cover. 두 합쳐 풀스택 보장.
+  - A 는 향후 더 robust 한 솔루션으로 retain 가능 (예: free·deep 추가 마이그레이션 시).
+- **영향 범위**:
+  - [eduluck/components/interpret/SilentSsePrefetch.tsx](../eduluck/components/interpret/SilentSsePrefetch.tsx) — `serverInsertProtected` flag
+  - [eduluck/components/interpret/StreamingBody.tsx](../eduluck/components/interpret/StreamingBody.tsx) — 동일 패턴
+  - 신규 진단부터 part1/part2 row insert 정상화. 기존 캐시 사용자는 별도 `share-backfill` 경로.
+- **되돌리는 방법**: 두 파일에서 `serverInsertProtected` 변수 제거하고 cleanup 의 `if (!serverInsertProtected)` 조건문 풀어 무조건 `ac.abort()` 호출로 되돌리면 원래 코드.
+
+---
+
+## 2026-05-26: 가족 공유 방식 — URL+동적 vs HTML 정적
+
+- **선택**: 현재의 URL + 서버 동적 fetch 방식 유지.
+- **대안 검토**:
+  - **A. URL + 서버 동적 (현행)**: 카톡·라인 등 OS 공유 sheet 로 URL 텍스트 한 줄 전송. 받는 쪽이 URL 열면 `/share/[token]` 페이지가 `/api/share` 호출해 DB 본문 fetch.
+  - **B. HTML 정적 스냅샷 파일 첨부**: 진단 시점 본문을 HTML 로 생성해서 가족에게 파일 통째 전송. 받는 쪽이 인터넷·서버 없이도 열기 가능.
+- **선택 이유**:
+  - 카톡·문자 흐름은 URL 미리보기(OG 태그)가 자연스러움. HTML 파일 첨부는 어머니 세대에서 열기 어색 + 첨부 차단 가능성.
+  - 서버 동적이라 본문 수정·만료·차단 모두 가능 (mom test 단계에서 중요).
+  - eduluck 도메인 노출이 강해 진단 받은 가족이 재진입(자기 진단)할 유도가 더 큼. 하단 CTA 버튼과 결합 효과 ↑.
+  - 단점(인터넷 의존)은 현 mom test 대상(스마트폰 보유 어머니)에서 무관.
+- **영향 범위**:
+  - 진단 page → ShareButton → `/api/share-link` (or `share-backfill`) → 공유 sheet → `/share/[token]` → `/api/share` 의 전체 흐름.
+- **되돌리는 방법**: 향후 외부 검증·국외 확장 단계에서 HTML 스냅샷 옵션을 *추가* 가능 (URL 우선 + HTML 다운로드 보조). 현 구조 변경 없이 신규 endpoint로 가산.
+
+---
+
 ## 2026-05-26: Vercel build cache 회피 — share-token → share-link 파일 rename
 
 - **선택**: 파일 이름 자체 변경 (`api/share-token.ts` → `api/share-link.ts`) + 클라이언트 fetch URL + vercel.json functions 일괄 갱신.

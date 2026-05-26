@@ -6,6 +6,26 @@
 
 ---
 
+## Session 2026-05-26 11:14 — 가족 공유 풀스택 버그 종결 (SSE abort + backfill + share v5 + CTA)
+
+### 작업 요약
+
+- **진단 핵심**: DB `interpretations` 상태 조회 — `premium-part2` row가 24h간 **0건** (part1: 4건). Vercel runtime logs에서 `[part2] stream done`은 찍히는데 `[part2] insert OK/error`는 **0건** 확인. → SSE 완료 후 onComplete (DB insert) 단계가 한 번도 실행 안 됨.
+- **원인 식별**: `SilentSsePrefetch.tsx` + `StreamingBody.tsx` 의 unmount cleanup `ac.abort()`. server stream-sse.ts 순서가 `stream done → await onComplete → enqueue done event` 이므로, 한쪽이 done event 받자마자 `setPremiumPart2Text` 호출 → 부모 condition `!state.premiumPart2Text` 깨져서 다른 fetch가 즉시 unmount → cleanup의 abort가 Vercel function의 await 단계를 cancel → insert 누락. (worklog 6cb36b4 "background IIFE → onComplete await" fix와 정면 충돌)
+- **fix 1 `3184c80`**: 두 컴포넌트에 `serverInsertProtected` flag 추가. reader done 또는 'done' event 수신 시점부터 cleanup의 `ac.abort()` skip → server function이 onComplete await 끝까지 살아남아 DB insert 보장. (앞으로의 신규 진단부터 적용)
+- **fix 2 `85b3d02` (share-backfill)**: 이미 클라이언트 캐시(`state.premiumPartXText`)는 살아있는데 DB row가 없는 사용자(이전 abort 사고 피해자)도 공유 가능하도록 `/api/share-backfill` POST endpoint 추가. session_id + childSubjectId + part1Text + part2Text 받아 없는 kind만 insert → 최신 share_token 반환. ShareButton 이 share-link 404 + 캐시 텍스트 존재 시 자동 폴백. vercel.json 등록.
+- **fix 3 `bda746d` (share read v5)**: `/api/share` 가 `.eq('kind','premium')` 으로만 필터해서 v5 part1/part2 row 무시하던 버그. 새 흐름: token → session_id → 같은 session 의 모든 premium-* row → kind 별 최신 본문 → `{ part1Text, part2Text, bodyText, nickname }` 응답. share 페이지가 Part 1/Part 2 분리 헤더 + InterpretBody로 둘 다 렌더, v4 legacy `bodyText` backward-compat fallback. (app/api/share+api.ts 도 동일 갱신)
+- **fix 4 `df777f2` (CTA 강화)**: share 페이지 상단 Logo + "eduluck" 텍스트 묶음을 Pressable 로 변경 → 클릭 시 홈 이동. 하단 안내 텍스트를 primary Button "내 아이도 진단 받아보기" 로 교체. 가족·지인이 진단 본 직후 자기 진단 진입을 한 번에 유도.
+- **사용자 검증**: `df777f2` 배포 전 단계까지 prod에서 "공유 잘된다" 확인. CTA 강화 후 추가 검증 대기.
+
+### 다음 액션
+
+- prod 실사용자 흐름 e2e 검증 (`df777f2` 배포 완료 후): 진단 → 공유 → 시크릿창 URL 열기 → Part1·Part2 모두 보임 → 홈 CTA 클릭 → `/` 이동
+- (필요시) 다음 mom test 5~10명 모집·진행
+- `interpretations.kind` schema 정책 결정 (free text 유지 vs CHECK 재도입)
+
+---
+
 ## Session 2026-05-26 10:14 — v5 디자인 polish + 가족 공유 풀스택 진단 (race·schema·build cache)
 
 ### 작업 요약

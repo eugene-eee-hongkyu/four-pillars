@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 10:14
-## 마지막 업데이트: 2026-05-26 10:14
+## 마지막 실행: 2026-05-26 11:14
+## 마지막 업데이트: 2026-05-26 11:14
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- v5.2 정밀 진단 + 디자인 v2 + 가족 공유 풀스택 fix 완료. e2e 검증 통과 (Haiku 4.5 90초·9907자·share-link 200). Mom test 진입 대기.
+- 가족 공유 풀스택 종결 완료 (`3184c80`·`85b3d02`·`bda746d`·`df777f2`). prod e2e 검증 후 mom test 진입.
 
 ### 이어서 할 것
 
-1. Mom test 5~10명 — 가족 공유·v5.2 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
-2. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs enum/regex CHECK 재도입
-3. legacy cleanup — v4 `api/interpret-premium.ts`·`interpret-free`·`relation-mini` 사용처 검토 후 제거
+1. `df777f2` 배포 완료 후 prod e2e 검증 — 진단 → 공유 → 시크릿창 → Part1·Part2 둘 다 보임 → 홈 CTA 클릭
+2. Mom test 5~10명 — 가족 공유·v5.2 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
+3. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs enum/regex CHECK 재도입
 
 ### 막힌 것
 
@@ -148,8 +148,8 @@
 - [x] @tailwind warning suppression (eduluck/.vscode/settings.json)
 - [x] StreamingBody timeout 180s → 270s + max_tokens 16000 → 12000 (`969b599`)
 - [x] 모든 LLM 호출 Sonnet → Haiku 4.5 통일 + env safeguard (`cc126d8`·`d737b4f`·`88c70a9`) ⭐
-- [x] 가족 공유 풀스택 fix — onComplete · CHECK constraint · share-link rename · ENV 제거 (`d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`) ⭐
-- [x] e2e 검증 — Haiku 4.5 90초·9907자·share-link 200 ⭐
+- [x] 가족 공유 풀스택 fix v1 — onComplete · CHECK constraint · share-link rename · ENV 제거 (`d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`) ⭐
+- [x] 가족 공유 풀스택 종결 — SSE abort 방지 + share-backfill + share read v5 + CTA 강화 (`3184c80`·`85b3d02`·`bda746d`·`df777f2`) ⭐
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
