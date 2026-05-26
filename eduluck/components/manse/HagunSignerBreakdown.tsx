@@ -14,7 +14,8 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { ManseResult } from '@/lib/manse/engine';
-import { computeHagun, scoreToGrade } from '@/lib/prompts/hagun-tier';
+import { computeHagun, scoreToGrade, calculateFinalTier } from '@/lib/prompts/hagun-tier';
+import { getTierSchoolGroups } from '@/lib/manse/tier-schools';
 
 interface Props {
   manse: ManseResult;
@@ -121,6 +122,16 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
   const grade = scoreToGrade(breakdown.total);
   const gauge = gradeToGauge(grade.label);
 
+  // v2: 안정·가능·도전 3구간 chip (parent education 없이 사주 본질만 기준)
+  const finalTier = calculateFinalTier({
+    childManse: manse,
+    motherManse: null,
+    fatherManse: null,
+    motherEducation: null,
+    fatherEducation: null,
+  });
+  const tierGroups = getTierSchoolGroups(finalTier.primaryTier, finalTier.safetyTier, finalTier.confidence);
+
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const top3 = positive.slice(0, 3);
   const rest = positive.slice(3);
@@ -185,8 +196,8 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
             {grade.label}
           </Text>
           <Text className="font-body text-body-md text-text-sub">·</Text>
-          <Text className="font-body-bold text-body-lg text-text-pri">
-            {grade.baseTier}
+          <Text className="font-body text-body-md text-text-sub">
+            사주가 받쳐주는 대학 자리
           </Text>
         </View>
 
@@ -198,8 +209,26 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
           {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
         </Text>
 
+        {/* 안정·가능·도전 3구간 chip — 어머니가 "어느 대학 자리" 한눈에 인식 */}
+        {!isWeakScholar && tierGroups.length > 0 && (
+          <View className="gap-1.5 mt-1">
+            {tierGroups.map(g => (
+              <View key={g.label} className="flex-row items-center gap-2 flex-wrap">
+                <View className="px-2 py-0.5 rounded-sm bg-secondary-container min-w-[44px]">
+                  <Text className="font-body-bold text-label-sm text-primary text-center">
+                    {g.label}
+                  </Text>
+                </View>
+                <Text className="font-body text-body-sm text-text-pri flex-1" numberOfLines={1}>
+                  {g.schools.join(' · ')}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {top3.length > 0 && (
-          <View className="flex-row flex-wrap gap-2 mt-1">
+          <View className="flex-row flex-wrap gap-2 mt-2">
             {top3.map(h => (
               <View key={h.signer} className="px-3 py-1 rounded-full bg-secondary-container">
                 <Text className="font-body-bold text-label-md text-primary" numberOfLines={1}>
@@ -213,7 +242,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
         <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-1">
           {isWeakScholar
             ? '학자 트랙이 약한 자리예요. 다른 트랙(예술·실무·운동 등)에서 빛나는 사주일 수 있어요.'
-            : '사주 시그너로 만들어진 학운 그릇이에요. 아래는 이 그릇을 만드는 자리들이에요.'}
+            : '실제 입시는 환경·노력에 따라 ±1단계 움직일 수 있어요.'}
         </Text>
       </View>
 

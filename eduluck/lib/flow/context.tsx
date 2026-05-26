@@ -140,7 +140,8 @@ export interface FlowState {
 // v5.2: §10 '강요 금지' → '양육 경계' 리프레임 (긍정·중립 톤, 명리 중도 개념).
 // v5.3: prompt 예시의 '재호' → '{자녀}' placeholder. 다른 자녀에서 재호 이름이 leak 되던 버그 fix.
 // v5.4: 대학 티어 정의 v2 30 sub-tier 시스템 도입 (TIER_SYSTEM_v2.md 기반). LLM 이 sub-tier (1-2, 4-3 등) 받아 정밀 학교명 선택, 사용자 출력은 1~10 티어로만.
-export const PREMIUM_PROMPT_VERSION = 'v5.4-tier-v2';
+// v5.5: 본문 '○티어' 숫자 라벨 노출 금지 강화 (hero 가 안정·가능·도전 chip 으로 한번 보여주므로 본문은 학교명 + 명리 이유).
+export const PREMIUM_PROMPT_VERSION = 'v5.5-school-names';
 
 const initial: FlowState = {
   sessionId: null,
