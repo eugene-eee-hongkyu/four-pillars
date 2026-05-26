@@ -336,11 +336,16 @@ export const SHARED_UNIVERSITY_TIER_GUIDE = `## 대학 명시 가이드 — v2 3
 
 ### 별도 트랙 발현 조건 (sub-tier × 시그너 매트릭스)
 
-같은 sub-tier 라도 사주 시그너로 별도 트랙 노출이 갈림. user message [방향성]·[격국]·[의약 점수]·[예술 점수]·[해외운 점수] 와 결합:
+같은 sub-tier 라도 사주 시그너로 별도 트랙 노출이 갈림. **중요: 학운 sub-tier 는 사주 본질이라 절대 무시 ✗**. 별도 트랙은 학운 sub-tier 안에서 학과 방향만 분기.
 
 - **의약 트랙** (1-1 ~ 2-1): 현침살 / 의료 환경 / medicalScore '강' 이상
 - **해외 트랙** (1-1 ~ 2-3): 외국운(역마) / 언어환경 / abroadScore '강' 이상
-- **예체능 트랙** (전 구간): artsScore '매우 강' 우선, '강' 보조 — 격국보다 예술 우선 가능
+- **예체능 트랙** — artsScore '매우 강' / '강' 트리거. **학운 sub-tier 구간별 학교 라인이 다름**:
+  - 학운 1-1 ~ 2-3 (상위 12%) + arts 매우 강 → 한예종·서울대 미대·홍익 미대 상위·중앙·한양 예체능 상위
+  - 학운 3-1 ~ 4-3 (12~32%) + arts 매우 강 → 종합대 예체능 중상위 (성신·동덕·덕성 / 홍익·중앙·한양 예체능 일반)
+  - **학운 5-1 ~ 6-3 (32~56%) + arts 매우 강 → 지방·중위 종합대 예체능 (울산대 시각디자인·한림대 디자인·호서대 시각디자인·청주대 디자인·신라대 패션디자인 등)**
+  - 학운 7-1 ~ 10-3 (56~100%) + arts 매우 강 → 전문대 예체능 (계원예대·동양미래대 디자인·수도권 전문대 뷰티·미디어)
+  - ⚠️ artsScore 매우 강 + 학운 5-1 인데 한예종·홍익 미대 상위 짚는 것 ✗. 거짓 희망. 학운 안에서만 예술 학과로 분기.
 - **사관·경찰** (2-1 ~ 3-1): 관성 강 + 규율·신체 적성
 - **교대** (2-3 ~ 3-1, ±1 변동성): 인성 + 관성
 - **연구·과기원** (1-1 ~ 1-3): 격국 짜임 + 식상 / 연구 기질
@@ -427,9 +432,9 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `[예술·디자인 점수 — 백엔드 보정. §16 격국 lookup 보강]`,
     `  ${c.artsScore.summary}`,
     c.artsScore.level === '매우 강'
-      ? `  §16 권유: **격국보다 예술·디자인 우선**. 추천: ${c.artsScore.recommendedFields.join(' / ')}. 톤: "이 아이는 예술·디자인 자리가 정말 강하게 보여요". 격국 1순위는 보조.`
+      ? `  §16·§18 권유: **학운 sub-tier 안에서 예술·디자인 학과 우선**. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}. 톤: "이 아이는 예술·디자인 자리가 정말 강하게 보여요". 학교는 sub-tier 표 그대로 (예: 학운 5-1 + 예술 → 울산대 시각디자인·한림대 디자인 / 학운 1-2 + 예술 → 한예종·홍익 미대 상위). 학운 무시한 상위 예술대 권유 ✗.`
       : c.artsScore.level === '강'
-        ? `  §16 권유: 격국 1순위와 함께 예술·디자인도 명시. 추천: ${c.artsScore.recommendedFields.join(' / ')}`
+        ? `  §16 권유: 격국 1순위와 함께 예술·디자인 학과도 명시. 학교는 학운 sub-tier 안에서. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}`
         : c.artsScore.level === '보통'
           ? `  §16 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능.`
           : `  §16 권유: 격국 lookup만. 예술·디자인 언급 ✗.`,
@@ -437,9 +442,9 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `[의·약·치·생명과학 점수 — 백엔드 보정. §16 자격직 보강]`,
     `  ${c.medicalScore.summary}`,
     c.medicalScore.level === '매우 강'
-      ? `  §16 권유: **격국보다 의·약 우선**. 추천: ${c.medicalScore.recommendedFields.join(' / ')}. 의대·한의대·치대·약대 중 시그너 맞춰 1~2개 명시.`
+      ? `  §16·§18 권유: **학운 sub-tier 가 1-1 ~ 2-2 일 때만 의예·치의예·한의예·약대 직접 권유 가능**. 학운 2-3 이하면 의·약 본과 진학 어렵고, 생명과학·간호·물리치료·임상병리·보건 인접 학과로 분기. 추천: ${c.medicalScore.recommendedFields.join(' / ')}. 학운 무시한 의대 권유 ✗.`
       : c.medicalScore.level === '강'
-        ? `  §16 권유: 격국 1순위와 함께 의·약 자격직도 명시. 추천: ${c.medicalScore.recommendedFields.join(' / ')}`
+        ? `  §16 권유: 학운 sub-tier 가 1-1 ~ 2-3 일 때만 의·약 자격직 명시. 그 외엔 생명과학·간호·보건 계열. 추천: ${c.medicalScore.recommendedFields.join(' / ')}`
         : c.medicalScore.level === '보통'
           ? `  §16 권유: 격국 lookup 기본. 의·약 자격직 가능성 한 줄 언급.`
           : `  §16 권유: 격국 lookup만. 의·약 언급 ✗.`,
