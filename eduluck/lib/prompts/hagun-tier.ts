@@ -540,17 +540,24 @@ export interface FinalTierResult {
   /** LLM 풀이용 한 줄 confidence 표현: "1티어 안정 영역" / "1티어 가능 + 2티어 안정" / "1티어 도전 + 2티어 안정"
    *  (2026-05-23 표현 약화: "확실한" → "안정 영역"·"가능" — Counterfactual cutoff random 33% 통과 반영) */
   confidenceLabel: string;
+  /** v2 30 sub-tier label (예: '1-2', '4-3'). LLM 내부 학교명 분기용, 사용자 출력 ✗. */
+  subTier: string;
+  /** sub-tier 레인지 ('엄청 강·강·약강' 라벨). LLM 내부 분기용, 사용자 출력 ✗. */
+  subTierLabel: '엄청 강' | '강' | '약강';
   /** LLM 풀이용 한 줄 요약 */
   oneLineSummary: string;
 }
 
 /** 점수 + 최종 티어 범위로부터 confidence + primary/safety 티어 산출.
- *  같은 단계 안에서도 점수에 따라 certain/likely/reach 분리. */
+ *  같은 단계 안에서도 점수에 따라 certain/likely/reach 분리.
+ *  v2: subTier ('1-2' 등) + subTierLabel ('엄청 강·강·약강') 도 함께 산출. */
 function calcConfidence(score: number, finalTierRange: [number, number]): {
   confidence: 'certain' | 'likely' | 'reach';
   primaryTier: number;
   safetyTier: number;
   label: string;
+  subTier: string;
+  subTierLabel: '엄청 강' | '강' | '약강';
 } {
   const primaryTier = finalTierRange[0]; // 핵심 추천 = 단계 상단 (낮은 숫자가 위)
   // 안정권: 범위 내 다음 티어. range가 [1,1] 등 단일이면 +1.
@@ -586,6 +593,26 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
   else if (score >= botCutoff) confidence = 'likely';
   else confidence = 'reach';
 
+  // v2 sub-tier 결정.
+  //   - confidence 'certain' 이면 점수가 t-1 cutoff 이상인지로 1 vs 2 결정 (둘 다 '엄청 강·강')
+  //   - 'likely' → t-3 ('약강')
+  //   - 'reach' 면 한 단계 떨어졌으니 다음 티어 1단계로 표시 (안정 권유)
+  const topCutoff = NORMALIZED_CUTOFFS[baseIdx] ?? 0;
+  let subStep: 1 | 2 | 3;
+  let subStepLabel: '엄청 강' | '강' | '약강';
+  let subTierMajor = tierIdx;
+  if (confidence === 'certain') {
+    if (score >= topCutoff) { subStep = 1; subStepLabel = '엄청 강'; }
+    else { subStep = 2; subStepLabel = '강'; }
+  } else if (confidence === 'likely') {
+    subStep = 3; subStepLabel = '약강';
+  } else {
+    // reach — 사실은 다음 티어로 떨어진 것으로 본다.
+    subTierMajor = Math.min(10, tierIdx + 1);
+    subStep = 1; subStepLabel = '엄청 강';
+  }
+  const subTier = `${subTierMajor}-${subStep}`;
+
   let label: string;
   // 1티어 최상위 (1-1 통과, 정규화 100점) — 의대·서울대 최상위·KAIST·POSTECH
   if (primaryTier === 1 && score >= NORMALIZED_CUTOFFS[0]) {
@@ -598,7 +625,7 @@ function calcConfidence(score: number, finalTierRange: [number, number]): {
     label = `${primaryTier}티어 도전 + ${safetyTier}티어 안정`;
   }
 
-  return { confidence, primaryTier, safetyTier, label };
+  return { confidence, primaryTier, safetyTier, label, subTier, subTierLabel: subStepLabel };
 }
 
 /** 현재 대운·세운의 십성으로 학운 시기 강약 평가.
@@ -682,6 +709,8 @@ export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResul
     primaryTier: conf.primaryTier,
     safetyTier: conf.safetyTier,
     confidenceLabel: conf.label,
+    subTier: conf.subTier,
+    subTierLabel: conf.subTierLabel,
     oneLineSummary: summary,
   };
 }

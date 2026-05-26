@@ -139,7 +139,8 @@ export interface FlowState {
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumInterpretText·premiumPart1Text·premiumPart2Text·deepDiveTexts 모두) */
 // v5.2: §10 '강요 금지' → '양육 경계' 리프레임 (긍정·중립 톤, 명리 중도 개념).
 // v5.3: prompt 예시의 '재호' → '{자녀}' placeholder. 다른 자녀에서 재호 이름이 leak 되던 버그 fix.
-export const PREMIUM_PROMPT_VERSION = 'v5.3-no-name-leak';
+// v5.4: 대학 티어 정의 v2 30 sub-tier 시스템 도입 (TIER_SYSTEM_v2.md 기반). LLM 이 sub-tier (1-2, 4-3 등) 받아 정밀 학교명 선택, 사용자 출력은 1~10 티어로만.
+export const PREMIUM_PROMPT_VERSION = 'v5.4-tier-v2';
 
 const initial: FlowState = {
   sessionId: null,
