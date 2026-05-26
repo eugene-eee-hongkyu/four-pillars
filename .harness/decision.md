@@ -6,6 +6,45 @@
 
 ---
 
+## 2026-05-26: prompt 예시 자녀 이름 표기 — placeholder `{자녀}` 방식
+
+- **선택**: prompt 예시 본문의 자녀 이름 자리를 `{자녀}` 명시적 placeholder 로 표기하고, 예시 위에 "system context `[자녀 ...]` 닉네임만 사용, 예시 본문 카피 금지" 룰을 명시.
+- **대안 검토**:
+  - **A. 일반 명사 ('이 아이' 등)**: 자연스러우나 LLM 이 본문에서도 '이 아이' 그대로 카피할 위험. 자녀 닉네임을 일관 사용 못함.
+  - **B. 다른 sample 이름 ('영진' 등)**: 또 다른 이름 leak 위험을 신규 도입.
+  - **C. 예시 자체 삭제**: 어미 시그니처·인용 박스 가이드의 효과적 부분이 약화. v6 92.8 점수 회귀 가능.
+  - **D. `{자녀}` placeholder (선택안)**: LLM 이 placeholder 문법을 인식하고 치환 규칙도 함께 주어 카피 위험 낮음. 어미/인용 가이드 효과는 그대로.
+- **선택 이유**:
+  - D 는 LLM 이 변수 patrol 인식이 강력하고 (Anthropic Haiku 4.5 기준), 명시 룰과 결합 시 leak 위험 최소화.
+  - PROMPT_VERSION bump (v5.2 → v5.3) 로 캐시 무효화도 같이 진행.
+  - 사후 검증: 재원이 DB 사주 (무자·무오·무술·기미) ↔ screenshot 본문 일치 확인 → 본문 풀이는 정확, **이름만 leak 이라는 가설 검증**.
+- **영향 범위**:
+  - [interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) §시각 anchor 예시 2건
+  - [interpret-free.ts](../eduluck/lib/prompts/interpret-free.ts) [A3] 어미 예시 2건
+  - [interpret-premium.ts](../eduluck/lib/prompts/interpret-premium.ts) (v4 legacy) 예시 3건
+  - [context.tsx](../eduluck/lib/flow/context.tsx) PREMIUM_PROMPT_VERSION 캐시 키
+- **되돌리는 방법**: placeholder 를 다시 고정 이름으로 바꾸면 leak 패턴 재발. PROMPT_VERSION 만 bump 하면 캐시는 재무효화.
+
+---
+
+## 2026-05-26: 진단 화면 navigation — page-level 버튼 vs 글로벌 헤더
+
+- **선택**: `headerShown: false` 유지하면서 각 진단 화면(상단 strip + 본문 끝)에 `← 영역 선택`·`🏠 처음으로` 버튼을 page-level 로 직접 배치.
+- **대안 검토**:
+  - **A. expo-router Stack 의 글로벌 헤더 활성화 (`headerShown: true`)**: 모든 화면 자동 back 버튼. 단 디자인 (Logo·StepIndicator·진단 헤더) 와 시각 충돌 — 헤더 영역 중복.
+  - **B. 공통 TopBar 컴포넌트 도입**: 일관성 높음. 단 모든 (flow) 화면에 props 정의 필요, 단계적 마이그레이션 비용. v5.2 출시 직전이라 risk ↑.
+  - **C. page-level 버튼 (선택안)**: 단 두 화면만 손대면 됨. share/[token].tsx 의 검증된 패턴 그대로 재사용 (로고 Pressable + Button "내 아이도 진단 받아보기"). 작은 변경, 빠른 적용.
+- **선택 이유**:
+  - mom test 진입 직전 minimum-touch fix 가 안전. C 는 두 파일만 수정.
+  - 운세·타로 앱 UX 검색 결과 (CHANI·Faladdin 사례) 도 page-level CTA + 안정적 home anchor 패턴 권장.
+  - 글로벌 헤더(A)·공통 TopBar(B) 는 향후 v6 디자인 systemization 단계에서 일괄 도입 가능 (현재 유지보수 부담 ↑).
+- **영향 범위**:
+  - [app/(flow)/interpret-deep.tsx](../eduluck/app/(flow)/interpret-deep.tsx) 상단 strip + 본문 끝 액션
+  - [app/(flow)/interpret-premium.tsx](../eduluck/app/(flow)/interpret-premium.tsx) 상단 우측 + 본문 끝 deep-dive 버튼 옆
+- **되돌리는 방법**: 향후 공통 TopBar 도입 시 두 화면의 page-level 버튼 제거 + TopBar 로 통합. 글로벌 헤더 활성화는 디자인 충돌 해결 후 가능.
+
+---
+
 ## 2026-05-26: SSE insert 누락 fix — server waitUntil 도입 대신 client abort 방지
 
 - **선택**: 두 클라이언트 컴포넌트 (`SilentSsePrefetch`·`StreamingBody`)에 `serverInsertProtected` flag 추가 — done event 또는 reader 정상 종료 후 cleanup 에서 `ac.abort()` skip. server stream-sse.ts 의 onComplete await 흐름을 보호.

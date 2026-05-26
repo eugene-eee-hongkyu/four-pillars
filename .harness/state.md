@@ -6,18 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 13:16
-## 마지막 업데이트: 2026-05-26 13:16
+## 마지막 실행: 2026-05-26 13:43
+## 마지막 업데이트: 2026-05-26 13:43
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 가족 공유 풀스택 종결 완료 (`3184c80`·`85b3d02`·`bda746d`·`df777f2`). prod e2e 검증 후 mom test 진입.
+- 가족 공유·UX 버그 정리 완료 (`3184c80`~`169a363` 8 commit). prod e2e 검증 후 mom test 진입.
 
 ### 이어서 할 것
 
-1. `df777f2` 배포 완료 후 prod e2e 검증 — 진단 → 공유 → 시크릿창 → Part1·Part2 둘 다 보임 → 홈 CTA 클릭
-2. Mom test 5~10명 — 가족 공유·v5.2 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
+1. `169a363` 배포 완료 후 prod e2e — Part 2 청크 reveal, §N 이름 정상, navigation 동작, 공유 흐름
+2. Mom test 5~10명 — 가족 공유·v5.3 진단·디자인 v2·시각 anchor 카드·신규 4섹션 정성 검증
 3. (선택) `interpretations.kind` 정책 결정 — free text 유지 vs enum/regex CHECK 재도입
 
 ### 막힌 것
@@ -150,6 +150,9 @@
 - [x] 모든 LLM 호출 Sonnet → Haiku 4.5 통일 + env safeguard (`cc126d8`·`d737b4f`·`88c70a9`) ⭐
 - [x] 가족 공유 풀스택 fix v1 — onComplete · CHECK constraint · share-link rename · ENV 제거 (`d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`) ⭐
 - [x] 가족 공유 풀스택 종결 — SSE abort 방지 + share-backfill + share read v5 + CTA 강화 (`3184c80`·`85b3d02`·`bda746d`·`df777f2`) ⭐
+- [x] Part 2 reveal 트리거 fix — minSectionNum 기반 (`3b90623`)
+- [x] '재호' 이름 leak fix — prompt 예시 placeholder + PROMPT_VERSION v5.3 (`aa7d6e0`) ⭐
+- [x] 진단 화면 navigation 추가 — 영역 선택·처음으로 (`169a363`)
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 5~10명 — 시각 anchor 카드 + Part 1/2 + 가족 공유 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)

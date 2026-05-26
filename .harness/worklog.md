@@ -6,6 +6,26 @@
 
 ---
 
+## Session 2026-05-26 13:43 — UX 버그·navigation 4건 (Part 2 reveal·이름 leak·길찾기)
+
+### 작업 요약
+
+- **Part 2 reveal 버그 fix (`3b90623`)**: StreamingBody 가 Part 2 (11-20 섹션) 에서 청크 단위 reveal 안 되고 stream done 시 한꺼번에 노출되던 문제. 원인: `revealedSectionNum` 초기값 0 + `nextTriggerSectionNum = lastRevealed + 2 + 1 = 3` 으로 `## 3.` marker 만 찾는데 Part 2 LLM 은 `## 11.` 부터 출력. 수정: `initialRevealed = minSectionNum - 1` 로 Part 1 은 0, Part 2 는 10 으로 시작 → 첫 trigger Part 2 에선 `## 13.` → §11·§12 reveal 정상.
+- **'재호' 이름 leak fix (`aa7d6e0`)**: 재원이 §11 깊이 보기 본문에 "재호의 친구 관계..." 가 등장. 원인: `interpret-premium-shared.ts`·`interpret-free.ts`·`interpret-premium.ts` (v4 legacy) 의 인용 박스/어미/두괄식 예시 5건에 calibration sample 이름 "재호" 가 그대로 하드코딩. LLM 이 예시 패턴 모방하며 자녀 닉네임 변수 대신 "재호" 카피. 수정: 모든 예시 → `{자녀}` placeholder + 위에 "이름 사용 규칙" 명시 (system context `[자녀 ...]` 닉네임만 사용). PREMIUM_PROMPT_VERSION `v5.2-care-boundary` → `v5.3-no-name-leak` 으로 bump → 기존 클라이언트 캐시 자동 invalidate.
+- **이름 leak 검증 (본문은 정확)**: DB 직접 조회. 재원이 (id 3f7504f3) 실제 사주 = 무자/무오/무술/기미. screenshot 본문 "일주 무술(戌)·시주 기미(己未)·양인살(월주)·자오충(년주·월주)" 모두 재원이 데이터 (일간 무토·월지 오·년지 자) 에서 정확히 도출. **이름만 leak, 본문 정상 확인** → fix 효과 검증됨.
+- **진단 화면 navigation 추가 (`169a363`)**: `headerShown: false` 환경에서 `/interpret-deep §N`·`/interpret-premium` 에 back/home 길 없음 (스크롤 끝까지 가야만 일부 버튼). 웹 검색 결과: 운세·타로 앱의 흔한 페인포인트 (CHANI·Faladdin 사례). 수정:
+  - interpret-deep.tsx 상단 strip 에 `← 영역 선택` + `🏠 처음으로` 항상 노출 (스트리밍 중에도)
+  - interpret-deep.tsx 본문 끝 액션에 `🏠 처음으로` 추가
+  - interpret-premium.tsx 상단 우측 + 본문 끝 deep-dive 버튼 옆에 `🏠 처음으로`
+
+### 다음 액션
+
+- prod e2e 검증 (`169a363` 배포 완료 후): Part 2 청크 reveal · §N 깊이 보기 이름 정상 · navigation 버튼 동작
+- Mom test 5~10명 모집·진행
+- (선택) `interpretations.kind` schema 정책 결정
+
+---
+
 ## Session 2026-05-26 13:16 — backlog ↔ state.md 정리 (중복 제거 + 참조화)
 
 ### 작업 요약
