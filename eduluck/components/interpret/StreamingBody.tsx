@@ -132,6 +132,7 @@ export function StreamingBody({
   const displayedLenRef = useRef(0);
   const fullTextRef = useRef('');
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const startedRef = useRef(false);
 
@@ -222,8 +223,10 @@ export function StreamingBody({
     const timeoutId = setTimeout(() => {
       log('TIMEOUT', { deltaCount, firstDeltaAt, elapsedMs: Date.now() - startedAt });
       ac.abort();
+      const m = `응답이 지연되고 있어요. 다시 시도해주세요. (timeout, deltas: ${deltaCount})`;
       setStatus('error');
-      onError?.(`응답이 지연되고 있어요. 다시 시도해주세요. (timeout, deltas: ${deltaCount})`);
+      setErrorMessage(m);
+      onError?.(m);
     }, timeoutMs);
 
     (async () => {
@@ -239,8 +242,10 @@ export function StreamingBody({
           const err = await res.text().catch(() => res.statusText);
           log('ERROR — bad response', { status: res.status, err });
           clearTimeout(timeoutId);
+          const m = `서버 응답 오류 ${res.status}: ${err}`;
           setStatus('error');
-          onError?.(`서버 응답 오류 ${res.status}: ${err}`);
+          setErrorMessage(m);
+          onError?.(m);
           return;
         }
 
@@ -270,8 +275,10 @@ export function StreamingBody({
               setStatus('done');
               onComplete?.(fullText);
             } else {
+              const m = `서버가 응답을 끝까지 못 보냈어요. (stream closed without done, deltas: ${deltaCount}, elapsedMs: ${Date.now() - startedAt})`;
               setStatus('error');
-              onError?.('서버가 응답을 끝까지 못 보냈어요. (stream closed without done)');
+              setErrorMessage(m);
+              onError?.(m);
             }
             break;
           }
@@ -302,8 +309,10 @@ export function StreamingBody({
             } else if (ev.event === 'error') {
               log('ERROR event', { message: ev.data.message, deltaCount });
               clearTimeout(timeoutId);
+              const m = ev.data.message ?? 'stream error';
               setStatus('error');
-              onError?.(ev.data.message ?? 'stream error');
+              setErrorMessage(`서버 stream 에러: ${m} (deltas: ${deltaCount})`);
+              onError?.(m);
             }
           }
         }
@@ -316,6 +325,7 @@ export function StreamingBody({
         const msg = e instanceof Error ? e.message : 'unknown error';
         log('EXCEPTION', { msg, deltaCount });
         setStatus('error');
+        setErrorMessage(`fetch 예외: ${msg} (deltas: ${deltaCount})`);
         onError?.(msg);
       }
     })();
@@ -340,10 +350,15 @@ export function StreamingBody({
 
   if (status === 'error') {
     return (
-      <View className="p-card-padding">
-        <Text className="font-body text-body-md text-text-sub">
+      <View className="p-card-padding gap-2">
+        <Text className="font-body text-body-md text-text-pri">
           진단 생성 중 오류가 발생했어요. 다시 시도해주세요.
         </Text>
+        {errorMessage && (
+          <Text className="font-body text-label-sm text-text-sub">
+            {errorMessage}
+          </Text>
+        )}
       </View>
     );
   }
