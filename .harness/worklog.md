@@ -6,6 +6,27 @@
 
 ---
 
+## Session 2026-05-26 13:16 — backlog ↔ state.md 정리 (중복 제거 + 참조화)
+
+### 작업 요약
+
+- backlog.md + state.md 미완료 항목 교차 점검 — 3건 중복·1건 sub-task 식별.
+- **backlog #5 (어미 일관성 metric) 삭제**: 2026-05-22 "Mom test 10명 결과 기반 trait 조정" 항목의 sub-task 로 흡수. 같은 mom test 데이터를 분석하는 작업이라 카드 분리 의미 약함. 완료/취소 섹션에 통합 사유 기록.
+- **state.md 진행 상황 3건 압축**: backlog 와 동일 내용을 한 줄 참조로 단순화.
+  - "영진 외부 의지 score 모듈 (사주 본질 ✗ + SKY 패턴)" → "외부 변수 모듈 → backlog 2026-05-24"
+  - "06 정환·08 세형 sample md v7 포맷 갱신" → "06·08 sample v7 포맷 → backlog 2026-05-23"
+  - "외부 100명 검증 단계 — Holland Interest Profiler 동시 시행" → "외부 100명 검증 → backlog 2026-05-20"
+- 백로그 카운트 6 → 5. 책임 분리: state.md = 다음 마일스톤 한 줄, backlog.md = 트리거·필요 데이터·이전 검토 전체 컨텍스트. (`e7db1b0`)
+- 검토 결과: backlog 5건 모두 트리거(mom test 결과 / 외부 sample / 외부 100명 검증) 대기. 지금 당장 활성화할 항목 없음. 즉시 실행 가능한 것은 state.md "이어서 할 것"의 prod e2e 검증뿐.
+
+### 다음 액션
+
+- `df777f2` 배포 완료 후 prod e2e 검증 (진단→공유→시크릿창→Part1·Part2→홈 CTA)
+- Mom test 5~10명 모집·진행
+- (선택) interpretations.kind schema 정책 결정
+
+---
+
 ## Session 2026-05-26 11:14 — 가족 공유 풀스택 버그 종결 (SSE abort + backfill + share v5 + CTA)
 
 ### 작업 요약
