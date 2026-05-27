@@ -491,7 +491,54 @@ v6 (2026-05-22)에서 §1-3에 Confidence 라벨 통합. 별도 §1-7 ✗.
 
 ---
 
-## 6. 관련 코드 위치
+## 6. 16 방향성 점수 정규화 (V14, 2026-05-27)
+
+11 directions + 5 score 모듈 (arts·medical·abroad·publicForce·research) = **16 차원** 진로 방향성 점수. 각 모듈 raw 점수를 "매우 강 cutoff = 100점" 으로 매핑.
+
+### 통일 정규화 cutoff (각 모듈 raw → 100점)
+
+| 모듈 | raw 매우 강 cutoff | 비고 |
+|---|---|---|
+| 11 directions | 100 (raw 자체 0-100+) | V12 calibration |
+| artsScore | 6 (raw max ≈ 10) | 화개·도화·식상·천덕월덕·격국 종합 |
+| medicalScore | 8 (raw max ≈ 11) | 천의성·백호·관인상생·인성·격국 |
+| abroadScore | 9 (raw max ≈ 11) | 역마·외부 지지·외국운 종합 |
+| publicForceScore | 8 (raw max ≈ 10) | 관성·관인상생·양인·일주강·신체 |
+| researchScore | 8 (raw max ≈ 11) | 격국 짜임·인성·식상·학자귀인·일주강 |
+
+### 통일 레벨 cutoff (16 모듈 공통)
+
+| 레벨 | 정규화 점수 |
+|---|---|
+| 매우 강 | ≥ 100 |
+| 강 | 75 ~ 99 |
+| 보통 | 50 ~ 74 |
+| 약 | < 50 |
+
+### ⚠️ 두 level 시스템 분리 운영
+
+각 모듈은 **두 종류의 level 라벨** 보유:
+
+| 라벨 | cutoff | 목적 | 사용처 |
+|---|---|---|---|
+| `level` | 각 모듈 raw cutoff (N=11 calibration 검증) | **정밀 분기** — LLM 본업 vs 부전공 결정 | `interpret-premium-shared.ts` §16·§17 |
+| `normalizedLevel` | 통일 (≥100/≥75/≥50/<50) | **통일 비교** — 사용자 16 차원 직관 | UI DirectionCard, score summary |
+
+**왜 분리?**
+- 각 모듈 raw cutoff 는 통일 cutoff 보다 의도적으로 관대 (예: artsScore 강 cutoff raw 4 = 정규화 67 < 75). calibration sample 검증한 정밀 임계.
+- 통일 cutoff 강제 시 본업 권유 영역 축소 = 거짓 희망 fix calibration 자산 손실.
+- 사용자 직관 비교는 통일 cutoff 가 필수 (16 차원 한눈에).
+- 두 목적 다른 cutoff = 영구 분리 운영.
+
+### 신규 유지보수자 가이드
+
+- **LLM prompt 분기 추가 시**: 각 모듈의 `level` (raw cutoff 기반) 사용. calibration 정밀도 유지.
+- **UI 표시 / 사용자 요약 시**: `normalizedLevel` (통일 cutoff) 사용. 16 모듈 일관성.
+- **헤더 주석**: [lib/manse/normalized-score.ts](../../lib/manse/normalized-score.ts) 의 "두 level 시스템 분리 운영" 섹션 참조.
+
+---
+
+## 7. 관련 코드 위치
 
 - **학운 종합 점수**: [eduluck/lib/prompts/hagun-tier.ts](../../lib/prompts/hagun-tier.ts) `scoreHagun()`
 - **10가지 trait**: [eduluck/lib/manse/student-traits.ts](../../lib/manse/student-traits.ts) `calcStudentTraits()`

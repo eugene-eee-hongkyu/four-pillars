@@ -16,6 +16,26 @@
 //   abroadScore: 9 (raw max ≈ 11)
 //   publicForceScore: 8 (raw max ≈ 10)
 //   researchScore: 8 (raw max ≈ 11)
+//
+// ============================================================================
+// 두 level 시스템 분리 운영 (2026-05-27 결정)
+// ============================================================================
+//
+// 각 모듈은 의도적으로 두 종류의 level 라벨을 보유한다:
+//
+// 1. `level` (각 모듈의 raw cutoff 기반) — **정밀 분기용**
+//    - N=11 calibration 으로 검증된 raw cutoff
+//    - 예: artsScore 강 cutoff raw 4 = "예술 시그너 4개면 본업 권유 가능"
+//      (정규화 통일 75 보다 관대. 본업 영역을 더 폭넓게 정의)
+//    - 사용처: `lib/prompts/interpret-premium-shared.ts` §16·§17 LLM 분기
+//      (본업 권유 vs 부전공·취미 톤 결정)
+//
+// 2. `normalizedLevel` (통일 cutoff ≥100/≥75/≥50/<50) — **통일 비교용**
+//    - 16 모듈 직관 비교 ("내 사주 16 차원 한눈에")
+//    - 사용처: UI DirectionCard, score summary 표시
+//
+// 같은 cutoff 강제 시 한쪽 손실 — calibration 정밀도 (분기) vs 사용자 직관 (비교)
+// 둘 다 살리기 위해 영구 공존. 신규 유지보수자는 목적에 맞는 라벨을 선택.
 
 export type NormalizedLevel = '약' | '보통' | '강' | '매우 강';
 
