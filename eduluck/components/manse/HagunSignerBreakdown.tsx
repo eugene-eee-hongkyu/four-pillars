@@ -96,22 +96,30 @@ function StrengthDots({ value }: { value: number }) {
   );
 }
 
-/** 등급 라벨 → 강도 게이지 (5단계). V24 10단계 hagunLabel 매핑.
- *  - 학업형 (1~6) → 게이지 2~5 (학자 트랙 강 ~ 보강)
- *  - 실무·기술 (7~8) → 게이지 1~2 (전문대·실무)
- *  - 조기·비제도권 (9~10) → 게이지 0 (isWeakScholar = true) */
+/** 등급 라벨 → 강도 게이지 (5점 만점, 0.5 단위). V24 10단계 → 0.5 step.
+ *  - 1 최상위 학업형 → 5.0
+ *  - 2 강한 학업형 → 4.5
+ *  - 3 상위권 학업형 → 4.0
+ *  - 4 중상위 학업형 → 3.5
+ *  - 5 일반 학업형 → 3.0
+ *  - 6 보강 학업형 → 2.5
+ *  - 7 실무 전환형 → 2.0
+ *  - 8 기술 특화형 → 1.5
+ *  - 9 조기 사회진입형 → 1.0
+ *  - 10 비제도권 성장형 → 0.5
+ *  렌더: ●●●●● (5) / ●●●●◐ (4.5) / ●●●●○ (4.0) / ●●●◐○ (3.5) ... */
 function gradeToGauge(label: string): number {
   switch (label) {
-    case '최상위 학업형': return 5;
-    case '강한 학업형': return 5;
-    case '상위권 학업형': return 4;
-    case '중상위 학업형': return 4;
-    case '일반 학업형': return 3;
-    case '보강 학업형': return 2;
-    case '실무 전환형': return 2;
-    case '기술 특화형': return 1;
-    case '조기 사회진입형': return 1;
-    case '비제도권 성장형': return 0;
+    case '최상위 학업형': return 5.0;
+    case '강한 학업형': return 4.5;
+    case '상위권 학업형': return 4.0;
+    case '중상위 학업형': return 3.5;
+    case '일반 학업형': return 3.0;
+    case '보강 학업형': return 2.5;
+    case '실무 전환형': return 2.0;
+    case '기술 특화형': return 1.5;
+    case '조기 사회진입형': return 1.0;
+    case '비제도권 성장형': return 0.5;
     // 옛 8단계 라벨 호환 (캐시·legacy)
     case '매우 강': return 5;
     case '강': return 4;
@@ -120,6 +128,14 @@ function gradeToGauge(label: string): number {
     case '중하': return 1;
     default: return 0;
   }
+}
+
+/** 0.5 단위 별 텍스트 렌더. 예: 4.5 → '●●●●◐', 3.5 → '●●●◐○' */
+function renderGaugeText(value: number): string {
+  const full = Math.floor(value);
+  const hasHalf = value - full >= 0.5;
+  const empty = 5 - full - (hasHalf ? 1 : 0);
+  return '●'.repeat(full) + (hasHalf ? '◐' : '') + '○'.repeat(empty);
 }
 
 /** Hero — 사용자 피드백 반영 (2026-05-23):
@@ -144,6 +160,7 @@ export function HagunSignerBreakdown({ manse, grade, gender }: ExtendedProps) {
   });
   const tierGroups = getTierSchoolGroups(finalTier.subTier, gender ? { gender } : undefined);
   const gauge = gradeToGauge(finalTier.hagunLabel);
+  const gaugeText = renderGaugeText(gauge);
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const top3 = positive.slice(0, 3);
@@ -151,7 +168,8 @@ export function HagunSignerBreakdown({ manse, grade, gender }: ExtendedProps) {
   // 음의 값(페널티) — 화면 표시 제거 (사용자 피드백 2026-05-25)
   // const negative = breakdown.hits.filter(h => h.value < 0);
 
-  const isWeakScholar = gauge === 0;
+  // 학교 chip이 비어 있으면 학자 트랙 약함 신호 (8-1 이상 sub-tier 또는 일반 대학군 ✗ 영역)
+  const isWeakScholar = tierGroups.length === 0;
 
   // 함께 작용 영역 — 기본 접힘 (사용자 피드백: 정보 과다, 토글로)
   const [restOpen, setRestOpen] = useState(false);
@@ -221,7 +239,7 @@ export function HagunSignerBreakdown({ manse, grade, gender }: ExtendedProps) {
           style={{ color: STAR_GOLD, letterSpacing: 4 }}
           accessibilityLabel={`강도 5점 만점에 ${gauge}점`}
         >
-          {'●'.repeat(gauge)}{'○'.repeat(5 - gauge)}
+          {gaugeText}
         </Text>
 
         {/* 안정·가능·도전 3구간 chip — 어머니가 "어느 대학 자리" 한눈에 인식 */}
