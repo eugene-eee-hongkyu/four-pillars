@@ -21,10 +21,6 @@ export interface InterpretPremiumContext {
   childManse: ManseResult;
   motherManse: ManseResult | null;
   fatherManse: ManseResult | null;
-  parentEducation?: {
-    mother?: { level: string | null; schoolName: string | null; major: string | null; schoolTier?: number | 'college' | 'high' | 'unknown' | null } | null;
-    father?: { level: string | null; schoolName: string | null; major: string | null; schoolTier?: number | 'college' | 'high' | 'unknown' | null } | null;
-  };
 }
 
 export const GRADE_LABEL: Record<string, string> = {
@@ -382,8 +378,6 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     childManse: c,
     motherManse: m,
     fatherManse: ctx.fatherManse,
-    motherEducation: ctx.parentEducation?.mother,
-    fatherEducation: ctx.parentEducation?.father,
   });
   const luckPhase = calcCurrentLuckPhase(c);
 
@@ -408,18 +402,6 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     ...(ctx.fatherManse ? manseSummary(ctx.fatherManse).map(s => '  ' + s) : []),
     ...(ctx.fatherManse ? [`  ${fatherChildSyncLine(c, ctx.fatherManse)}`] : []),
     ``,
-    ...(ctx.parentEducation && (ctx.parentEducation.mother || ctx.parentEducation.father)
-      ? [
-          `[부모 학력·전공] — 옵션 입력. 진단 신뢰성·가능 범위 보조. 단정적 부모 학력↔자녀 학교 매핑 ✗.`,
-          ...(ctx.parentEducation.mother
-            ? [`  어머니: ${ctx.parentEducation.mother.level ?? '—'} / ${ctx.parentEducation.mother.schoolName ?? '—'} / ${ctx.parentEducation.mother.major ?? '—'}`]
-            : []),
-          ...(ctx.parentEducation.father
-            ? [`  아빠: ${ctx.parentEducation.father.level ?? '—'} / ${ctx.parentEducation.father.schoolName ?? '—'} / ${ctx.parentEducation.father.major ?? '—'}`]
-            : []),
-          ``,
-        ]
-      : []),
     `[학운 sub-tier — 백엔드 계산. §17 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
     `  v2 sub-tier: ${tierResult.subTier} (subStep ${tierResult.subStep} / 학운 ${tierResult.hagunLabel})`,
     `  → SHARED_UNIVERSITY_TIER_GUIDE 표의 sub-tier ${tierResult.subTier} 행에서 학교명 추출`,

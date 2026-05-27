@@ -120,13 +120,11 @@ interface ExtendedProps extends Props {
 export function HagunSignerBreakdown({ manse }: ExtendedProps) {
   const breakdown = computeHagun(manse);
 
-  // v2: 안정·가능 chip (parent education 없이 사주 본질만 기준)
+  // v2: 안정·가능 chip (사주 본질만 기준)
   const finalTier = calculateFinalTierV2({
     childManse: manse,
     motherManse: null,
     fatherManse: null,
-    motherEducation: null,
-    fatherEducation: null,
   });
   const tierGroups = getTierSchoolGroups(finalTier.subTier);
   const gauge = gradeToGauge(finalTier.hagunLabel);

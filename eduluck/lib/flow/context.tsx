@@ -91,16 +91,6 @@ export interface FatherInput {
   birthLocation: string | null;
 }
 
-/** 부모 학력·전공 (옵션) */
-export interface ParentEducation {
-  /** 'high' (고졸) | 'college' (전문대) | 'university' (4년제) | 'graduate' (대학원) | 'none' (없음/미입력) */
-  level: 'high' | 'college' | 'university' | 'graduate' | 'none' | null;
-  schoolName: string | null;
-  major: string | null;
-  /** 학교 티어 (1-10·'college'·'high'·'unknown'). 학교명 자동 lookup 또는 사용자 dropdown 선택. */
-  schoolTier?: number | 'college' | 'high' | 'unknown' | null;
-}
-
 export interface FlowState {
   sessionId: string | null;
   userId: string | null;
@@ -120,10 +110,6 @@ export interface FlowState {
   fatherSubjectId: string | null;
   fatherManse: ManseResult | null;
   fatherStatus: 'pending' | 'entered' | 'skipped';
-
-  motherEducation: ParentEducation;
-  fatherEducation: ParentEducation;
-  parentEducationStatus: 'pending' | 'entered' | 'skipped';
 
   freeInterpretText: string | null;
   /** v5 정밀 진단 Part 1 (10 섹션 — 본질·인성·관계·즉시 행동) */
@@ -195,9 +181,6 @@ const initial: FlowState = {
   fatherSubjectId: null,
   fatherManse: null,
   fatherStatus: 'pending',
-  motherEducation: { level: null, schoolName: null, major: null },
-  fatherEducation: { level: null, schoolName: null, major: null },
-  parentEducationStatus: 'pending',
   freeInterpretText: null,
   premiumPart1Text: null,
   premiumPart2Text: null,
@@ -218,9 +201,6 @@ interface FlowContextValue {
   patchFather: (patch: Partial<FatherInput>) => void;
   setFatherSubject: (id: string, manse: ManseResult) => void;
   setFatherSkipped: () => void;
-  patchMotherEducation: (patch: Partial<ParentEducation>) => void;
-  patchFatherEducation: (patch: Partial<ParentEducation>) => void;
-  setParentEducationStatus: (status: 'entered' | 'skipped') => void;
   setFreeInterpretText: (t: string) => void;
   /** v5 Part 1 텍스트 설정. null 시 캐시 클리어 */
   setPremiumPart1Text: (t: string | null) => void;
@@ -295,15 +275,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   const setFatherSkipped = useCallback(() => {
     setState((s) => ({ ...s, fatherStatus: 'skipped' }));
   }, []);
-  const patchMotherEducation = useCallback((patch: Partial<ParentEducation>) => {
-    setState((s) => ({ ...s, motherEducation: { ...s.motherEducation, ...patch } }));
-  }, []);
-  const patchFatherEducation = useCallback((patch: Partial<ParentEducation>) => {
-    setState((s) => ({ ...s, fatherEducation: { ...s.fatherEducation, ...patch } }));
-  }, []);
-  const setParentEducationStatus = useCallback((status: 'entered' | 'skipped') => {
-    setState((s) => ({ ...s, parentEducationStatus: status }));
-  }, []);
   const setFreeInterpretText = useCallback((t: string) => {
     setState((s) => ({ ...s, freeInterpretText: t }));
   }, []);
@@ -352,7 +323,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       motherSubjectId: null,
       motherManse: null,
       motherStatus: 'pending',
-      motherEducation: { level: null, schoolName: null, major: null },
     }));
   }, []);
   const resetFather = useCallback(() => {
@@ -362,7 +332,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       fatherSubjectId: null,
       fatherManse: null,
       fatherStatus: 'pending',
-      fatherEducation: { level: null, schoolName: null, major: null },
     }));
   }, []);
   const resetChild = useCallback(() => {
@@ -397,9 +366,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         patchFather,
         setFatherSubject,
         setFatherSkipped,
-        patchMotherEducation,
-        patchFatherEducation,
-        setParentEducationStatus,
         resetMother,
         resetFather,
         resetChild,

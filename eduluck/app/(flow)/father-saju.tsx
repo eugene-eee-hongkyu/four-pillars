@@ -94,7 +94,7 @@ export default function FatherSaju() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       setFatherSubject(data.subjectId, data.manse);
-      router.push('/(flow)/parent-education' as never);
+      router.push('/(flow)/interpret-premium' as never);
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));
     } finally {
@@ -104,7 +104,7 @@ export default function FatherSaju() {
 
   const handleSkip = () => {
     setFatherSkipped();
-    router.push('/(flow)/parent-education' as never);
+    router.push('/(flow)/interpret-premium' as never);
   };
 
   return (

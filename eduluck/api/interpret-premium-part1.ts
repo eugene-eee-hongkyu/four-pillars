@@ -59,12 +59,6 @@ export async function POST(request: Request) {
     childManse: hydrateManse(child.manse_json),
     motherManse: mother ? hydrateManse(mother.manse_json) : null,
     fatherManse: father ? hydrateManse(father.manse_json) : null,
-    parentEducation: (mother?.education_json || father?.education_json)
-      ? {
-          mother: mother?.education_json ?? null,
-          father: father?.education_json ?? null,
-        }
-      : undefined,
   };
 
   const system = getInterpretPremiumPart1System();

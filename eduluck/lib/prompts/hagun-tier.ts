@@ -38,7 +38,6 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { lookupSchoolTier, tierToParentWeight, type SchoolTier } from '../manse/university-tier';
 
 // unsung.ts와 일관성: STRONG_STAGES + WEAK_STAGES 분류 그대로.
 // (이전 버그: '쇠'를 WEAK에서 누락 — unsung.ts에는 weak로 분류되지만 hagun-tier는 미반영.)
@@ -443,29 +442,10 @@ function scoreHagun(m: ManseResult): number {
  *    상수 80.1 매우 강 / 두흥 58.9 중상 / 승희 61.7 강 (boundary) /
  *    영진 11.3 매우 약 (외부변수) / 와이프 45.4 중하 */
 
-interface ParentEducationInput {
-  level: string | null;
-  schoolName?: string | null;
-  major?: string | null;
-  /** 사용자가 dropdown으로 수동 선택한 티어 (자동 lookup이 실패했을 때만 채워짐). */
-  schoolTier?: SchoolTier | null;
-}
-
 interface ParentTierAdjustInput {
   childManse: ManseResult;
   motherManse: ManseResult | null;
   fatherManse: ManseResult | null;
-  motherEducation: ParentEducationInput | null | undefined;
-  fatherEducation: ParentEducationInput | null | undefined;
-}
-
-function resolveParentTier(edu: ParentEducationInput | null | undefined): SchoolTier {
-  if (!edu) return 'unknown';
-  if (edu.level === 'high') return 'high';
-  // 1순위: 사용자 수동 선택
-  if (edu.schoolTier) return edu.schoolTier;
-  // 2순위: 학교명/학과명 자동 lookup
-  return lookupSchoolTier(edu.schoolName ?? null, edu.major ?? null);
 }
 
 interface ParentTierAdjustResult {
@@ -473,7 +453,7 @@ interface ParentTierAdjustResult {
   breakdown: string[];
 }
 
-/** 부모 사주 합 + 부모 학력 → ±1~2단계 조정. */
+/** 부모 사주 합 → ±1~2단계 조정. 부모 학력 가중치는 2026-05 부모학력 입력 폐지로 제거. */
 function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult {
   const breakdown: string[] = [];
   let total = 0;
@@ -508,9 +488,6 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
       breakdown.push(`아빠-자녀 합 ${fatherEffect} 0`);
     }
   }
-
-  // 부모 학력 가중치는 Phase H에서 제거 (mom test 단계 UX 단순화).
-  // university-tier.ts·resolveParentTier·tierToParentWeight 함수는 코드 유지 (향후 재도입 가능).
 
   // 한도 ±2
   if (total > 2) total = 2;
