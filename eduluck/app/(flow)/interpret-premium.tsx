@@ -98,10 +98,10 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {/* 진로 방향성 10가지 */}
+        {/* 주력 방향성 + 적성 점수 + 대운 라벨 (V15) */}
         {state.childManse?.directions && (
           <View className="px-container-padding">
-            <DirectionCard directions={state.childManse.directions} compact={true} />
+            <DirectionCard manse={state.childManse} compact={true} />
           </View>
         )}
 

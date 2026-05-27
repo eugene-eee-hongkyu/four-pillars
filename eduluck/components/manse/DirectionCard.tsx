@@ -1,26 +1,29 @@
-// 진로 방향성 8개 카드 — 학자·연구 / 의약·치 / 법조·관료 / 이공계·기술 /
-//                          경영·실무 / 사업·자영업 / 예술·미디어 / 체육·군경·외과
+// 진로 방향성 — V15 (2026-05-27) 명명 통일:
+//   - 주력 방향성 (11 directions) — 사회적 본업·전공의 큰 흐름
+//   - 적성 점수 (5 scores: arts·medical·abroad·publicForce·research) — 개인 재능·기질 세부 신호
+//   - 대운 발현 시기 라벨 — 청년기 흐름 (조숙·정석·전환·대기만성)
+//   - 가치(자율선택) 메모 — footer 한 줄
 //
-// Agent UX 리서치 권장 (NN/g progressive disclosure + 16Personalities 패턴):
-//   - Compact 모드 (default): 한 줄 요약 + 펼침 시 3그룹 카드
-//   - 강한 방향 (매우 강·강): Top 2~3 강조 카드 + 트랙 매핑
-//   - 가능한 방향 (보통): 키워드 목록
-//   - 약한 방향: 회색 처리 (참고용)
-//
-// 명리 출처: KCI 명리 진로상담 + 자평진전 격국 통설 + 부산대 평생교육원
+// 디자인 위계 (NN/g progressive disclosure + 16Personalities 패턴):
+//   1. 주력 방향성 = 큰 카드 (Hero, 별점 5점)
+//   2. 적성 점수 = 작은 chip 행 (보조)
+//   3. 대운 라벨 = 한 줄 inline
+//   4. 가치 메모 = footer (회색)
 
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Modal } from '@/components/ui/Modal';
 import type { DirectionEntry, DirectionLevel as CategoryLevel } from '@/lib/direction-system';
+import type { ManseResult } from '@/lib/manse/engine';
 
 interface Props {
-  directions: DirectionEntry[];
-  /** compact=true: 한 줄 요약 + 펼침 (default). false: 전체 3그룹 카드 */
+  manse: ManseResult;
+  /** compact=true: 한 줄 요약 + 펼침 (default). false: 전체 카드 */
   compact?: boolean;
 }
 
 const STAR_GOLD = '#F59E0B';
+const MINT = '#10B981';
 
 function StrengthDots({ level }: { level: CategoryLevel }) {
   const n = level === '매우 강' ? 5 : level === '강' ? 4 : level === '보통' ? 3 : 1;
@@ -31,30 +34,67 @@ function StrengthDots({ level }: { level: CategoryLevel }) {
   );
 }
 
-function levelLabel(level: CategoryLevel): { tone: 'strong' | 'mid' | 'weak'; emoji: string } {
-  if (level === '매우 강' || level === '강') return { tone: 'strong', emoji: '🌟' };
-  if (level === '보통') return { tone: 'mid', emoji: '✏️' };
-  return { tone: 'weak', emoji: '💤' };
+/** 적성 점수 5종 chip — normalized 0-100 + 통일 레벨 */
+interface AptitudeChipData {
+  key: string;
+  emoji: string;
+  label: string;
+  normalized: number;
+  level: '약' | '보통' | '강' | '매우 강';
 }
 
-export function DirectionCard({ directions, compact = true }: Props) {
+function aptitudeChipColor(level: AptitudeChipData['level']): { bg: string; border: string; text: string } {
+  if (level === '매우 강') return { bg: 'bg-emerald-50', border: 'border-emerald-400', text: 'text-emerald-900' };
+  if (level === '강') return { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-800' };
+  if (level === '보통') return { bg: 'bg-surface-container-low', border: 'border-outline-warm', text: 'text-text-pri' };
+  return { bg: 'bg-surface', border: 'border-outline-warm', text: 'text-text-sub' };
+}
+
+function AptitudeChip({ chip }: { chip: AptitudeChipData }) {
+  const c = aptitudeChipColor(chip.level);
+  return (
+    <View
+      className={`px-3 py-1.5 rounded-full border ${c.bg} ${c.border}`}
+      accessibilityLabel={`적성 ${chip.label} ${chip.normalized}점 ${chip.level}`}
+    >
+      <Text className={`font-body text-label-md ${c.text}`}>
+        {chip.emoji} {chip.label} {chip.normalized}
+      </Text>
+    </View>
+  );
+}
+
+export function DirectionCard({ manse, compact = true }: Props) {
+  const directions = manse.directions;
   const [activeKey, setActiveKey] = useState<DirectionEntry['key'] | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
 
   const strong = directions.filter(d => d.level === '매우 강' || d.level === '강');
   const mid = directions.filter(d => d.level === '보통');
-  // const weak = directions.filter(d => d.level === '약');  // 사용자 피드백으로 약 영역 표시 제거
 
-  // strong이 0이면 mid 전체를 fallback (재호처럼 모두 보통 동률 sample에서 임의 2개만 뽑으면 정보 손실)
-  // 4개 이상 강하면 "다재다능" 라벨 (긍정 해석 — 여러 영역 골고루 강함)
   const strongDisplay = strong.length > 0 ? strong : mid;
   const midDisplay = strong.length > 0 ? mid : [];
   const isVersatile = strongDisplay.length >= 4;
   const strongHeaderLabel = isVersatile
-    ? `🌟 다재다능 — 강한 방향 ${strongDisplay.length}개`
-    : `🌟 강한 방향 (${strongDisplay.length})`;
+    ? `🌟 주력 방향성 — 다재다능 (${strongDisplay.length})`
+    : `🌟 주력 방향성 (${strongDisplay.length})`;
 
   const active = activeKey ? directions.find(d => d.key === activeKey) ?? null : null;
+
+  // === 적성 점수 5종 chip 데이터 ===
+  const aptitudes: AptitudeChipData[] = [
+    { key: 'arts', emoji: '🎨', label: '예술', normalized: manse.artsScore.normalized, level: manse.artsScore.normalizedLevel },
+    { key: 'medical', emoji: '💉', label: '의약', normalized: manse.medicalScore.normalized, level: manse.medicalScore.normalizedLevel },
+    { key: 'abroad', emoji: '✈️', label: '해외', normalized: manse.abroadScore.normalized, level: manse.abroadScore.normalizedLevel },
+    { key: 'publicForce', emoji: '🛡️', label: '사관', normalized: manse.publicForceScore.normalized, level: manse.publicForceScore.normalizedLevel },
+    { key: 'research', emoji: '🔬', label: '연구', normalized: manse.researchScore.normalized, level: manse.researchScore.normalizedLevel },
+  ];
+  // 강·매우 강 먼저 정렬
+  aptitudes.sort((a, b) => b.normalized - a.normalized);
+
+  // === 대운 라벨 ===
+  const dw = manse.daewoonLabel;
+  const dwTypeLabel = dw.type === 'early' ? '조숙형' : dw.type === 'steady' ? '정석형' : dw.type === 'shift' ? '전환형' : '대기만성형';
 
   const renderDirectionCell = (d: DirectionEntry, isStrong: boolean) => (
     <Pressable
@@ -82,7 +122,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
   if (compact) {
     return (
       <View className="gap-3">
-        {/* 헤더 — 펼침 제거, 항상 즉시 노출 (피드백 #1: Hero급 결론은 펼침 ✗) */}
+        {/* 헤더 */}
         <View>
           <View className="flex-row items-center justify-between">
             <Text className="font-heading-bold text-headline-md text-text-pri">
@@ -103,7 +143,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </Text>
         </View>
 
-        {/* 강한 방향 — Filled card (primary). 4+ 카테고리면 "다재다능" 라벨 */}
+        {/* === 주력 방향성 (Top Hero) === */}
         {strongDisplay.length > 0 && (
           <View className="gap-2">
             <View className="flex-row items-baseline justify-between">
@@ -111,7 +151,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
                 {strongHeaderLabel}
               </Text>
               <Text className="font-body text-label-sm text-text-sub">
-                {isVersatile ? '여러 영역 골고루 강함' : '사주가 받쳐주는 트랙'}
+                {isVersatile ? '여러 영역 골고루 강함' : '본업으로 흐를 가능성'}
               </Text>
             </View>
             {isVersatile && (
@@ -123,7 +163,7 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </View>
         )}
 
-        {/* 가능한 방향 — Chip tag (secondary). strong이 0이면 strongDisplay에 쓰인 2개 제외한 나머지 */}
+        {/* 가능한 방향 — chip */}
         {midDisplay.length > 0 && (
           <View className="gap-1.5">
             <Text className="font-body text-label-md text-text-sub">
@@ -144,8 +184,34 @@ export function DirectionCard({ directions, compact = true }: Props) {
           </View>
         )}
 
-        {/* 약한 방향 영역 제거 (사용자 피드백) — negativity bias 완충 차원에서 표시했으나
-            사용자가 화면에 노출되는 정보 최소화 선호. weak 정보는 면책 모달에서만 일반론 설명. */}
+        {/* === 적성 점수 5 chip — 신규 V15 === */}
+        <View className="gap-1.5 pt-2 border-t border-outline-warm">
+          <View className="flex-row items-baseline justify-between">
+            <Text className="font-body-bold text-label-md text-text-sub" style={{ color: MINT }}>
+              🎁 적성 점수
+            </Text>
+            <Text className="font-body text-label-sm text-text-sub">
+              개인 재능·세부 신호 (0-100)
+            </Text>
+          </View>
+          <View className="flex-row flex-wrap gap-1.5">
+            {aptitudes.map(a => (
+              <AptitudeChip key={a.key} chip={a} />
+            ))}
+          </View>
+        </View>
+
+        {/* === 대운 발현 시기 라벨 === */}
+        <View className="px-3 py-2 rounded-md bg-surface-container-low border border-outline-warm">
+          <Text className="font-body text-label-sm text-text-sub">
+            🕐 청년기 흐름: <Text className="font-body-bold text-text-pri">{dwTypeLabel}</Text> — {dw.label}
+          </Text>
+        </View>
+
+        {/* === 가치(자율선택) footer 메모 === */}
+        <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-1">
+          ⓘ 사주는 타고난 경향이에요. 본인의 의지·노력·환경·선택에 따라 다르게 발현될 수 있어요. 점수가 낮은 영역도 의식적 훈련으로 충분히 발달 가능해요.
+        </Text>
 
         {/* 면책 모달 — 방향성 시스템 전체 설명 */}
         <Modal visible={infoOpen} onClose={() => setInfoOpen(false)}>
@@ -154,21 +220,21 @@ export function DirectionCard({ directions, compact = true }: Props) {
               방향성 점수에 대해
             </Text>
             <Text className="font-body text-body-md text-text-pri leading-relaxed">
-              이 10개 방향은 명리학(자평명리 격국론 + 김기승 명리직업상담론 + Holland RIASEC 진로흥미 융합) 관점에서 사주의 강점·기질을 분류한 것이에요.
+              방향성은 두 차원으로 나눠서 봐요. <Text className="font-body-bold">주력 방향성(11개)</Text>은 사주가 가리키는 사회적 본업의 큰 흐름이에요. <Text className="font-body-bold">적성 점수(5개)</Text>는 개인 안의 세부 재능·기질 신호예요.
             </Text>
             <View className="px-3 py-2 rounded-md bg-surface border border-outline-warm gap-1">
               <Text className="font-body text-body-md text-text-pri">
-                · "강한 방향" = 사주가 받쳐주는 트랙
+                · 두 차원이 일치하면 = 본업화 가능
               </Text>
               <Text className="font-body text-body-md text-text-pri">
-                · "약한 방향" = 사주 신호가 적은 트랙 (능력 부족 아님)
+                · 엇갈리면 = 적성은 부전공·취미·보조로 발현
               </Text>
               <Text className="font-body text-body-md text-text-pri">
-                · 같은 사람이 보통 강한 방향 1-3개 + 가능한 방향 2-3개를 가져요
+                · "청년기 흐름"은 23-32세 대운 발현 시기 안내
               </Text>
             </View>
             <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-              실제 진로 선택은 흥미·훈련량·시기 운까지 함께 봐야 해요. 명리 결과는 "여기서 시작해볼래?"라는 출발점이지 "정답"이 아니에요.
+              명리학(자평명리 격국론 + Holland RIASEC) 기반으로 사주의 강점·기질을 분류했어요. 실제 진로 선택은 흥미·훈련량·시기 운까지 함께 봐야 해요.
             </Text>
             <Pressable
               onPress={() => setInfoOpen(false)}
@@ -217,11 +283,11 @@ export function DirectionCard({ directions, compact = true }: Props) {
     );
   }
 
-  // Full mode — 모든 8개 카드 노출 (확장 디버그·관리자용)
+  // Full mode — 모든 카드 노출
   return (
     <View className="gap-3">
       <Text className="font-heading-bold text-headline-md text-text-pri">
-        🎯 사주가 가리키는 방향성 8가지
+        🎯 사주가 가리키는 방향성
       </Text>
       {directions.map(d => renderDirectionCell(d, d.level === '매우 강' || d.level === '강'))}
     </View>
