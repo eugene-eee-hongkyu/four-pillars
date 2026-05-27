@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-27 16:25
-## 마지막 업데이트: 2026-05-27 16:25
+## 마지막 실행: 2026-05-27 23:28
+## 마지막 업데이트: 2026-05-27 23:28
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- V13 영진(07) narrow trigger + Phase A-E 일괄 정리 + e2e 검증 완료. raw signer ID hero chip fix (`6181a6f`) 배포 대기. PROMPT_VERSION v5.13-no-subtier-override.
+- V18-V25 누적 (학교 데이터 통합·hero UX·정합성 audit) 모두 prod 배포 완료. PROMPT_VERSION v5.25-global-abroad-synonym. 다음은 사용자 직접 prod 검증 + mom test 진행.
 
 ### 이어서 할 것
 
-1. `6181a6f` 배포 후 영진 prod 진단 hero chip 한국어 라벨 정상 표시 검증
-2. Mom test 5~10명 모집·진행 (v5.13 prompt + 영진 narrow trigger + 외부변수 안내 + 캠퍼스 표시)
-3. 방향성 시스템 정비 별도 세션 — score.ts (좀비)·categoryScores (directions 중복)·체육 명명 통일
+1. V25 prod 배포 (`b8c9154`) 사용자 직접 확인 — hero 0.5 단위 별·점수·V24 라벨·VersionFooter 정상 작동
+2. 영진 외 sample mom test — §16·§17·§18 본문 라벨이 친화 변환 형태로 노출되는지
+3. 5 적성 점수 raw cutoff 다음 calibration 변경 시 V25 헤더 가드 작동 확인
 
 ### 막힌 것
 
@@ -27,13 +27,13 @@
 ### 사람 판단 필요
 
 - Mom test 5~10명 모집·정성 피드백
-- 방향성 시스템 정비 세션 일정 결정 (score.ts / categoryScores / 체육 명명)
-- Final QA 추가 random 2~3건 테스트 여부
+- 방향성 시스템 정비 (score.ts / categoryScores / 체육 명명) — 다음 세션 일정
+- DirectionKey 'global' → 'abroad' 코드 통일 여부 (V25는 prompt instruct만, 코드 명명은 그대로)
 
 ### 백로그 요약
 
-- 대기 중: 5개
-- 최근 추가: 2026-05-24 — 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
+- 대기 중: 6개
+- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
 
 ### 진행 상황
 
@@ -115,65 +115,33 @@
 - [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성
 - [x] Direction System V1-V12 — Step 0-6 + perfect fit 7/7 ⭐
 - [x] V12 Loop 720 hagun + 14명 정합 (`cb2df11`)
-- [x] Direction UI 통합 — 10 카테고리 화면 노출 (`e64e8b6`)
-- [x] Vercel esbuild alias 버그 fix (`e201d7c`)
-- [x] 만세력 → 정밀 진단 직행 (`e4c37b3`)
-- [x] DirectionCard mid 영역 누락 + 다재다능 라벨 (`5f0850b`·`6d70491`)
-- [x] LLM hang 대응 — V12 prompt 갱신 + StreamingBody 90초 timeout (`a2a50de`)
-- [x] StreamingBody useEffect deps 폭주 fix (`ff53a6e`)
-- [x] Phase 1: 신규 4섹션 prompt + Part 1/2 분리 명세 (`78b71fe`) ⭐
-- [x] Phase 2: API 분리 3 endpoint (`32805f1`)
-- [x] Phase 3: Context 확장 + hydrate (`0fdc044`)
-- [x] Phase 4: UI 3개 화면 + SilentSsePrefetch (`09e489c`)
-- [x] Phase 5: INTERPRET_FLOW_v5.md + self-test 회귀 ✗ (`bae0c46`)
-- [x] v5 endpoint vercel 위치 fix — 404 해결 (`532a793`)
-- [x] 분량 8000자 + survey 제거 + max_tokens 12000 (`c0d7c2a`·`969b599`)
-- [x] prompts/ → docs/prompts/ 이동 + README + dump --write (`9d61c8b`·`679f721`)
-- [x] StreamingBody 청크 reveal 모드 — 글자 streaming 폐기 (`dc467fd`)
-- [x] StreamingBody 섹션 헤더 기반 reveal (2섹션씩) (`b6cc9f1`)
-- [x] progress bar 청크 reset + 위치 이동 + 마지막 청크 사라짐 (`51ad624`)
-- [x] stages 4단계 → 2단계 (첫 청크 직전까지) (`48f5070`)
-- [x] InterpretBody markdown ** strip + prompt 강화 (`636764d`)
-- [x] 인용 박스 + 명리 근거 박스 v1 (`4497235`)
-- [x] 디자인 v2 — 섹션헤더·QuoteBox·EvidenceBox 카테고리 chip 전면 polish (`c1d37ec`) ⭐
-- [x] §18 → §14 섹션 재배열 + PROMPT_VERSION v5.1 (`97d63fc`) ⭐
-- [x] 4분면 카드 §3 (StrengthWeaknessCard) (`70479e4`) ⭐
-- [x] 시간축 카드 §13 (LuckTimelineCard) — 3구간 + 현재 ⭐ + worst year ⚠ (`e3fefe3`) ⭐
-- [x] 약한 자리·약한 방향 제거 + 함께 작용 토글 (`388509c`)
-- [x] 카테고리 chip "신살" → "기운" (`f696c16`)
-- [x] §10 '강요 금지' → '양육 경계' 리프레임 + PROMPT_VERSION v5.2 (`05af1ec`) ⭐
-- [x] backlog 정리 + sajutalk hold 결정 (`feb01ff`·`b80bcda`)
-- [x] setChildSubject 자녀 변경 cache invalidate (`2b4a1c2`)
-- [x] HagunSignerBreakdown displaySigner — raw detector ID prefix 제거 (`d4d2728`)
-- [x] @tailwind warning suppression (eduluck/.vscode/settings.json)
-- [x] StreamingBody timeout 180s → 270s + max_tokens 16000 → 12000 (`969b599`)
-- [x] 모든 LLM 호출 Sonnet → Haiku 4.5 통일 + env safeguard (`cc126d8`·`d737b4f`·`88c70a9`) ⭐
-- [x] 가족 공유 풀스택 fix v1 — onComplete · CHECK constraint · share-link rename · ENV 제거 (`d9077ba`·`6cb36b4`·`4236f77`·`00f8b23`·`177903e`·`9832ee4`) ⭐
-- [x] 가족 공유 풀스택 종결 — SSE abort 방지 + share-backfill + share read v5 + CTA 강화 (`3184c80`·`85b3d02`·`bda746d`·`df777f2`) ⭐
-- [x] Part 2 reveal 트리거 fix — minSectionNum 기반 (`3b90623`)
-- [x] '재호' 이름 leak fix — prompt 예시 placeholder + PROMPT_VERSION v5.3 (`aa7d6e0`) ⭐
-- [x] 진단 화면 navigation 추가 — 영역 선택·처음으로 (`169a363`)
-- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 부터 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PROMPT_VERSION v5.4 (`d8c2307`) ⭐
-- [x] prompt template literal backtick 빌드 깨짐 fix (`075c69b`)
-- [x] StreamingBody error UI 구체 메시지 5경로 (`3ceb3d5`)
-- [x] check-jeongah / check-tier-groups 진단 스크립트 (`902f49c`)
-- [x] 학운 그릇 hero 안정·가능·도전 chip + 본문 ○티어 금지 + ±1~2단계 (`76b0c08`·`f4c5849`)
-- [x] tier-schools 옵션 A — sub-tier 별 3~5개 학교 chip (v2 표 정확 매핑) (`473b5c0`) ⭐
-- [x] 별도 트랙 (예술·의약) 발현 조건 학운 sub-tier 구간별 분리 — 거짓 희망 fix (`8935155`) ⭐
-- [x] evidence bullet split + 줄바꿈 룰 + signature anchor 박스 fallback (`536a69f`·`f42b134`)
-- [x] 음력 → 양력 변환 (lunar-typescript) + SolarPreview UI (`c405bf1`·`589321f`)
-- [x] interpret-deep-select navigation 추가 (`a423fbb`)
-- [x] §16-§17-§18 순서 재배치 (직업·진로 → 학교 뒤로) (`0b244b5`) ⭐
-- [x] artsScore × directions cross-check (`a11e625`) ⭐
-- [x] **hagun-tier refactor v2 풀스택 (Phase 1-4)** — score → 30 sub-tier 직접 매핑, ≈180줄 제거, PROMPT_VERSION v5.11 (`a68b337`·`42bff2f`·`5c68d12`·`3807f49`) ⭐
-- [x] **hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt** (`6c92fc1`) ⭐
-- [x] **Score·티어 audit (4 영역) + 우려 종합 보고** (Explore agent 4 병렬)
-- [x] **Phase A-E 일괄 정리** — legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·§17 ±1 제거 (`e1c9e1b`·`a20b5a5`·`3021218`·`13b00f9`·`6c8cc13`) ⭐
-- [x] **Playwright e2e 영진 prod 검증 + hero chip raw signer fix** (`6181a6f`) ⭐
-- [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
-- [ ] `6181a6f` 배포 후 영진 hero chip 한국어 라벨 정상 검증
-- [ ] Mom test 5~10명 — v5.13 prompt + 영진 narrow trigger + 외부변수 안내 + 캠퍼스 표시 정성 검증
+- [x] Phase 1-5 정밀 진단 v5 (Part1/2 분리 + 신규 4섹션 + Context·hydrate)
+- [x] 가족 공유 풀스택 (`d9077ba`~`df777f2`) ⭐
+- [x] v2 30 sub-tier 시스템 도입 (`d8c2307`) ⭐
+- [x] tier-schools 옵션 A — sub-tier 별 3~5개 학교 chip (`473b5c0`) ⭐
+- [x] hagun-tier refactor v2 (sub-tier 직접 매핑, PROMPT_VERSION v5.11) ⭐
+- [x] hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt ⭐
+- [x] Score·티어 audit (4 영역) + Phase A-E 일괄 정리 ⭐
+- [x] Playwright e2e 영진·세형 prod 검증 + hero chip raw signer fix
+- [x] **V14 physical direction + researchScore + publicForceScore 신규 (`6582b21`)** ⭐
+- [x] **V15 명명 통일 (주력 방향성·적성 점수) + 가치 메모 + 대운 발현 시기 라벨 (`2c5ed9a`)** ⭐
+- [x] **V16 정규화 16 모듈 0-100 + 두 level 시스템 (`24562fb`·`939a5e8`)**
+- [x] **V17 도전 chip 재도입 + 가능·도전 룰 (`6c212ab`)**
+- [x] **V18 30 sub-tier 학교 데이터 단일 source + 학과·별도 트랙 (`c21aa4f`)** ⭐
+- [x] **V19 generalDetail 세세화 + specialTracks {name, triggers[]} 객체화 (`2cc8077`)** ⭐
+- [x] **V20 성인 회고 모드 찬사 멘트 (`10975d8`)** — hero 푸터 + §17 LLM instruction
+- [x] **V21 남자 사주 여대 권유 차단 (`6583c26`)** — chip + LLM prompt
+- [x] **V22 학교명 약어 풀어쓰기 (`fd812a0`)** — '서·성·한' → '서강대·성균관대·한양대'
+- [x] **V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)** — 영문 ID 제거 + 카테고리 4종 강제
+- [x] **V24 10단계 학운 라벨 + hero 점수 + signer ×N fix (`13771be`·`25eb1bf`)** ⭐
+- [x] **VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`)**
+- [x] **V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`)** ⭐
+- [x] **verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)**
+- [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
+- [ ] V25 prod 사용자 직접 확인 (hero 별·점수·V24 라벨·VersionFooter)
+- [ ] Mom test 5~10명 — V18-V25 누적 prompt + UI 정성 검증
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts (좀비)·categoryScores (directions 중복)·체육 명명 통일
+- [ ] DirectionKey 'global' → 'abroad' 코드 통일 여부 (V25는 prompt instruct만)
 - [ ] interpretations.kind 정책 — 2026-05-27 free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
 - [ ] 음력 입력 UI 토글 추가 (윤달) (선택)

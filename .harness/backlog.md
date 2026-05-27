@@ -4,6 +4,16 @@
 
 ## 대기 중
 
+## 2026-05-27: DirectionKey 'global' → 'abroad' 코드 통일
+
+- **백로그 이유**: V25 정합성 audit에서 DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 발견. V25는 prompt instruct로 명시적 매핑만 추가 (코드 변경 ✗). 다음 큰 refactor 세션 때 코드 단일 명명으로 통일 고려.
+- **할 것**: lib/direction-system.ts DirectionKey 'global' → 'abroad' 일괄 변경. V12_LOOP_1200_WEIGHTS·DIRECTION_LABELS·DIRECTION_UI_LABELS·DEFAULT_RECOMMENDED_FIELDS·buildDirectionEntries 모두 갱신. components/manse/DirectionCard.tsx UI render 부분도. prompt 동의어 매핑 instruct는 코드 통일 후 제거.
+- **필요한 것**: V12 calibration weight 재검증 (DirectionKey rename이 weight 매핑에 영향 ✗ 확인). LLM prompt 재검증.
+- **이전 검토**: V25 audit (`b8c9154`) — Explore agent 분석. HIGH 우려 1건. prompt instruct로 우선 처리, 코드 통일은 변경 폭 큰 작업이라 별도 세션 권장.
+- **관련 파일**: [eduluck/lib/direction-system.ts](../eduluck/lib/direction-system.ts), [eduluck/lib/manse/tier-schools.ts](../eduluck/lib/manse/tier-schools.ts) (TrackTrigger), [eduluck/lib/prompts/interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) (V25 동의어 instruct 위치)
+
+---
+
 ## 2026-05-24: 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토
 
 - **백로그 이유**: 시그너 가중치 calibration loop 90회 (V1+V2) 결과 wgap 89 floor. 영진(상관격 4티어, gap 18-19)·정환(정재격 1티어, gap 12-16)·두흥(외부 변수 1티어, gap 14-18) 격차 잔존. 사주만으로 fit 한계 입증. mom test 진입 전 결정 우선순위 ↓.

@@ -6,7 +6,35 @@
 
 ---
 
-## Session 2026-05-27 16:25 — Score·Tier audit + Phase A-E 정리 + V13 영진 fit + e2e
+## Session 2026-05-27 23:28 — V18-V25 학교 데이터 통합·hero UX·정합성 audit
+
+### 작업 요약
+
+- **V18 30 sub-tier 단일 source** (`c21aa4f`): SUB_TIER_DATA (general·departments·specialTracks) 단일 매핑. SHARED_UNIVERSITY_TIER_GUIDE 30-row 표 제거 (~1500→200 토큰 절감). user message [§17] baseline 풍부화 (안정·가능·도전 + 학과 + 별도 트랙). cross-check 룰 5개 (medical·research·publicForce·abroad·arts).
+- **V19 generalDetail 세세화 + specialTracks 객체화** (`2cc8077`): general(chip용)·generalDetail(prompt용 학교+학과 detail 한 줄) 분리. specialTracks {name, triggers[]} 객체화 (6 trigger 타입: medical·abroad·research·arts·publicForce·edu). prod 검증 통과 (세형 §17 본문에 `컴공·경영·자유전공·전기정보` detail 반영).
+- **V20 성인 회고 모드 찬사 멘트** (`10975d8`): HagunSignerBreakdown hero 푸터 + §17 LLM instruction 두 자리에 "사주 자리보다 더 높은 대학 가셨다면 본인 의지·노력의 결과" 톤. grade='adult' 조건부 노출.
+- **V21 남자 사주 여대 권유 차단** (`6583c26`): isWomenOnly() + getTierSchoolGroups(opts.gender) — '여대' 포함 학교 자동 filter. prompt §17 instruct도 "남자 사주 → 여대 본문 권유 ✗" 명시.
+- **V22 학교명 약어 풀어쓰기** (`fd812a0`): generalDetail의 '서·성·한'·'중경외시'·'국숭세'·'건·동·홍' 모두 풀어쓰기로 변경. "서·성·한(서울)" 표기가 사용자에게 "서울대"로 오해되던 문제 fix. prompt instruct에 'SKY 약어 풀이 시 학교명 오해 가능, 무조건 풀어쓰기'.
+- **V23 명리 근거 카드 라벨 친화 변환** (`1cb6996`): baseline 영문 ID (artsScore·medicalScore·publicForceScore·researchScore·abroadScore) 제거. 명리 근거 카드 카테고리 [본질·시기·기운·관계] 4종 외 ✗ instruct + 친화 표기 예시 6개 추가.
+- **V24 10단계 학운 라벨 + hero 점수** (`13771be`): HagunLabelV2 사용자 친화 10단계 ('최상위 학업형'·'강한 학업형'·...·'비제도권 성장형'). HagunSignerBreakdown hero 점수 (X/100) 표시. signer 'X multiplier (×N)' → 'X N자리 누적' (displaySigner '×N' bug fix).
+- **V24 hotfix gradeToGauge 10단계 매핑** (`25eb1bf`): V24 라벨 변경 후 옛 8단계 라벨만 매핑된 gradeToGauge → 화면에 chip 빈, isWeakScholar=true 버그. V24 10 라벨 매핑 추가.
+- **V25 별 0.5 단위 + 정합성 audit fix** (`f470c6d`, `b8c9154`): 5점 만점 별 게이지 0.5 단위 (반쪽 원 ◐). DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 매핑 prompt 명시. 5 적성 점수 모듈 헤더에 raw level vs normalizedLevel 이원 운영 경고 주석 추가.
+- **VersionFooter** (`4434676`): 모든 화면 우측 하단 작은 버전 라벨 (PROMPT_VERSION + git short SHA). vercel.json env에 EXPO_PUBLIC_GIT_SHA → VERCEL_GIT_COMMIT_SHA 매핑.
+- **verify-v8-prod.ts V24 baseline 갱신** (`fe013f9`): 옛 V6 #266 baseline → V24 현재 baseline snapshot (9/9 정합). expectedGrade·normalized·target30 모두 V24 실제값으로 update.
+- **정합성 audit** (Explore agent 6 영역 검토): HIGH 1·MEDIUM 1·LOW 1. HIGH (global ↔ abroad 동의어), MEDIUM (raw vs normalized 이원 운영) 모두 V25에서 fix.
+
+### 실패한 시도
+
+- e2e Playwright form 입력 — 남 라디오 active 상태가 reload 후 깨지는 RN web 이슈로 prod 자동 검증 시도 일부 막힘 (코드 self-test로 검증 완료)
+- vercel.json env 적용 — `$VERCEL_GIT_COMMIT_SHA` 매핑은 빌드 후 검증 필요 (이번 push에서 첫 적용)
+
+### 다음 액션
+
+- V25 prod 배포 완료 후 사용자 직접 확인 — hero 화면 별 0.5 단위·점수·V24 라벨·VersionFooter 모두 정상 작동 여부
+- 영진 sample 외에 mom test 진행 시 §17 baseline·§16 전공·§18 직업 본문 라벨이 모두 친화 변환된 형태로 나오는지 확인
+- 다음 calibration 변경 시 5 적성 점수 raw cutoff 재검증 필수 (V25 헤더 가드 작동)
+
+
 
 ### 작업 요약
 

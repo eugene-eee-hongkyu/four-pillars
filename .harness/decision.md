@@ -5,3 +5,68 @@
 > 이전 기록: [archive/decision-2026-05-27.md](archive/decision-2026-05-27.md)
 
 ---
+
+## 2026-05-27: V18 30 sub-tier 학교 데이터 단일 source (옵션 C)
+
+- **선택**: lib/manse/tier-schools.ts SUB_TIER_DATA 단일 매핑 (general·departments·specialTracks). user message [§17] baseline 풍부화. system prompt SHARED_UNIVERSITY_TIER_GUIDE 30-row 표 제거.
+- **대안 검토**:
+  - A. system prompt 표만 유지 — 토큰 절감 ✗ (~1500 토큰), 코드 동기화 부담
+  - B. 코드 단일 source + user message에 sub-tier 행만 주입 — 사용자 검토에서 옵션 C (학과·별도 트랙 모두 풍부) 선택
+  - C. 옵션 B 옵션 + 학과·별도 트랙 풍부 ← 선택
+- **선택 이유**: LLM 학과 명시·별도 트랙 cross-check 정밀도 ↑ + 시스템 prompt 토큰 절감 (~1500→200, 13% 절감) + 데이터 단일 source 동기화 부담 해소
+- **영향 범위**: lib/manse/tier-schools.ts (SUB_TIER_DATA + getDepartments + getSpecialTracks + getSubTierData), lib/prompts/interpret-premium-shared.ts (buildSharedManseContext [§17] 풍부화), PROMPT_VERSION v5.18
+- **되돌리는 방법**: SUB_TIER_DATA structure는 일관성 위해 유지. system prompt 표는 commit `c21aa4f` 이전 코드 (~b6da46d) 에서 복구 가능. v4 legacy 코드는 이미 V12에서 제거됨.
+
+---
+
+## 2026-05-27: V19 학교 데이터 세세화 + specialTracks 객체화
+
+- **선택**: SUB_TIER_DATA general(chip 학교명) + generalDetail(prompt 학교+학과 detail 한 줄) 분리. specialTracks를 {name: string, triggers: TrackTrigger[]}로 객체화 (6 trigger 타입).
+- **대안 검토**:
+  - A. general에 학과 detail 혼합 — chip 표시 시 학교명 추출 로직 필요, 복잡
+  - B. general/generalDetail 분리 (chip vs prompt 표현 분리) ← 선택
+  - C. specialTracks를 단순 string 배열 유지 — LLM cross-check 모호, trigger 매칭 정확도 ↓
+- **선택 이유**: chip은 학교명만 짧게, prompt는 학교+학과 detail 풍부하게 — 두 용도 분리. 객체화로 LLM이 trigger별 적성 cross-check 명확 (medical 강 → trigger=medical 트랙 권유 OK 식).
+- **영향 범위**: lib/manse/tier-schools.ts (TrackTrigger·SpecialTrack 타입·getGeneralDetailGroups), lib/prompts/interpret-premium-shared.ts (baseline 풍부화), PROMPT_VERSION v5.19
+- **되돌리는 방법**: V18 commit (c21aa4f) 으로 rollback. SUB_TIER_DATA의 general은 학교명 배열 그대로라 호환.
+
+---
+
+## 2026-05-27: V24 10단계 학운 라벨 (사용자 친화 명명)
+
+- **선택**: HagunLabelV2 옛 8단계 → 사용자 제공 10단계 친화 라벨 (최상위 학업형·강한 학업형·상위권 학업형·중상위 학업형·일반 학업형·보강 학업형·실무 전환형·기술 특화형·조기 사회진입형·비제도권 성장형) + hero 점수 (X/100) 표시.
+- **대안 검토**:
+  - A. 옛 8단계 자연 확장 (매우 강 / 강 / 든든 / 중상 / 중 / 중하 / 약상 / 약 / 매우 약 / 미약) — 명리적이나 어머니 친화 ✗
+  - B. 친화 형용사 (매우 든든함 / 든든함 / 강함 / 안정 / ...) — 직관적이나 일관성 약함
+  - C. "X 자리" 통일 — 사주적이나 길음
+  - D. 사용자 직접 명명 (학업형 / 실무형 등 — 학업·실무 트랙 분리) ← 선택
+- **선택 이유**: 사용자가 직접 제공한 라벨. 1-6 학업형 + 7-10 실무·기술·조기·비제도권 = 학업 트랙과 비학업 트랙 명확 분리. 거짓 희망/절망 ✗ 균형 (하위는 "실무 전환·기술 특화·조기 사회진입·비제도권 성장" 톤).
+- **영향 범위**: lib/prompts/hagun-tier.ts (HagunLabelV2 type·primaryTierToHagunLabel), components/manse/HagunSignerBreakdown.tsx (hero 라벨·점수·gradeToGauge 매핑·gauge 0.5 단위), lib/prompts/interpret-premium-shared.ts·part2.ts (본문 노출 ✗ instruct), scripts/verify-v8-prod.ts (V24 baseline snapshot), PROMPT_VERSION v5.24·v5.25
+- **되돌리는 방법**: HagunLabelV2 type 옛 8단계 라벨로 rollback (`'매우 강' | '강' | '중상' | ...`). 사용처 변경 위해 V24 commit (13771be) revert. 단 사용자 친화 명명 의도가 결정적이라 rollback 비추천.
+
+---
+
+## 2026-05-27: V25 별 게이지 0.5 단위 + global/abroad 동의어 명시
+
+- **선택**: 5 단계 별 게이지 → 0.5 단위 10 단계 (반쪽 원 ◐ U+25D0). DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 prompt baseline 명시 (코드 변경 ✗, instruct만).
+- **대안 검토**:
+  - A. DirectionKey 'global' → 'abroad' 명명 통일 (코드 9곳 grep + 변경) — robust 하나 변경 폭 큼
+  - B. prompt instruct에 동의어 명시만 추가 ← 선택
+- **선택 이유**: 변경 폭 최소화. LLM이 명시적 매핑 가드로 cross-check 정확도 충분. 다음 칼리브 시 동의어 매핑이 prompt에 남아 있으면 LLM 해석 일관.
+- **영향 범위**: lib/prompts/interpret-premium-shared.ts (§15 해외운 baseline + §17 specialTracks trigger=abroad 룰), 5 적성 점수 모듈 (arts·medical·abroad·publicForce·research) 헤더 주석 (raw vs normalized 이원 운영 가드), PROMPT_VERSION v5.25
+- **되돌리는 방법**: prompt instruct 한 줄 제거 + 5 score 헤더 경고 주석 제거. V25 commit (b8c9154) revert. 단 매핑 가드는 미래 calibration 시 안전 자산이라 유지 권장.
+
+---
+
+## 2026-05-27: VersionFooter — 모든 화면 우측 하단 버전 표시
+
+- **선택**: PROMPT_VERSION + git short SHA 7자 노출 (vercel.json env → EXPO_PUBLIC_GIT_SHA → process.env inline). 우측 하단 absolute/fixed, opacity 0.45, pointerEvents none.
+- **대안 검토**:
+  - A. PROMPT_VERSION만 표시 — 코드 변경 식별 약함
+  - B. git SHA + PROMPT_VERSION 동시 표시 ← 선택
+  - C. 빌드 시간 추가 — 식별 가독성 ↑ but 노이즈
+- **선택 이유**: prod 캐시 디버깅 시 prompt 버전·코드 SHA 동시 확인. 어머니 화면이라 작고 비활성 위치 + opacity 낮춤.
+- **영향 범위**: components/ui/VersionFooter.tsx, app/_layout.tsx, vercel.json (build.env.EXPO_PUBLIC_GIT_SHA = $VERCEL_GIT_COMMIT_SHA)
+- **되돌리는 방법**: _layout.tsx에서 `<VersionFooter />` 제거, vercel.json build.env 제거.
+
+---
