@@ -144,7 +144,8 @@ export interface FlowState {
 // v5.20: 성인 회고 모드(grade='adult') §17 본문 마지막 한 단락 강제 instruction — "도전 자리보다 더 높은 대학에 가셨다면 학운을 넘어선 본인의 의지·노력의 결과, 박수" 톤. (HagunSignerBreakdown hero 푸터에도 동일 의미 React 컴포넌트로 노출 — UI/LLM 두 자리 모두 회고 톤 보강.)
 // v5.21: 남자 사주(gender='male') 여대 권유 ✗ — getTierSchoolGroups gender 옵션 추가 (안정·가능·도전 chip 에서 '여대' 포함 학교 자동 filter). prompt §17 baseline 에도 "남자 사주 — 여대 본문 권유 ✗" instruct 명시.
 // v5.22: SUB_TIER_DATA generalDetail 약어 모두 풀어쓰기 — "서·성·한"·"중경외시"·"국숭세"·"건·동·홍"·"인하·아주" 등 → 학교명 풀어쓰기 ("서강대(서울)·성균관대(서울)·한양대(서울)"). LLM 본문에 약어 + "(서울)" 충돌로 "서울대"로 오해되는 케이스 fix. prompt §17 instruct 에 "약어 ✗, 학교명 풀어쓰기" + "'서' = 서강대 ≠ 서울대" 명시.
-export const PREMIUM_PROMPT_VERSION = 'v5.22-no-univ-abbrev';
+// v5.23: 명리 근거 카드 친화 라벨 강제 — baseline 라벨 영문 식별자 (publicForceScore·medicalScore·researchScore·artsScore·abroadScore) 제거. 명리 근거 카드 카테고리 [본질·시기·기운·관계] 4종 외 ✗ instruct 강화 + 친화 표기 예시 6개 추가 (격국 lookup·학운 sub-tier·적성·주력 방향성·12운성·대운 발현 → 한글 친화 변환).
+export const PREMIUM_PROMPT_VERSION = 'v5.23-myungni-card-friendly';
 
 const initial: FlowState = {
   sessionId: null,

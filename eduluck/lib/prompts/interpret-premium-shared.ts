@@ -197,11 +197,37 @@ export const SHARED_TONE_GUIDE = `## 페르소나·톤·어미 — 매우 중요
 - ❌ '- [본질] 정재격 ─ 안정적 자리 - [기운] 천을귀인 ─ 학문 인연' (한 줄에 두 bullet)
 - ✅ 각 bullet 마다 줄바꿈 (다음 줄에 새 '- ' 시작)
 
-**카테고리 4종 (정확히 이 단어만 사용)**:
-- '본질' — 일간·격국·납음·오행 부재·신왕신약
+**카테고리 4종 (정확히 이 단어만 사용 — 다른 단어 카테고리 ✗)**:
+- '본질' — 일간·격국·납음·오행 부재·신왕신약 · 학운 자리 · 주력 방향성 · 학자형 부재
 - '시기' — 대운·세운·12운성·공망·관인상생 흐름
-- '기운' — 신살(문창귀인·천을귀인·학당귀인·천의성·도화살·역마살·화개살·양인살·백호대살) + 합·충·형·해. 명리 정통 '신살(神煞)·성(星)'을 어머니 친화 단어로 통칭.
+- '기운' — 신살(문창귀인·천을귀인·학당귀인·천의성·도화살·역마살·화개살·양인살·백호대살) + 합·충·형·해 · 적성 점수 (예술·의·연구·공무·해외). 명리 정통 '신살(神煞)·성(星)'을 어머니 친화 단어로 통칭.
 - '관계' — 어머니 일간·아빠 일간·부모-자녀 십성 매핑·일주 합
+
+**금지 카테고리 (LLM 이탈 패턴 — 절대 ✗)**:
+- ❌ '[격국 lookup]' '[학운 sub-tier]' '[적성]' '[주력 방향성]' '[대운 발현]' '[12운성]' — baseline 라벨을 카테고리로 가져오기 ✗
+- ✅ 위 4종 (본질/시기/기운/관계) 중 하나로 분류해서 시그너 이름·내용을 자연어로 풀어 쓰기
+
+**시그너 이름 친화 표기 룰 (V23 강제)**:
+- ❌ 영문 식별자 노출: 'publicForceScore 보통'·'artsScore 강'·'medicalScore 매우 강'·'researchScore'·'abroadScore' 등 ✗
+- ✅ 한글 친화: '공무·법조 적성 (보통)'·'예술 적성 (강)'·'의·약 적성 (매우 강)'·'연구 적성'·'해외운'
+- ❌ 내부 ID 노출: '학운 sub-tier 3-1'·'subTier 2-2' ✗
+- ✅ 한글 친화: '학운 자리 (중상 — 건국·동국·홍익 안정)'·'학운 자리 (강)'
+- ❌ 카테고리화 ✗ 시그너: 'lookup'·'prefix'·'label' 같은 영문 메타 단어 ✗
+- ✅ '격국이 가리키는 진로'·'주력 방향성 상위 3'·'대운 흐름 (정석형)' 같이 풀어 씀
+
+**친화 표기 예시 (재원 §16·§17·§18 case)**:
+- ❌ '- [격국 lookup] 1순위: 경영·체육·군경·검찰 ─ 리더십 기반 진로'
+  ✅ '- [본질] 격국 (양인격) ─ 경영·체육·군경·검찰 진로 자연스러움'
+- ❌ '- [학운 sub-tier] 3-1 ─ 건국·동국·홍익 안정'
+  ✅ '- [본질] 학운 자리 (중상) ─ 건국·동국·홍익(서울) 안정 자리'
+- ❌ '- [적성] publicForceScore 보통 ─ 공무·법조 기본 가능'
+  ✅ '- [기운] 공무·법조 적성 (보통) ─ 일반 공무·법조 가능, 사관·경찰은 신체 조건 필요'
+- ❌ '- [주력 방향성] Top 3: 체육·신체, 공무·법·조직, 실무·현장 ─ 리더십·실행 중심'
+  ✅ '- [본질] 주력 방향성 ─ 체육·신체 · 공무·법·조직 · 실무·현장 (리더십·실행 중심)'
+- ❌ '- [12운성] 일지 술=묘 ─ 중년 이후 성장'
+  ✅ '- [시기] 12운성 자리 (일지 술 = 묘) ─ 꽃봉오리 자리, 중년 이후 큰 성장'
+- ❌ '- [대운 발현] 정석형 ─ 전공·직업 자연 연결'
+  ✅ '- [시기] 대운 흐름 (정석형) ─ 전공과 직업이 자연스럽게 연결되는 흐름'
 
 좋은 예 (§3 강점):
 
@@ -486,7 +512,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  2순위 진로: ${c.gyeokguk.careers.secondary.join(' · ')}`,
     `  이공계 대안: ${c.gyeokguk.careers.engineering.join(' · ')}`,
     ``,
-    `[적성 점수 — 예술·디자인 (artsScore). 주력 방향성 arts 카테고리와 cross-check 필수. 적성 ≠ 주력 = 부전공·취미 톤]`,
+    `[적성 점수 — 예술·디자인. 주력 방향성 arts 카테고리와 cross-check 필수. 적성 ≠ 주력 = 부전공·취미 톤]`,
     `  ${c.artsScore.summary}`,
     (() => {
       const artsDir = c.directions.find((d) => d.key === 'arts');
@@ -516,7 +542,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
       return `  §16 권유: 격국 lookup만. 적성 예술 언급 ✗.`;
     })(),
     ``,
-    `[적성 점수 — 의·약·치·생명과학 (medicalScore). 주력 방향성 medical 카테고리와 cross-check 필수]`,
+    `[적성 점수 — 의·약·치·생명과학. 주력 방향성 medical 카테고리와 cross-check 필수]`,
     `  ${c.medicalScore.summary}`,
     c.medicalScore.level === '매우 강'
       ? `  §16·§18 권유: **학운 sub-tier 가 1-1 ~ 2-2 일 때만 의예·치의예·한의예·약대 직접 권유 가능**. 학운 2-3 이하면 의·약 본과 진학 어렵고, 생명과학·간호·물리치료·임상병리·보건 인접 학과로 분기. 추천: ${c.medicalScore.recommendedFields.join(' / ')}. 학운 무시한 의대 권유 ✗.`
@@ -526,7 +552,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
           ? `  §16 권유: 격국 lookup 기본. 의·약 자격직 가능성 한 줄 언급.`
           : `  §16 권유: 격국 lookup만. 의·약 언급 ✗.`,
     ``,
-    `[적성 점수 — 연구·과기원 (researchScore). 주력 방향성 scholar+engineer 안에서 KAIST·POSTECH 분기]`,
+    `[적성 점수 — 연구·과기원. 주력 방향성 scholar+engineer 안에서 KAIST·POSTECH 분기]`,
     `  ${c.researchScore.summary}`,
     c.researchScore.level === '매우 강' || c.researchScore.level === '강'
       ? `  §17 권유: **학운 sub-tier 가 1-1 ~ 1-3 일 때 KAIST·POSTECH·UNIST·GIST·DGIST 우선 명시**. 학운 2-1 이하면 서울대 자연·공학 일반 또는 지방 거점 국립대 공학으로 분기. 추천: ${c.researchScore.recommendedFields.join(' / ')}.`
@@ -534,7 +560,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ? `  §17 권유: 격국 lookup 기본. 연구·과기원 한 줄 언급 가능.`
         : `  §17 권유: 연구·과기원 언급 ✗ (격국 lookup 만).`,
     ``,
-    `[적성 점수 — 공무·사관·경찰 (publicForceScore). 주력 방향성 authority 안에서 사관·경찰 분기]`,
+    `[적성 점수 — 공무·사관·경찰. 주력 방향성 authority 안에서 사관·경찰 분기]`,
     `  ${c.publicForceScore.summary}`,
     c.publicForceScore.level === '매우 강' || c.publicForceScore.level === '강'
       ? `  §17 권유: **학운 sub-tier 2-1 ~ 3-1 일 때 사관학교·경찰대 우선 명시**. 학운 그 외이면 일반 공무원·경찰·소방·교정 행정직으로 분기. 추천: ${c.publicForceScore.recommendedFields.join(' / ')}. 사관·경찰은 신체·체력 적성 필수 (사주만으론 결정 ✗).`
@@ -563,7 +589,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ``,
       ];
     })(),
-    `[적성 점수 — 해외운 (abroadScore). 주력 방향성 global 카테고리와 cross-check. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
+    `[적성 점수 — 해외운. 주력 방향성 global 카테고리와 cross-check. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
     `  ${c.abroadScore.summary}`,
     `  근거: ${c.abroadScore.signals.filter(s => s.matched).map(s => s.reason).join(' / ') || '시그널 없음 — 해외운 약'}`,
     `  §14 풀이 톤:`,
