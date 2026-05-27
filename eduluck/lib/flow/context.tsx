@@ -138,7 +138,8 @@ export interface FlowState {
 // v5.14: direction 11 카테고리 (physical 추가) + researchScore·publicForceScore 신규. 학자형 안에서 KAIST·POSTECH 분기, authority 안에서 사관·경찰 분기, 체육·신체 진로 카테고리화 (사관·체대·운동선수).
 // v5.15: 명명 통일 (주력 방향성 11 + 적성 점수 5) + 가치 자율선택 메모 강제 + 대운 발현 시기 라벨 신규 (조숙·정석·전환·대기만성). Part1 §3·§4·§6 + Part2 §20 적성 점수·대운 라벨 활용 강화.
 // v5.16: §17 학교 권유 명단 fix — getTierSchoolGroups 코드 산출 안정·가능 학교명 직접 주입 + "외 학교 절대 ✗" 강제. SHARED_TIER_GUIDE 예시 학교명 placeholder화 (다른 sample 누출 차단 — 재호 1-1 sample에 영남대·계명대 4티어 노출 버그 fix).
-export const PREMIUM_PROMPT_VERSION = 'v5.16-school-name-strict';
+// v5.17: 도전 chip 재도입 + 가능·도전 범위 사용자 명시 룰 (1티어: 가능 한 칸 위·도전 두 칸 위 / 2티어+: 가능 한·두 칸 위·도전 세·네 칸 위). chip 간 학교 중복 dedup. 1티어 sample 도 가능 영역 표시 가능.
+export const PREMIUM_PROMPT_VERSION = 'v5.17-stable-possible-challenge';
 
 const initial: FlowState = {
   sessionId: null,

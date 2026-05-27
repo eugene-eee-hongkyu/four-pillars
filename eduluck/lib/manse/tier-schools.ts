@@ -1,18 +1,17 @@
 // 학운 sub-tier → "안정·가능·도전" 대표 학교 chip lookup
 //
-// 사용처: HagunSignerBreakdown hero 의 3구간 chip 표시.
+// 사용처: HagunSignerBreakdown hero, DirectionCard 의 3구간 chip 표시.
 // 데이터 출처: docs/scoring/TIER_SYSTEM_v2.md §3 30 sub-tier 표 (일반 대학군 컬럼).
 //
-// v2 refactor (2026-05-27): subTier 만 받아 chip 산출. confidence·primaryTier·safetyTier
-// 인자 제거. parentAdjust 는 이미 score 가산되어 subTier 에 반영됨 (calculateFinalTierV2).
+// V17 (2026-05-27): 도전 chip 재도입 + 가능·도전 범위 사용자 명시 룰로 변경.
+//   - primaryTier 1 (1-2, 1-3): 가능 = 한 칸 위, 도전 = 두 칸 위 (각 1 sub-step)
+//   - primaryTier 2+: 가능 = 한·두 칸 위 합집합, 도전 = 세·네 칸 위 합집합
+//   - 1-1: 안정만 (이미 최상)
 //
-// 매핑 규칙:
-//   - 안정 = subTier 자체 (사용자 정확한 위치)
-//   - 가능 = (primaryTier - 1)-3 (한 칸 위 가장 약한 sub-step, 도전 가능 영역)
-//   - 도전 chip 미표시 (거짓 희망 방지)
+// 옛 정책 (`473b5c0` 도전 chip 제거 — 거짓 희망 방지) → V17 사용자 결정으로 재도입.
 
 export type TierGroup = {
-  label: '안정' | '가능';
+  label: '안정' | '가능' | '도전';
   schools: string[];
 };
 
@@ -60,22 +59,72 @@ function parseSubTier(subTier: string): { primaryTier: number; subStep: number }
   return { primaryTier: t, subStep: s };
 }
 
-/** v2 sub-tier 만으로 안정·가능 chip 산출. 도전 chip 미표시 (거짓 희망 방지). */
+/** sub-tier 순번 (1-1=1, 1-2=2, ..., 10-3=30). offset 단위 산출용. */
+function subTierOrder(primaryTier: number, subStep: number): number {
+  return (primaryTier - 1) * 3 + subStep;
+}
+
+/** order → sub-tier 문자열. order ≤ 0 이면 null. */
+function orderToSubTier(order: number): string | null {
+  if (order <= 0 || order > 30) return null;
+  const primary = Math.ceil(order / 3);
+  const step = ((order - 1) % 3) + 1;
+  return `${primary}-${step}`;
+}
+
+/** subTier 의 offset 칸 위 sub-tier (예: 2-1 의 offset 1 = 1-3, offset 3 = 1-1). */
+function offsetSubTier(subTier: string, offset: number): string | null {
+  const { primaryTier, subStep } = parseSubTier(subTier);
+  return orderToSubTier(subTierOrder(primaryTier, subStep) - offset);
+}
+
+/** 여러 offset 의 학교를 합집합 (중복 제거 + 입력 순서 보존). */
+function collectFromOffsets(subTier: string, offsets: number[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const o of offsets) {
+    const ot = offsetSubTier(subTier, o);
+    if (!ot) continue;
+    for (const s of schoolsAt(ot)) {
+      if (!seen.has(s)) {
+        seen.add(s);
+        out.push(s);
+      }
+    }
+  }
+  return out;
+}
+
+/** v2 sub-tier 안정·가능·도전 chip 산출 (V17 사용자 명시 룰).
+ *  - primaryTier 1 (1-2, 1-3): 가능 = 한 칸 위, 도전 = 두 칸 위
+ *  - primaryTier 2+: 가능 = 한·두 칸 위 합집합, 도전 = 세·네 칸 위 합집합
+ *  - 1-1: 안정만 (이미 최상)
+ *  - chip 간 학교명 중복 dedup: 가능 ⊃ 안정 / 도전 ⊃ 안정·가능 학교 제거
+ *    (1티어 안 sub-step 별 같은 서울대 중복 표시 방지) */
 export function getTierSchoolGroups(subTier: string): TierGroup[] {
   const { primaryTier } = parseSubTier(subTier);
   const groups: TierGroup[] = [];
   const cap = (arr: string[]) => arr.slice(0, 5);
 
-  // 안정 = subTier 자체 (사용자 정확한 위치)
+  // 안정 = subTier 자체
   const stable = schoolsAt(subTier);
   if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
+  const stableSet = new Set(stable);
 
-  // 가능 = (primaryTier - 1)-3 (한 칸 위 가장 약한 sub-step)
-  if (primaryTier >= 2) {
-    const possibleSub = `${primaryTier - 1}-3`;
-    const possible = schoolsAt(possibleSub);
-    if (possible.length > 0) groups.push({ label: '가능', schools: cap(possible) });
-  }
+  // 가능·도전 offset 룰 — primaryTier 1 vs 2+
+  const possibleOffsets = primaryTier === 1 ? [1] : [1, 2];
+  const challengeOffsets = primaryTier === 1 ? [2] : [3, 4];
+
+  // 가능 = 가능 offset 학교 - 안정 학교 (중복 제거)
+  const possibleRaw = collectFromOffsets(subTier, possibleOffsets);
+  const possible = possibleRaw.filter(s => !stableSet.has(s));
+  if (possible.length > 0) groups.push({ label: '가능', schools: cap(possible) });
+
+  // 도전 = 도전 offset 학교 - 안정·가능 학교 (중복 제거)
+  const possibleSet = new Set(possible);
+  const challengeRaw = collectFromOffsets(subTier, challengeOffsets);
+  const challenge = challengeRaw.filter(s => !stableSet.has(s) && !possibleSet.has(s));
+  if (challenge.length > 0) groups.push({ label: '도전', schools: cap(challenge) });
 
   return groups;
 }
