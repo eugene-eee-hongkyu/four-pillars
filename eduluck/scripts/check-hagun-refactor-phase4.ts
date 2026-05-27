@@ -30,8 +30,6 @@ function main() {
       childManse: manse,
       motherManse: null,
       fatherManse: null,
-      motherEducation: null,
-      fatherEducation: null,
     });
     console.log(
       `${s.id.padEnd(12)} | ${s.nickname.padEnd(7)} | ${t.hagunScore.toFixed(1).padStart(5)} | ${t.subTier.padEnd(7)} | ${t.hagunLabel.padEnd(9)} | ${t.finalScore.toFixed(1).padStart(10)} | ${String(t.parentAdjust).padStart(6)} | ${t.oneLineSummary}`,

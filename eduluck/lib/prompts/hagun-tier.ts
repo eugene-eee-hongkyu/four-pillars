@@ -46,12 +46,6 @@ const WEAK_UNSUNG = new Set(['쇠', '병', '사', '묘', '절', '태']);
 // 학자형 4귀인 — 직접 학문·시험 친화 (천을귀인은 일반 인덕 길성이라 student-traits에서 별도 활용)
 const HAGUN_GUI = new Set(['문창귀인', '학당귀인', '문곡귀인']);
 
-/** 학자형 격국 (학문·시험 친화). 명리 합의: 인성·관성·식신·건록 계열. */
-const SCHOLAR_GYEOKGUK = new Set(['정관격', '정인격', '편인격', '식신격', '건록격']);
-
-/** 학운 친화 납음 — "잠재형/빛 발하는 구조"의 납음. */
-const SCHOLAR_NAPUM = new Set(['산하화', '해중금', '검봉금', '천중수', '간하수', '대림목', '송백목', '천상화']);
-
 /** v6 학자형 격국 narrow — 편관격 제외 (의약·법조 트랙은 medical-score.ts 별도 모듈). */
 const SCHOLAR_GYEOKGUK_NARROW = new Set(['정관격', '정인격', '편인격', '식신격', '건록격']);
 

@@ -61,8 +61,6 @@ function main() {
       childManse: manse,
       motherManse: null,
       fatherManse: null,
-      motherEducation: null,
-      fatherEducation: null,
     });
     // scoreToSubTier 와 calculateFinalTierV2 결과 일치 검증 (parent=0 일 때)
     const direct = scoreToSubTier(tier.finalScore);
