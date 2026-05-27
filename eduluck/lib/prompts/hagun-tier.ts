@@ -671,6 +671,121 @@ export function calcCurrentLuckPhase(m: ManseResult): CurrentLuckPhaseResult {
   };
 }
 
+// ============================================================================
+// v2 sub-tier 시스템 (2026-05-26 refactor)
+//
+// 옛 시스템 (scoreToGrade → 8 grade → baseTierRange [N, N+1] → 12 티어 → confidence)
+// 의 redundancy 제거. score → subTier 직접 매핑.
+//
+// 핵심: subTier 하나가 메인 데이터. primaryTier·subStep·hagunLabel 모두 derive.
+// ============================================================================
+
+/** v2 30 sub-tier cutoff (사회 분포 기반 정규화 0~100 점수).
+ *  각 cutoff[i] = sub-tier (i+1)-th 의 하한선 (score >= cutoff[i] → 그 sub-tier 또는 위 영역).
+ *  사회 백분위: 1-1=1.67%, 1-2=3.33%, ..., 10-3=100%. */
+export const SUB_TIER_CUTOFFS: number[] = [
+  100.0, 92.9, 87.9, // 1-1, 1-2, 1-3
+  81.6, 76.6, 73.0,  // 2-1, 2-2, 2-3
+  68.8, 64.5, 61.7,  // 3-1, 3-2, 3-3
+  58.9, 56.7, 54.6,  // 4-1, 4-2, 4-3
+  52.5, 50.4, 48.2,  // 5-1, 5-2, 5-3
+  46.8, 44.7, 42.6,  // 6-1, 6-2, 6-3
+  41.1, 39.0, 36.9,  // 7-1, 7-2, 7-3
+  34.8, 32.6, 30.5,  // 8-1, 8-2, 8-3
+  29.1, 27.0, 24.1,  // 9-1, 9-2, 9-3
+  21.3, 17.0, 2.1,   // 10-1, 10-2, 10-3
+];
+
+export type SubStep = 1 | 2 | 3;
+
+export interface SubTierResult {
+  /** v2 sub-tier label (예: '1-2', '4-3', '10-3') */
+  subTier: string;
+  /** 첫 숫자 (1~10) — 메인 티어 */
+  primaryTier: number;
+  /** 두 번째 숫자 (1·2·3 = 엄청 강·강·약강) */
+  subStep: SubStep;
+}
+
+/** v2 메인 함수: score 0~100 → subTier 직접 매핑.
+ *  cutoff 30개 desc 정렬. score >= cutoff[i] 인 가장 작은 i 가 가장 위 sub-tier. */
+export function scoreToSubTier(score: number): SubTierResult {
+  for (let i = 0; i < SUB_TIER_CUTOFFS.length; i++) {
+    if (score >= SUB_TIER_CUTOFFS[i]) {
+      const primaryTier = Math.floor(i / 3) + 1;
+      const subStep = ((i % 3) + 1) as SubStep;
+      return { subTier: `${primaryTier}-${subStep}`, primaryTier, subStep };
+    }
+  }
+  // 모든 cutoff 미달 — 최하 10-3
+  return { subTier: '10-3', primaryTier: 10, subStep: 3 };
+}
+
+/** primaryTier (1~10) → 8 grade 라벨 (현재 UI 표시 호환).
+ *  v1 매핑 유지: 1=매우강, 2=강, 3=중상, 4=중, 5=중하, 6=약상, 7=약중, 8~10=약하. */
+export type HagunLabelV2 = '매우 강' | '강' | '중상' | '중' | '중하' | '약상' | '약중' | '약하';
+export function primaryTierToHagunLabel(primaryTier: number): HagunLabelV2 {
+  if (primaryTier <= 1) return '매우 강';
+  if (primaryTier === 2) return '강';
+  if (primaryTier === 3) return '중상';
+  if (primaryTier === 4) return '중';
+  if (primaryTier === 5) return '중하';
+  if (primaryTier === 6) return '약상';
+  if (primaryTier === 7) return '약중';
+  return '약하';
+}
+
+/** parentAdjust 정수 단위(±0~2) 를 점수 가산값으로 변환.
+ *  근거: cutoff 30개 평균 간격 ≈ (100 - 2.1) / 29 ≈ 3.4점. 1 sub-step = 3.4점.
+ *  parent +1 = 한 티어 위 = 3 sub-step 위 = +10.2점. 보수적으로 +10점. */
+const PARENT_ADJUST_POINTS_PER_UNIT = 10;
+
+export interface FinalTierResultV2 {
+  hagunScore: number;
+  /** parentAdjust 후 최종 score (= hagunScore + parentAdjust × 10) */
+  finalScore: number;
+  parentAdjust: number;
+  parentAdjustBreakdown: string[];
+  /** v2 메인 결과 */
+  subTier: string;
+  primaryTier: number;
+  subStep: SubStep;
+  /** UI hero용 정성 라벨 (매우강~약하) */
+  hagunLabel: HagunLabelV2;
+  /** LLM·log 용 한 줄 요약 */
+  oneLineSummary: string;
+}
+
+/** v2 메인 함수: 사주 → 학운 점수 → parentAdjust 가산 → subTier 직접 매핑.
+ *  옛 calculateFinalTier 의 단순화 버전. baseTierRange·confidence·safetyTier 제거.
+ *  안정·가능·도전 chip 은 호출 측 (tier-schools.ts) 에서 subTier 만으로 derive. */
+export function calculateFinalTierV2(input: ParentTierAdjustInput): FinalTierResultV2 {
+  const hagunScore = scoreHagun(input.childManse);
+  const parentAdj = calcParentAdjust(input);
+  const finalScore = hagunScore + parentAdj.total * PARENT_ADJUST_POINTS_PER_UNIT;
+  const { subTier, primaryTier, subStep } = scoreToSubTier(finalScore);
+  const hagunLabel = primaryTierToHagunLabel(primaryTier);
+
+  const summary =
+    `학운 점수 ${hagunScore.toFixed(1)} ` +
+    `(+부모 환경 ${parentAdj.total >= 0 ? '+' : ''}${parentAdj.total} × ${PARENT_ADJUST_POINTS_PER_UNIT}점 = 최종 ${finalScore.toFixed(1)}) ` +
+    `→ sub-tier ${subTier} (${hagunLabel})`;
+
+  return {
+    hagunScore,
+    finalScore,
+    parentAdjust: parentAdj.total,
+    parentAdjustBreakdown: parentAdj.breakdown,
+    subTier,
+    primaryTier,
+    subStep,
+    hagunLabel,
+    oneLineSummary: summary,
+  };
+}
+
+/** @deprecated v2 refactor (2026-05-26) — calculateFinalTierV2 를 사용하세요.
+ *  Phase 3 에서 제거 예정. */
 export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResult {
   const hagunScore = scoreHagun(input.childManse);
   const gradeInfo = scoreToGrade(hagunScore);
