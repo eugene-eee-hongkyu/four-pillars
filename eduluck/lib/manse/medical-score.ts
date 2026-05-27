@@ -8,6 +8,12 @@
 //
 // 가중치 합산 ≥4 → "의약 강"으로 §12 전공 풀이에서 의·약·치·생명과학 직접 권유.
 // abroad-score·arts-score와 동일 패턴 + recommendedFields로 세부 직업 분기.
+//
+// ⚠️ 두 level 시스템 운영 (V12·V25 정리):
+//   - level (raw cutoff: total ≤4·5·7) — LLM prompt 분기 (interpret-premium-shared.ts:548)
+//   - normalizedLevel (통일 cutoff: 100/75/50) — UI DirectionCard 직관 비교
+//   raw cutoff 변경 시 prompt baseline 분기 (interpret-premium-shared.ts) 재검증 필수.
+//   normalized cutoff 변경 시 NORMALIZE_CUTOFFS.medical (normalized-score.ts) 만 갱신.
 
 import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';

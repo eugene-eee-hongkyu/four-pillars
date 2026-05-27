@@ -5,6 +5,11 @@
 //      학운 1-1~1-3 sub-tier 안에서 서울대 일반 vs 연구원·과기원 분기를 명확히 한다.
 //
 // 가중치 합산 ≥4 → "연구 강" 으로 §17 학교 권유에서 KAIST·POSTECH·UNIST·GIST·DGIST 우선.
+//
+// ⚠️ 두 level 시스템 운영 (V12·V25 정리):
+//   - level (raw cutoff: total ≤2·5·7) — LLM prompt 분기 (interpret-premium-shared.ts:557+)
+//   - normalizedLevel (통일 cutoff: 100/75/50) — UI DirectionCard 직관 비교
+//   raw cutoff 변경 시 prompt baseline 분기 재검증 필수.
 
 import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';

@@ -4,6 +4,11 @@
 //      격국 lookup만으로는 "회계·금융"으로 매핑. 명리 본질("화개살 다 = 예술가") 무시.
 //
 // 가중치 합산 ≥4 → "예술 강"으로 §12 전공 풀이에서 격국 lookup보다 우선 권유.
+//
+// ⚠️ 두 level 시스템 운영 (V12·V25 정리):
+//   - level (raw cutoff: total ≤3·4·5) — LLM prompt 분기 (interpret-premium-shared.ts:495+)
+//   - normalizedLevel (통일 cutoff: 100/75/50) — UI DirectionCard 직관 비교
+//   raw cutoff 변경 시 prompt baseline 분기 재검증 필수.
 
 import { splitPillar } from './pillars';
 import type { ShenshaResult } from './shensha';

@@ -470,7 +470,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         `     · medical 강·매우 강 → trigger=medical 트랙 권유 OK (의예·치의예·한의예·약대·수의예·차의과대 등)`,
         `     · research 강·매우 강 → trigger=research 트랙 권유 OK (KAIST·POSTECH·UNIST·GIST·DGIST 등)`,
         `     · publicForce 강·매우 강 → trigger=publicForce 트랙 권유 OK (사관학교·경찰대·한국체대 등)`,
-        `     · abroad 강·매우 강 → trigger=abroad 트랙 권유 OK (하버드·MIT·Ivy·미국 Top X 학부 등)`,
+        `     · abroad 강·매우 강 → trigger=abroad 트랙 권유 OK (하버드·MIT·Ivy·미국 Top X 학부 등). ⚠️ DirectionKey 'global' ≡ 'abroad' (동의어, V25)`,
         `     · arts 강·매우 강 (+주력 arts 강) → trigger=arts 트랙 권유 OK (한예종·서울대 미대·홍익 미대 등)`,
         `     · edu (교사 기질: 관성+인성) → trigger=edu 트랙 권유 OK (교대 ±1)`,
         `     · 적성 약·보통 → 해당 trigger 트랙 본업 권유 ✗`,
@@ -589,7 +589,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ``,
       ];
     })(),
-    `[적성 점수 — 해외운. 주력 방향성 global 카테고리와 cross-check. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
+    `[적성 점수 — 해외운. ⚠️ 동의어 매핑 (V25): 'global' (주력 방향성 DirectionKey) ≡ 'abroad' (specialTracks trigger) ≡ 'abroadScore' (적성 점수) ≡ '해외운' — 모두 같은 영역. cross-check 시 셋 다 같은 강도로 해석. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
     `  ${c.abroadScore.summary}`,
     `  근거: ${c.abroadScore.signals.filter(s => s.matched).map(s => s.reason).join(' / ') || '시그널 없음 — 해외운 약'}`,
     `  §14 풀이 톤:`,

@@ -146,7 +146,8 @@ export interface FlowState {
 // v5.22: SUB_TIER_DATA generalDetail 약어 모두 풀어쓰기 — "서·성·한"·"중경외시"·"국숭세"·"건·동·홍"·"인하·아주" 등 → 학교명 풀어쓰기 ("서강대(서울)·성균관대(서울)·한양대(서울)"). LLM 본문에 약어 + "(서울)" 충돌로 "서울대"로 오해되는 케이스 fix. prompt §17 instruct 에 "약어 ✗, 학교명 풀어쓰기" + "'서' = 서강대 ≠ 서울대" 명시.
 // v5.23: 명리 근거 카드 친화 라벨 강제 — baseline 라벨 영문 식별자 (publicForceScore·medicalScore·researchScore·artsScore·abroadScore) 제거. 명리 근거 카드 카테고리 [본질·시기·기운·관계] 4종 외 ✗ instruct 강화 + 친화 표기 예시 6개 추가 (격국 lookup·학운 sub-tier·적성·주력 방향성·12운성·대운 발현 → 한글 친화 변환).
 // v5.24: HagunLabelV2 10단계 사용자 친화 라벨 (최상위 학업형 / 강한 학업형 / 상위권 학업형 / 중상위 학업형 / 일반 학업형 / 보강 학업형 / 실무 전환형 / 기술 특화형 / 조기 사회진입형 / 비제도권 성장형). HagunSignerBreakdown hero 점수 (X/100) 표시. signer '인성/관성 multiplier (×N)' → '인성/관성 N자리 누적' (displaySigner '×N' 버그 fix). prompt §17 baseline 에 V24 hero 라벨 본문 노출 ✗ instruct.
-export const PREMIUM_PROMPT_VERSION = 'v5.24-hagun-label-10tier';
+// v5.25: 정합성 audit fix — DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 매핑 명시 (prompt baseline §15·§17 cross-check 룰). 5 적성 점수 모듈 (arts·medical·abroad·publicForce·research) 헤더에 'raw cutoff vs normalizedLevel 이원 운영' 경고 주석 추가 (raw cutoff 변경 시 prompt 재검증 가드).
+export const PREMIUM_PROMPT_VERSION = 'v5.25-global-abroad-synonym';
 
 const initial: FlowState = {
   sessionId: null,

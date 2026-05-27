@@ -5,6 +5,16 @@
 //      가리킴. 외국 거주(싱가포르) 후 한국 대비 실제 좋아진 사례로 검증.
 //
 // 가중치 합산 ≥6 → "해외 강"으로 §10 국가·해외 운 풀이 baseline 사용.
+//
+// ⚠️ 명명 동의어 매핑 (V25):
+//   - 'global' (DirectionKey, direction-system.ts) ≡ 'abroad' (TrackTrigger, tier-schools.ts)
+//     ≡ 'abroadScore' (이 모듈) ≡ '해외운' — 모두 같은 영역
+//   - LLM prompt (interpret-premium-shared.ts:592+) 에서 cross-check 시 셋 다 같은 강도로 해석
+//
+// ⚠️ 두 level 시스템 운영 (V12·V25 정리):
+//   - level (raw cutoff: total ≤2·5·8) — LLM prompt 분기 (interpret-premium-shared.ts:596+)
+//   - normalizedLevel (통일 cutoff: 100/75/50) — UI DirectionCard 직관 비교
+//   raw cutoff 변경 시 prompt baseline 분기 재검증 필수.
 
 import { splitPillar } from './pillars';
 import type { HapchunhResult } from './hapchunh';

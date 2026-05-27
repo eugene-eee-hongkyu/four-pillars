@@ -6,6 +6,11 @@
 //      신체·추진력 시그너 (양인격·일주 건록·제왕·금토 강) 으로 사관·경찰 분기 명확화.
 //
 // 가중치 합산 ≥5 → "사관·경찰 강" 으로 §17 학교 권유에서 사관·경찰대 우선 명시.
+//
+// ⚠️ 두 level 시스템 운영 (V12·V25 정리):
+//   - level (raw cutoff: total ≤2·5·7) — LLM prompt 분기 (interpret-premium-shared.ts:565+)
+//   - normalizedLevel (통일 cutoff: 100/75/50) — UI DirectionCard 직관 비교
+//   raw cutoff 변경 시 prompt baseline 분기 재검증 필수.
 
 import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';
