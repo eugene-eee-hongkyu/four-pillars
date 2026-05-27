@@ -15,6 +15,7 @@ import { GenderToggle } from '@/components/ui/GenderToggle';
 import { GradeDropdown } from '@/components/ui/GradeDropdown';
 import { CalendarToggle } from '@/components/ui/CalendarToggle';
 import { DateTimeInput } from '@/components/ui/DateTimeInput';
+import { SolarPreview } from '@/components/ui/SolarPreview';
 import { LocationDropdown } from '@/components/ui/LocationDropdown';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
@@ -255,6 +256,7 @@ export default function FamilyInput() {
           </View>
           <CalendarToggle value={state.child.birthCalendar} onChange={(c) => patchChild({ birthCalendar: c })} />
           <DateTimeInput label="생년월일" value={childDate} onChange={setChildDate} type="date" />
+          <SolarPreview calendar={state.child.birthCalendar} dateStr={childDate} />
           <DateTimeInput
             label="출생 시간" value={childTime}
             onChange={setChildTime}
@@ -287,6 +289,7 @@ export default function FamilyInput() {
             </Text>
             <CalendarToggle value={state.mother.birthCalendar} onChange={(c) => patchMother({ birthCalendar: c })} />
             <DateTimeInput label="어머니 생년월일" value={motherDate} onChange={setMotherDate} type="date" />
+            <SolarPreview calendar={state.mother.birthCalendar} dateStr={motherDate} />
             <DateTimeInput
               label="어머니 출생 시간" value={motherTime}
               onChange={setMotherTime}
@@ -326,6 +329,7 @@ export default function FamilyInput() {
             </Text>
             <CalendarToggle value={state.father.birthCalendar} onChange={(c) => patchFather({ birthCalendar: c })} />
             <DateTimeInput label="아빠 생년월일" value={fatherDate} onChange={setFatherDate} type="date" />
+            <SolarPreview calendar={state.father.birthCalendar} dateStr={fatherDate} />
             <DateTimeInput
               label="아빠 출생 시간" value={fatherTime}
               onChange={setFatherTime}
