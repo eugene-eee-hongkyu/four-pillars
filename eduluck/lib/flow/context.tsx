@@ -146,7 +146,8 @@ export interface FlowState {
 // v5.8: evidence bullet 줄바꿈 룰 reminder + InterpretBody 파싱이 한 줄 multiple bullet ' - ' split 처리.
 // v5.9: §16-§17-§18 순서 재배치 (직업→전공→학교 → 전공→학교→직업). 진로 단계 자연 순서. 캐시 자동 invalidate (deepDiveTexts·part2Text 모두 재생성).
 // v5.10: artsScore × directions cross-check. artsScore '매우 강' 이라도 directions 'arts' 가 보통·약이면 본업 권유 ✗ (취미·부전공 톤). 정아 케이스 directions arts 보통인데 LLM 이 본업 예술 권유하던 모순 fix.
-export const PREMIUM_PROMPT_VERSION = 'v5.10-arts-cross-check';
+// v5.11: hagun-tier refactor v2 — score → 30 sub-tier 직접 매핑. 옛 8 grade·12 티어·3 confidence 제거 (~180 줄). subTier 단일 메인 데이터. prompt baseline 의 confidenceLabel/subTierLabel 노출 제거.
+export const PREMIUM_PROMPT_VERSION = 'v5.11-subtier-direct';
 
 const initial: FlowState = {
   sessionId: null,
