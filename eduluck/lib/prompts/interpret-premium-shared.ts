@@ -433,15 +433,35 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  2순위 진로: ${c.gyeokguk.careers.secondary.join(' · ')}`,
     `  이공계 대안: ${c.gyeokguk.careers.engineering.join(' · ')}`,
     ``,
-    `[예술·디자인 점수 — 백엔드 보정. §16 격국 lookup 보강]`,
-    `  ${c.artsScore.summary}`,
-    c.artsScore.level === '매우 강'
-      ? `  §16·§18 권유: **학운 sub-tier 안에서 예술·디자인 학과 우선**. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}. 톤: "이 아이는 예술·디자인 자리가 정말 강하게 보여요". 학교는 sub-tier 표 그대로 (예: 학운 5-1 + 예술 → 울산대 시각디자인·한림대 디자인 / 학운 1-2 + 예술 → 한예종·홍익 미대 상위). 학운 무시한 상위 예술대 권유 ✗.`
-      : c.artsScore.level === '강'
-        ? `  §16 권유: 격국 1순위와 함께 예술·디자인 학과도 명시. 학교는 학운 sub-tier 안에서. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}`
-        : c.artsScore.level === '보통'
-          ? `  §16 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능.`
-          : `  §16 권유: 격국 lookup만. 예술·디자인 언급 ✗.`,
+    `[예술·디자인 점수 — 백엔드 보정. §16 격국 lookup 보강. directions 의 'arts' 카테고리와 cross-check 필수]`,
+    `  artsScore: ${c.artsScore.summary}`,
+    (() => {
+      const artsDir = c.directions.find((d) => d.key === 'arts');
+      const dirLevel = artsDir?.level ?? '약';
+      const arts = c.artsScore.level;
+      // cross-check: artsScore 와 directions 'arts' level 동시 고려.
+      // directions 가 v8 calibration 거친 메인 신호. artsScore 는 보조 신호 (신살 기반).
+      // directions 'arts' 가 약·보통 이면 artsScore 매우 강이라도 본업 권유 ✗ (취미·부전공만).
+      if (arts === '매우 강' && (dirLevel === '강' || dirLevel === '매우 강')) {
+        return `  directions arts: ${dirLevel} → §16·§18 권유: **본업 예술·디자인 가능**. 학운 sub-tier 안에서 예술 학과 우선. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}. 학운 무시한 상위 예술대 권유 ✗.`;
+      }
+      if (arts === '매우 강' && dirLevel === '보통') {
+        return `  directions arts: 보통 → §16 권유: **본업 예술 ✗** (directions Top 메인 권유 우선). 예술 시그너 매우 강은 "감성·창의성 잘 활용한다·취미·부전공으로 빛난다" 톤으로 한 단락 언급 정도. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')} (부전공·복수전공 톤).`;
+      }
+      if (arts === '매우 강' && (dirLevel === '약' || dirLevel === '매우 약')) {
+        return `  directions arts: ${dirLevel} → §16 권유: directions Top 메인 권유. 예술 시그너는 "취미·여가로 좋다" 한 줄만. 본업 권유 ✗.`;
+      }
+      if (arts === '강' && (dirLevel === '강' || dirLevel === '매우 강')) {
+        return `  §16 권유: 격국 1순위와 함께 예술 학과도 명시. 학교는 학운 sub-tier 안에서. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}`;
+      }
+      if (arts === '강') {
+        return `  directions arts: ${dirLevel} → §16 권유: 격국 1순위 메인. 예술은 부전공·취미 톤으로만 언급.`;
+      }
+      if (arts === '보통') {
+        return `  §16 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능.`;
+      }
+      return `  §16 권유: 격국 lookup만. 예술·디자인 언급 ✗.`;
+    })(),
     ``,
     `[의·약·치·생명과학 점수 — 백엔드 보정. §16 자격직 보강]`,
     `  ${c.medicalScore.summary}`,

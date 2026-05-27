@@ -145,7 +145,8 @@ export interface FlowState {
 // v5.7: 별도 트랙 (예술·의약) 발현 조건을 학운 sub-tier 구간별로 분리. '격국보다 ○○ 우선' → '학운 sub-tier 안에서 ○○ 학과 우선'. 학운 5-1 + arts 매우 강에 한예종·홍익 미대 짚던 거짓 희망 fix.
 // v5.8: evidence bullet 줄바꿈 룰 reminder + InterpretBody 파싱이 한 줄 multiple bullet ' - ' split 처리.
 // v5.9: §16-§17-§18 순서 재배치 (직업→전공→학교 → 전공→학교→직업). 진로 단계 자연 순서. 캐시 자동 invalidate (deepDiveTexts·part2Text 모두 재생성).
-export const PREMIUM_PROMPT_VERSION = 'v5.9-career-after-school';
+// v5.10: artsScore × directions cross-check. artsScore '매우 강' 이라도 directions 'arts' 가 보통·약이면 본업 권유 ✗ (취미·부전공 톤). 정아 케이스 directions arts 보통인데 LLM 이 본업 예술 권유하던 모순 fix.
+export const PREMIUM_PROMPT_VERSION = 'v5.10-arts-cross-check';
 
 const initial: FlowState = {
   sessionId: null,
