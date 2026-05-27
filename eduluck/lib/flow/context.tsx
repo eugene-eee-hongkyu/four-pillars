@@ -135,7 +135,8 @@ export interface FlowState {
 // v5.11: hagun-tier refactor v2 — score → 30 sub-tier 직접 매핑. 옛 8 grade·12 티어·3 confidence 제거 (~180 줄). subTier 단일 메인 데이터. prompt baseline 의 confidenceLabel/subTierLabel 노출 제거.
 // v5.12: hagun-tier v13 영진(07) narrow trigger + 외부변수 안내 prompt 분기. combo_sanggwanArtsMediaConvergence +31 raw (영진만 매칭: 상관격 + 학자귀인0 + 청소년 학자대운0 + 화국삼합 + 도화·화개) → 영진 14.9 → 36.9 (7-3 약중 7티어), 다른 11 sample 변동 0. 비학자 격국 + isScholar=false sample LLM에 "외부변수 안내 모드" 자동 삽입 — §14/§17 정직+희망 톤 강제.
 // v5.13: §17 권유 자유도 ±1 sub-tier 미세 조정 제거. 거짓 희망 fix — sub-tier baseline 그대로 강제.
-export const PREMIUM_PROMPT_VERSION = 'v5.13-no-subtier-override';
+// v5.14: direction 11 카테고리 (physical 추가) + researchScore·publicForceScore 신규. 학자형 안에서 KAIST·POSTECH 분기, authority 안에서 사관·경찰 분기, 체육·신체 진로 카테고리화 (사관·체대·운동선수).
+export const PREMIUM_PROMPT_VERSION = 'v5.14-physical-research-publicforce';
 
 const initial: FlowState = {
   sessionId: null,

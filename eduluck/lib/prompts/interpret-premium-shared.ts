@@ -475,6 +475,22 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
           ? `  §16 권유: 격국 lookup 기본. 의·약 자격직 가능성 한 줄 언급.`
           : `  §16 권유: 격국 lookup만. 의·약 언급 ✗.`,
     ``,
+    `[연구·과기원 점수 — 백엔드 보정. directions scholar+engineer 안에서 KAIST·POSTECH 분기]`,
+    `  ${c.researchScore.summary}`,
+    c.researchScore.level === '매우 강' || c.researchScore.level === '강'
+      ? `  §17 권유: **학운 sub-tier 가 1-1 ~ 1-3 일 때 KAIST·POSTECH·UNIST·GIST·DGIST 우선 명시**. 학운 2-1 이하면 서울대 자연·공학 일반 또는 지방 거점 국립대 공학으로 분기. 추천: ${c.researchScore.recommendedFields.join(' / ')}.`
+      : c.researchScore.level === '보통'
+        ? `  §17 권유: 격국 lookup 기본. 연구·과기원 한 줄 언급 가능.`
+        : `  §17 권유: 연구·과기원 언급 ✗ (격국 lookup 만).`,
+    ``,
+    `[공무·사관·경찰 점수 — 백엔드 보정. directions authority 안에서 사관·경찰 분기]`,
+    `  ${c.publicForceScore.summary}`,
+    c.publicForceScore.level === '매우 강' || c.publicForceScore.level === '강'
+      ? `  §17 권유: **학운 sub-tier 2-1 ~ 3-1 일 때 사관학교·경찰대 우선 명시**. 학운 그 외이면 일반 공무원·경찰·소방·교정 행정직으로 분기. 추천: ${c.publicForceScore.recommendedFields.join(' / ')}. 사관·경찰은 신체·체력 적성 필수 (사주만으론 결정 ✗).`
+      : c.publicForceScore.level === '보통'
+        ? `  §17 권유: 격국 lookup 기본. 일반 공무원·법조 언급 가능, 사관·경찰은 추가 신체 적성 조건부.`
+        : `  §17 권유: 사관·경찰 본업 권유 ✗ (시그너 약함).`,
+    ``,
     `[현재 학운 시기 — 백엔드 결정성. §13 "흐름" baseline]`,
     `  ${luckPhase.oneLineSummary}`,
     ``,

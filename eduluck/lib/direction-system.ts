@@ -23,11 +23,13 @@ import { splitPillar, getStemSipsin } from './manse/pillars';
 
 export type DirectionKey =
   | 'scholar' | 'engineer' | 'medical' | 'business' | 'arts'
-  | 'education' | 'authority' | 'global' | 'practical' | 'entrepreneur';
+  | 'education' | 'authority' | 'global' | 'practical' | 'entrepreneur'
+  | 'physical';
 
 export const DIRECTION_KEYS: DirectionKey[] = [
   'scholar', 'engineer', 'medical', 'business', 'arts',
   'education', 'authority', 'global', 'practical', 'entrepreneur',
+  'physical',
 ];
 
 /** 카테고리별 한글명 + RIASEC 매핑 */
@@ -42,13 +44,14 @@ export const DIRECTION_LABELS: Record<DirectionKey, { label: string; riasec: str
   global:       { label: '글로벌·유학외국형',  riasec: ['meta'] },
   practical:    { label: '실무·현장기술형',    riasec: ['R'] },
   entrepreneur: { label: '비대학·창업자립형',  riasec: ['E', 'R'] },
+  physical:     { label: '체육·신체활동형',    riasec: ['R'] },
 };
 
 /** V1 calibration에서 검증된 카테고리 (sample N≥1) */
 export const CALIBRATED_CATEGORIES: DirectionKey[] = ['engineer', 'medical', 'business', 'arts', 'entrepreneur'];
 
 /** V1 calibration에서 미검증 카테고리 (명리 통설 기반 weight) */
-export const UNCALIBRATED_CATEGORIES: DirectionKey[] = ['scholar', 'education', 'authority', 'global', 'practical'];
+export const UNCALIBRATED_CATEGORIES: DirectionKey[] = ['scholar', 'education', 'authority', 'global', 'practical', 'physical'];
 
 // ============================================================================
 // V10 fit detector — 명식 ≠ 직업 sample 보정
@@ -436,6 +439,21 @@ export const V12_LOOP_1200_WEIGHTS: DirectionWeights = {
     combo_yanginGuiTripleStrategy: 40, // 윤수 fit
     combo_pyeoninGwaninStrategy:   30, // 상수 fit
   },
+  // V14 신규 (2026-05-27): 체육·신체활동형 (사관·경찰 신체 적성·체대·운동선수).
+  // 명리 시그너: 신왕(일주 건록·제왕·양인격) + 금토(현실·신체 오행) + 역마(이동·활동) +
+  //   식상 강(에너지 발산) + 편관 강(추진·결단). 인성·문창귀인은 weight ✗ (학자형 분기 ✗).
+  physical: {
+    g_jeongin: 0, g_pyeonin: 0, g_jeonggwan: 5, g_pyeongwan: 25, g_siksin: 10,
+    g_sanggwan: 10, g_jeongjae: 5, g_pyeonjae: 5, g_bigyeon: 20, g_yangin: 30,
+    cnt_insung: 0, cnt_gwansung: 3, cnt_siksang: 3, cnt_jaesung: 0, cnt_bigeop: 4,
+    s_gwaninsangsaeng: 0, s_siksangSengJae: 5, s_jaeSengGwan: 5, s_sanggwanPaeIn: 0, s_pyeongwanJehwa: 10,
+    m_stableType: 5, m_riskType: 15, m_mixedType: 5,
+    e_woodStrong: 0, e_fireStrong: 5, e_earthStrong: 15, e_metalStrong: 20, e_waterStrong: 0,
+    e_woodMissing: 0, e_fireMissing: 0, e_earthMissing: -5, e_metalMissing: -10, e_waterMissing: 0,
+    sh_hwagae: 0, sh_dohwa: 0, sh_yeokma: 20, sh_hyeonchim: 5, sh_yanginsal: 25, sh_cheonyi: 0, sh_hongyeom: 0,
+    u_dayGeonrok: 20, u_dayJewang: 25, u_dayMyo: 0, u_dayJeol: 0,
+    gw_hakdang: 0, gw_munchang: 0, gw_cheoneul: 0, gw_gwangwiHakgwan: 5, h_chungYearMonth: 5, h_dayChung: 5,
+  },
 };
 
 // ============================================================================
@@ -480,6 +498,7 @@ export const DIRECTION_UI_LABELS: Record<DirectionKey, { label: string; emoji: s
   global:       { label: '글로벌·유학외국', emoji: '🌏' },
   practical:    { label: '실무·현장기술', emoji: '🔧' },
   entrepreneur: { label: '비대학·창업자립', emoji: '🚀' },
+  physical:     { label: '체육·신체활동', emoji: '🏃' },
 };
 
 const DEFAULT_RECOMMENDED_FIELDS: Record<DirectionKey, string[]> = {
@@ -493,6 +512,7 @@ const DEFAULT_RECOMMENDED_FIELDS: Record<DirectionKey, string[]> = {
   global:       ['해외대·국제학', '외국어·통상·외교', '환경: 이동·다양성·외부 도전'],
   practical:    ['전문대·폴리텍', '기술자격·현장직', '환경: 손기술·실용성·즉시 결과'],
   entrepreneur: ['창업·자영업', '가업·조기 취업', '환경: 자기 페이스·위험 감수'],
+  physical:     ['체육·운동선수', '사관·경찰 신체', '환경: 신체 단련·도전·팀'],
 };
 
 /** raw 점수 → 강도 level. cutoff: 매우 강 ≥100, 강 ≥75, 보통 ≥50, 약 <50 */

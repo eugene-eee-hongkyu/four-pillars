@@ -12,6 +12,8 @@ import { calcNapum, type NapumResult } from './napum';
 import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
+import { calcResearchScore, type ResearchScoreResult } from './research-score';
+import { calcPublicForceScore, type PublicForceScoreResult } from './publicforce-score';
 import { computeDirections, buildDirectionEntries, type DirectionEntry } from '../direction-system';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
@@ -55,7 +57,11 @@ export interface ManseResult {
   artsScore: ArtsScoreResult;
   /** 의·약·치·생명과학 점수 — §12 전공 풀이에서 격국 lookup 보정 (의약 자격직) */
   medicalScore: MedicalScoreResult;
-  /** 10 카테고리 진로 방향성 entry (V12 calibration). UI/LLM prompt 메인. */
+  /** 연구·과기원 점수 — directions scholar+engineer 안에서 KAIST·POSTECH 분기 (V14 신규) */
+  researchScore: ResearchScoreResult;
+  /** 공무·사관·경찰 점수 — directions authority 안에서 사관·경찰 분기 (V14 신규) */
+  publicForceScore: PublicForceScoreResult;
+  /** 11 카테고리 진로 방향성 entry (V14: physical 추가). UI/LLM prompt 메인. */
   directions: DirectionEntry[];
   /** 학운 4가지 학습 특성 점수 + percentile — §0 직후 UI 카드용 (방향성과 분리, 공통 보조) */
   studentTraits: StudentTraitsWithPercentile;
@@ -161,9 +167,12 @@ export function computeManse(input: ManseInput): ManseResult {
     sipsin,
     gyeokguk,
   });
-  // V12 Direction System (10 카테고리) — UI directions 생성.
-  // arts·medical 만 별도 모듈의 동적 recommendedFields 사용. 그 외 8 카테고리는 direction-system.ts
-  // DEFAULT_RECOMMENDED_FIELDS 정적 fallback (categoryScores 모듈 2026-05-27 폐지).
+  // V14 신규: 학자형 안에서 KAIST·POSTECH 분기 + authority 안에서 사관·경찰 분기.
+  const researchScore = calcResearchScore({ shensha, sipsin, gyeokguk, unsung });
+  const publicForceScore = calcPublicForceScore({ shensha, sipsin, gyeokguk, unsung, elementCounts });
+  // V14 Direction System (11 카테고리, physical 추가) — UI directions 생성.
+  // arts·medical 만 별도 모듈의 동적 recommendedFields 사용. 그 외 9 카테고리는 direction-system.ts
+  // DEFAULT_RECOMMENDED_FIELDS 정적 fallback.
   const directionScores = computeDirections({
     yearPillar: raw.yearPillar, monthPillar: raw.monthPillar, dayPillar: raw.dayPillar, hourPillar,
     shensha, sipsin, gyeokguk, unsung, elementCounts,
@@ -206,6 +215,8 @@ export function computeManse(input: ManseInput): ManseResult {
     abroadScore,
     artsScore,
     medicalScore,
+    researchScore,
+    publicForceScore,
     directions,
     studentTraits,
   };
