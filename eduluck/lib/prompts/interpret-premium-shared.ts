@@ -5,7 +5,7 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { calculateFinalTier, calcCurrentLuckPhase } from './hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase } from './hagun-tier';
 import { calcCriticalYear } from '../manse/critical-year';
 
 export interface InterpretPremiumContext {
@@ -375,7 +375,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
   const cDaeunStr = cDaeun ? `${cDaeun.age}세 ${cDaeun.stem}${cDaeun.branch}(${cDaeun.stemSipsin}·${cDaeun.branchSipsin})` : '—';
   const cSewunStr = cSewun ? `${cSewun.year}년 ${cSewun.stem}${cSewun.branch}(${cSewun.stemSipsin})` : '—';
 
-  const tierResult = calculateFinalTier({
+  const tierResult = calculateFinalTierV2({
     childManse: c,
     motherManse: m,
     fatherManse: ctx.fatherManse,
@@ -418,9 +418,9 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ]
       : []),
     `[학운 sub-tier — 백엔드 계산. §17 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
-    `  v2 sub-tier: ${tierResult.subTier} (${tierResult.subTierLabel}) ← SHARED_UNIVERSITY_TIER_GUIDE 표의 이 행에서 학교명 추출`,
-    `  Confidence: ${tierResult.confidence} (내부 라벨 — 본문에 '${tierResult.confidenceLabel}' 같은 표현 ✗)`,
-    `  본문 표기: 학교명 + '안정·가능·도전' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
+    `  v2 sub-tier: ${tierResult.subTier} (subStep ${tierResult.subStep} / 학운 ${tierResult.hagunLabel})`,
+    `  → SHARED_UNIVERSITY_TIER_GUIDE 표의 sub-tier ${tierResult.subTier} 행에서 학교명 추출`,
+    `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
     `[진로 방향성 10가지 — 백엔드 결정성. §16 "전공 볼게요" 1차 baseline. 강도순 정렬, Top 2~3 메인, 그 다음 보통 등급 보조. 약은 본문 언급 ✗]`,
     ...c.directions.map((d) =>
@@ -448,8 +448,8 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
       if (arts === '매우 강' && dirLevel === '보통') {
         return `  directions arts: 보통 → §16 권유: **본업 예술 ✗** (directions Top 메인 권유 우선). 예술 시그너 매우 강은 "감성·창의성 잘 활용한다·취미·부전공으로 빛난다" 톤으로 한 단락 언급 정도. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')} (부전공·복수전공 톤).`;
       }
-      if (arts === '매우 강' && (dirLevel === '약' || dirLevel === '매우 약')) {
-        return `  directions arts: ${dirLevel} → §16 권유: directions Top 메인 권유. 예술 시그너는 "취미·여가로 좋다" 한 줄만. 본업 권유 ✗.`;
+      if (arts === '매우 강' && dirLevel === '약') {
+        return `  directions arts: 약 → §16 권유: directions Top 메인 권유. 예술 시그너는 "취미·여가로 좋다" 한 줄만. 본업 권유 ✗.`;
       }
       if (arts === '강' && (dirLevel === '강' || dirLevel === '매우 강')) {
         return `  §16 권유: 격국 1순위와 함께 예술 학과도 명시. 학교는 학운 sub-tier 안에서. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}`;

@@ -3,15 +3,16 @@
 // 사용처: HagunSignerBreakdown hero 의 3구간 chip 표시.
 // 데이터 출처: docs/scoring/TIER_SYSTEM_v2.md §3 30 sub-tier 표 (일반 대학군 컬럼).
 //
-// 매핑 규칙 (calcConfidence label 과 정합):
-//   - certain ("○티어 안정 영역") : 안정 = subTier (사용자 정확한 위치) / 가능 = (primary-1)-3
-//   - likely  ("○티어 가능 + (○+1)티어 안정") : 안정 = safetyTier-1 / 가능 = primaryTier-3
-//   - reach   ("○티어 도전 + (○+1)티어 안정") : 안정 = subTier (보통 safetyTier-1) / 도전 = primaryTier-3
+// v2 refactor (2026-05-27): subTier 만 받아 chip 산출. confidence·primaryTier·safetyTier
+// 인자 제거. parentAdjust 는 이미 score 가산되어 subTier 에 반영됨 (calculateFinalTierV2).
 //
-// 핵심 원칙: 거짓 희망 금지. reach 케이스도 chip 학교는 v2 표 정확한 행에서 추출.
+// 매핑 규칙:
+//   - 안정 = subTier 자체 (사용자 정확한 위치)
+//   - 가능 = (primaryTier - 1)-3 (한 칸 위 가장 약한 sub-step, 도전 가능 영역)
+//   - 도전 chip 미표시 (거짓 희망 방지)
 
 export type TierGroup = {
-  label: '안정' | '가능' | '도전';
+  label: '안정' | '가능';
   schools: string[];
 };
 
@@ -54,57 +55,26 @@ function schoolsAt(subTier: string): string[] {
   return SUB_TIER_SCHOOLS[subTier] ?? [];
 }
 
-/** primary·safety·confidence·subTier 로부터 안정·가능·도전 chip 산출.
- *  각 그룹 학교 최대 5개. */
-export function getTierSchoolGroups(
-  primaryTier: number,
-  safetyTier: number,
-  confidence: 'certain' | 'likely' | 'reach',
-  subTier: string,
-): TierGroup[] {
-  // primaryTier 11(전문대)·12(비대학) — sub-tier 라벨로 대체
-  if (primaryTier === 11) {
-    return [
-      { label: '안정', schools: schoolsAt('8-1') },
-      { label: '가능', schools: schoolsAt('7-1') },
-    ];
-  }
-  if (primaryTier >= 12) {
-    return [
-      { label: '안정', schools: schoolsAt('9-3') },
-      { label: '가능', schools: schoolsAt('8-3') },
-    ];
-  }
+function parseSubTier(subTier: string): { primaryTier: number; subStep: number } {
+  const [t, s] = subTier.split('-').map(Number);
+  return { primaryTier: t, subStep: s };
+}
 
+/** v2 sub-tier 만으로 안정·가능 chip 산출. 도전 chip 미표시 (거짓 희망 방지). */
+export function getTierSchoolGroups(subTier: string): TierGroup[] {
+  const { primaryTier } = parseSubTier(subTier);
   const groups: TierGroup[] = [];
-  // 한 그룹당 최대 5개로 캡
   const cap = (arr: string[]) => arr.slice(0, 5);
 
-  if (confidence === 'certain') {
-    // 안정 = subTier (사용자 정확한 위치)
-    // 가능 = primaryTier-1 의 가장 약한 sub-step (한 칸 위, 도전 가능 영역)
-    const stable = schoolsAt(subTier);
-    const possibleSub = primaryTier - 1 >= 1 ? `${primaryTier - 1}-3` : null;
-    const possible = possibleSub ? schoolsAt(possibleSub) : [];
-    if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
+  // 안정 = subTier 자체 (사용자 정확한 위치)
+  const stable = schoolsAt(subTier);
+  if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
+
+  // 가능 = (primaryTier - 1)-3 (한 칸 위 가장 약한 sub-step)
+  if (primaryTier >= 2) {
+    const possibleSub = `${primaryTier - 1}-3`;
+    const possible = schoolsAt(possibleSub);
     if (possible.length > 0) groups.push({ label: '가능', schools: cap(possible) });
-  } else if (confidence === 'likely') {
-    // 안정 = safetyTier 의 가장 강한 sub-step (= safety 위치 정확)
-    // 가능 = primaryTier 의 가장 약한 sub-step (= 도전 가능 영역)
-    const stable = schoolsAt(`${Math.min(10, safetyTier)}-1`);
-    const possible = schoolsAt(`${primaryTier}-3`);
-    if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
-    if (possible.length > 0 && primaryTier !== safetyTier) {
-      groups.push({ label: '가능', schools: cap(possible) });
-    }
-  } else {
-    // reach — 안정 = subTier 자체 (보통 safetyTier-1) / 도전 = primaryTier 의 가장 약한 sub-step
-    const stable = schoolsAt(subTier);
-    const reach = schoolsAt(`${primaryTier}-3`);
-    if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
-    if (reach.length > 0 && primaryTier !== safetyTier) {
-      groups.push({ label: '도전', schools: cap(reach) });
-    }
   }
 
   return groups;

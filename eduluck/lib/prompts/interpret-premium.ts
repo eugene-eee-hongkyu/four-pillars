@@ -4,7 +4,7 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { calculateFinalTier, calcCurrentLuckPhase } from './hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase } from './hagun-tier';
 import { calcCriticalYear } from '../manse/critical-year';
 
 export function getInterpretPremiumSystem(): string {
@@ -442,7 +442,7 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
   const cSewunStr = cSewun ? `${cSewun.year}년 ${cSewun.stem}${cSewun.branch}(${cSewun.stemSipsin})` : '—';
 
   // 학운 단계 + 추천 티어 결정성 계산 — LLM에 명시 주입해 호출마다 흔들림 차단
-  const tierResult = calculateFinalTier({
+  const tierResult = calculateFinalTierV2({
     childManse: c,
     motherManse: m,
     fatherManse: ctx.fatherManse,
@@ -486,8 +486,8 @@ export function buildInterpretPremiumPrompt(ctx: InterpretPremiumContext): strin
         ]
       : []),
     `[학운 단계·추천 티어 — 백엔드 계산 결과. §13 권유의 baseline. 이 섹션 내용(점수·조정 내역 등)은 본문에 절대 노출 금지 — 결과(최종 티어 범위·confidence)만 사용]`,
-    `  최종 추천 티어 범위: ${tierResult.finalTierRange[0] === tierResult.finalTierRange[1] ? `${tierResult.finalTierRange[0]}티어` : `${tierResult.finalTierRange[0]}~${tierResult.finalTierRange[1]}티어`}`,
-    `  Confidence 표현 (§13에서 이 표현으로 권유): "${tierResult.confidenceLabel}"`,
+    `  v2 sub-tier: ${tierResult.subTier} (subStep ${tierResult.subStep} / 학운 ${tierResult.hagunLabel})`,
+    `  본문 표기 (§13): 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
     `[진로 방향성 10가지 — 백엔드 결정성 (학자·인문연구 / 과학·공학기술 / 의약·생명정밀 / 경영·사업상경 / 예술·표현창작 / 교육·상담돌봄 / 공무·법·조직 / 글로벌·유학외국 / 실무·현장기술 / 비대학·창업자립). §12 "전공 볼게요" 1차 baseline. 강도 순으로 정렬되어 있으니 위에서부터 Top 2-3을 메인 권유, 그 다음 보통 등급을 보조 권유로 사용. 약은 본문 언급 ✗]`,
     ...c.directions.map((d) =>
