@@ -14,6 +14,7 @@ import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
 import { calcResearchScore, type ResearchScoreResult } from './research-score';
 import { calcPublicForceScore, type PublicForceScoreResult } from './publicforce-score';
+import { calcDaewoonLabel, type DaewoonLabelResult } from './daewoon-label';
 import { computeDirections, buildDirectionEntries, type DirectionEntry } from '../direction-system';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
@@ -61,6 +62,8 @@ export interface ManseResult {
   researchScore: ResearchScoreResult;
   /** 공무·사관·경찰 점수 — directions authority 안에서 사관·경찰 분기 (V14 신규) */
   publicForceScore: PublicForceScoreResult;
+  /** 대운 발현 시기 라벨 — 청소년기·청년기 대운 매핑 (V15 신규). 점수 변경 ✗ 별도 레이어. */
+  daewoonLabel: DaewoonLabelResult;
   /** 11 카테고리 진로 방향성 entry (V14: physical 추가). UI/LLM prompt 메인. */
   directions: DirectionEntry[];
   /** 학운 4가지 학습 특성 점수 + percentile — §0 직후 UI 카드용 (방향성과 분리, 공통 보조) */
@@ -170,6 +173,8 @@ export function computeManse(input: ManseInput): ManseResult {
   // V14 신규: 학자형 안에서 KAIST·POSTECH 분기 + authority 안에서 사관·경찰 분기.
   const researchScore = calcResearchScore({ shensha, sipsin, gyeokguk, unsung });
   const publicForceScore = calcPublicForceScore({ shensha, sipsin, gyeokguk, unsung, elementCounts });
+  // V15 신규: 청소년기·청년기 대운 발현 시기 라벨 (점수 변경 ✗ 별도 레이어).
+  const daewoonLabel = calcDaewoonLabel(luckCycles);
   // V14 Direction System (11 카테고리, physical 추가) — UI directions 생성.
   // arts·medical 만 별도 모듈의 동적 recommendedFields 사용. 그 외 9 카테고리는 direction-system.ts
   // DEFAULT_RECOMMENDED_FIELDS 정적 fallback.
@@ -217,6 +222,7 @@ export function computeManse(input: ManseInput): ManseResult {
     medicalScore,
     researchScore,
     publicForceScore,
+    daewoonLabel,
     directions,
     studentTraits,
   };

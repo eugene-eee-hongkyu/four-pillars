@@ -20,6 +20,7 @@ import { calcArtsScore } from './arts-score';
 import { calcMedicalScore } from './medical-score';
 import { calcResearchScore } from './research-score';
 import { calcPublicForceScore } from './publicforce-score';
+import { calcDaewoonLabel } from './daewoon-label';
 import { computeDirections, buildDirectionEntries } from '../direction-system';
 import { calcStudentTraitsWithPercentile } from './student-traits';
 import { splitPillar, countElements, BRANCH_ELEMENT, STEM_ELEMENT } from './pillars';
@@ -104,6 +105,7 @@ export function hydrateManse(m: ManseResult): ManseResult {
   });
   const researchScore = m.researchScore ?? calcResearchScore({ shensha, sipsin, gyeokguk, unsung });
   const publicForceScore = m.publicForceScore ?? calcPublicForceScore({ shensha, sipsin, gyeokguk, unsung, elementCounts });
+  const daewoonLabel = m.daewoonLabel ?? calcDaewoonLabel(luckCycles);
   const directions = m.directions ?? (() => {
     const directionScores = computeDirections({
       yearPillar: m.yearPillar, monthPillar: m.monthPillar, dayPillar: m.dayPillar, hourPillar: m.hourPillar,
@@ -124,7 +126,7 @@ export function hydrateManse(m: ManseResult): ManseResult {
     shensha, hapchunh, jijanggan,
     elementCounts, luckCycles,
     abroadScore, artsScore, medicalScore,
-    researchScore, publicForceScore,
+    researchScore, publicForceScore, daewoonLabel,
     directions,
     studentTraits,
   };

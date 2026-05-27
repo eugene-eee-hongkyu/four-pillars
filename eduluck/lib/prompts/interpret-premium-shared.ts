@@ -260,7 +260,32 @@ export const SHARED_TONE_GUIDE = `## 페르소나·톤·어미 — 매우 중요
 - 시(時)주 없는 경우 시주 관련 추측 ✗
 - 결제 유도
 - **학원 브랜드명 직접 명시 절대 금지** (CMS·시매쓰·와이즈만·청담·이그잼 등). 학원은 "계열·접근 방식·선생님 스타일"로만 묘사.
-- **거짓 희망 금지**: 학운 약한 사주에 SKY·상위권 짚지 말 것. 사주 강약에 솔직.`;
+- **거짓 희망 금지**: 학운 약한 사주에 SKY·상위권 짚지 말 것. 사주 강약에 솔직.
+
+## V15 명명 통일 (필수)
+
+- **"주력 방향성"** (11개 directions) — 사회적 본업·전공의 큰 흐름. 본문에 사용 시 "주력 방향성" 또는 "사주가 가리키는 본업 흐름". **본문에 "본업 방향성"·"진로 방향성" 등 옛 명명 ✗**.
+- **"적성 점수"** (5개: arts·medical·abroad·publicForce·research) — 개인 재능·기질의 세부 신호. 본문에 사용 시 "타고난 적성"·"개인 적성"·"세부 재능" 톤. **본문에 raw 점수 (예: "artsScore 100") 노출 ✗**.
+- 두 차원이 일치 = 본업화 가능. 엇갈리면 적성은 부전공·취미·보조로 발현.
+
+## 가치(자율선택) 메모 — §3·§11·§14·§16·§17·§18 끝마다 한 문장 강제
+
+본문 권유·진단 끝에 다음 톤 메모 한 줄 자연스럽게 삽입:
+- ❌ "이대로 갈 것이다" (단정)
+- ✅ "본인의 의지·노력·환경·선택에 따라 다르게 발현될 수 있어요"
+- ✅ "점수가 낮은 영역도 의식적 훈련으로 충분히 발달 가능해요" (적성 약 영역)
+
+거짓 희망 차단 (현재 cross-check) + 거짓 절망 차단 (가치 메모) 양쪽 갖춤.
+
+## 대운 발현 시기 라벨 활용
+
+user message [대운 발현 시기 라벨] 의 4 타입 (조숙형·정석형·전환형·대기만성형) 을 §11·§14·§18 흐름 풀이에 활용:
+- 조숙형: "입시기 성과가 빨리 나는 흐름 — 청소년기 학자 운"
+- 정석형: "전공과 직업이 자연 연결되는 흐름"
+- 전환형: "전공과 실제 직업이 달라질 수 있는 흐름 — 청년기 운 변화"
+- 대기만성형: "초기보다 사회 진입 후 강해지는 흐름 — 청년기 학자 운"
+
+⚠️ 점수 자체 변경 ✗ — "주력·적성 점수는 X, 청년기에 Y 시기로 발현된다" 식 시간 흐름 설명에만.`;
 
 /** Part 1·Part 2 system prompt가 공유하는 대학 티어 정의 + 권유 톤 가이드.
  *  v2 (2026-05-26): 30 sub-tier 시스템 (10티어 × 3 단계, 사회 분포 매핑).
@@ -424,10 +449,15 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ``,
       ];
     })(),
-    `[진로 방향성 10가지 — 백엔드 결정성. §16 "전공 볼게요" 1차 baseline. 강도순 정렬, Top 2~3 메인, 그 다음 보통 등급 보조. 약은 본문 언급 ✗]`,
+    `[주력 방향성 11가지 — 백엔드 결정성. 사회적 본업·전공의 큰 흐름. §3·§16·§17·§18 1차 baseline. 강도순 정렬, Top 2~3 메인, 그 다음 보통 등급 보조. 약은 본문 언급 ✗]`,
+    `  ⚠️ 명명: 본문에 "주력 방향성" 사용 (이전 "방향성"·"진로 방향성"·"본업 방향성" 모두 → "주력 방향성"으로 통일)`,
     ...c.directions.map((d) =>
       `  ${d.emoji} ${d.label} — ${d.level}${d.recommendedFields.length > 0 ? ` (${d.recommendedFields.slice(0, 3).join(' · ')})` : ''}`,
     ),
+    ``,
+    `[대운 발현 시기 라벨 — V15 신규. 점수 보정 ✗, 발현 타이밍 안내 레이어. §11·§14·§18 활용]`,
+    `  ${c.daewoonLabel.summary}`,
+    `  ⚠️ 점수 자체 변경 ✗. "주력·적성 점수 X 이지만 청년기에 Y 시기로 발현된다" 식 시간 흐름 설명에만 활용.`,
     ``,
     `[격국 진로 매핑 — 백엔드 결정성 lookup. §16 2차 baseline. 1순위·2순위·이공계 대안 활용]`,
     `  격국: ${c.gyeokguk.name}`,
@@ -435,37 +465,37 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  2순위 진로: ${c.gyeokguk.careers.secondary.join(' · ')}`,
     `  이공계 대안: ${c.gyeokguk.careers.engineering.join(' · ')}`,
     ``,
-    `[예술·디자인 점수 — 백엔드 보정. §16 격국 lookup 보강. directions 의 'arts' 카테고리와 cross-check 필수]`,
-    `  artsScore: ${c.artsScore.summary}`,
+    `[적성 점수 — 예술·디자인 (artsScore). 주력 방향성 arts 카테고리와 cross-check 필수. 적성 ≠ 주력 = 부전공·취미 톤]`,
+    `  ${c.artsScore.summary}`,
     (() => {
       const artsDir = c.directions.find((d) => d.key === 'arts');
       const dirLevel = artsDir?.level ?? '약';
       const arts = c.artsScore.level;
-      // cross-check: artsScore 와 directions 'arts' level 동시 고려.
-      // directions 가 v8 calibration 거친 메인 신호. artsScore 는 보조 신호 (신살 기반).
-      // directions 'arts' 가 약·보통 이면 artsScore 매우 강이라도 본업 권유 ✗ (취미·부전공만).
+      // cross-check: 주력 방향성 arts level + 적성 점수 artsScore level 동시 고려.
+      // 주력 = 격국·십성 통합 (본업 결정). 적성 = 신살 기반 세부 재능.
+      // 주력 'arts' 가 약·보통 이면 적성 매우 강이라도 본업 권유 ✗ (취미·부전공만).
       if (arts === '매우 강' && (dirLevel === '강' || dirLevel === '매우 강')) {
-        return `  directions arts: ${dirLevel} → §16·§18 권유: **본업 예술·디자인 가능**. 학운 sub-tier 안에서 예술 학과 우선. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}. 학운 무시한 상위 예술대 권유 ✗.`;
+        return `  주력 arts: ${dirLevel} → §16·§18 권유: **본업 예술·디자인 가능**. 학운 sub-tier 안에서 예술 학과 우선. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}. 학운 무시한 상위 예술대 권유 ✗.`;
       }
       if (arts === '매우 강' && dirLevel === '보통') {
-        return `  directions arts: 보통 → §16 권유: **본업 예술 ✗** (directions Top 메인 권유 우선). 예술 시그너 매우 강은 "감성·창의성 잘 활용한다·취미·부전공으로 빛난다" 톤으로 한 단락 언급 정도. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')} (부전공·복수전공 톤).`;
+        return `  주력 arts: 보통 → §16 권유: **본업 예술 ✗** (주력 Top 메인 권유 우선). 적성 예술 매우 강은 "감성·창의성 잘 활용한다·취미·부전공으로 빛난다" 톤으로 한 단락 언급. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')} (부전공·복수전공 톤).`;
       }
       if (arts === '매우 강' && dirLevel === '약') {
-        return `  directions arts: 약 → §16 권유: directions Top 메인 권유. 예술 시그너는 "취미·여가로 좋다" 한 줄만. 본업 권유 ✗.`;
+        return `  주력 arts: 약 → §16 권유: 주력 Top 메인 권유. 적성 예술은 "취미·여가로 좋다" 한 줄만. 본업 권유 ✗.`;
       }
       if (arts === '강' && (dirLevel === '강' || dirLevel === '매우 강')) {
         return `  §16 권유: 격국 1순위와 함께 예술 학과도 명시. 학교는 학운 sub-tier 안에서. 추천 학과: ${c.artsScore.recommendedFields.join(' / ')}`;
       }
       if (arts === '강') {
-        return `  directions arts: ${dirLevel} → §16 권유: 격국 1순위 메인. 예술은 부전공·취미 톤으로만 언급.`;
+        return `  주력 arts: ${dirLevel} → §16 권유: 격국 1순위 메인. 적성 예술은 부전공·취미 톤으로만 언급.`;
       }
       if (arts === '보통') {
-        return `  §16 권유: 격국 lookup 기본. 취미·부전공 정도로 예술 언급 가능.`;
+        return `  §16 권유: 격국 lookup 기본. 취미·부전공 정도로 적성 예술 언급 가능.`;
       }
-      return `  §16 권유: 격국 lookup만. 예술·디자인 언급 ✗.`;
+      return `  §16 권유: 격국 lookup만. 적성 예술 언급 ✗.`;
     })(),
     ``,
-    `[의·약·치·생명과학 점수 — 백엔드 보정. §16 자격직 보강]`,
+    `[적성 점수 — 의·약·치·생명과학 (medicalScore). 주력 방향성 medical 카테고리와 cross-check 필수]`,
     `  ${c.medicalScore.summary}`,
     c.medicalScore.level === '매우 강'
       ? `  §16·§18 권유: **학운 sub-tier 가 1-1 ~ 2-2 일 때만 의예·치의예·한의예·약대 직접 권유 가능**. 학운 2-3 이하면 의·약 본과 진학 어렵고, 생명과학·간호·물리치료·임상병리·보건 인접 학과로 분기. 추천: ${c.medicalScore.recommendedFields.join(' / ')}. 학운 무시한 의대 권유 ✗.`
@@ -475,7 +505,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
           ? `  §16 권유: 격국 lookup 기본. 의·약 자격직 가능성 한 줄 언급.`
           : `  §16 권유: 격국 lookup만. 의·약 언급 ✗.`,
     ``,
-    `[연구·과기원 점수 — 백엔드 보정. directions scholar+engineer 안에서 KAIST·POSTECH 분기]`,
+    `[적성 점수 — 연구·과기원 (researchScore). 주력 방향성 scholar+engineer 안에서 KAIST·POSTECH 분기]`,
     `  ${c.researchScore.summary}`,
     c.researchScore.level === '매우 강' || c.researchScore.level === '강'
       ? `  §17 권유: **학운 sub-tier 가 1-1 ~ 1-3 일 때 KAIST·POSTECH·UNIST·GIST·DGIST 우선 명시**. 학운 2-1 이하면 서울대 자연·공학 일반 또는 지방 거점 국립대 공학으로 분기. 추천: ${c.researchScore.recommendedFields.join(' / ')}.`
@@ -483,7 +513,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ? `  §17 권유: 격국 lookup 기본. 연구·과기원 한 줄 언급 가능.`
         : `  §17 권유: 연구·과기원 언급 ✗ (격국 lookup 만).`,
     ``,
-    `[공무·사관·경찰 점수 — 백엔드 보정. directions authority 안에서 사관·경찰 분기]`,
+    `[적성 점수 — 공무·사관·경찰 (publicForceScore). 주력 방향성 authority 안에서 사관·경찰 분기]`,
     `  ${c.publicForceScore.summary}`,
     c.publicForceScore.level === '매우 강' || c.publicForceScore.level === '강'
       ? `  §17 권유: **학운 sub-tier 2-1 ~ 3-1 일 때 사관학교·경찰대 우선 명시**. 학운 그 외이면 일반 공무원·경찰·소방·교정 행정직으로 분기. 추천: ${c.publicForceScore.recommendedFields.join(' / ')}. 사관·경찰은 신체·체력 적성 필수 (사주만으론 결정 ✗).`
@@ -512,7 +542,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         ``,
       ];
     })(),
-    `[해외운 점수 — 백엔드 다층 시그널. §14 baseline. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
+    `[적성 점수 — 해외운 (abroadScore). 주력 방향성 global 카테고리와 cross-check. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
     `  ${c.abroadScore.summary}`,
     `  근거: ${c.abroadScore.signals.filter(s => s.matched).map(s => s.reason).join(' / ') || '시그널 없음 — 해외운 약'}`,
     `  §14 풀이 톤:`,
