@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-27 15:59
-## 마지막 업데이트: 2026-05-27 15:59
+## 마지막 실행: 2026-05-27 16:25
+## 마지막 업데이트: 2026-05-27 16:25
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- hagun-tier v2 리팩토링 Phase A-E 완료 (legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·Part2 prompt 정리). 5개 순차 commit 대기.
+- V13 영진(07) narrow trigger + Phase A-E 일괄 정리 + e2e 검증 완료. raw signer ID hero chip fix (`6181a6f`) 배포 대기. PROMPT_VERSION v5.13-no-subtier-override.
 
 ### 이어서 할 것
 
-1. Final QA — 영진 패턴 재확인 + 타 사주 2-3건 random test
-2. 5개 commit 푸시 및 Vercel 배포
-3. Mom test 5~10명 진행 (v5.11 prompt + v2 hero chip 정성 검증)
+1. `6181a6f` 배포 후 영진 prod 진단 hero chip 한국어 라벨 정상 표시 검증
+2. Mom test 5~10명 모집·진행 (v5.13 prompt + 영진 narrow trigger + 외부변수 안내 + 캠퍼스 표시)
+3. 방향성 시스템 정비 별도 세션 — score.ts (좀비)·categoryScores (directions 중복)·체육 명명 통일
 
 ### 막힌 것
 
@@ -26,8 +26,9 @@
 
 ### 사람 판단 필요
 
-- Phase 3·4·10 (score.ts, categoryScores, 체육 명명) 별도 세션 일정 결정
-- Final QA 통과 후 mom test 모집 (어머니 5~10명)
+- Mom test 5~10명 모집·정성 피드백
+- 방향성 시스템 정비 세션 일정 결정 (score.ts / categoryScores / 체육 명명)
+- Final QA 추가 random 2~3건 테스트 여부
 
 ### 백로그 요약
 
@@ -165,14 +166,15 @@
 - [x] §16-§17-§18 순서 재배치 (직업·진로 → 학교 뒤로) (`0b244b5`) ⭐
 - [x] artsScore × directions cross-check (`a11e625`) ⭐
 - [x] **hagun-tier refactor v2 풀스택 (Phase 1-4)** — score → 30 sub-tier 직접 매핑, ≈180줄 제거, PROMPT_VERSION v5.11 (`a68b337`·`42bff2f`·`5c68d12`·`3807f49`) ⭐
-- [x] **hagun-tier v2 리팩토링 Phase A-E** — legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·Part2 prompt 정리 (`5개 순차 commit 대기`)
+- [x] **hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt** (`6c92fc1`) ⭐
+- [x] **Score·티어 audit (4 영역) + 우려 종합 보고** (Explore agent 4 병렬)
+- [x] **Phase A-E 일괄 정리** — legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·§17 ±1 제거 (`e1c9e1b`·`a20b5a5`·`3021218`·`13b00f9`·`6c8cc13`) ⭐
+- [x] **Playwright e2e 영진 prod 검증 + hero chip raw signer fix** (`6181a6f`) ⭐
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
-- [ ] Final QA — 영진 패턴 재확인 + 타 사주 2-3건 random test
-- [ ] 5개 commit 푸시 및 Vercel 배포
-- [ ] Mom test 5~10명 — v5.11 prompt + v2 hero chip + 새 §16-§17-§18 순서 정성 검증
-- [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
-- [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토 + categoryScores 제거
-- [ ] Phase 3·4·10 (score.ts, categoryScores, 체육 명명) — 방향성 시스템과 묶어 별도 세션
+- [ ] `6181a6f` 배포 후 영진 hero chip 한국어 라벨 정상 검증
+- [ ] Mom test 5~10명 — v5.13 prompt + 영진 narrow trigger + 외부변수 안내 + 캠퍼스 표시 정성 검증
+- [ ] 방향성 시스템 정비 별도 세션 — score.ts (좀비)·categoryScores (directions 중복)·체육 명명 통일
+- [ ] interpretations.kind 정책 — 2026-05-27 free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
 - [ ] 음력 입력 UI 토글 추가 (윤달) (선택)
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23

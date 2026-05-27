@@ -6,6 +6,48 @@
 
 ---
 
+## Session 2026-05-27 16:25 — Score·Tier audit + Phase A-E 정리 + V13 영진 fit + e2e
+
+### 작업 요약
+
+- **hagun-tier V13 영진 narrow trigger 추가** (`6c92fc1`):
+  - `combo_sanggwanArtsMediaConvergence +31 raw` 신규 — 상관격 + 학자귀인 0 + 청소년 학자대운 0 + 화국 삼합 + 도화살 + 화개살 (6 조건 AND)
+  - 11 sample 검증 — 영진만 trigger, false positive 0건
+  - 영진 raw 14.9 → 36.9 (7-3 약중 7티어). 실제 4티어와 격차 3 = 노력/외부변수 메꿈 영역
+  - 명리 근거: 자평진전·삼명통회 「상관격 + 도화·화개 + 삼합 화국 = 표현·예술·미디어로 자기 자리」
+- **외부변수 안내 prompt 분기** (interpret-premium-shared.ts): NON_SCHOLAR_GYEOKGUK + isScholar=false sample 에 LLM 톤 자동 안내. §14 정직+희망 / §17 "본인 의지로 ±2~3티어 가능" 톤
+- **Score·티어 시스템 audit** (4 영역 병렬 Explore agent):
+  - hagun-tier 계산 흐름, sub-tier↔university-tier 매핑, score 모듈 8종 참조, LLM prompt baseline 주입 경로
+  - 우려 11건 종합 보고 (P1 v4 legacy / TIER_TABLE 매핑 ~ P3 dead code / 캠퍼스 / 명명 통일)
+- **Phase A-E 일괄 정리** (사용자 결정 후 자율 진행, 6 commit):
+  - **Phase A** v4 legacy 단절 (`e1c9e1b`): endpoint+prompt+scripts+DB column drop migration (`kind='premium'` 15 rows, `interpretations_kind_check` constraint 제거) — 1764줄 삭제
+  - **Phase B** 부모학력 입력 일괄 삭제 (`a20b5a5`): university-tier.ts 전체 삭제, ParentEducation type/state/UI route/API endpoint/DB column 제거
+  - **Phase C** Dead code 정리 (`3021218`): SCHOLAR_GYEOKGUK·SCHOLAR_NAPUM·eval-hagun-loocv·옛 eval scripts 7개
+  - **Phase D** 캠퍼스 구분 표시 (`3021218`): tier-schools.ts SUB_TIER_SCHOOLS 학교명 캠퍼스 명시
+  - **Phase E** §17 ±1 sub-tier 자유도 제거 (`13b00f9`): v5.12 → v5.13-no-subtier-override
+  - **fix** vercel.json 패턴 fix (`6c8cc13`): 삭제된 `api/interpret-premium.ts` functions 제거 (2 deployment ERROR 해결)
+- **Playwright e2e 영진(07) prod 검증**:
+  - 만세력 정확 (시 병인·일 갑술·월 무오·년 계유), 격국 상관격 ✓
+  - 학운 그릇 "약중 · 사주가 받쳐주는 대학 자리" (V13 7-3 매핑) ✓
+  - **"상관 표현·예술·미디어 응축" 콤보 별 5/5** — V13 narrow trigger 정확 작동 ⭐
+  - 외부변수 안내 톤 "학자 트랙 약. 다른 트랙(예술·실무·운동) 빛나는 사주", "자기 의지·노력으로 자기 자리" ✓
+- **hero chip raw signer ID 노출 fix** (`6181a6f`): e2e 에서 발견. `displaySigner()` 미사용 → 적용. `combo_sanggwanArtsMediaConvergence` → `상관 표현·예술·미디어 응축`
+
+### 결정 (decision.md 추가)
+- 영진 fit 방식: A (narrow trigger) + B (외부변수 prompt) 채택. C (자가 입력)·D (포기) 거부
+- v4 legacy + 부모학력 입력 일괄 삭제 (옛 결제 고객도 테스트라 DB 보존 ✗)
+
+### 실패한 시도
+- **B안 수정판 (baseScore 18→33 + 페널티 약화 + 콤보 강화)**: 영진 fit 됐으나 와이프 52.5→68.8 (실제 6티어 vs 3티어), 학자형 4명 1-1 cap 등 다른 sample 변동 큼 → 롤백. narrow trigger (V13) 로 전환.
+- **dev server Playwright e2e**: Expo Router `+api.ts` 가 expo start --web 에서 라우팅 ✗. prod 직접 검증으로 전환.
+
+### 다음 액션
+1. `6181a6f` deploy 후 영진 hero chip raw ID 정상 풀린 한국어 라벨로 검증
+2. Mom test 5~10명 진행 (v5.13 prompt + 영진 narrow trigger + 외부변수 안내 + 캠퍼스 표시)
+3. 방향성 시스템 정비 별도 세션 — score.ts (8영역 좀비)·categoryScores (directions 와 중복)·체육 명명 통일
+
+---
+
 ## Session 2026-05-27 15:59 — Four Pillars 부모학력·레거시 제거 및 시스템 정리 완료
 
 ### 작업 요약
