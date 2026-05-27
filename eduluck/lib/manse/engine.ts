@@ -13,7 +13,6 @@ import { calcNapum, type NapumResult } from './napum';
 import { calcAbroadScore, type AbroadScoreResult } from './abroad-score';
 import { calcArtsScore, type ArtsScoreResult } from './arts-score';
 import { calcMedicalScore, type MedicalScoreResult } from './medical-score';
-import { calcCategoryScores, type CategoryScores } from './category-score';
 import { computeDirections, buildDirectionEntries, type DirectionEntry } from '../direction-system';
 import { calcStudentTraitsWithPercentile, type StudentTraitsWithPercentile } from './student-traits';
 import { applyDstCorrection } from './dst';
@@ -58,10 +57,7 @@ export interface ManseResult {
   artsScore: ArtsScoreResult;
   /** 의·약·치·생명과학 점수 — §12 전공 풀이에서 격국 lookup 보정 (의약 자격직) */
   medicalScore: MedicalScoreResult;
-  /** 진로 방향성 6개 카테고리 점수 (Scholar·Authority·Engineer·Business·Entrepreneur·Action).
-   *  arts·medical과 함께 총 8개 방향성을 구성. §12 전공 풀이의 1차 baseline. */
-  categoryScores: CategoryScores;
-  /** 8개 방향성 통합 정렬 entry — 강도순 정렬, UI/LLM prompt에서 Top N 추출 사용 */
+  /** 10 카테고리 진로 방향성 entry (V12 calibration). UI/LLM prompt 메인. */
   directions: DirectionEntry[];
   /** 학운 4가지 학습 특성 점수 + percentile — §0 직후 UI 카드용 (방향성과 분리, 공통 보조) */
   studentTraits: StudentTraitsWithPercentile;
@@ -180,27 +176,16 @@ export function computeManse(input: ManseInput): ManseResult {
     sipsin,
     gyeokguk,
   });
-  const categoryScores = calcCategoryScores({
-    shensha,
-    sipsin,
-    gyeokguk,
-    unsung,
-    elementCounts,
-  });
-  // V12 Direction System (10 카테고리) — UI directions 생성
-  // computeDirections는 ManseResult 완전체에서 필요 필드만 사용 — partial로 충분
+  // V12 Direction System (10 카테고리) — UI directions 생성.
+  // arts·medical 만 별도 모듈의 동적 recommendedFields 사용. 그 외 8 카테고리는 direction-system.ts
+  // DEFAULT_RECOMMENDED_FIELDS 정적 fallback (categoryScores 모듈 2026-05-27 폐지).
   const directionScores = computeDirections({
     yearPillar: raw.yearPillar, monthPillar: raw.monthPillar, dayPillar: raw.dayPillar, hourPillar,
     shensha, sipsin, gyeokguk, unsung, elementCounts,
   } as any);
   const directions = buildDirectionEntries(directionScores, {
-    scholar:      categoryScores.scholar.recommendedFields,
-    engineer:     categoryScores.engineer.recommendedFields,
-    business:     categoryScores.business.recommendedFields,
-    authority:    categoryScores.authority.recommendedFields,
-    entrepreneur: categoryScores.entrepreneur.recommendedFields,
-    arts:         artsScore.recommendedFields,
-    medical:      medicalScore.recommendedFields,
+    arts:    artsScore.recommendedFields,
+    medical: medicalScore.recommendedFields,
   });
   const studentTraits = calcStudentTraitsWithPercentile({
     shensha,
@@ -237,7 +222,6 @@ export function computeManse(input: ManseInput): ManseResult {
     abroadScore,
     artsScore,
     medicalScore,
-    categoryScores,
     directions,
     studentTraits,
   };

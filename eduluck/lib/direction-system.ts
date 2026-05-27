@@ -503,8 +503,9 @@ function scoreToLevel(score: number): DirectionLevel {
   return '약';
 }
 
-/** 10 카테고리 점수를 UI용 DirectionEntry[]로 변환. 기존 categoryScores·artsScore·medicalScore의
- *  recommendedFields가 있으면 우선 사용 (LLM prompt와 일관), 없는 신규 4 카테고리는 기본값. */
+/** 10 카테고리 점수를 UI용 DirectionEntry[]로 변환. arts·medical 별도 모듈의 동적
+ *  recommendedFields가 있으면 우선 사용 (학운 sub-tier × 점수 cross-check 정밀도 유지),
+ *  그 외 8 카테고리는 DEFAULT_RECOMMENDED_FIELDS 정적 fallback (2026-05-27 categoryScores 폐지). */
 export function buildDirectionEntries(
   scores: DirectionScores,
   existingRecommendedFields?: Partial<Record<DirectionKey, string[]>>,

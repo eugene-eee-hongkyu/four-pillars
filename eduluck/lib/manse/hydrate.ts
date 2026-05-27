@@ -18,7 +18,6 @@ import { calcHapchunh } from './hapchunh';
 import { calcAbroadScore } from './abroad-score';
 import { calcArtsScore } from './arts-score';
 import { calcMedicalScore } from './medical-score';
-import { calcCategoryScores } from './category-score';
 import { computeDirections, buildDirectionEntries } from '../direction-system';
 import { calcStudentTraitsWithPercentile } from './student-traits';
 import { splitPillar, countElements, BRANCH_ELEMENT, STEM_ELEMENT } from './pillars';
@@ -101,22 +100,14 @@ export function hydrateManse(m: ManseResult): ManseResult {
   const medicalScore = m.medicalScore ?? calcMedicalScore({
     pillars: pillarsInput, shensha, sipsin, gyeokguk,
   });
-  const categoryScores = m.categoryScores ?? calcCategoryScores({
-    shensha, sipsin, gyeokguk, unsung, elementCounts,
-  });
   const directions = m.directions ?? (() => {
     const directionScores = computeDirections({
       yearPillar: m.yearPillar, monthPillar: m.monthPillar, dayPillar: m.dayPillar, hourPillar: m.hourPillar,
       shensha, sipsin, gyeokguk, unsung, elementCounts,
     } as any);
     return buildDirectionEntries(directionScores, {
-      scholar:      categoryScores.scholar.recommendedFields,
-      engineer:     categoryScores.engineer.recommendedFields,
-      business:     categoryScores.business.recommendedFields,
-      authority:    categoryScores.authority.recommendedFields,
-      entrepreneur: categoryScores.entrepreneur.recommendedFields,
-      arts:         artsScore.recommendedFields,
-      medical:      medicalScore.recommendedFields,
+      arts:    artsScore.recommendedFields,
+      medical: medicalScore.recommendedFields,
     });
   })();
   const studentTraits = m.studentTraits ?? calcStudentTraitsWithPercentile({
@@ -129,7 +120,7 @@ export function hydrateManse(m: ManseResult): ManseResult {
     shensha, hapchunh, jijanggan,
     elementCounts, luckCycles,
     abroadScore, artsScore, medicalScore,
-    categoryScores, directions,
+    directions,
     studentTraits,
   };
 }
