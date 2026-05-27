@@ -140,7 +140,8 @@ export interface FlowState {
 // v5.16: §17 학교 권유 명단 fix — getTierSchoolGroups 코드 산출 안정·가능 학교명 직접 주입 + "외 학교 절대 ✗" 강제. SHARED_TIER_GUIDE 예시 학교명 placeholder화 (다른 sample 누출 차단 — 재호 1-1 sample에 영남대·계명대 4티어 노출 버그 fix).
 // v5.17: 도전 chip 재도입 + 가능·도전 범위 사용자 명시 룰 (1티어: 가능 한 칸 위·도전 두 칸 위 / 2티어+: 가능 한·두 칸 위·도전 세·네 칸 위). chip 간 학교 중복 dedup. 1티어 sample 도 가능 영역 표시 가능.
 // v5.18: 30 sub-tier 학교 데이터 단일 source — SUB_TIER_DATA (general·departments·specialTracks) + getDepartments·getSpecialTracks 신규. user message [§17 학교 권유 + §16 학과 baseline] 풍부화 (안정·가능·도전 + 학과 + 별도 트랙). SHARED_TIER_GUIDE 30-row 표 제거 (system prompt 토큰 ~1500 → ~200 절약).
-export const PREMIUM_PROMPT_VERSION = 'v5.18-school-data-unified';
+// v5.19: 30 sub-tier general 셀 세세화 (학교+학과 detail 한 줄로, 예 "서울대 최상위 (컴공·경영·자유전공·전기정보)") + specialTracks { name, triggers[] } 객체화 (medical·abroad·research·arts·publicForce·edu). LLM cross-check 명확화 — trigger 비어 있는 일반 별도 트랙(분교·전문대)은 항상 표시. tier_system_v2.md §3 표 30 항목 모두 정확 반영.
+export const PREMIUM_PROMPT_VERSION = 'v5.19-school-detail-triggers';
 
 const initial: FlowState = {
   sessionId: null,

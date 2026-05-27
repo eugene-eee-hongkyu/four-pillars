@@ -6,7 +6,7 @@
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
 import { calculateFinalTierV2, calcCurrentLuckPhase, computeHagun } from './hagun-tier';
-import { getTierSchoolGroups, getDepartments, getSpecialTracks } from '../manse/tier-schools';
+import { getTierSchoolGroups, getDepartments, getSpecialTracks, getGeneralDetailGroups } from '../manse/tier-schools';
 
 /** 비학자 격국 (학업 본질이 좁고 표현·실무·사업·예술 트랙 중심) — V13 외부변수 안내 분기용. */
 const NON_SCHOLAR_GYEOKGUK = new Set(['상관격', '정재격', '편재격', '양인격', '비견격']);
@@ -401,33 +401,45 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
     ...(() => {
-      // V18 단일 source — getTierSchoolGroups + getDepartments + getSpecialTracks 모두
-      // user message 에 풍부 주입. LLM 이 system prompt 표를 다시 참조할 필요 ✗.
-      const groups = getTierSchoolGroups(tierResult.subTier);
+      // V19 단일 source — getGeneralDetailGroups (세세한 학교+학과 detail) + getDepartments
+      //   + getSpecialTracks ({ name, triggers }) 모두 user message 에 풍부 주입.
+      //   LLM 이 system prompt 표를 다시 참조할 필요 ✗.
+      const detailGroups = getGeneralDetailGroups(tierResult.subTier);
       const departments = getDepartments(tierResult.subTier);
       const specialTracks = getSpecialTracks(tierResult.subTier);
+      const firstStableSchool = getTierSchoolGroups(tierResult.subTier)[0]?.schools[0] ?? '학교';
+
       const lines: string[] = [
         `[§17 학교 권유 + §16 학과 baseline — 코드 산출 정확 명단 (이 외 절대 본문 노출 ✗)]`,
+        `  ※ 아래 '안정·가능·도전' 라벨에 명시된 학교+학과 세부 표기를 본문에 그대로 반영 (예: "서울대 최상위 (컴공·경영·...)"의 "컴공·경영..." 부분도 권유 시 활용).`,
       ];
-      for (const g of groups) {
-        lines.push(`  ${g.label}: ${g.schools.join(' · ')}`);
+      for (const g of detailGroups) {
+        lines.push(`  ${g.label} (sub-tier ${g.subTier}): ${g.detail}`);
       }
       if (departments.length > 0) {
         lines.push(`  학과 (§16 baseline): ${departments.join(' · ')}`);
       }
       if (specialTracks.length > 0) {
-        lines.push(`  별도 트랙 (적성 점수 cross-check 후 권유): ${specialTracks.join(' · ')}`);
+        lines.push(`  별도 트랙 (적성 점수 cross-check 후 권유):`);
+        for (const t of specialTracks) {
+          const trigStr = t.triggers.length > 0
+            ? `[trigger: ${t.triggers.join('·')} 강·매우 강일 때만]`
+            : `[trigger 없음: 항상 표시 가능]`;
+          lines.push(`     · ${t.name} ${trigStr}`);
+        }
       }
       lines.push(
         `  ⚠️ 안정·가능·도전 명단 외 학교명 절대 본문 인용 ✗ (학운 무관 권유 = 거짓 희망/절망).`,
-        `  ⚠️ 별도 트랙 권유 룰 — 적성 점수 강·매우 강일 때만:`,
-        `     · medical 강·매우 강 → 의예·치의예·한의예·약대 권유 OK`,
-        `     · research 강·매우 강 → KAIST·POSTECH·UNIST·연구원 권유 OK`,
-        `     · publicForce 강·매우 강 → 사관·경찰대 권유 OK`,
-        `     · abroad 강·매우 강 → 해외 학부 권유 OK`,
-        `     · arts 강·매우 강 (+주력 arts 강) → 예체능 권유 OK`,
-        `     · 적성 약·보통 → 해당 별도 트랙 본업 권유 ✗`,
-        `  ✅ 본문 패턴: "${groups[0]?.schools[0] ?? '학교'}는 안정적으로 보여요" + 학과 명시 + 적성 강하면 별도 트랙 1~2개 한 줄.`,
+        `  ⚠️ 별도 트랙 권유 룰 — 위 [trigger: X] 매핑:`,
+        `     · medical 강·매우 강 → trigger=medical 트랙 권유 OK (의예·치의예·한의예·약대·수의예·차의과대 등)`,
+        `     · research 강·매우 강 → trigger=research 트랙 권유 OK (KAIST·POSTECH·UNIST·GIST·DGIST 등)`,
+        `     · publicForce 강·매우 강 → trigger=publicForce 트랙 권유 OK (사관학교·경찰대·한국체대 등)`,
+        `     · abroad 강·매우 강 → trigger=abroad 트랙 권유 OK (하버드·MIT·Ivy·미국 Top X 학부 등)`,
+        `     · arts 강·매우 강 (+주력 arts 강) → trigger=arts 트랙 권유 OK (한예종·서울대 미대·홍익 미대 등)`,
+        `     · edu (교사 기질: 관성+인성) → trigger=edu 트랙 권유 OK (교대 ±1)`,
+        `     · 적성 약·보통 → 해당 trigger 트랙 본업 권유 ✗`,
+        `     · trigger 비어 있는 일반 별도 트랙 (분교·전문대 등) → 항상 권유 가능`,
+        `  ✅ 본문 패턴: "${firstStableSchool}이 안정적으로 보여요" + 안정 자리 학과 세부 명시 + 가능·도전 1~2개 + 적성 강하면 별도 트랙 1~2개 한 줄.`,
         ``,
       );
       return lines;
