@@ -5,7 +5,6 @@ import { calcShensha, type ShenshaResult } from './shensha';
 import { calcYongsin, type YongsinResult } from './yongsin';
 import { calcAllJijanggan, type AllJijanggan } from './jijanggan';
 import { calcHapchunh, type HapchunhResult } from './hapchunh';
-import { calcScores, type ScoreResult } from './score';
 import { calcSipsin, type SipsinResult } from './sipsin';
 import { calcUnsung, type UnsungResult } from './unsung';
 import { calcGyeokguk, type GyeokgukResult } from './gyeokguk';
@@ -46,7 +45,6 @@ export interface ManseResult {
   jijanggan: AllJijanggan;
   hapchunh: HapchunhResult;
   elementCounts: { wood: number; fire: number; earth: number; metal: number; water: number };
-  scores: ScoreResult;
   sipsin: SipsinResult;
   unsung: UnsungResult;
   gyeokguk: GyeokgukResult;
@@ -133,19 +131,6 @@ export function computeManse(input: ManseInput): ManseResult {
     raw.yearPillar, raw.monthPillar, raw.dayPillar, hourPillar, dayPillarId, gender,
   );
 
-  const scores = calcScores({
-    dayPillar: raw.dayPillar,
-    yearPillar: raw.yearPillar,
-    monthPillar: raw.monthPillar,
-    hourPillar,
-    elementCounts,
-    shensha,
-    hapchunh,
-    luckCycles,
-    jijanggan,
-    gender,
-  });
-
   const pillarsInput = {
     yearPillar: raw.yearPillar,
     monthPillar: raw.monthPillar,
@@ -214,7 +199,6 @@ export function computeManse(input: ManseInput): ManseResult {
     jijanggan,
     hapchunh,
     elementCounts,
-    scores,
     sipsin,
     unsung,
     gyeokguk,

@@ -246,7 +246,7 @@ export function calcStudentTraits(input: CalcInput): StudentTraits {
 
 /** 학습 특성 4개 — 방향성과 분리된 공통 학습 스타일 (어느 학과/트랙이든 보조).
  *  나머지 6개(studyMind·comprehension·expression·competitiveness·arts·athletics)는
- *  category-score.ts의 8개 방향성에 흡수됨. UI는 이 4개만 노출. */
+ *  direction-system.ts 의 10 카테고리 weight 에 흡수됨. UI는 이 4개만 노출. */
 export const LEARNING_TRAIT_KEYS: (keyof StudentTraits)[] = [
   'examPower',
   'persistence',
