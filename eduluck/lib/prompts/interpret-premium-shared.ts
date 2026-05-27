@@ -6,6 +6,7 @@
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
 import { calculateFinalTierV2, calcCurrentLuckPhase, computeHagun } from './hagun-tier';
+import { getTierSchoolGroups } from '../manse/tier-schools';
 
 /** 비학자 격국 (학업 본질이 좁고 표현·실무·사업·예술 트랙 중심) — V13 외부변수 안내 분기용. */
 const NON_SCHOLAR_GYEOKGUK = new Set(['상관격', '정재격', '편재격', '양인격', '비견격']);
@@ -308,9 +309,10 @@ export const SHARED_UNIVERSITY_TIER_GUIDE = `## 대학 명시 가이드 — v2 3
 - ❌ "정아는 4~5티어 대학 자리가 어울렸어요"
 - ❌ "중상위권 대학에서 진학할 수 있었던 자리"
 - ❌ "5티어 안정 영역이에요"
-- ✅ "정아는 한림대·울산대·조선대 같은 자리가 안정적으로 보여요"
-- ✅ "영남대·계명대까지 노릴 만한 자리예요"
-- ✅ "부산대는 조금 어렵지만 도전해볼 만하고요"
+- ✅ "{user message [§17 학교 권유] 명단의 학교명}는 안정적으로 보여요"
+- ✅ "{user message 가능 명단 학교}까지 노릴 만한 자리예요"
+
+⚠️ **위 ✅ 예시의 학교명은 user message [§17 학교 권유] 의 "안정·가능" 명단 그대로만 사용**. 예시에 등장한 특정 학교명 (한림·울산·영남·계명·부산 등) 을 다른 사주 본문에 인용 ✗ (학운 sub-tier 불일치 = 거짓 희망/절망).
 
 §17 학교 본문 작성 시:
 - user message [학운 sub-tier] (예: 4-2) → SHARED_UNIVERSITY_TIER_GUIDE 표의 해당 sub-tier 행에서 학교명 직접 가져오기
@@ -430,9 +432,28 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     ``,
     `[학운 sub-tier — 백엔드 계산. §17 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
     `  v2 sub-tier: ${tierResult.subTier} (subStep ${tierResult.subStep} / 학운 ${tierResult.hagunLabel})`,
-    `  → SHARED_UNIVERSITY_TIER_GUIDE 표의 sub-tier ${tierResult.subTier} 행에서 학교명 추출`,
     `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
+    ...(() => {
+      // 코드 산출 안정·가능 chip 학교명 명시 — LLM 자체 판정 차단.
+      // 옛 버전: "SHARED_UNIVERSITY_TIER_GUIDE 표의 sub-tier 행에서 학교명 추출" 으로
+      // 표 전체 노출 → LLM이 다른 sub-tier 행 학교까지 임의 끌어옴 (학운 1-1 sample에
+      // 영남대·계명대 4티어 노출 버그 fix).
+      const groups = getTierSchoolGroups(tierResult.subTier);
+      const lines: string[] = [
+        `[§17 학교 권유 — 코드 산출 정확 명단 (이 외 학교 본문 노출 절대 ✗)]`,
+      ];
+      for (const g of groups) {
+        lines.push(`  ${g.label}: ${g.schools.join(' · ')}`);
+      }
+      lines.push(
+        `  ⚠️ 위 "안정·가능" 명단 외 학교명 절대 본문 인용 ✗ (학운에 ✗ 닿는 상위/하위 학교 권유 = 거짓 희망/절망).`,
+        `  ⚠️ SHARED_UNIVERSITY_TIER_GUIDE 표의 다른 sub-tier 행 학교 끌어오기 ✗.`,
+        `  ✅ 본문 패턴: "${groups[0]?.schools[0] ?? '서울대'}는 안정적으로 보여요" + 별도 트랙 (의약·예체능·사관·연구·해외) 은 적성/주력 점수 기준 분기.`,
+        ``,
+      );
+      return lines;
+    })(),
     ...(() => {
       // V13 외부변수 안내 분기: 비학자 격국 + 학자 본질 시그너 부재 = 사주만으로는 학업 영역 좁은 case.
       // 영진(07) 패턴: 사주 본질 ✗ + 본인 의지·외모·열정 같은 외부 자산이 결정 변수.
