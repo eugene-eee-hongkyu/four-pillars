@@ -19,6 +19,8 @@ import { getTierSchoolGroups } from '@/lib/manse/tier-schools';
 
 interface Props {
   manse: ManseResult;
+  /** 학년 키. 'adult' (대학생/성인 회고용) 일 때 hero 푸터에 "사주 자리보다 더 위 대학에 가셨다면 본인 의지·노력의 결과" 멘트 추가. */
+  grade?: string | null;
 }
 
 /** 시그너 → 학부모 친화 설명 한 줄 매핑.
@@ -117,7 +119,7 @@ interface ExtendedProps extends Props {
   compact?: boolean;
 }
 
-export function HagunSignerBreakdown({ manse }: ExtendedProps) {
+export function HagunSignerBreakdown({ manse, grade }: ExtendedProps) {
   const breakdown = computeHagun(manse);
 
   // v2: 안정·가능 chip (사주 본질만 기준)
@@ -241,6 +243,13 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
             ? '학자 트랙이 약한 자리예요. 다른 트랙(예술·실무·운동 등)에서 빛나는 사주일 수 있어요.'
             : '실제 입시는 환경·노력에 따라 ±1~2단계 움직일 수 있어요.'}
         </Text>
+
+        {/* 성인 회고 모드 — 학운 자리보다 더 위로 간 분에게 찬사 */}
+        {grade === 'adult' && (
+          <Text className="font-body text-body-sm text-text-sub leading-relaxed mt-2 italic">
+            ✨ 만약 사주가 보여주는 자리보다 더 높은 대학으로 진학하셨다면, 그건 학운을 넘어선 본인의 의지와 노력의 결과예요. 그 길에 진심으로 박수를 보내드려요.
+          </Text>
+        )}
       </View>
 
       {/* ===== 핵심 자리 (Top 3) — Filled card (primary) ===== */}
