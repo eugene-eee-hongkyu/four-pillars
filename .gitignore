@@ -17,6 +17,10 @@ screen*.png
 *-check.png
 *-buttons.png
 *-header.png
+*-premium-hero.png
+*-full.png
+youngjin-*.png
+sehyung-*.png
 
 # Next.js 빌드 아티팩트 (sajutalk/ 외 위치)
 .next/
