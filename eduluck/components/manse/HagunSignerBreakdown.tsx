@@ -96,17 +96,29 @@ function StrengthDots({ value }: { value: number }) {
   );
 }
 
-/** 등급 라벨 → 강도 게이지 (5단계).
- *  점수 숫자 비노출 + 게이지로 직관 표시. 학부모 인지 부조화 해소
- *  ("100점 만점 32점 = 낙제 vs 강 2~3티어 = 좋음" 충돌 제거). */
+/** 등급 라벨 → 강도 게이지 (5단계). V24 10단계 hagunLabel 매핑.
+ *  - 학업형 (1~6) → 게이지 2~5 (학자 트랙 강 ~ 보강)
+ *  - 실무·기술 (7~8) → 게이지 1~2 (전문대·실무)
+ *  - 조기·비제도권 (9~10) → 게이지 0 (isWeakScholar = true) */
 function gradeToGauge(label: string): number {
   switch (label) {
+    case '최상위 학업형': return 5;
+    case '강한 학업형': return 5;
+    case '상위권 학업형': return 4;
+    case '중상위 학업형': return 4;
+    case '일반 학업형': return 3;
+    case '보강 학업형': return 2;
+    case '실무 전환형': return 2;
+    case '기술 특화형': return 1;
+    case '조기 사회진입형': return 1;
+    case '비제도권 성장형': return 0;
+    // 옛 8단계 라벨 호환 (캐시·legacy)
     case '매우 강': return 5;
     case '강': return 4;
     case '중상': return 3;
     case '중': return 2;
     case '중하': return 1;
-    default: return 0; // 약상·약중·약하
+    default: return 0;
   }
 }
 
