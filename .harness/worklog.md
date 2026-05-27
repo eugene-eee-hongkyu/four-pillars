@@ -6,6 +6,25 @@
 
 ---
 
+## Session 2026-05-27 15:59 — Four Pillars 부모학력·레거시 제거 및 시스템 정리 완료
+
+### 작업 요약
+- **Phase A** v4 legacy 단절 (endpoint·prompt·scripts·DB) — 1764줄 삭제 후 commit
+- **Phase B** 부모학력 입력 시스템 일괄 제거 (UI·타입·함수·API)
+- **Phase C** Dead code 정리 (SCHOLAR_*·eval-hagun-loocv)
+- **Phase D** 캠퍼스 구분 표시 (tier-schools.ts)
+- **Phase E** Part2 sub-tier ±1 prompt 제거
+- **Playwright 테스트 검증**:
+  - Part1 입력 → 격국 상관격·점수 14.9 → 정규화 36.9 (7-3 약중) ✓
+  - Part2 결과 → 비학자 격국 외부변수 분기 톤 정상 ✓
+  - 학교 chip → 7-3 영역 학교 + 캠퍼스 라벨 정상 ✓
+  - eval-all-calibration 11/11 통과 ✓
+
+### 다음 액션
+- 3·4·10 (score.ts, categoryScores, 체육 명명)은 방향성 시스템과 묶어서 별도 세션 진행 추천
+- mom test 진입 전 final QA round (영진 진단 재확인, 타 사주 2-3건 random test)
+
+
 ## Session 2026-05-27 (오후) — hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt
 
 ### 작업 요약

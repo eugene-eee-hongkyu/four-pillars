@@ -6,20 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-27 (오후)
-## 마지막 업데이트: 2026-05-27 (오후)
+## 마지막 실행: 2026-05-27 15:59
+## 마지막 업데이트: 2026-05-27 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- **hagun-tier V13 영진 narrow trigger + 외부변수 prompt** 완료. PROMPT_VERSION v5.12. 영진 14.9 → 36.9 (7-3 약중 7티어, 실제 4티어와 격차 3), 다른 11명 변동 0. commit 대기.
+- hagun-tier v2 리팩토링 Phase A-E 완료 (legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·Part2 prompt 정리). 5개 순차 commit 대기.
 
 ### 이어서 할 것
 
-1. 사용자 commit 확인 후 단일 commit (hagun-tier·shared·context·data + eval-youngjin-trigger 신규)
-2. Vercel 배포 → eugene 본인 prod 진단 — sub-tier 7-3 + 외부변수 안내 톤 검증
-3. (병행) `3807f49` 배포 후 prod 정아 재진단 — sub-tier 5-1 검증
-4. Mom test 5-10명 진행. 영진 패턴 false positive 사후 검증
+1. Final QA — 영진 패턴 재확인 + 타 사주 2-3건 random test
+2. 5개 commit 푸시 및 Vercel 배포
+3. Mom test 5~10명 진행 (v5.11 prompt + v2 hero chip 정성 검증)
 
 ### 막힌 것
 
@@ -27,9 +26,8 @@
 
 ### 사람 판단 필요
 
-- Mom test 어머니 5~10명 모집·정성 피드백
-- score 시스템 추가 정비 우선순위 (체육 / categoryScores 제거 / scores 활용)
-- Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
+- Phase 3·4·10 (score.ts, categoryScores, 체육 명명) 별도 세션 일정 결정
+- Final QA 통과 후 mom test 모집 (어머니 5~10명)
 
 ### 백로그 요약
 
@@ -64,7 +62,7 @@
 - [x] calibration sample _private 저장
 - [x] 사용자 회고 재해석
 - [x] 05·06·07 LLM 풀이 검증
-- [x] N=7 학운 시스템 ~97/100 점수
+- [x] N=7 학운 시스템 ≈97/100 점수
 - [x] 정밀 prefetch (옵션 B)
 - [x] 공유 URL — DB migration + /api/share + /share/[token]
 - [x] calibration sample PII 분리
@@ -154,7 +152,7 @@
 - [x] Part 2 reveal 트리거 fix — minSectionNum 기반 (`3b90623`)
 - [x] '재호' 이름 leak fix — prompt 예시 placeholder + PROMPT_VERSION v5.3 (`aa7d6e0`) ⭐
 - [x] 진단 화면 navigation 추가 — 영역 선택·처음으로 (`169a363`)
-- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 ~ 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PROMPT_VERSION v5.4 (`d8c2307`) ⭐
+- [x] v2 30 sub-tier 시스템 도입 — sub-tier 1-1 부터 10-3 + SHARED_UNIVERSITY_TIER_GUIDE v2 + PROMPT_VERSION v5.4 (`d8c2307`) ⭐
 - [x] prompt template literal backtick 빌드 깨짐 fix (`075c69b`)
 - [x] StreamingBody error UI 구체 메시지 5경로 (`3ceb3d5`)
 - [x] check-jeongah / check-tier-groups 진단 스크립트 (`902f49c`)
@@ -166,13 +164,16 @@
 - [x] interpret-deep-select navigation 추가 (`a423fbb`)
 - [x] §16-§17-§18 순서 재배치 (직업·진로 → 학교 뒤로) (`0b244b5`) ⭐
 - [x] artsScore × directions cross-check (`a11e625`) ⭐
-- [x] **hagun-tier refactor v2 풀스택 (Phase 1-4)** — score → 30 sub-tier 직접 매핑, ~180 줄 제거, PROMPT_VERSION v5.11 (`a68b337`·`42bff2f`·`5c68d12`·`3807f49`) ⭐
+- [x] **hagun-tier refactor v2 풀스택 (Phase 1-4)** — score → 30 sub-tier 직접 매핑, ≈180줄 제거, PROMPT_VERSION v5.11 (`a68b337`·`42bff2f`·`5c68d12`·`3807f49`) ⭐
+- [x] **hagun-tier v2 리팩토링 Phase A-E** — legacy v4 단절·부모학력 제거·dead code 정리·캠퍼스 표시·Part2 prompt 정리 (`5개 순차 commit 대기`)
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
+- [ ] Final QA — 영진 패턴 재확인 + 타 사주 2-3건 random test
+- [ ] 5개 commit 푸시 및 Vercel 배포
 - [ ] Mom test 5~10명 — v5.11 prompt + v2 hero chip + 새 §16-§17-§18 순서 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
 - [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토 + categoryScores 제거
+- [ ] Phase 3·4·10 (score.ts, categoryScores, 체육 명명) — 방향성 시스템과 묶어 별도 세션
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
-- [ ] 체육 카테고리 추가 또는 athleticsScore 신규 — 사관·경찰·체대 분기 baseline 명확화
 - [ ] 음력 입력 UI 토글 추가 (윤달) (선택)
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
