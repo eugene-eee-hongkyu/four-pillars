@@ -6,19 +6,20 @@
 
 ---
 
-## 마지막 실행: 2026-05-27 10:52
-## 마지막 업데이트: 2026-05-27 10:52
+## 마지막 실행: 2026-05-27 (오후)
+## 마지막 업데이트: 2026-05-27 (오후)
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- hagun-tier refactor v2 풀스택 완료 (`a68b337`~`3807f49` Phase 1-4 + 5 commits). v5.11. prod 정아 검증 후 mom test 진입.
+- **hagun-tier V13 영진 narrow trigger + 외부변수 prompt** 완료. PROMPT_VERSION v5.12. 영진 14.9 → 36.9 (7-3 약중 7티어, 실제 4티어와 격차 3), 다른 11명 변동 0. commit 대기.
 
 ### 이어서 할 것
 
-1. `3807f49` 배포 후 prod 정아 재진단 — sub-tier 5-1 / 한림·순천향·울산·조선·원광 / 옛 라벨 잔재 0건 검증
-2. (선택) score 시스템 정비 — 체육 카테고리 추가 / categoryScores legacy 완전 제거 / scores 8영역 활용 결정
-3. Mom test 5~10명 모집·진행
+1. 사용자 commit 확인 후 단일 commit (hagun-tier·shared·context·data + eval-youngjin-trigger 신규)
+2. Vercel 배포 → eugene 본인 prod 진단 — sub-tier 7-3 + 외부변수 안내 톤 검증
+3. (병행) `3807f49` 배포 후 prod 정아 재진단 — sub-tier 5-1 검증
+4. Mom test 5-10명 진행. 영진 패턴 false positive 사후 검증
 
 ### 막힌 것
 

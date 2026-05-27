@@ -5,7 +5,10 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { calculateFinalTierV2, calcCurrentLuckPhase } from './hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase, computeHagun } from './hagun-tier';
+
+/** 비학자 격국 (학업 본질이 좁고 표현·실무·사업·예술 트랙 중심) — V13 외부변수 안내 분기용. */
+const NON_SCHOLAR_GYEOKGUK = new Set(['상관격', '정재격', '편재격', '양인격', '비견격']);
 import { calcCriticalYear } from '../manse/critical-year';
 
 export interface InterpretPremiumContext {
@@ -422,6 +425,22 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  → SHARED_UNIVERSITY_TIER_GUIDE 표의 sub-tier ${tierResult.subTier} 행에서 학교명 추출`,
     `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
     ``,
+    ...(() => {
+      // V13 외부변수 안내 분기: 비학자 격국 + 학자 본질 시그너 부재 = 사주만으로는 학업 영역 좁은 case.
+      // 영진(07) 패턴: 사주 본질 ✗ + 본인 의지·외모·열정 같은 외부 자산이 결정 변수.
+      // sample 영향: 영진·와이프·박진우·재원 등 = 점수 변동 ✗, LLM 톤에만 외부변수 인정 안내 추가.
+      const hagunInfo = computeHagun(c);
+      const isNonScholarCase = !hagunInfo.isScholar && NON_SCHOLAR_GYEOKGUK.has(c.gyeokguk.name);
+      if (!isNonScholarCase) return [];
+      return [
+        `[외부변수 안내 모드 — 비학자 격국 + 학자 본질 시그너 부재. ${c.gyeokguk.name} + isScholar=false]`,
+        `  사주만으로는 학업 영역이 좁은 명조. 본인 의지·열정·외모·기회·환경 같은 외부 자산이 학력의 결정 변수.`,
+        `  §14 (한 마디) 톤: 정직 + 희망. "사주 본질만 보면 학업 영역이 좁아요. 그래도 자기 표현·자기 자리 잡는 힘은 강해요. 본인이 의지로 만들어가는 자리예요." 톤.`,
+        `  §17 (학교) 톤: sub-tier ${tierResult.subTier} 학교명 본문 그대로 + 한 문장 추가 안내. 예시: "사주가 보여주는 자리는 여기예요. 본인이 의지·노력으로 ±2~3티어 위까지 가는 사주들도 있어요 — 사주는 본질만 보여드려요."`,
+        `  거짓 희망 ✗ + 절망 ✗ 균형. 어머니에게 "노력으로 메꿔질 수 있는 가능 영역" 솔직 안내.`,
+        ``,
+      ];
+    })(),
     `[진로 방향성 10가지 — 백엔드 결정성. §16 "전공 볼게요" 1차 baseline. 강도순 정렬, Top 2~3 메인, 그 다음 보통 등급 보조. 약은 본문 언급 ✗]`,
     ...c.directions.map((d) =>
       `  ${d.emoji} ${d.label} — ${d.level}${d.recommendedFields.length > 0 ? ` (${d.recommendedFields.slice(0, 3).join(' · ')})` : ''}`,

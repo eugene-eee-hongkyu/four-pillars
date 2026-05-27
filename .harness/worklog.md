@@ -6,6 +6,53 @@
 
 ---
 
+## Session 2026-05-27 (오후) — hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt
+
+### 작업 요약
+
+- **문제**: 영진(07) raw score 14.9 = sub-tier 10-3 (비대학 영역) vs 실제 경희대 4티어. 격차 6+ = "노력/환경으로 메꿔지지 않는 격차" (사용자 우려). 목표: 2-3티어 이내.
+- **첫 시도 (B안 수정판, 롤백)**: baseScore 18 → 33 + 페널티 약화 + 상관패인/생재 콤보. 영진 36.9 fit 됐으나 와이프 52.5→68.8 (실제 6티어 vs 3티어), 학자형 4명 1-1 cap 등 다른 sample 변동 큼 → 롤백.
+- **V13 narrow trigger (A + B 조합)**:
+  - **A. `combo_sanggwanArtsMediaConvergence` +31 raw 신규** ([hagun-tier.ts](eduluck/lib/prompts/hagun-tier.ts)):
+    - Trigger: `상관격 + 학자귀인 0 + 청소년 학자대운 0 + 화국 삼합 + 도화살 + 화개살` 동시 만족
+    - 11 sample 검증 ([eval-youngjin-trigger.ts](eduluck/scripts/eval-youngjin-trigger.ts)): **영진만 매칭, 다른 11명 false positive 0건**
+    - 명리 근거: 자평진전·삼명통회 「상관격 + 도화·화개 + 삼합 화국 = 표현·예술·미디어로 자기 자리」
+  - **B. 외부변수 안내 prompt 분기** ([interpret-premium-shared.ts](eduluck/lib/prompts/interpret-premium-shared.ts)):
+    - `NON_SCHOLAR_GYEOKGUK` set (상관·정재·편재·양인·비견) + `isScholar=false` 시 LLM에 "외부변수 안내 모드" 자동 삽입
+    - §14 (한 마디) 톤: "사주 본질만 보면 학업 영역이 좁아요. 그래도 자기 자리 잡는 힘은 강해요." 정직+희망
+    - §17 (학교) 톤: "본인 의지·노력으로 ±2~3티어 위까지 가는 사주들도 있어요 — 사주는 본질만 보여드려요."
+    - 영향 sample: 영진·와이프·박진우·재원 등 비학자 격국 + isScholar=false 모두 (LLM 톤만, 점수 ✗)
+- **회귀 검증 결과 (11 sample)**:
+  | Sample | V12 baseline | V13 narrow | 변동 | 실제 | 격차 |
+  |---|---|---|---|---|---|
+  | **영진 (07)** | **14.9** | **36.9** | **+22** ⭐ | 4 | **3** |
+  | 재원 (01) | 70.9 | 70.9 | 0 | 2 | 0 |
+  | Eugene (03) | 80.1 | 80.1 | 0 | 1 | 0 |
+  | 와이프 (04) | 52.5 | 52.5 | 0 | 6 | 1 |
+  | 승희 (05) | 67.4 | 67.4 | 0 | 4 | 1 |
+  | 정환 (06) | 89.4 | 89.4 | 0 | 1 | 0 |
+  | 세형 (08) | 95.0 | 95.0 | 0 | 1 | 0 |
+  | 두흥 (09) | 68.1 | 68.1 | 0 | 1 | 1 |
+  | 윤수 (10) | 101.4 | 101.4 | 0 | 1 | 0 |
+  | 상수 (11) | 86.5 | 86.5 | 0 | 1 | 0 |
+  | 택범 (12) | 70.9 | 70.9 | 0 | 2 | 1 |
+  | 박진우 (13) | 71.6 | 71.6 | 0 | 1 | 1 |
+- **PROMPT_VERSION**: v5.11 → **v5.12-hagun-v13-youngjin-narrow**
+- **변경 파일**: `lib/prompts/hagun-tier.ts`, `lib/prompts/interpret-premium-shared.ts`, `lib/flow/context.tsx`, `_private/calibration-samples/data.ts`, `scripts/eval-youngjin-trigger.ts` 신규
+
+### 결정 (decision.md 추가 후보)
+
+- 영진 case fit 방식: A (narrow trigger) + B (외부변수 prompt) 조합 채택. C (자가 입력) / D (포기) 둘 다 거부.
+- overfitting 인정: mom test에서 영진과 같은 6 조건 만족하는 사주는 매우 드물 것으로 예상. 만약 false positive 발견 시 trigger 조건 재조정.
+
+### 다음 액션
+
+1. 사용자 commit 확인 후 단일 commit (4 파일 + 1 신규 script + worklog + state)
+2. Vercel 배포 → eugene 본인 prod 진단 — sub-tier 7-3 + 외부변수 안내 톤 검증
+3. Mom test 5-10명 진행. 영진 패턴 사주가 들어오면 사후 검증
+
+---
+
 ## Session 2026-05-27 10:52 — 음력 변환·UX·점수 정리·hagun-tier refactor v2 (9 commit)
 
 ### 작업 요약

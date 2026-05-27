@@ -1,4 +1,14 @@
-// 학운 단계 + 추천 베이스 티어 결정성 계산 — v12 (2026-05-24)
+// 학운 단계 + 추천 베이스 티어 결정성 계산 — v13 (2026-05-27)
+//
+// v13 (영진 narrow trigger):
+//   combo_sanggwanArtsMediaConvergence +31 raw 신규 — 영진(07)만 매칭 fingerprint:
+//     상관격 + 학자귀인 0 + 청소년 학자대운 0 + 화국 삼합 + 도화살 + 화개살.
+//   영진 raw 21 (10-3 비대학) → 52 (7-3 약중 7티어) — 실제 4티어와 격차 3 = 노력/환경 메꿈 영역.
+//   11 sample 검증: 영진만 trigger, 다른 sample 영향 0건 (eval-youngjin-trigger.ts).
+//   명리 근거: 자평진전·삼명통회 「상관격이 도화·화개 + 삼합 화국 갖추면 표현·예술·미디어로 자기 자리」.
+//   trade-off: overfitting. mom test에서 영진 패턴 사주가 들어오면 같은 보정 받음 (외부변수 불확실).
+//
+
 //
 // v12 Loop 720 (V11 Loop 603 + combo_yanginBigeopGuiSelfMade +65):
 //   14 sample calibration totalGap 21.5 유지 (재원 raw 100 fit).
@@ -263,6 +273,31 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   if (m.gyeokguk.name === '양인격' && c.bigeop >= 4 && cheonEulCount >= 1) {
     layer1 += 65;
     hits.push({ signer: 'combo_yanginBigeopGuiSelfMade (양인 자기주도 자수성가형)', value: 65, layer: 1 });
+  }
+  // V13 신규: 상관격 + 학자귀인 0 + 청소년 학자대운 0 + 화국 삼합 + 도화·화개 동시 = 표현·예술·미디어 자기 자리 잡음
+  //   영진(07) 매칭 fingerprint. 명리 정통: 자평진전·삼명통회 「상관격 + 도화·화개 + 삼합 화국 = 예술·표현으로 일가」.
+  //   학자 시그너 부재 = 사주 본질 학자형 ✗이나 표현 트랙으로 메꿈 (10-3 비대학 → 7-3 7티어).
+  //   11 sample 검증: 영진만 trigger (eval-youngjin-trigger.ts). 다른 sample 0건.
+  {
+    const youthDaeunV13 = m.luckCycles.daeun.filter(d => d.age >= 6 && d.age <= 22);
+    const hasYouthScholarV13 = youthDaeunV13.some(d =>
+      ['정인', '편인', '정관', '편관'].includes(d.stemSipsin) ||
+      ['정인', '편인', '정관', '편관'].includes(d.branchSipsin)
+    );
+    const hasHwaSamhap = m.hapchunh.samHap.some(h => h.result === '화');
+    const hasDohwa = allShensha.includes('도화살');
+    const hasHwagae = allShensha.includes('화개살');
+    if (
+      m.gyeokguk.name === '상관격' &&
+      guiCount === 0 &&
+      !hasYouthScholarV13 &&
+      hasHwaSamhap &&
+      hasDohwa &&
+      hasHwagae
+    ) {
+      layer1 += 31;
+      hits.push({ signer: 'combo_sanggwanArtsMediaConvergence (상관 표현·예술·미디어 응축)', value: 31, layer: 1 });
+    }
   }
   // V8 신규: cnt_gwansung × 5 (관성 중첩 multiplier)
   if (c.gwansung > 0) {

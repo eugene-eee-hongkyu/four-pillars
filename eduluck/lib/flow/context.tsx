@@ -147,7 +147,8 @@ export interface FlowState {
 // v5.9: §16-§17-§18 순서 재배치 (직업→전공→학교 → 전공→학교→직업). 진로 단계 자연 순서. 캐시 자동 invalidate (deepDiveTexts·part2Text 모두 재생성).
 // v5.10: artsScore × directions cross-check. artsScore '매우 강' 이라도 directions 'arts' 가 보통·약이면 본업 권유 ✗ (취미·부전공 톤). 정아 케이스 directions arts 보통인데 LLM 이 본업 예술 권유하던 모순 fix.
 // v5.11: hagun-tier refactor v2 — score → 30 sub-tier 직접 매핑. 옛 8 grade·12 티어·3 confidence 제거 (~180 줄). subTier 단일 메인 데이터. prompt baseline 의 confidenceLabel/subTierLabel 노출 제거.
-export const PREMIUM_PROMPT_VERSION = 'v5.11-subtier-direct';
+// v5.12: hagun-tier v13 영진(07) narrow trigger + 외부변수 안내 prompt 분기. combo_sanggwanArtsMediaConvergence +31 raw (영진만 매칭: 상관격 + 학자귀인0 + 청소년 학자대운0 + 화국삼합 + 도화·화개) → 영진 14.9 → 36.9 (7-3 약중 7티어), 다른 11 sample 변동 0. 비학자 격국 + isScholar=false sample LLM에 "외부변수 안내 모드" 자동 삽입 — §14/§17 정직+희망 톤 강제.
+export const PREMIUM_PROMPT_VERSION = 'v5.12-hagun-v13-youngjin-narrow';
 
 const initial: FlowState = {
   sessionId: null,
