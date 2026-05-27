@@ -25,10 +25,9 @@ function loadInitial(): FlowState {
       if (merged.childManse) merged.childManse = hydrateManse(merged.childManse);
       if (merged.motherManse) merged.motherManse = hydrateManse(merged.motherManse);
       if (merged.fatherManse) merged.fatherManse = hydrateManse(merged.fatherManse);
-      // premium prompt 구조 버전 mismatch 시 모든 캐시 무효 (legacy + v5 part1/part2/deep)
-      if (merged.premiumInterpretVersion !== PREMIUM_PROMPT_VERSION) {
-        merged.premiumInterpretText = null;
-        merged.premiumInterpretVersion = null;
+      // v5 premium prompt 구조 버전 mismatch 시 모든 진단 캐시 무효 (part1/part2/deep)
+      if (merged.premiumPromptVersion !== PREMIUM_PROMPT_VERSION) {
+        merged.premiumPromptVersion = null;
         merged.premiumPart1Text = null;
         merged.premiumPart2Text = null;
         merged.deepDiveTexts = {};
@@ -39,6 +38,9 @@ function loadInitial(): FlowState {
       if (!merged.deepDiveTexts || typeof merged.deepDiveTexts !== 'object') {
         merged.deepDiveTexts = {};
       }
+      // 옛 v4 legacy 필드 제거 — 2026-05-27 v4 단절
+      delete (merged as Record<string, unknown>).premiumInterpretText;
+      delete (merged as Record<string, unknown>).premiumInterpretVersion;
       return merged;
     }
   } catch {}
@@ -124,19 +126,17 @@ export interface FlowState {
   parentEducationStatus: 'pending' | 'entered' | 'skipped';
 
   freeInterpretText: string | null;
-  /** v4 legacy 정밀 진단 (16섹션 단일 호출) — v5 전환 후 새 진단은 part1/part2/deep에 저장 */
-  premiumInterpretText: string | null;
-  /** premiumInterpretText의 prompt 버전 — 코드 PREMIUM_PROMPT_VERSION과 mismatch 시 캐시 무효 */
-  premiumInterpretVersion: string | null;
   /** v5 정밀 진단 Part 1 (10 섹션 — 본질·인성·관계·즉시 행동) */
   premiumPart1Text: string | null;
   /** v5 정밀 진단 Part 2 (10 섹션 — 학원·진로·미래) */
   premiumPart2Text: string | null;
   /** v5 Deep-dive 캐시 — section number → 풀이 텍스트 */
   deepDiveTexts: Record<number, string>;
+  /** v5 premium prompt 버전 — 코드 PREMIUM_PROMPT_VERSION과 mismatch 시 캐시 무효 */
+  premiumPromptVersion: string | null;
 }
 
-/** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumInterpretText·premiumPart1Text·premiumPart2Text·deepDiveTexts 모두) */
+/** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumPart1Text·premiumPart2Text·deepDiveTexts) */
 // v5.2: §10 '강요 금지' → '양육 경계' 리프레임 (긍정·중립 톤, 명리 중도 개념).
 // v5.3: prompt 예시의 '재호' → '{자녀}' placeholder. 다른 자녀에서 재호 이름이 leak 되던 버그 fix.
 // v5.4: 대학 티어 정의 v2 30 sub-tier 시스템 도입 (TIER_SYSTEM_v2.md 기반). LLM 이 sub-tier (1-2, 4-3 등) 받아 정밀 학교명 선택, 사용자 출력은 1~10 티어로만.
@@ -199,11 +199,10 @@ const initial: FlowState = {
   fatherEducation: { level: null, schoolName: null, major: null },
   parentEducationStatus: 'pending',
   freeInterpretText: null,
-  premiumInterpretText: null,
-  premiumInterpretVersion: null,
   premiumPart1Text: null,
   premiumPart2Text: null,
   deepDiveTexts: {},
+  premiumPromptVersion: null,
 };
 
 interface FlowContextValue {
@@ -223,7 +222,6 @@ interface FlowContextValue {
   patchFatherEducation: (patch: Partial<ParentEducation>) => void;
   setParentEducationStatus: (status: 'entered' | 'skipped') => void;
   setFreeInterpretText: (t: string) => void;
-  setPremiumInterpretText: (t: string | null) => void;
   /** v5 Part 1 텍스트 설정. null 시 캐시 클리어 */
   setPremiumPart1Text: (t: string | null) => void;
   /** v5 Part 2 텍스트 설정. null 시 캐시 클리어 */
@@ -270,11 +268,10 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         ...(isNewChild
           ? {
               freeInterpretText: null,
-              premiumInterpretText: null,
-              premiumInterpretVersion: null,
               premiumPart1Text: null,
               premiumPart2Text: null,
               deepDiveTexts: {},
+              premiumPromptVersion: null,
             }
           : {}),
       };
@@ -310,18 +307,11 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   const setFreeInterpretText = useCallback((t: string) => {
     setState((s) => ({ ...s, freeInterpretText: t }));
   }, []);
-  const setPremiumInterpretText = useCallback((t: string | null) => {
-    setState((s) => ({
-      ...s,
-      premiumInterpretText: t,
-      premiumInterpretVersion: t === null ? null : PREMIUM_PROMPT_VERSION,
-    }));
-  }, []);
   const setPremiumPart1Text = useCallback((t: string | null) => {
     setState((s) => ({
       ...s,
       premiumPart1Text: t,
-      premiumInterpretVersion: t === null && s.premiumPart2Text === null
+      premiumPromptVersion: t === null && s.premiumPart2Text === null
         ? null
         : PREMIUM_PROMPT_VERSION,
     }));
@@ -330,7 +320,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((s) => ({
       ...s,
       premiumPart2Text: t,
-      premiumInterpretVersion: t === null && s.premiumPart1Text === null
+      premiumPromptVersion: t === null && s.premiumPart1Text === null
         ? null
         : PREMIUM_PROMPT_VERSION,
     }));
@@ -352,8 +342,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       premiumPart1Text: null,
       premiumPart2Text: null,
       deepDiveTexts: {},
-      premiumInterpretText: null,
-      premiumInterpretVersion: null,
+      premiumPromptVersion: null,
     }));
   }, []);
   const resetMother = useCallback(() => {
@@ -383,11 +372,10 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       childSubjectId: null,
       childManse: null,
       freeInterpretText: null,
-      premiumInterpretText: null,
-      premiumInterpretVersion: null,
       premiumPart1Text: null,
       premiumPart2Text: null,
       deepDiveTexts: {},
+      premiumPromptVersion: null,
     }));
   }, []);
   const resetAll = useCallback(() => {
@@ -417,7 +405,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         resetChild,
         resetAll,
         setFreeInterpretText,
-        setPremiumInterpretText,
         setPremiumPart1Text,
         setPremiumPart2Text,
         setDeepDiveText,
