@@ -288,7 +288,7 @@ export const SHARED_UNIVERSITY_TIER_GUIDE = `## 대학 명시 가이드 — v2 3
 - ✅ "영남대·계명대까지 노릴 만한 자리예요"
 - ✅ "부산대는 조금 어렵지만 도전해볼 만하고요"
 
-§17·§18 학교 본문 작성 시:
+§17 학교 본문 작성 시:
 - user message [학운 sub-tier] (예: 4-2) → SHARED_UNIVERSITY_TIER_GUIDE 표의 해당 sub-tier 행에서 학교명 직접 가져오기
 - "안정·가능·도전" 어휘는 OK, 그 뒤에는 항상 **학교명** 이 와야 함. "안정적으로 ○○대" / "○○대·○○대도 가능"
 - hero UI 가 이미 "안정·가능·도전 + 대학명" chip 으로 한번 보여주므로, 본문은 같은 학교명 + 명리 이유 + 어머니 액션 위주로.
@@ -417,7 +417,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
           ``,
         ]
       : []),
-    `[학운 sub-tier — 백엔드 계산. §17·§18 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
+    `[학운 sub-tier — 백엔드 계산. §17 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
     `  v2 sub-tier: ${tierResult.subTier} (${tierResult.subTierLabel}) ← SHARED_UNIVERSITY_TIER_GUIDE 표의 이 행에서 학교명 추출`,
     `  Confidence: ${tierResult.confidence} (내부 라벨 — 본문에 '${tierResult.confidenceLabel}' 같은 표현 ✗)`,
     `  본문 표기: 학교명 + '안정·가능·도전' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,

@@ -59,12 +59,12 @@ export const DEEP_SECTIONS: Record<number, DeepSectionSpec> = {
     taskGuide: `§13 흐름 직후 worst year zoom in. user message [조심해야 하는 한 해] baseline 사용. "사고 난다" 단정 ✗ → "흔들리기 쉬워요·집중력 흩어져요" 부드럽게. 1~2개 구체 액션.` },
   15: { number: 15, header: '국가·해외 운 — 유학·이민', oneLine: '해외 유학·이민 운', group: 'Part2', emoji: '🌏',
     taskGuide: `user message [해외운 점수] baseline 사용. 양인격·오행 불균형·충·공망·대운 종합. 구체 국가 1~2곳 (강 이상).` },
-  16: { number: 16, header: '직업·진로 흐름 — 직장 결·일터 결', oneLine: '직업·진로 흐름', group: 'Part2', emoji: '💼',
-    taskGuide: `전공 후 직업·일터 결. 진로 방향성 Top 2~3. 일·시지 12운성으로 직장 후반 결.` },
-  17: { number: 17, header: '전공 — 학과·계열', oneLine: '전공·학과·계열 매핑', group: 'Part2', emoji: '📚',
+  16: { number: 16, header: '전공 — 학과·계열', oneLine: '전공·학과·계열 매핑', group: 'Part2', emoji: '📚',
     taskGuide: `격국 진로 매핑 baseline + 예술·의약 점수 보강. 1순위·2순위·이공계 대안 모두 명시. 학부 미묘함만 자유.` },
-  18: { number: 18, header: '학교 — 안정·가능·도전 3구간', oneLine: '학교 권유 (안정·가능·도전)', group: 'Part2', emoji: '🏫',
-    taskGuide: `user message [학운 단계·추천 티어] baseline + Confidence 표현 사용. 학년대 구체 학교명. "안정·가능·도전" 3구간 톤. "스치다·막힘" ✗.` },
+  17: { number: 17, header: '학교 — 안정·가능·도전 3구간', oneLine: '학교 권유 (안정·가능·도전)', group: 'Part2', emoji: '🏫',
+    taskGuide: `user message [학운 sub-tier] baseline 사용. 학년대 구체 학교명. "안정·가능·도전" 3구간 톤. "스치다·막힘" ✗.` },
+  18: { number: 18, header: '직업·진로 흐름 — 직장 결·일터 결', oneLine: '직업·진로 흐름', group: 'Part2', emoji: '💼',
+    taskGuide: `전공·학교 정한 뒤의 직업·일터 결. 진로 방향성 Top 2~3. 일·시지 12운성으로 직장 후반 결.` },
   19: { number: 19, header: '본질을 깨우는 가장 효과적 액션 — 3 카드', oneLine: '본질 깨우는 효과적 액션', group: 'Part2', emoji: '⚡',
     taskGuide: `용신 환경 카드 + 약점 보강 카드 + 시기 활용 카드. "본질이 ~할 때 가장 빛난다" 어조. 단정 ✗.` },
   20: { number: 20, header: '어머니께 한 마디 — 종합 정리', oneLine: '어머니께 종합 한 마디', group: 'Part2', emoji: '💌',
@@ -111,7 +111,7 @@ ${SHARED_UNIVERSITY_TIER_GUIDE}
 ## 섹션별 user message baseline 활용
 사용자 메시지에 **그 섹션과 관련된 백엔드 결정값**이 명시됨 (티어·해외운·진로·조심한해 등). 그 값을 **그대로 baseline으로 사용** — LLM 자체 판정 ✗.
 
-특히 §17(학교)·§14(해외)·§16(전공)·§18(조심한해)·§13(흐름)은 user message baseline이 본문 골격.
+특히 §17(학교)·§15(해외)·§16(전공)·§14(조심한해)·§13(흐름)은 user message baseline이 본문 골격.
 
 ## 금지
 - Part 1·Part 2와 동일한 톤·anchor 반복 ✗ — deep-dive는 **그 섹션 하나만 깊게**, 다른 섹션 영역 침범 ✗
