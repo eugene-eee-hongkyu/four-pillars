@@ -229,7 +229,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
             {top3.map(h => (
               <View key={h.signer} className="px-3 py-1 rounded-full bg-secondary-container">
                 <Text className="font-body-bold text-label-md text-primary" numberOfLines={1}>
-                  {h.signer.split(' (')[0]}
+                  {displaySigner(h.signer)}
                 </Text>
               </View>
             ))}
