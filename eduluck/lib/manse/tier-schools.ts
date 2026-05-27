@@ -74,7 +74,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '2-1': {
     general: ['연세대(서울)', '고려대(서울)', '서강대(서울)', '성균관대(서울)', '한양대(서울)'],
-    generalDetail: '연·고대 일반 / 서강대·성균관대·한양대(서울) 인기학과',
+    generalDetail: '연세대(서울)·고려대(서울) 일반 / 서강대(서울)·성균관대(서울)·한양대(서울) 인기학과',
     departments: ['경영학', '경제학', '공학 인기', '커뮤니케이션', '인문계 인기'],
     specialTracks: [
       { name: '지방 의예 일반', triggers: ['medical'] },
@@ -88,7 +88,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '2-2': {
     general: ['서강대(서울)', '성균관대(서울)', '한양대(서울)', '중앙대(서울)', '경희대(서울)', '서울시립대'],
-    generalDetail: '서·성·한 일반 / 중앙대·경희대(서울)·서울시립대 인기학과',
+    generalDetail: '서강대(서울)·성균관대(서울)·한양대(서울) 일반 / 중앙대(서울)·경희대(서울)·서울시립대 인기학과',
     departments: ['경영·경제', '공학 일반', '미디어·언론', '국제학', '간호학'],
     specialTracks: [
       { name: '약대 일반', triggers: ['medical'] },
@@ -100,7 +100,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '2-3': {
     general: ['중앙대(서울)', '경희대(서울)', '한국외대(서울)', '이화여대', '건국대(서울)', '동국대(서울)', '홍익대(서울)'],
-    generalDetail: '중경외시 일반 / 이화여대 인기학과 / 한국외대(서울)·건국·동국·홍익(서울) 인기학과',
+    generalDetail: '중앙대(서울)·경희대(서울)·한국외대(서울)·서울시립대 일반 / 이화여대 인기학과 / 건국대(서울)·동국대(서울)·홍익대(서울) 인기학과',
     departments: ['국제학·외국어', '경영·경제', '미디어·광고', '디자인·예체능 인기'],
     specialTracks: [
       { name: '서울교대·경인교대 (±1)', triggers: ['edu'] },
@@ -112,7 +112,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '3-1': {
     general: ['건국대(서울)', '동국대(서울)', '홍익대(서울)', '국민대(서울)', '숭실대(서울)', '세종대(서울)', '숙명여대'],
-    generalDetail: '건국·동국·홍익(서울) 일반 / 국민·숭실·세종 인기학과 / 숙명여대',
+    generalDetail: '건국대(서울)·동국대(서울)·홍익대(서울) 일반 / 국민대(서울)·숭실대(서울)·세종대(서울) 인기학과 / 숙명여대',
     departments: ['경영·경제', '디자인·예술 일반', '전기전자·컴퓨터', '미디어'],
     specialTracks: [
       { name: '지방 교대 (±1: 부산·대구·광주·청주·춘천·전주·진주·공주)', triggers: ['edu'] },
@@ -122,7 +122,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '3-2': {
     general: ['국민대(서울)', '숭실대(서울)', '세종대(서울)', '단국대(죽전)', '광운대(서울)', '명지대(서울)', '상명대(서울)', '인하대', '아주대', '가톨릭대(성심)'],
-    generalDetail: '국민·숭실·세종 일반 / 단국(죽전)·광운·명지(서울)·상명(서울) / 인하·아주 인기학과 / 가톨릭대(성심)',
+    generalDetail: '국민대(서울)·숭실대(서울)·세종대(서울) 일반 / 단국대(죽전)·광운대(서울)·명지대(서울)·상명대(서울) / 인하대·아주대 인기학과 / 가톨릭대(성심)',
     departments: ['공학·IT', '경영·상경', '디자인', '간호·보건'],
     specialTracks: [
       { name: '한양대(ERICA) 상위', triggers: [] },
@@ -133,7 +133,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '3-3': {
     general: ['인하대', '아주대', '부산대', '경북대', '가천대', '인천대', '한국공학대'],
-    generalDetail: '인하·아주 일반 / 부산·경북대 인기학과 / 가천·인천대·한국공학대',
+    generalDetail: '인하대·아주대 일반 / 부산대·경북대 인기학과 / 가천대·인천대·한국공학대',
     departments: ['공학 일반', '경영·경제', '간호·보건', '디자인 일반'],
     specialTracks: [
       { name: '동덕·서울여·성신·덕성', triggers: [] },
@@ -143,7 +143,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '4-1': {
     general: ['부산대', '경북대', '충남대', '충북대', '전남대', '전북대', '강원대', '제주대', '경상국립대'],
-    generalDetail: '부산·경북대 일반 / 충남·충북·전남·전북·강원·제주·경상국립 인기학과',
+    generalDetail: '부산대·경북대 일반 / 충남대·충북대·전남대·전북대·강원대·제주대·경상국립대 인기학과',
     departments: ['공학 일반', '인문계·사회과학', '농생물·자연', '교육'],
     specialTracks: [
       { name: '연세(미래)·고려(세종) 상위', triggers: [] },
@@ -152,7 +152,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '4-2': {
     general: ['충남대', '충북대', '전남대', '전북대', '강원대', '제주대', '경상국립대', '영남대', '계명대'],
-    generalDetail: '지방거점국립대(충남·충북·전남·전북·강원·제주·경상국립) 일반 / 영남·계명 인기학과',
+    generalDetail: '충남대·충북대·전남대·전북대·강원대·제주대·경상국립대 일반 / 영남대·계명대 인기학과',
     departments: ['공학 일반', '인문 일반', '경영 일반', '간호'],
     specialTracks: [
       { name: '한양(ERICA) 일반', triggers: [] },
@@ -163,7 +163,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '4-3': {
     general: ['영남대', '계명대', '동아대', '부경대', '한국해양대', '단국대(천안)'],
-    generalDetail: '영남·계명 일반 / 동아·부경·한국해양 인기 / 단국(천안) 일반',
+    generalDetail: '영남대·계명대 일반 / 동아대·부경대·한국해양대 인기학과 / 단국대(천안) 일반',
     departments: ['공학 일반', '경영 일반', '식품·생명', '체육 일반'],
     specialTracks: [
       { name: '고려(세종)·연세(미래) 일반', triggers: [] },
@@ -173,7 +173,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '5-1': {
     general: ['한림대', '순천향대', '울산대', '조선대', '원광대', '한남대', '호서대', '청주대'],
-    generalDetail: '한림·순천향 일반 / 울산·조선·원광 (의·약 제외) / 한남·호서·청주 인기학과',
+    generalDetail: '한림대·순천향대 일반 / 울산대·조선대·원광대 (의·약 제외) / 한남대·호서대·청주대 인기학과',
     departments: ['간호·보건', '디자인', '공학 실무', '경영 실무'],
     specialTracks: [
       { name: '가톨릭관동·인천가톨릭', triggers: [] },
@@ -182,7 +182,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '5-2': {
     general: ['한남대', '호서대', '청주대', '백석대', '건양대', '을지대', '신라대', '동의대'],
-    generalDetail: '한남·호서·청주 일반 / 백석·건양·을지 인기학과 / 신라·동의 인기학과',
+    generalDetail: '한남대·호서대·청주대 일반 / 백석대·건양대·을지대 인기학과 / 신라대·동의대 인기학과',
     departments: ['간호', '디자인', '경영·상경', '복지·교육'],
     specialTracks: [
       { name: '상명(천안)·남서울·한세', triggers: [] },
@@ -191,7 +191,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '5-3': {
     general: ['신라대', '동의대', '동아대', '부산가톨릭', '인제대', '우송대', '배재대', '대전대', '목원대', '나사렛대'],
-    generalDetail: '신라·동의·동아 일반 / 부산가톨릭·인제 상위 / 우송·배재·대전·목원·나사렛 상위',
+    generalDetail: '신라대·동의대·동아대 일반 / 부산가톨릭대·인제대 상위 / 우송대·배재대·대전대·목원대·나사렛대 상위',
     departments: ['간호·물리치료', '실무 공학', '경영 실무'],
     specialTracks: [
       { name: '위덕·동서·동명 상위', triggers: [] },
@@ -200,7 +200,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '6-1': {
     general: ['부산외대', '동서대', '동명대', '영산대', '광주대', '호남대', '동신대', '백석대', '건양대'],
-    generalDetail: '부산외대·동서·동명·영산 일반 / 광주·호남·동신 상위 / 백석·건양 일반',
+    generalDetail: '부산외대·동서대·동명대·영산대 일반 / 광주대·호남대·동신대 상위 / 백석대·건양대 일반',
     departments: ['실무 학과', '간호·보건', '디자인 실무'],
     specialTracks: [
       { name: '을지대 (간호·의 제외)', triggers: [] },
@@ -210,7 +210,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '6-2': {
     general: ['경동대', '세명대', '극동대', '중부대', '송원대', '신경주', '영동', '한일장신'],
-    generalDetail: '경동·세명·극동·중부·송원 상위 / 신경주·영동 / 한일장신',
+    generalDetail: '경동대·세명대·극동대·중부대·송원대 상위 / 신경주대·영동대 / 한일장신대',
     departments: ['실무 학과 중하위'],
     specialTracks: [
       { name: '지방 사립 중하위', triggers: [] },
@@ -219,7 +219,7 @@ const SUB_TIER_DATA: Record<string, SubTierData> = {
   },
   '6-3': {
     general: ['광주대', '호남대', '동신대', '가야대', '광주여대', '위덕대'],
-    generalDetail: '광주·호남·동신 일반 / 가야·광주여대·위덕 일반 / 지방 4년제 사립 비인기',
+    generalDetail: '광주대·호남대·동신대 일반 / 가야대·광주여대·위덕대 일반 / 지방 4년제 사립 비인기',
     departments: ['실무·자격증 학과'],
     specialTracks: [
       { name: '지방 사립 비인기', triggers: [] },

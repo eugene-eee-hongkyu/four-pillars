@@ -143,7 +143,8 @@ export interface FlowState {
 // v5.19: 30 sub-tier general 셀 세세화 (학교+학과 detail 한 줄로, 예 "서울대 최상위 (컴공·경영·자유전공·전기정보)") + specialTracks { name, triggers[] } 객체화 (medical·abroad·research·arts·publicForce·edu). LLM cross-check 명확화 — trigger 비어 있는 일반 별도 트랙(분교·전문대)은 항상 표시. tier_system_v2.md §3 표 30 항목 모두 정확 반영.
 // v5.20: 성인 회고 모드(grade='adult') §17 본문 마지막 한 단락 강제 instruction — "도전 자리보다 더 높은 대학에 가셨다면 학운을 넘어선 본인의 의지·노력의 결과, 박수" 톤. (HagunSignerBreakdown hero 푸터에도 동일 의미 React 컴포넌트로 노출 — UI/LLM 두 자리 모두 회고 톤 보강.)
 // v5.21: 남자 사주(gender='male') 여대 권유 ✗ — getTierSchoolGroups gender 옵션 추가 (안정·가능·도전 chip 에서 '여대' 포함 학교 자동 filter). prompt §17 baseline 에도 "남자 사주 — 여대 본문 권유 ✗" instruct 명시.
-export const PREMIUM_PROMPT_VERSION = 'v5.21-male-skip-women-univ';
+// v5.22: SUB_TIER_DATA generalDetail 약어 모두 풀어쓰기 — "서·성·한"·"중경외시"·"국숭세"·"건·동·홍"·"인하·아주" 등 → 학교명 풀어쓰기 ("서강대(서울)·성균관대(서울)·한양대(서울)"). LLM 본문에 약어 + "(서울)" 충돌로 "서울대"로 오해되는 케이스 fix. prompt §17 instruct 에 "약어 ✗, 학교명 풀어쓰기" + "'서' = 서강대 ≠ 서울대" 명시.
+export const PREMIUM_PROMPT_VERSION = 'v5.22-no-univ-abbrev';
 
 const initial: FlowState = {
   sessionId: null,
