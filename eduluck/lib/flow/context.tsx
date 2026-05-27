@@ -139,7 +139,8 @@ export interface FlowState {
 // v5.15: 명명 통일 (주력 방향성 11 + 적성 점수 5) + 가치 자율선택 메모 강제 + 대운 발현 시기 라벨 신규 (조숙·정석·전환·대기만성). Part1 §3·§4·§6 + Part2 §20 적성 점수·대운 라벨 활용 강화.
 // v5.16: §17 학교 권유 명단 fix — getTierSchoolGroups 코드 산출 안정·가능 학교명 직접 주입 + "외 학교 절대 ✗" 강제. SHARED_TIER_GUIDE 예시 학교명 placeholder화 (다른 sample 누출 차단 — 재호 1-1 sample에 영남대·계명대 4티어 노출 버그 fix).
 // v5.17: 도전 chip 재도입 + 가능·도전 범위 사용자 명시 룰 (1티어: 가능 한 칸 위·도전 두 칸 위 / 2티어+: 가능 한·두 칸 위·도전 세·네 칸 위). chip 간 학교 중복 dedup. 1티어 sample 도 가능 영역 표시 가능.
-export const PREMIUM_PROMPT_VERSION = 'v5.17-stable-possible-challenge';
+// v5.18: 30 sub-tier 학교 데이터 단일 source — SUB_TIER_DATA (general·departments·specialTracks) + getDepartments·getSpecialTracks 신규. user message [§17 학교 권유 + §16 학과 baseline] 풍부화 (안정·가능·도전 + 학과 + 별도 트랙). SHARED_TIER_GUIDE 30-row 표 제거 (system prompt 토큰 ~1500 → ~200 절약).
+export const PREMIUM_PROMPT_VERSION = 'v5.18-school-data-unified';
 
 const initial: FlowState = {
   sessionId: null,
