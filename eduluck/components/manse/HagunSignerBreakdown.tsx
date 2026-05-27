@@ -196,11 +196,13 @@ export function HagunSignerBreakdown({ manse, grade, gender }: ExtendedProps) {
           <Text className="font-heading-bold text-display-sm text-text-pri">
             {finalTier.hagunLabel}
           </Text>
-          <Text className="font-body text-body-md text-text-sub">·</Text>
           <Text className="font-body text-body-md text-text-sub">
-            사주가 받쳐주는 대학 자리
+            ({Math.round(finalTier.finalScore)}/100)
           </Text>
         </View>
+        <Text className="font-body text-body-sm text-text-sub">
+          사주가 받쳐주는 대학 자리
+        </Text>
 
         <Text
           className="font-body text-headline-md"

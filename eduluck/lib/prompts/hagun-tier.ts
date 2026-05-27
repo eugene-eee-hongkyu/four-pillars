@@ -178,7 +178,7 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   if (c.insung > 0) {
     const v = c.insung * 4;
     layer1 += v;
-    hits.push({ signer: `인성 multiplier (×4)`, value: v, layer: 1 });
+    hits.push({ signer: `인성 ${c.insung}자리 누적`, value: v, layer: 1 });
   }
 
   // 1-5. 콤보 시그너 (V3 + V4 + V5)
@@ -296,7 +296,7 @@ export function computeHagun(m: ManseResult): HagunBreakdown {
   if (c.gwansung > 0) {
     const v = c.gwansung * 5;
     layer1 += v;
-    hits.push({ signer: `관성 multiplier (×5)`, value: v, layer: 1 });
+    hits.push({ signer: `관성 ${c.gwansung}자리 누적`, value: v, layer: 1 });
   }
 
   // ===== Layer 2: 신살·귀인 (boolean — V6 #266 weight 정확 재현) =====
@@ -583,18 +583,34 @@ export function scoreToSubTier(score: number): SubTierResult {
   return { subTier: '10-3', primaryTier: 10, subStep: 3 };
 }
 
-/** primaryTier (1~10) → 8 grade 라벨 (현재 UI 표시 호환).
- *  v1 매핑 유지: 1=매우강, 2=강, 3=중상, 4=중, 5=중하, 6=약상, 7=약중, 8~10=약하. */
-export type HagunLabelV2 = '매우 강' | '강' | '중상' | '중' | '중하' | '약상' | '약중' | '약하';
+/** primaryTier (1~10) → 10 grade 라벨 (V24 — 사용자 결정 명명).
+ *  사용자 친화 명명: 학업·실무 트랙 분리 + 거짓 희망/절망 ✗ 균형 (하위는 "실무·기술·조기 진입" 톤).
+ *  - 1~6: 학업형 (강도 differ)
+ *  - 7~10: 실무·기술·사회 진입 톤
+ */
+export type HagunLabelV2 =
+  | '최상위 학업형'
+  | '강한 학업형'
+  | '상위권 학업형'
+  | '중상위 학업형'
+  | '일반 학업형'
+  | '보강 학업형'
+  | '실무 전환형'
+  | '기술 특화형'
+  | '조기 사회진입형'
+  | '비제도권 성장형';
+
 export function primaryTierToHagunLabel(primaryTier: number): HagunLabelV2 {
-  if (primaryTier <= 1) return '매우 강';
-  if (primaryTier === 2) return '강';
-  if (primaryTier === 3) return '중상';
-  if (primaryTier === 4) return '중';
-  if (primaryTier === 5) return '중하';
-  if (primaryTier === 6) return '약상';
-  if (primaryTier === 7) return '약중';
-  return '약하';
+  if (primaryTier <= 1) return '최상위 학업형';
+  if (primaryTier === 2) return '강한 학업형';
+  if (primaryTier === 3) return '상위권 학업형';
+  if (primaryTier === 4) return '중상위 학업형';
+  if (primaryTier === 5) return '일반 학업형';
+  if (primaryTier === 6) return '보강 학업형';
+  if (primaryTier === 7) return '실무 전환형';
+  if (primaryTier === 8) return '기술 특화형';
+  if (primaryTier === 9) return '조기 사회진입형';
+  return '비제도권 성장형';
 }
 
 /** parentAdjust 정수 단위(±0~2) 를 점수 가산값으로 변환.

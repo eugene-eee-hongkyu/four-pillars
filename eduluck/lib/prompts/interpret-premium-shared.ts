@@ -424,7 +424,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     ``,
     `[학운 sub-tier — 백엔드 계산. §17 학교 권유 baseline. 아래 정보 모두 본문 노출 ✗, 내부 분기용 only]`,
     `  v2 sub-tier: ${tierResult.subTier} (subStep ${tierResult.subStep} / 학운 ${tierResult.hagunLabel})`,
-    `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권' 등 숫자/순위 표현 절대 ✗`,
+    `  본문 표기: 학교명 + '안정·가능' 어휘만. '○티어'·'중상위권'·'최상위 학업형'·'실무 전환형'·'기술 특화형'·'조기 사회진입형'·'비제도권 성장형' 등 V24 hero 카드 라벨 본문 노출 ✗ (hero UI 전용).`,
     ``,
     ...(() => {
       // V19 단일 source — getGeneralDetailGroups (세세한 학교+학과 detail) + getDepartments
