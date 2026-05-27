@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-26 18:51
-## 마지막 업데이트: 2026-05-26 18:51
+## 마지막 실행: 2026-05-27 10:52
+## 마지막 업데이트: 2026-05-27 10:52
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- v2 30 sub-tier 풀스택 정착 완료 (`d8c2307`~`f42b134` 10 commit). PROMPT_VERSION v5.3 → v5.8. prod 정아 e2e 검증 후 mom test 진입.
+- hagun-tier refactor v2 풀스택 완료 (`a68b337`~`3807f49` Phase 1-4 + 5 commits). v5.11. prod 정아 검증 후 mom test 진입.
 
 ### 이어서 할 것
 
-1. prod e2e 재검증 (`f42b134` 배포 후) — 정아 §18 학교명 (울산대·한림대) + evidence chip 분리 + signature anchor 박스
-2. Mom test 5~10명 — v5.8 prompt + hero chip + 시각 anchor 카드 + 별도 트랙 분기 정성 검증
-3. (선택) interpretations.kind 정책 결정
+1. `3807f49` 배포 후 prod 정아 재진단 — sub-tier 5-1 / 한림·순천향·울산·조선·원광 / 옛 라벨 잔재 0건 검증
+2. (선택) score 시스템 정비 — 체육 카테고리 추가 / categoryScores legacy 완전 제거 / scores 8영역 활용 결정
+3. Mom test 5~10명 모집·진행
 
 ### 막힌 것
 
@@ -27,6 +27,7 @@
 ### 사람 판단 필요
 
 - Mom test 어머니 5~10명 모집·정성 피드백
+- score 시스템 추가 정비 우선순위 (체육 / categoryScores 제거 / scores 활용)
 - Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 
 ### 백로그 요약
@@ -160,12 +161,18 @@
 - [x] tier-schools 옵션 A — sub-tier 별 3~5개 학교 chip (v2 표 정확 매핑) (`473b5c0`) ⭐
 - [x] 별도 트랙 (예술·의약) 발현 조건 학운 sub-tier 구간별 분리 — 거짓 희망 fix (`8935155`) ⭐
 - [x] evidence bullet split + 줄바꿈 룰 + signature anchor 박스 fallback (`536a69f`·`f42b134`)
+- [x] 음력 → 양력 변환 (lunar-typescript) + SolarPreview UI (`c405bf1`·`589321f`)
+- [x] interpret-deep-select navigation 추가 (`a423fbb`)
+- [x] §16-§17-§18 순서 재배치 (직업·진로 → 학교 뒤로) (`0b244b5`) ⭐
+- [x] artsScore × directions cross-check (`a11e625`) ⭐
+- [x] **hagun-tier refactor v2 풀스택 (Phase 1-4)** — score → 30 sub-tier 직접 매핑, ~180 줄 제거, PROMPT_VERSION v5.11 (`a68b337`·`42bff2f`·`5c68d12`·`3807f49`) ⭐
 - [-] sajutalk 프로젝트 hold (decision.md 2026-05-26) — eduluck mom test 후 재개 여부 결정
-- [ ] Mom test 5~10명 — v5.8 prompt + hero chip + 별도 트랙 분기 정성 검증
+- [ ] Mom test 5~10명 — v5.11 prompt + v2 hero chip + 새 §16-§17-§18 순서 정성 검증
 - [ ] interpretations.kind 정책 결정 (free text 유지 vs CHECK 재도입)
-- [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토
+- [ ] legacy cleanup — v4 /api/interpret-premium + interpret-free·relation-mini 사용처 검토 + categoryScores 제거
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
-- [ ] 음력 입력 UI 토글 추가 (선택)
+- [ ] 체육 카테고리 추가 또는 athleticsScore 신규 — 사관·경찰·체대 분기 baseline 명확화
+- [ ] 음력 입력 UI 토글 추가 (윤달) (선택)
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 (Holland Interest Profiler 동시) → backlog 2026-05-20

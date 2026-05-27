@@ -45,6 +45,79 @@
 
 ---
 
+## 2026-05-27: hagun-tier refactor v2 — score → 30 sub-tier 직접 매핑
+
+- **선택**: 옛 8 grade → baseTierRange → 12 티어 → 3 confidence 흐름을 모두 제거하고 score → 30 sub-tier 직접 매핑으로 단순화. subTier 단일 메인 데이터. primaryTier·subStep·hagunLabel 은 derive.
+- **대안 검토**:
+  - **A. 그대로 유지**: 옛 흐름 redundant + reach 처리 부정확. Eugene 80.1점 옛 2-1 / 실제 v2 cutoff 2-2 같이 4명 잘못 매핑. 11·12 티어 별도 처리도 v2 표와 mismatch.
+  - **B. 부분 정리** (8 grade 만 제거): confidence·12 티어 별도 잔존. redundancy 해결 ✗.
+  - **C. 전면 제거 (선택안)**: 단일 데이터 흐름. 코드 ~100 줄 순 감소. 옛 reach 처리 부정확 fix.
+- **선택 이유**:
+  - scoring 코드의 NORMALIZED_CUTOFFS 30개가 이미 사회 분포 매핑. 8 grade는 그 위 추상화 + 정보 손실.
+  - 옛 reach 처리 (점수 < botCutoff → 다음 티어 -1) 가 v2 30 sub-tier 사회 분포와 정합 X. Phase 1 회귀에서 11 sample 중 4건 잘못 매핑 확인.
+  - 11·12 티어 (전문대·비대학) 별도 처리도 v2 표가 8-1~10-3 안에 흡수 (9-3 = 마이스터고, 10-3 = 비제도권). 별도 처리 잔재.
+  - 사용자 UX 영향 0 — 여전히 1~10 티어 + "매우 강~약하" 라벨로 노출.
+- **영향 범위**:
+  - [lib/prompts/hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) — 옛 ~180 줄 제거, 신규 ~80 줄 추가 (scoreToSubTier·primaryTierToHagunLabel·calculateFinalTierV2·FinalTierResultV2)
+  - [lib/manse/tier-schools.ts](../eduluck/lib/manse/tier-schools.ts) — getTierSchoolGroups signature 단순화 (subTier 만)
+  - [components/manse/HagunSignerBreakdown.tsx](../eduluck/components/manse/HagunSignerBreakdown.tsx) — V2 API 사용, scoreToGrade 제거
+  - [lib/prompts/interpret-premium-shared.ts·interpret-premium.ts](../eduluck/lib/prompts) — V2 사용 + 옛 confidenceLabel/subTierLabel 노출 제거
+  - PROMPT_VERSION v5.10 → v5.11-subtier-direct (캐시 자동 invalidate)
+  - 11 legacy scripts 에 // @ts-nocheck (prod 빌드 무관)
+- **검증**:
+  - phase1.md / phase2.md / phase3.md / phase4-final.md (자동 회귀)
+  - 11 sample 모두 v2 cutoff 정합 결과. 4건 옛↔새 변경 (Eugene 2-1→2-2, 승희 3-1→3-2, 영진 11-3→10-3, 두흥 3-1→3-2)
+- **되돌리는 방법**: archive/worklog-2026-05-26.md 의 commit 7개 (a68b337·42bff2f·5c68d12·3807f49 등) 역순 revert. PROMPT_VERSION 도 v5.10 으로 회귀.
+
+---
+
+## 2026-05-27: parentAdjust 적용 방식 — 점수 가산 (vs 티어 단위 보정)
+
+- **선택**: parent +1 = score +10점 (1 티어 평균 cutoff 폭). 그 다음 scoreToSubTier 로 재매핑.
+- **대안 검토**:
+  - **A. 티어 단위 보정 (옛)**: finalTierRange 의 lo·hi 둘 다 ±N 정수. 1 grade = 2 티어 묶음이라 보정도 큰 단위.
+  - **B. sub-step 단위 보정**: subTier 의 두 번째 숫자만 ±N 보정 (1 티어 안에서 강도만). 작은 보정. 같은 티어 안 분기 위주.
+  - **C. 점수 가산 (선택안)**: parent +1 = +10점. 약 1 티어 분량. 점수 → subTier 재매핑 자동.
+- **선택 이유**:
+  - C 는 score 의 연속성 활용. 보정 결과가 자연스럽게 30 sub-tier 안에 흡수.
+  - cutoff 30개 평균 간격 ≈ 3.4점. 1 티어 = 3 sub-step = 약 10점. parent +1 = +10점 직관적.
+  - 코드 단순: gradeInfo·baseTierRange 분기 없이 score 산술만.
+- **영향 범위**: [hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts) calculateFinalTierV2 — `finalScore = hagunScore + parentAdjust × 10`
+- **되돌리는 방법**: PARENT_ADJUST_POINTS_PER_UNIT 상수 (현재 10) 만 변경하면 강도 조절 가능. 0 으로 두면 parentAdjust 무력화.
+
+---
+
+## 2026-05-27: 학교 chip 도전 chip 제거 — 거짓 희망 방지
+
+- **선택**: hero 의 '안정·가능' 2 구간만 표시. '도전' chip 제거.
+- **대안 검토**:
+  - **A. 3 구간 유지 (안정·가능·도전)**: 입시 톤 친숙. 단 옛 reach 처리 잔재 — 사주 본질보다 위 학교를 도전 가능으로 노출 → 거짓 희망.
+  - **B. 2 구간 (선택안)**: 사주 정확 위치 (안정) + 한 칸 위 (가능) 만. 거짓 희망 방지.
+- **선택 이유**:
+  - v2 30 sub-tier 직접 매핑 후 parent·score 합산 결과가 정확한 위치. '도전' 은 추가 외부 변수 (노력·환경) 인정인데 시스템이 그걸 알 수 없음.
+  - 사용자 UX: 어머니가 "도전" chip 보면 그 학교 갈 수 있다고 오인 위험.
+  - 본문 §17 학교 풀이에서 LLM 이 "조금 어렵지만 도전" 톤은 가능 (학교명 + 톤 어휘).
+- **영향 범위**: [tier-schools.ts](../eduluck/lib/manse/tier-schools.ts) — TierGroup label '안정·가능' 만. [HagunSignerBreakdown.tsx](../eduluck/components/manse/HagunSignerBreakdown.tsx) — chip 그룹 2개 표시.
+- **되돌리는 방법**: getTierSchoolGroups 에 도전 케이스 추가 (`(primaryTier - 2)-1` 또는 비슷). 다만 거짓 희망 위험 재발.
+
+---
+
+## 2026-05-27: artsScore × directions cross-check 패턴
+
+- **선택**: 별도 score (artsScore) 의 본업 권유는 directions 메인 신호와 cross-check 한 후만 발동.
+- **대안 검토**:
+  - **A. artsScore 단독 신호로 본업 권유 (옛)**: directions 의 arts 카테고리 강도 무시. 정아 케이스 directions arts 보통인데 artsScore 6점 매우 강으로 본업 디자인 권유 → UI 방향성 카드와 본문 모순.
+  - **B. directions 만 사용, artsScore 제거**: artsScore 의 신살 기반 정밀 보강 효과 손실. 화개살·천덕귀인 같은 시그너 정보 prompt 에서 빠짐.
+  - **C. Cross-check (선택안)**: 두 신호 모두 강할 때만 본업 권유. 한쪽만 강하면 부전공·취미 톤. medicalScore 도 학운 sub-tier 와 cross-check 한 동일 패턴.
+- **선택 이유**:
+  - directions (v8 calibration 거친 메인 신호) 이 본업 진로 결정의 우선. artsScore 는 신살 기반 보강.
+  - 명리 합의: 화개살·도화살·문창귀인 같은 예술 시그너는 "감성·창의성 잘 활용" 신호이지 본업 진로 자체 ✗.
+  - 이 패턴 (메인 신호 × 보조 신호 cross-check) 을 다른 score (athletics·education 등 신규 추가 시) 에도 일관 적용 가능.
+- **영향 범위**: [interpret-premium-shared.ts](../eduluck/lib/prompts/interpret-premium-shared.ts) buildSharedManseContext [예술·디자인 점수] 분기. PROMPT_VERSION v5.10.
+- **되돌리는 방법**: 분기 로직을 옛 단순 (`level === '매우 강' → 본업 우선`) 로 환원.
+
+---
+
 ## 2026-05-26: 대학 티어 시스템 — v2 30 sub-tier 풀스택 정착
 
 - **선택**: TIER_SYSTEM_v2.md §3 표 (30 sub-tier × 일반/별도 트랙 컬럼) 를 LLM prompt 에 그대로 주입 + scoring 의 subTier 산출 + hero 의 sub-tier 별 학교 chip 으로 풀스택 연결. 사용자 노출은 '1티어/2티어' 만, sub-tier (1-2, 4-3 등) 은 LLM 내부 분기용 only.
