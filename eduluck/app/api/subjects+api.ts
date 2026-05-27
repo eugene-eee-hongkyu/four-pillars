@@ -3,6 +3,7 @@
 // response: { subjectId, manse: ManseResult }
 
 import { computeManse } from '@/lib/manse/engine';
+import { normalizeToSolar } from '@/lib/manse/lunar-to-solar';
 import { getSupabaseServer } from '@/lib/supabase/server';
 
 interface Body {
@@ -33,12 +34,15 @@ export async function POST(request: Request) {
     return Response.json({ error: 'missing required fields' }, { status: 400 });
   }
 
+  // 음력 입력 시 양력 변환 — computeManse 는 양력 기준
+  const solar = normalizeToSolar(birthCalendar, birthYear, birthMonth, birthDay);
+
   let manse;
   try {
     manse = computeManse({
-      year: birthYear,
-      month: birthMonth,
-      day: birthDay,
+      year: solar.year,
+      month: solar.month,
+      day: solar.day,
       hour: body.birthHour,
       minute: body.birthMinute,
       gender,
