@@ -2,6 +2,7 @@ import '../global.css';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { FlowProvider } from '@/lib/flow/context';
+import { VersionFooter } from '@/components/ui/VersionFooter';
 
 export default function RootLayout() {
   return (
@@ -13,6 +14,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: '#FBF8F1' },
           }}
         />
+        <VersionFooter />
       </FlowProvider>
     </SafeAreaProvider>
   );
