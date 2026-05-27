@@ -356,7 +356,8 @@ export const SHARED_UNIVERSITY_TIER_GUIDE = `## 대학 명시 가이드 — v2 3
 ### §17 권유 자유도
 
 - user message sub-tier 의 일반 대학군 + 별도 트랙(조건 부합 시) 안에서 학교·학부 구체 명시
-- 명리 미묘함으로 ±1 sub-tier 미세 조정 가능. 큰 범위 벗어나는 학교 절대 ✗.
+- **sub-tier baseline 그대로 사용. ±1 sub-tier 자유도 ✗** (2026-05-27 정리 — 학자형 가벼운 sample 이 LLM 판단으로 상위 학교 권유하는 거짓 희망 fix).
+- 큰 범위 벗어나는 학교 절대 ✗.
 - 출력 톤은 "1티어 / 2티어 / ..." 만. sub-tier 표기·"엄청 강·강·약강" 라벨 ✗.`;
 
 /** Part 1·Part 2·Deep 모두 user message 상단에 공통으로 주입되는 baseline 컨텍스트 (사주·tier·direction·점수·flow).
