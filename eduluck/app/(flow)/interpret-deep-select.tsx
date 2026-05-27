@@ -17,7 +17,17 @@ export default function InterpretDeepSelect() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView contentContainerClassName="pt-8 pb-24 gap-6">
+      <ScrollView contentContainerClassName="pt-6 pb-24 gap-6">
+        {/* 상단 navigation — 길 잃지 않게 항상 노출 */}
+        <View className="px-container-padding flex-row items-center justify-between">
+          <Button variant="ghost" size="md" onPress={() => router.replace('/interpret-premium')}>
+            ← 정밀 진단으로
+          </Button>
+          <Button variant="ghost" size="md" onPress={() => router.replace('/')}>
+            🏠 처음으로
+          </Button>
+        </View>
+
         <View className="px-container-padding gap-2">
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             📋 더 자세히 알고 싶은 영역
@@ -37,8 +47,13 @@ export default function InterpretDeepSelect() {
           seenSections={Object.keys(state.deepDiveTexts).map(Number)}
         />
 
-        <View className="px-container-padding mt-4">
-          <Button variant="ghost" onPress={() => router.back()}>← 정밀 진단으로 돌아가기</Button>
+        <View className="px-container-padding mt-4 gap-2">
+          <Button variant="ghost" onPress={() => router.replace('/interpret-premium')}>
+            ← 정밀 진단으로 돌아가기
+          </Button>
+          <Button variant="ghost" onPress={() => router.replace('/')}>
+            🏠 처음으로
+          </Button>
         </View>
       </ScrollView>
     </View>
