@@ -407,7 +407,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
       const detailGroups = getGeneralDetailGroups(tierResult.subTier);
       const departments = getDepartments(tierResult.subTier);
       const specialTracks = getSpecialTracks(tierResult.subTier);
-      const firstStableSchool = getTierSchoolGroups(tierResult.subTier)[0]?.schools[0] ?? '학교';
+      const firstStableSchool = getTierSchoolGroups(tierResult.subTier, { gender: ctx.childGender })[0]?.schools[0] ?? '학교';
 
       const lines: string[] = [
         `[§17 학교 권유 + §16 학과 baseline — 코드 산출 정확 명단 (이 외 절대 본문 노출 ✗)]`,
@@ -427,6 +427,12 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
             : `[trigger 없음: 항상 표시 가능]`;
           lines.push(`     · ${t.name} ${trigStr}`);
         }
+      }
+      if (ctx.childGender === 'male') {
+        lines.push(
+          `  ⚠️ 남자 사주 — 여대(이화·숙명·동덕·서울여대·성신·덕성·광주여대 등) 본문 권유 ✗.`,
+          `     일반대학군·별도 트랙 모두에서 여대명 인용 ✗.`,
+        );
       }
       lines.push(
         `  ⚠️ 안정·가능·도전 명단 외 학교명 절대 본문 인용 ✗ (학운 무관 권유 = 거짓 희망/절망).`,

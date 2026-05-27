@@ -142,7 +142,8 @@ export interface FlowState {
 // v5.18: 30 sub-tier 학교 데이터 단일 source — SUB_TIER_DATA (general·departments·specialTracks) + getDepartments·getSpecialTracks 신규. user message [§17 학교 권유 + §16 학과 baseline] 풍부화 (안정·가능·도전 + 학과 + 별도 트랙). SHARED_TIER_GUIDE 30-row 표 제거 (system prompt 토큰 ~1500 → ~200 절약).
 // v5.19: 30 sub-tier general 셀 세세화 (학교+학과 detail 한 줄로, 예 "서울대 최상위 (컴공·경영·자유전공·전기정보)") + specialTracks { name, triggers[] } 객체화 (medical·abroad·research·arts·publicForce·edu). LLM cross-check 명확화 — trigger 비어 있는 일반 별도 트랙(분교·전문대)은 항상 표시. tier_system_v2.md §3 표 30 항목 모두 정확 반영.
 // v5.20: 성인 회고 모드(grade='adult') §17 본문 마지막 한 단락 강제 instruction — "도전 자리보다 더 높은 대학에 가셨다면 학운을 넘어선 본인의 의지·노력의 결과, 박수" 톤. (HagunSignerBreakdown hero 푸터에도 동일 의미 React 컴포넌트로 노출 — UI/LLM 두 자리 모두 회고 톤 보강.)
-export const PREMIUM_PROMPT_VERSION = 'v5.20-adult-recall-applause';
+// v5.21: 남자 사주(gender='male') 여대 권유 ✗ — getTierSchoolGroups gender 옵션 추가 (안정·가능·도전 chip 에서 '여대' 포함 학교 자동 filter). prompt §17 baseline 에도 "남자 사주 — 여대 본문 권유 ✗" instruct 명시.
+export const PREMIUM_PROMPT_VERSION = 'v5.21-male-skip-women-univ';
 
 const initial: FlowState = {
   sessionId: null,

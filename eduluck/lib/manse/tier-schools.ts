@@ -382,28 +382,39 @@ function collectFromOffsets(subTier: string, offsets: number[]): string[] {
   return out;
 }
 
+/** 여대 학교명 식별 — '여대' 키워드 포함. 남자 사주에서 권유 제외용. */
+export function isWomenOnly(school: string): boolean {
+  return school.includes('여대');
+}
+
 /** v2 sub-tier 안정·가능·도전 chip 산출 (V17 룰).
  *  - primaryTier 1 (1-2, 1-3): 가능 = 한 칸 위, 도전 = 두 칸 위
  *  - primaryTier 2+: 가능 = 한·두 칸 위 합집합, 도전 = 세·네 칸 위 합집합
- *  - chip 간 학교명 dedup */
-export function getTierSchoolGroups(subTier: string): TierGroup[] {
+ *  - chip 간 학교명 dedup
+ *  - opts.gender === 'male' 일 때 여대 학교 제외 (V21) */
+export function getTierSchoolGroups(
+  subTier: string,
+  opts?: { gender?: 'male' | 'female' },
+): TierGroup[] {
   const { primaryTier } = parseSubTier(subTier);
   const groups: TierGroup[] = [];
   const cap = (arr: string[]) => arr.slice(0, 5);
+  const filterGender = (arr: string[]) =>
+    opts?.gender === 'male' ? arr.filter(s => !isWomenOnly(s)) : arr;
 
-  const stable = schoolsAt(subTier);
+  const stable = filterGender(schoolsAt(subTier));
   if (stable.length > 0) groups.push({ label: '안정', schools: cap(stable) });
   const stableSet = new Set(stable);
 
   const possibleOffsets = primaryTier === 1 ? [1] : [1, 2];
   const challengeOffsets = primaryTier === 1 ? [2] : [3, 4];
 
-  const possibleRaw = collectFromOffsets(subTier, possibleOffsets);
+  const possibleRaw = filterGender(collectFromOffsets(subTier, possibleOffsets));
   const possible = possibleRaw.filter(s => !stableSet.has(s));
   if (possible.length > 0) groups.push({ label: '가능', schools: cap(possible) });
 
   const possibleSet = new Set(possible);
-  const challengeRaw = collectFromOffsets(subTier, challengeOffsets);
+  const challengeRaw = filterGender(collectFromOffsets(subTier, challengeOffsets));
   const challenge = challengeRaw.filter(s => !stableSet.has(s) && !possibleSet.has(s));
   if (challenge.length > 0) groups.push({ label: '도전', schools: cap(challenge) });
 

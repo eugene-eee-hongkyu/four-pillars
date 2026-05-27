@@ -21,6 +21,8 @@ interface Props {
   manse: ManseResult;
   /** 학년 키. 'adult' (대학생/성인 회고용) 일 때 hero 푸터에 "사주 자리보다 더 위 대학에 가셨다면 본인 의지·노력의 결과" 멘트 추가. */
   grade?: string | null;
+  /** 자녀 성별. 'male' 일 때 안정·가능·도전 chip 에서 여대 학교 제외 (V21). */
+  gender?: 'male' | 'female' | null;
 }
 
 /** 시그너 → 학부모 친화 설명 한 줄 매핑.
@@ -119,7 +121,7 @@ interface ExtendedProps extends Props {
   compact?: boolean;
 }
 
-export function HagunSignerBreakdown({ manse, grade }: ExtendedProps) {
+export function HagunSignerBreakdown({ manse, grade, gender }: ExtendedProps) {
   const breakdown = computeHagun(manse);
 
   // v2: 안정·가능 chip (사주 본질만 기준)
@@ -128,7 +130,7 @@ export function HagunSignerBreakdown({ manse, grade }: ExtendedProps) {
     motherManse: null,
     fatherManse: null,
   });
-  const tierGroups = getTierSchoolGroups(finalTier.subTier);
+  const tierGroups = getTierSchoolGroups(finalTier.subTier, gender ? { gender } : undefined);
   const gauge = gradeToGauge(finalTier.hagunLabel);
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);

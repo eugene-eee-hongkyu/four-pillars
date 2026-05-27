@@ -94,7 +94,7 @@ export default function InterpretPremium() {
         {/* Hero — 학운 그릇 */}
         {state.childManse && (
           <View className="px-container-padding">
-            <HagunSignerBreakdown manse={state.childManse} grade={state.child.grade} />
+            <HagunSignerBreakdown manse={state.childManse} grade={state.child.grade} gender={state.child.gender} />
           </View>
         )}
 
