@@ -7,7 +7,6 @@
     { "source": "/((?!_expo|assets|favicon|api).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/interpret-premium.ts": { "maxDuration": 300 },
     "api/interpret-premium-part1.ts": { "maxDuration": 300 },
     "api/interpret-premium-part2.ts": { "maxDuration": 300 },
     "api/interpret-deep.ts": { "maxDuration": 300 },
