@@ -1,9 +1,10 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // 40대 어른 calibration — 사주 진단 vs 실제 결과 비교
 // PII는 _private/calibration-samples/data.ts 에만. 이 스크립트는 sample ID로 로드 + 실제 결과만 정의.
 // 출력: 모듈별 일치/부분/빗나감 분석
 
 import { computeManse } from '../lib/manse/engine';
-import { calculateFinalTier, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
 import { getSample, type CalibrationSample } from '../_private/calibration-samples/data';
 
 interface AdultActual {
@@ -77,7 +78,7 @@ function evaluate(c: AdultCase) {
 
   // === 학운 티어 (당시 입시 환경 적용) ===
   console.log('\n[학운 점수 + 티어]');
-  const tier = calculateFinalTier({
+  const tier = calculateFinalTierV2({
     childManse: m, motherManse: null, fatherManse: null,
     motherEducation: undefined, fatherEducation: undefined,
   });

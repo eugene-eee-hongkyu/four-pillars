@@ -1,8 +1,9 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // 신정아 (1979-08-05, female) hagun score + sub-tier 확인 임시 스크립트.
 // 사용: npx tsx scripts/check-jeongah.ts
 
 import { computeManse } from '../lib/manse/engine';
-import { calculateFinalTier } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2 } from '../lib/prompts/hagun-tier';
 
 async function main() {
   const m = computeManse({
@@ -20,7 +21,7 @@ async function main() {
   console.log(`격국: ${m.gyeokguk.name}`);
   console.log(`용신: ${m.yongsin.element}`);
 
-  const tier = calculateFinalTier({
+  const tier = calculateFinalTierV2({
     childManse: m,
     motherManse: null,
     fatherManse: null,

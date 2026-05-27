@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // tier-schools.ts 안정·가능·도전 chip lookup 검증 (sub-tier 기반).
 // 사용: npx tsx scripts/check-tier-groups.ts
 

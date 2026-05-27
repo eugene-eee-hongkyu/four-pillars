@@ -14,7 +14,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { ManseResult } from '@/lib/manse/engine';
-import { computeHagun, scoreToGrade, calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
+import { computeHagun, calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
 import { getTierSchoolGroups } from '@/lib/manse/tier-schools';
 
 interface Props {
@@ -119,8 +119,6 @@ interface ExtendedProps extends Props {
 
 export function HagunSignerBreakdown({ manse }: ExtendedProps) {
   const breakdown = computeHagun(manse);
-  const grade = scoreToGrade(breakdown.total);
-  const gauge = gradeToGauge(grade.label);
 
   // v2: 안정·가능 chip (parent education 없이 사주 본질만 기준)
   const finalTier = calculateFinalTierV2({
@@ -131,6 +129,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
     fatherEducation: null,
   });
   const tierGroups = getTierSchoolGroups(finalTier.subTier);
+  const gauge = gradeToGauge(finalTier.hagunLabel);
 
   const positive = breakdown.hits.filter(h => h.value > 0).sort((a, b) => b.value - a.value);
   const top3 = positive.slice(0, 3);
@@ -193,7 +192,7 @@ export function HagunSignerBreakdown({ manse }: ExtendedProps) {
 
         <View className="flex-row items-baseline gap-2 flex-wrap">
           <Text className="font-heading-bold text-display-sm text-text-pri">
-            {grade.label}
+            {finalTier.hagunLabel}
           </Text>
           <Text className="font-body text-body-md text-text-sub">·</Text>
           <Text className="font-body text-body-md text-text-sub">

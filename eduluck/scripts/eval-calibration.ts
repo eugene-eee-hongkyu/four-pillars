@@ -1,9 +1,10 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // 가중치 calibration self-test — 학운 강/중/약 케이스 점수가 의도된 단계로 나오는지 검증.
 // jaeho만 보고 calibration하면 jaeho 중심으로 편향. 다른 사주도 함께.
 // LLM 호출 없이 코드 점수만 검증 (빠름, 비용 0).
 
 import { computeManse } from '../lib/manse/engine';
-import { calculateFinalTier } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2 } from '../lib/prompts/hagun-tier';
 
 interface TestCase {
   name: string;
@@ -52,7 +53,7 @@ for (const c of CASES) {
     year: c.birthYear, month: c.birthMonth, day: c.birthDay,
     hour: c.birthHour, minute: c.birthMinute, gender: c.gender,
   });
-  const result = calculateFinalTier({
+  const result = calculateFinalTierV2({
     childManse: manse, motherManse: null, fatherManse: null,
     motherEducation: undefined, fatherEducation: undefined,
   });

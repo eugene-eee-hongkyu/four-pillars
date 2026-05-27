@@ -30,31 +30,6 @@ import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
 import { lookupSchoolTier, tierToParentWeight, type SchoolTier } from '../manse/university-tier';
 
-export type HagunGrade =
-  | 'very-strong' | 'strong' | 'upper-mid'
-  | 'mid' | 'lower-mid' | 'weak-upper'
-  | 'weak-mid' | 'weak-lower' | 'very-weak' | 'non-college';
-
-interface HagunGradeInfo {
-  grade: HagunGrade;
-  label: string;
-  baseTier: string;
-  baseTierRange: [number, number]; // 숫자 티어 (전문대=11, 비대학=12로 표현)
-}
-
-const HAGUN_GRADE_TABLE: HagunGradeInfo[] = [
-  { grade: 'very-strong', label: '매우 강',    baseTier: '1~2티어',  baseTierRange: [1, 2] },
-  { grade: 'strong',      label: '강',         baseTier: '2~3티어',  baseTierRange: [2, 3] },
-  { grade: 'upper-mid',   label: '중상',       baseTier: '3~4티어',  baseTierRange: [3, 4] },
-  { grade: 'mid',         label: '중',         baseTier: '4~5티어',  baseTierRange: [4, 5] },
-  { grade: 'lower-mid',   label: '중하',       baseTier: '5~6티어',  baseTierRange: [5, 6] },
-  { grade: 'weak-upper',  label: '약상',       baseTier: '6~7티어',  baseTierRange: [6, 7] },
-  { grade: 'weak-mid',    label: '약중',       baseTier: '7~8티어',  baseTierRange: [7, 8] },
-  { grade: 'weak-lower',  label: '약하',       baseTier: '8~10티어 또는 전문대', baseTierRange: [8, 10] },
-  { grade: 'very-weak',   label: '매우 약',    baseTier: '전문대 또는 비대학 트랙', baseTierRange: [11, 12] },
-  { grade: 'non-college', label: '비대학 강',  baseTier: '비대학 트랙', baseTierRange: [12, 12] },
-];
-
 // unsung.ts와 일관성: STRONG_STAGES + WEAK_STAGES 분류 그대로.
 // (이전 버그: '쇠'를 WEAK에서 누락 — unsung.ts에는 weak로 분류되지만 hagun-tier는 미반영.)
 const STRONG_UNSUNG = new Set(['장생', '관대', '건록', '제왕']);
@@ -432,18 +407,6 @@ function scoreHagun(m: ManseResult): number {
  *    홍규 71.6 강 / 정환 64.5 강 / 세형 74.5 매우 강 / 윤수 90.1 매우 강 /
  *    상수 80.1 매우 강 / 두흥 58.9 중상 / 승희 61.7 강 (boundary) /
  *    영진 11.3 매우 약 (외부변수) / 와이프 45.4 중하 */
-export function scoreToGrade(score: number): HagunGradeInfo {
-  if (score >= 73.0) return HAGUN_GRADE_TABLE[0]; // 매우 강 (1~2티어)
-  if (score >= 61.7) return HAGUN_GRADE_TABLE[1]; // 강 (2~3티어)
-  if (score >= 54.6) return HAGUN_GRADE_TABLE[2]; // 중상 (3~4티어)
-  if (score >= 48.2) return HAGUN_GRADE_TABLE[3]; // 중 (4~5티어)
-  if (score >= 42.6) return HAGUN_GRADE_TABLE[4]; // 중하 (5~6티어)
-  if (score >= 36.9) return HAGUN_GRADE_TABLE[5]; // 약상 (6~7티어)
-  if (score >= 30.5) return HAGUN_GRADE_TABLE[6]; // 약중 (7~8티어)
-  if (score >= 17.0) return HAGUN_GRADE_TABLE[7]; // 약하 (8~10티어)
-  if (score >= 2.1)  return HAGUN_GRADE_TABLE[8]; // 매우 약 (전문대)
-  return HAGUN_GRADE_TABLE[9];                    // 비대학 강
-}
 
 interface ParentEducationInput {
   level: string | null;
@@ -519,113 +482,6 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
   if (total < -2) total = -2;
 
   return { total, breakdown };
-}
-
-export interface FinalTierResult {
-  hagunScore: number;
-  hagunGrade: HagunGrade;
-  hagunLabel: string;
-  baseTier: string;
-  baseTierRange: [number, number];
-  parentAdjust: number;
-  parentAdjustBreakdown: string[];
-  /** 최종 추천 티어 범위 (베이스 ± 조정, 한도 ±2). 사주 베이스 절반 이상 뒤집지 않음. */
-  finalTierRange: [number, number];
-  /** 점수 기반 confidence — 같은 단계 안에서도 점수에 따라 강도 다름 */
-  confidence: 'certain' | 'likely' | 'reach';
-  /** 핵심 추천 티어 (1, 2, 3, ...). finalTierRange[0] 또는 +1. */
-  primaryTier: number;
-  /** 안정권 티어 (primaryTier + 1) */
-  safetyTier: number;
-  /** LLM 풀이용 한 줄 confidence 표현: "1티어 안정 영역" / "1티어 가능 + 2티어 안정" / "1티어 도전 + 2티어 안정"
-   *  (2026-05-23 표현 약화: "확실한" → "안정 영역"·"가능" — Counterfactual cutoff random 33% 통과 반영) */
-  confidenceLabel: string;
-  /** v2 30 sub-tier label (예: '1-2', '4-3'). LLM 내부 학교명 분기용, 사용자 출력 ✗. */
-  subTier: string;
-  /** sub-tier 레인지 ('엄청 강·강·약강' 라벨). LLM 내부 분기용, 사용자 출력 ✗. */
-  subTierLabel: '엄청 강' | '강' | '약강';
-  /** LLM 풀이용 한 줄 요약 */
-  oneLineSummary: string;
-}
-
-/** 점수 + 최종 티어 범위로부터 confidence + primary/safety 티어 산출.
- *  같은 단계 안에서도 점수에 따라 certain/likely/reach 분리.
- *  v2: subTier ('1-2' 등) + subTierLabel ('엄청 강·강·약강') 도 함께 산출. */
-function calcConfidence(score: number, finalTierRange: [number, number]): {
-  confidence: 'certain' | 'likely' | 'reach';
-  primaryTier: number;
-  safetyTier: number;
-  label: string;
-  subTier: string;
-  subTierLabel: '엄청 강' | '강' | '약강';
-} {
-  const primaryTier = finalTierRange[0]; // 핵심 추천 = 단계 상단 (낮은 숫자가 위)
-  // 안정권: 범위 내 다음 티어. range가 [1,1] 등 단일이면 +1.
-  const safetyTier = finalTierRange[1] === finalTierRange[0]
-    ? Math.min(primaryTier + 1, 12)
-    : finalTierRange[1];
-
-  // v8: 정규화 score (0~100) + 30단계 cutoff 위치로 confidence 결정.
-  //   primaryTier(t)는 finalTierRange[0]. t의 30단계 sub cutoff [t-1, t-2, t-3] 비교.
-  //   score >= t-2 cutoff → certain (상위 2/3 영역)
-  //   score >= t-3 cutoff → likely (하위 1/3 영역)
-  //   미달 → reach
-  const NORMALIZED_CUTOFFS: number[] = [
-    100.0, 92.9, 87.9, // 1-1, 1-2, 1-3
-    81.6, 76.6, 73.0,  // 2-1, 2-2, 2-3
-    68.8, 64.5, 61.7,  // 3-1, 3-2, 3-3
-    58.9, 56.7, 54.6,  // 4-1, 4-2, 4-3
-    52.5, 50.4, 48.2,  // 5-1, 5-2, 5-3
-    46.8, 44.7, 42.6,  // 6-1, 6-2, 6-3
-    41.1, 39.0, 36.9,  // 7-1, 7-2, 7-3
-    34.8, 32.6, 30.5,  // 8-1, 8-2, 8-3
-    29.1, 27.0, 24.1,  // 9-1, 9-2, 9-3
-    21.3, 17.0, 2.1,   // 10-1, 10-2, 10-3
-  ];
-  const tierIdx = Math.max(1, Math.min(12, primaryTier));
-  // primaryTier가 11(전문대) 또는 12(비대학)인 경우 30단계 cutoff에 없으므로 마지막 영역 사용
-  const baseIdx = Math.min(27, (tierIdx - 1) * 3); // 10-1 idx = 27
-  const midCutoff = NORMALIZED_CUTOFFS[baseIdx + 1] ?? 0;
-  const botCutoff = NORMALIZED_CUTOFFS[baseIdx + 2] ?? 0;
-
-  let confidence: 'certain' | 'likely' | 'reach';
-  if (score >= midCutoff) confidence = 'certain';
-  else if (score >= botCutoff) confidence = 'likely';
-  else confidence = 'reach';
-
-  // v2 sub-tier 결정.
-  //   - confidence 'certain' 이면 점수가 t-1 cutoff 이상인지로 1 vs 2 결정 (둘 다 '엄청 강·강')
-  //   - 'likely' → t-3 ('약강')
-  //   - 'reach' 면 한 단계 떨어졌으니 다음 티어 1단계로 표시 (안정 권유)
-  const topCutoff = NORMALIZED_CUTOFFS[baseIdx] ?? 0;
-  let subStep: 1 | 2 | 3;
-  let subStepLabel: '엄청 강' | '강' | '약강';
-  let subTierMajor = tierIdx;
-  if (confidence === 'certain') {
-    if (score >= topCutoff) { subStep = 1; subStepLabel = '엄청 강'; }
-    else { subStep = 2; subStepLabel = '강'; }
-  } else if (confidence === 'likely') {
-    subStep = 3; subStepLabel = '약강';
-  } else {
-    // reach — 사실은 다음 티어로 떨어진 것으로 본다.
-    subTierMajor = Math.min(10, tierIdx + 1);
-    subStep = 1; subStepLabel = '엄청 강';
-  }
-  const subTier = `${subTierMajor}-${subStep}`;
-
-  let label: string;
-  // 1티어 최상위 (1-1 통과, 정규화 100점) — 의대·서울대 최상위·KAIST·POSTECH
-  if (primaryTier === 1 && score >= NORMALIZED_CUTOFFS[0]) {
-    label = `1티어 최상위 도전 영역`;
-  } else if (confidence === 'certain') {
-    label = `${primaryTier}티어 안정 영역`;
-  } else if (confidence === 'likely') {
-    label = `${primaryTier}티어 가능 + ${safetyTier}티어 안정`;
-  } else {
-    label = `${primaryTier}티어 도전 + ${safetyTier}티어 안정`;
-  }
-
-  return { confidence, primaryTier, safetyTier, label, subTier, subTierLabel: subStepLabel };
 }
 
 /** 현재 대운·세운의 십성으로 학운 시기 강약 평가.
@@ -784,48 +640,3 @@ export function calculateFinalTierV2(input: ParentTierAdjustInput): FinalTierRes
   };
 }
 
-/** @deprecated v2 refactor (2026-05-26) — calculateFinalTierV2 를 사용하세요.
- *  Phase 3 에서 제거 예정. */
-export function calculateFinalTier(input: ParentTierAdjustInput): FinalTierResult {
-  const hagunScore = scoreHagun(input.childManse);
-  const gradeInfo = scoreToGrade(hagunScore);
-  const parentAdj = calcParentAdjust(input);
-
-  // 베이스 ± 조정. 단, 사주 베이스를 절반 이상 뒤집지 않음 (조정 후 최대 베이스 범위 -2 ~ +2)
-  let [lo, hi] = gradeInfo.baseTierRange;
-  lo = Math.max(1, lo - parentAdj.total);
-  hi = Math.max(1, hi - parentAdj.total);
-  // baseTierRange는 lo<=hi 이므로 조정 후도 유지
-
-  // 전문대(11)·비대학(12)는 그대로 유지
-  if (gradeInfo.baseTierRange[1] >= 11) {
-    lo = gradeInfo.baseTierRange[0];
-    hi = gradeInfo.baseTierRange[1];
-  }
-
-  // confidence 산출 — 부모 환경 조정 후 finalTierRange 기준
-  const conf = calcConfidence(hagunScore, [lo, hi]);
-
-  const summary =
-    `학운 단계 ${gradeInfo.label} (점수 ${hagunScore}) → 베이스 ${gradeInfo.baseTier}, ` +
-    `부모 환경 변수 조정 ${parentAdj.total >= 0 ? '+' : ''}${parentAdj.total} → ` +
-    `최종 추천 티어 ${lo === hi ? `${lo}티어` : `${lo}~${hi}티어`} (${conf.label})`;
-
-  return {
-    hagunScore,
-    hagunGrade: gradeInfo.grade,
-    hagunLabel: gradeInfo.label,
-    baseTier: gradeInfo.baseTier,
-    baseTierRange: gradeInfo.baseTierRange,
-    parentAdjust: parentAdj.total,
-    parentAdjustBreakdown: parentAdj.breakdown,
-    finalTierRange: [lo, hi],
-    confidence: conf.confidence,
-    primaryTier: conf.primaryTier,
-    safetyTier: conf.safetyTier,
-    confidenceLabel: conf.label,
-    subTier: conf.subTier,
-    subTierLabel: conf.subTierLabel,
-    oneLineSummary: summary,
-  };
-}

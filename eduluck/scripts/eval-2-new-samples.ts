@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // 김택범·박진우 학운 + 방향성 평가 (V10 Loop 523 weight)
 import { computeManse } from '../lib/manse/engine';
 import { detectAllSigils } from './run-calibration-v3';

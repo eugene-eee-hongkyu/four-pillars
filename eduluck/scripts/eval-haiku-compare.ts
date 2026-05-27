@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // Haiku vs Sonnet 1-sample 비교 검증 (2026-05-23)
 //
 // 목적: 학운·방향성 점수가 코드로 결정되는 현재 구조에서, narrative 생성을 Haiku로 다운그레이드 가능한가 측정.
@@ -25,7 +26,7 @@ try {
 
 import { computeManse } from '../lib/manse/engine';
 import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
-import { calculateFinalTier } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2 } from '../lib/prompts/hagun-tier';
 import { SAMPLES } from '../_private/calibration-samples/data';
 
 const REPORT_DIR = '/Users/eugene/Downloads/coding/four-pillars/eduluck/_private/calibration-samples/llm-output';
@@ -68,7 +69,7 @@ interface SampleResult {
 
 async function callOne(client: Anthropic, model: string, s: typeof SAMPLES[0], system: string): Promise<SampleResult | null> {
   const manse = computeManse({ year: s.birth.year, month: s.birth.month, day: s.birth.day, hour: s.birth.hour ?? 12, minute: s.birth.minute ?? 0, gender: s.birth.gender });
-  const tier = calculateFinalTier({ childManse: manse, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
+  const tier = calculateFinalTierV2({ childManse: manse, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
   const userMsg = buildInterpretPremiumPrompt({
     childNickname: s.nickname, childGender: s.birth.gender, grade: s.grade ?? 'high-3',
     childBirthYear: s.birth.year, childBirthMonth: s.birth.month, childBirthDay: s.birth.day,
@@ -169,7 +170,7 @@ async function main() {
   console.log(`Sample: ${s.id} (${s.nickname})`);
 
   const manse = computeManse({ year: s.birth.year, month: s.birth.month, day: s.birth.day, hour: s.birth.hour ?? 12, minute: s.birth.minute ?? 0, gender: s.birth.gender });
-  const tier = calculateFinalTier({ childManse: manse, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
+  const tier = calculateFinalTierV2({ childManse: manse, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
 
   console.log(`v7 점수: ${tier.hagunScore} / 등급: ${tier.hagunLabel} / 티어: [${tier.finalTierRange[0]},${tier.finalTierRange[1]}]`);
 

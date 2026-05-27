@@ -3,7 +3,7 @@
 // 사용: pnpm tsx scripts/eval-hagun-scores-only.ts [--json output.json]
 
 import { computeManse } from '../lib/manse/engine';
-import { computeHagun, scoreToGrade } from '../lib/prompts/hagun-tier';
+import { computeHagun, scoreToSubTier, primaryTierToHagunLabel } from '../lib/prompts/hagun-tier';
 import { SAMPLES } from '../_private/calibration-samples/data';
 import { writeFileSync } from 'fs';
 
@@ -45,14 +45,14 @@ async function main() {
       gender: s.birth.gender,
     });
     const hg = computeHagun(manse);
-    const grade = scoreToGrade(hg.total);
+    const sub = scoreToSubTier(hg.total);
     rows.push({
       id: s.id,
       nickname: s.nickname,
       realTier: TIER_LABEL[s.id] ?? '?',
       total: hg.total,
-      grade: grade.label,
-      baseTier: grade.baseTier,
+      grade: primaryTierToHagunLabel(sub.primaryTier),
+      baseTier: sub.subTier,
       layer1: hg.layer1,
       layer2: hg.layer2,
       layer3: hg.layer3,

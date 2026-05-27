@@ -1,7 +1,7 @@
 // Prod hagun-tier.ts (v8)이 V6 #266 결과와 정합하는지 9 sample 검증
 import { computeManse } from '../lib/manse/engine';
 import { SAMPLES } from '../_private/calibration-samples/data';
-import { computeHagun, scoreToGrade } from '../lib/prompts/hagun-tier';
+import { computeHagun, scoreToSubTier, primaryTierToHagunLabel } from '../lib/prompts/hagun-tier';
 
 // V6 raw × (100/141) = 정규화 후 점수 (1-1 cutoff=141을 100으로 스케일)
 const EXPECTED = {
@@ -29,14 +29,15 @@ for (const [id, exp] of Object.entries(EXPECTED)) {
     hour: s.birth.hour, minute: s.birth.minute, gender: s.birth.gender,
   });
   const br = computeHagun(m);
-  const grade = scoreToGrade(br.total);
+  const sub = scoreToSubTier(br.total);
+  const gradeLabel = primaryTierToHagunLabel(sub.primaryTier);
   const scoreMatch = Math.abs(br.total - exp.normalized) <= 0.5;
-  const gradeMatch = grade.label === exp.expectedGrade;
+  const gradeMatch = gradeLabel === exp.expectedGrade;
   const allMatch = scoreMatch && gradeMatch;
   if (allMatch) pass++; else fail++;
   const sMark = scoreMatch ? '✓' : '✗';
   const gMark = gradeMatch ? '✓' : '✗ (expected ' + exp.expectedGrade + ')';
-  console.log(`${exp.nickname.padEnd(11)} | ${String(exp.raw).padStart(4)} | ${String(exp.normalized).padStart(13)} | ${String(br.total).padStart(10)} | ${grade.label.padEnd(7)} ${gMark.padEnd(15)} | ${sMark}`);
+  console.log(`${exp.nickname.padEnd(11)} | ${String(exp.raw).padStart(4)} | ${String(exp.normalized).padStart(13)} | ${String(br.total).padStart(10)} | ${gradeLabel.padEnd(7)} ${gMark.padEnd(15)} | ${sMark}`);
 }
 
 console.log(`\n결과: ${pass}/${pass + fail} 정합`);

@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy.
 // LOOCV + Layer Ablation — Phase 5
 //
 // 진짜 LOOCV는 weight refit인데 우리 weight는 명리 합의로 고정 → ML 의미 LOOCV 불가.

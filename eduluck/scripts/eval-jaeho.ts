@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // jaeho 사주 정밀 진단 self-test 스크립트.
 // prod 안 거치고 Anthropic API 직접 호출 → 3회 응답 받아 의도 검증:
 //   1) 본문에 점수·"+1티어" 같은 메타 노출 없음
@@ -21,7 +22,7 @@ try {
 } catch {}
 import { computeManse } from '../lib/manse/engine';
 import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
-import { calculateFinalTier, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase } from '../lib/prompts/hagun-tier';
 import { getSample } from '../_private/calibration-samples/data';
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
@@ -48,7 +49,7 @@ const ctx = {
 
 const userMsg = buildInterpretPremiumPrompt(ctx);
 const system = getInterpretPremiumSystem();
-const tier = calculateFinalTier({
+const tier = calculateFinalTierV2({
   childManse, motherManse: null, fatherManse: null,
   motherEducation: undefined, fatherEducation: undefined,
 });

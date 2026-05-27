@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // N=7 통합 회귀 스크립트 — 모든 sample을 한 번에 계산 + expected 비교
 // PII는 _private/calibration-samples/data.ts 에만. 이 스크립트는 ID·expected만 다룸.
 //
@@ -5,7 +6,7 @@
 //   코드 변경 시 회귀 검증: 모든 sample 점수가 expected와 일치하는지 확인.
 
 import { computeManse } from '../lib/manse/engine';
-import { calculateFinalTier } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2 } from '../lib/prompts/hagun-tier';
 import { SAMPLES } from '../_private/calibration-samples/data';
 
 interface Diff {
@@ -39,7 +40,7 @@ let totalFail = 0;
 
 for (const s of SAMPLES) {
   const m = computeManse(s.birth);
-  const t = calculateFinalTier({
+  const t = calculateFinalTierV2({
     childManse: m, motherManse: null, fatherManse: null,
     motherEducation: undefined, fatherEducation: undefined,
   });

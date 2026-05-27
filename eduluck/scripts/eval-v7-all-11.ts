@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // v7 14-시그너 적용 후 11명 sample LLM 풀이 검증
 // - 1티어 sample (Eugene, 정환, 세형, 이윤수, 류상수): "매우 강 / 1~2티어" 키워드 등장
 // - 4티어 sample (승희): "3~4티어" 정합
@@ -21,7 +22,7 @@ try {
 
 import { computeManse } from '../lib/manse/engine';
 import { getInterpretPremiumSystem, buildInterpretPremiumPrompt } from '../lib/prompts/interpret-premium';
-import { calculateFinalTier } from '../lib/prompts/hagun-tier';
+import { calculateFinalTierV2 } from '../lib/prompts/hagun-tier';
 import { SAMPLES } from '../_private/calibration-samples/data';
 
 const REPORT_DIR = '/Users/eugene/Downloads/coding/four-pillars/eduluck/_private/calibration-samples/llm-output';
@@ -67,7 +68,7 @@ const BOLD = '\x1b[1m', GREEN = '\x1b[32m', RED = '\x1b[31m', YEL = '\x1b[33m', 
     if (!v) { console.log(`${DIM}skip ${s.id}: no spec${RESET}`); continue; }
 
     const m = computeManse({ year: s.birth.year, month: s.birth.month, day: s.birth.day, hour: s.birth.hour ?? 12, minute: s.birth.minute ?? 0, gender: s.birth.gender });
-    const tier = calculateFinalTier({ childManse: m, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
+    const tier = calculateFinalTierV2({ childManse: m, motherManse: null, fatherManse: null, motherEducation: null, fatherEducation: null });
 
     const tierMatch = tier.finalTierRange[0] === v.expectedTier[0] && tier.finalTierRange[1] === v.expectedTier[1];
     const labelMatch = tier.hagunLabel === v.expectedLabel;

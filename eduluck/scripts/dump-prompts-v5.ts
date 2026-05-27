@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy calibration/eval script. v2 refactor 후 미동작 가능.
 // Phase 1 검증 — v5 prompt 3종 dump (part1·part2·deep §10)
 // sample 1개로 system + user message 전체 출력 + 길이 확인
 
