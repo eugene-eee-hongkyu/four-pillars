@@ -12,6 +12,7 @@
 import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';
 import type { GyeokgukResult } from './gyeokguk';
+import { normalizeScore, normalizedToLevel, NORMALIZE_CUTOFFS, type NormalizedLevel } from './normalized-score';
 
 export type MedicalLevel = '약' | '보통' | '강' | '매우 강';
 
@@ -25,6 +26,9 @@ export interface MedicalScoreSignal {
 export interface MedicalScoreResult {
   total: number;
   level: MedicalLevel;
+  /** 0-100 정규화 점수 (raw × 100 / 8). 16 모듈 통일 인터페이스. */
+  normalized: number;
+  normalizedLevel: NormalizedLevel;
   signals: MedicalScoreSignal[];
   /** prompt baseline에 그대로 주입할 한 줄 요약 */
   summary: string;
@@ -239,12 +243,16 @@ export function calcMedicalScore(input: CalcInput): MedicalScoreResult {
   // 중복 제거
   const dedupRecommendedFields = [...new Set(recommendedFields)];
 
+  const normalized = normalizeScore(total, NORMALIZE_CUTOFFS.medical);
+  const normalizedLevel = normalizedToLevel(normalized);
   const matchedNames = signals.filter(s => s.matched).map(s => s.name);
-  const summary = `의·약·치·생명과학 ${total}점 → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
+  const summary = `의·약·치·생명과학 ${total}점 (정규화 ${normalized}) → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
 
   return {
     total,
     level,
+    normalized,
+    normalizedLevel,
     signals,
     summary,
     recommendedFields: dedupRecommendedFields,

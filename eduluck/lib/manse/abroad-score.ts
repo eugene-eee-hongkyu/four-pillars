@@ -11,6 +11,7 @@ import type { HapchunhResult } from './hapchunh';
 import type { ShenshaResult } from './shensha';
 import type { GyeokgukResult } from './gyeokguk';
 import type { LuckCycles } from './luck-cycles';
+import { normalizeScore, normalizedToLevel, NORMALIZE_CUTOFFS, type NormalizedLevel } from './normalized-score';
 
 export type AbroadLevel = '약' | '보통' | '강' | '무조건';
 
@@ -30,6 +31,9 @@ export interface AbroadScoreResult {
   total: number;
   /** 등급 (총점 기반) */
   level: AbroadLevel;
+  /** 0-100 정규화 점수 (raw × 100 / 9). 16 모듈 통일 인터페이스. */
+  normalized: number;
+  normalizedLevel: NormalizedLevel;
   /** 시그널별 breakdown — prompt baseline에 그대로 주입 */
   signals: AbroadScoreSignal[];
   /** 한 줄 요약 (prompt용) */
@@ -199,12 +203,16 @@ export function calcAbroadScore(input: CalcInput): AbroadScoreResult {
   else if (totalScore <= 8) level = '강';
   else level = '무조건';
 
+  const normalized = normalizeScore(totalScore, NORMALIZE_CUTOFFS.abroad);
+  const normalizedLevel = normalizedToLevel(normalized);
   const matchedNames = signals.filter(s => s.matched).map(s => s.name);
-  const summary = `해외운 ${totalScore}/11 → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
+  const summary = `해외운 ${totalScore}/11 (정규화 ${normalized}) → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
 
   return {
     total: totalScore,
     level,
+    normalized,
+    normalizedLevel,
     signals,
     summary,
   };

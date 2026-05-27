@@ -11,6 +11,7 @@ import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';
 import type { GyeokgukResult } from './gyeokguk';
 import type { UnsungResult } from './unsung';
+import { normalizeScore, normalizedToLevel, NORMALIZE_CUTOFFS, type NormalizedLevel } from './normalized-score';
 
 export type PublicForceLevel = '약' | '보통' | '강' | '매우 강';
 
@@ -24,6 +25,9 @@ export interface PublicForceScoreSignal {
 export interface PublicForceScoreResult {
   total: number;
   level: PublicForceLevel;
+  /** 0-100 정규화 점수 (raw × 100 / 8). 16 모듈 통일 인터페이스. */
+  normalized: number;
+  normalizedLevel: NormalizedLevel;
   signals: PublicForceScoreSignal[];
   summary: string;
   /** 강·매우 강일 때 §17 학교 권유에서 우선 명시할 학교 카테고리 */
@@ -125,8 +129,10 @@ export function calcPublicForceScore(input: CalcInput): PublicForceScoreResult {
     recommendedFields.push('환경: 규율·신체 훈련·팀·국가 봉사');
   }
 
+  const normalized = normalizeScore(total, NORMALIZE_CUTOFFS.publicForce);
+  const normalizedLevel = normalizedToLevel(normalized);
   const matchedNames = signals.filter(s => s.matched).map(s => s.name);
-  const summary = `공무·사관·경찰 ${total}점 → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
+  const summary = `공무·사관·경찰 ${total}점 (정규화 ${normalized}) → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
 
-  return { total, level, signals, summary, recommendedFields };
+  return { total, level, normalized, normalizedLevel, signals, summary, recommendedFields };
 }

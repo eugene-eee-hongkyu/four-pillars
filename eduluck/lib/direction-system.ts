@@ -483,6 +483,10 @@ export interface DirectionEntry {
   label: string;
   emoji: string;
   level: DirectionLevel;
+  /** 0-100 정규화 점수 (raw cap 100). 16 모듈 통일 인터페이스. */
+  normalized: number;
+  /** 정규화 점수 기반 통일 레벨 (≥100 매우강 / ≥75 강 / ≥50 보통 / <50 약). */
+  normalizedLevel: '약' | '보통' | '강' | '매우 강';
   total: number;
   recommendedFields: string[];
 }
@@ -536,10 +540,17 @@ export function buildDirectionEntries(
     const existing = existingRecommendedFields?.[key];
     // 기존 모듈이 빈 배열을 반환하는 경우(약·보통 level)에도 default로 fallback
     const recommendedFields = (existing && existing.length > 0) ? existing : DEFAULT_RECOMMENDED_FIELDS[key];
+    // 정규화 — directions raw 가 이미 0-100 기준이라 cap 100 만 적용
+    const normalized = Math.min(100, Math.max(0, Math.round(total)));
+    const normalizedLevel: '약' | '보통' | '강' | '매우 강' =
+      normalized >= 100 ? '매우 강'
+        : normalized >= 75 ? '강'
+        : normalized >= 50 ? '보통'
+        : '약';
     return {
       key, label: ui.label, emoji: ui.emoji,
       level: scoreToLevel(total),
-      total, recommendedFields,
+      total, normalized, normalizedLevel, recommendedFields,
     };
   });
   // 정렬: 강도 우선 (매우 강 > 강 > 보통 > 약), 동률 시 total 큰 순

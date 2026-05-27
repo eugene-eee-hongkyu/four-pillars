@@ -9,6 +9,7 @@ import { splitPillar } from './pillars';
 import type { ShenshaResult } from './shensha';
 import type { SipsinResult } from './sipsin';
 import type { GyeokgukResult } from './gyeokguk';
+import { normalizeScore, normalizedToLevel, NORMALIZE_CUTOFFS, type NormalizedLevel } from './normalized-score';
 
 export type ArtsLevel = '약' | '보통' | '강' | '매우 강';
 
@@ -22,6 +23,10 @@ export interface ArtsScoreSignal {
 export interface ArtsScoreResult {
   total: number;
   level: ArtsLevel;
+  /** 0-100 정규화 점수 (raw × 100 / 6). 16 모듈 통일 인터페이스. */
+  normalized: number;
+  /** 정규화 점수 기반 통일 레벨 (≥100 매우강 / ≥75 강 / ≥50 보통 / <50 약). */
+  normalizedLevel: NormalizedLevel;
   signals: ArtsScoreSignal[];
   /** prompt baseline에 그대로 주입할 한 줄 요약 */
   summary: string;
@@ -168,12 +173,16 @@ export function calcArtsScore(input: CalcInput): ArtsScoreResult {
     }
   }
 
+  const normalized = normalizeScore(total, NORMALIZE_CUTOFFS.arts);
+  const normalizedLevel = normalizedToLevel(normalized);
   const matchedNames = signals.filter(s => s.matched).map(s => s.name);
-  const summary = `예술·디자인 ${total}점 → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
+  const summary = `예술·디자인 ${total}점 (정규화 ${normalized}) → ${level}${matchedNames.length > 0 ? ` (${matchedNames.join('·')})` : ''}`;
 
   return {
     total,
     level,
+    normalized,
+    normalizedLevel,
     signals,
     summary,
     recommendedFields,
