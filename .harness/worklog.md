@@ -6,7 +6,21 @@
 
 ---
 
-## Session 2026-05-28 14:28 — 진단 history·BirthSummary·deviceId 분리·VersionFooter patch
+## Session 2026-05-28 14:49 — project root PNG 12개 정리 + .gitignore 보강
+
+### 작업 요약
+
+- **project root 임시 PNG 12개 일괄 삭제** (`25c939f`): screen1*.png 4건 (4월 화면 1 디버깅) + result-test·tone-buttons·tone-check.png + chat-tone-header.png + sehyung-*.png 3건 (5/27 e2e) + feedback-form-render.png (5/28 e2e). 모두 일회성 디버깅 캡쳐 = 코딩 시 재사용 ✗.
+- **`.gitignore` 패턴 보강**: `/*.png` (project root level only — eduluck/assets 영향 ✗) + `*-render.png`·`*-scrolled.png`·`*-section.png` 추가. 향후 Playwright·e2e 스크린샷 root에 떨어져도 자동 무시.
+- **eduluck/ root config 파일 위치 검토** (사용자 질의 응답): package.json·tsconfig.json·app.json·babel·metro·tailwind·postcss·vercel·playwright·vitest·README·SPEC 모두 표준 root 위치 (빌드 도구·IDE·플랫폼 자동 탐색). 옮길 곳 ✗.
+- **eduluck/assets/ 5 PNG 보존**: icon·favicon·splash·og-image·adaptive-icon (Expo 앱 메타 필수, git tracked 유지).
+
+### 다음 액션
+
+- mom test 10명 모집·진행 (인프라 완비).
+- 새 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석.
+
+
 
 ### 작업 요약
 

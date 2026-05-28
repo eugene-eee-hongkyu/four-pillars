@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 14:28
-## 마지막 업데이트: 2026-05-28 14:28
+## 마지막 실행: 2026-05-28 14:49
+## 마지막 업데이트: 2026-05-28 14:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 인프라 완비 (자체 form + 진단 history + BirthSummary + deviceId 분리 funnel + CTA dedup). mom test 10명 실제 진행 대기.
+- mom test 인프라 완비 (자체 form + 진단 history + BirthSummary + deviceId 분리 funnel + CTA dedup + project root 정리). mom test 10명 실제 진행 대기.
 
 ### 이어서 할 것
 
@@ -143,11 +143,12 @@
 - [x] 자체 피드백 폼 풀스택 (`550b99e`) — DB·API·UI·CTA 2자리·Mixpanel 이벤트 ⭐
 - [x] e2e 검증 (API+UI+DB) + test data DELETE 완료
 - [x] Supabase 진단 데이터 저장 확인 — sessions 110·subjects 165·interpretations 128
-- [x] **진단 history 카드 + 새 진단 분기 (`e469511`)** — localStorage sessionsHistory[] ⭐
-- [x] **VersionFooter build patch KST timestamp (`a1e2edb`·`4d1f4c8`)** — 매 배포 unique
-- [x] **BirthSummary 카드 (`40bb081`·`7813ea0`)** — child-manse·interpret-premium·interpret-deep ⭐
-- [x] **피드백 제출 후 CTA 자동 숨김 (`8579349`)** — sessionId 단위 dedup
-- [x] **Mixpanel deviceId 분리 (`7813ea0`)** — 장비 단위 사용자, sessionId super property ⭐
+- [x] 진단 history 카드 + 새 진단 분기 (`e469511`) — localStorage sessionsHistory[] ⭐
+- [x] VersionFooter build patch KST timestamp (`a1e2edb`·`4d1f4c8`) — 매 배포 unique
+- [x] BirthSummary 카드 (`40bb081`·`7813ea0`) — child-manse·interpret-premium·interpret-deep ⭐
+- [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`) — sessionId 단위 dedup
+- [x] Mixpanel deviceId 분리 (`7813ea0`) — 장비 단위 사용자, sessionId super property ⭐
+- [x] **project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
 - [ ] 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
