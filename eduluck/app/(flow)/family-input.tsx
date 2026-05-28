@@ -24,6 +24,7 @@ import { Toast } from '@/components/ui/Toast';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
 import { StepIndicator } from '@/components/ui/StepIndicator';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 function parseDate(s: string) {
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -205,6 +206,10 @@ export default function FamilyInput() {
         setFatherSkipped();
       }
 
+      track(EVENTS.FAMILY_INPUT_COMPLETE, {
+        has_mother: !!state.mother?.birthDay,
+        has_father: !!state.father?.birthDay,
+      });
       router.push('/(flow)/child-manse' as never);
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));

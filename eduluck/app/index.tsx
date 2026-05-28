@@ -8,6 +8,7 @@ import { Toast } from '@/components/ui/Toast';
 import { Logo } from '@/components/ui/Logo';
 import { useFlow } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 export default function Landing() {
   const router = useRouter();
@@ -15,8 +16,10 @@ export default function Landing() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 진입 트래킹은 세션 발급 후 cta-tap 시점에 함께 보냄 (pre-session UUID 오염 회피)
-  useEffect(() => {}, []);
+  // 랜딩 진입 트래킹 (Mixpanel)
+  useEffect(() => {
+    track(EVENTS.LANDING_VIEW);
+  }, []);
 
   const handleStart = async () => {
     setLoading(true);
@@ -26,12 +29,13 @@ export default function Landing() {
       if (!res.ok) throw new Error(await res.text());
       const { sessionId } = await res.json();
       setSessionId(sessionId);
-      // 진입 추적
+      // 진입 추적 (legacy server log + Mixpanel)
       void fetch('/api/track', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, screen: 'landing', action: 'cta-tap' }),
       });
+      track(EVENTS.START_DIAGNOSIS_CLICK);
       router.push('/(flow)/family-input' as never);
     } catch (e) {
       setError(translateError(e instanceof Error ? e.message : null));

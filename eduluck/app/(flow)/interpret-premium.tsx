@@ -20,6 +20,7 @@ import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
 import { DirectionCard } from '@/components/manse/DirectionCard';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -63,6 +64,7 @@ export default function InterpretPremium() {
     if (state.premiumPart2Text && !part2Done) {
       setPart2Done(true);
       setPart2Visible(true);  // 캐시 있으면 자동 노출
+      track(EVENTS.PART2_COMPLETE, { from_cache: true });
     }
   }, [state.premiumPart2Text, part2Done]);
 
@@ -130,6 +132,7 @@ export default function InterpretPremium() {
             onComplete={(text) => {
               setPremiumPart1Text(text);
               setPart1Done(true);
+              track(EVENTS.PART1_COMPLETE);
             }}
           />
         ) : null}
@@ -180,6 +183,7 @@ export default function InterpretPremium() {
                 onComplete={(text) => {
                   setPremiumPart2Text(text);
                   setPart2Done(true);
+                  track(EVENTS.PART2_COMPLETE);
                 }}
               />
             ) : null}
@@ -206,7 +210,7 @@ export default function InterpretPremium() {
 
             {part2Done && (
               <View className="px-container-padding mt-4 gap-2">
-                <Button onPress={() => router.push('/interpret-deep-select')}>
+                <Button onPress={() => { track(EVENTS.DEEPDIVE_SELECT_CLICK); router.push('/interpret-deep-select'); }}>
                   📋 더 자세히 알고 싶은 영역 선택 (20 섹션)
                 </Button>
                 <Button variant="ghost" onPress={() => router.replace('/')}>

@@ -1,7 +1,8 @@
 // 화면 3 (재설계): 가족 만세력 — 자녀 중심 + 어머니·아빠 만세력 카드 + 합 카드 inline
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { PalcaTable } from '@/components/manse/PalcaTable';
@@ -28,6 +29,10 @@ export default function ChildManse() {
   const mother = state.motherManse ? hydrateManse(state.motherManse) : null;
   const father = state.fatherManse ? hydrateManse(state.fatherManse) : null;
   const name = state.child.nickname || '아이';
+
+  useEffect(() => {
+    track(EVENTS.CHILD_MANSE_VIEW);
+  }, []);
 
   return (
     <View className="flex-1 bg-surface">
@@ -119,7 +124,7 @@ export default function ChildManse() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => router.push('/(flow)/interpret-premium')}>정밀 진단 받기</Button>
+        <Button onPress={() => { track(EVENTS.PREMIUM_START_CLICK); router.push('/(flow)/interpret-premium'); }}>정밀 진단 받기</Button>
       </StickyCTA>
     </View>
   );

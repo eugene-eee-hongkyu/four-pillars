@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { colors } from '@/design-tokens/tokens';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 interface Props {
   sessionId: string;
@@ -24,6 +25,7 @@ export function ShareButton({ sessionId, nickname, childSubjectId, motherSubject
   const handleShare = async () => {
     setStatus('loading');
     setErrMsg(null);
+    track(EVENTS.SHARE_CLICK);
     try {
       // 1. share token 조회
       let token: string | null = null;
