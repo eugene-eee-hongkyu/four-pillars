@@ -42,6 +42,10 @@ function loadInitial(): FlowState {
       if (!Array.isArray(merged.sessionsHistory)) {
         merged.sessionsHistory = [];
       }
+      // feedbackSubmittedSessions hydrate
+      if (!Array.isArray(merged.feedbackSubmittedSessions)) {
+        merged.feedbackSubmittedSessions = [];
+      }
       // history 각 snapshot 안의 ManseResult 도 hydrate (Persistent 스키마 확장 안전)
       merged.sessionsHistory = merged.sessionsHistory.map((s: SavedSession) => {
         if (!s?.snapshot) return s;
@@ -148,6 +152,8 @@ export interface FlowState {
   premiumPromptVersion: string | null;
   /** 한 디바이스에서 본 진단 history (랜딩 화면 카드 list). PREMIUM_PROMPT_VERSION 변경 시에도 보존 */
   sessionsHistory: SavedSession[];
+  /** 피드백 제출 완료한 sessionId 목록 — CTA 자동 숨김 용 (한 sessionId 1회 제출이면 모든 CTA 숨김) */
+  feedbackSubmittedSessions: string[];
 }
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumPart1Text·premiumPart2Text·deepDiveTexts) */
@@ -228,6 +234,7 @@ const initial: FlowState = {
   deepDiveTexts: {},
   premiumPromptVersion: null,
   sessionsHistory: [],
+  feedbackSubmittedSessions: [],
 };
 
 interface FlowContextValue {
@@ -266,6 +273,8 @@ interface FlowContextValue {
   loadSessionFromHistory: (sessionId: string) => boolean;
   /** 새 자녀 진단 시작 — current state 초기화, history는 유지. */
   startNewSession: () => void;
+  /** 피드백 제출 완료 표시 — sessionId 단위 1회, 모든 CTA 자동 숨김. */
+  markFeedbackSubmitted: (sessionId: string) => void;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -396,7 +405,11 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
   const resetAll = useCallback(() => {
-    setState((s) => ({ ...initial, sessionsHistory: s.sessionsHistory }));
+    setState((s) => ({
+      ...initial,
+      sessionsHistory: s.sessionsHistory,
+      feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+    }));
   }, []);
 
   /** 현재 state 를 history snapshot 으로 저장. 같은 sessionId 있으면 update. 최대 20개 유지 (최신 우선). */
@@ -444,7 +457,23 @@ export function FlowProvider({ children }: { children: ReactNode }) {
 
   /** 새 자녀 진단 시작 — current 초기화, history 유지. */
   const startNewSession = useCallback(() => {
-    setState((s) => ({ ...initial, sessionsHistory: s.sessionsHistory }));
+    setState((s) => ({
+      ...initial,
+      sessionsHistory: s.sessionsHistory,
+      feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+    }));
+  }, []);
+
+  /** 피드백 제출 완료 — sessionId 1회 push (dedup). */
+  const markFeedbackSubmitted = useCallback((sessionId: string) => {
+    if (!sessionId) return;
+    setState((s) => {
+      if (s.feedbackSubmittedSessions.includes(sessionId)) return s;
+      return {
+        ...s,
+        feedbackSubmittedSessions: [sessionId, ...s.feedbackSubmittedSessions].slice(0, 100),
+      };
+    });
   }, []);
 
   return (
@@ -474,6 +503,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         saveCurrentToHistory,
         loadSessionFromHistory,
         startNewSession,
+        markFeedbackSubmitted,
       }}
     >
       {children}

@@ -92,8 +92,8 @@ export default function InterpretDeep() {
           />
         ) : null}
 
-        {/* 📝 피드백 CTA — 다른 영역 보기 위, 강조 */}
-        {(cachedText || done) && (
+        {/* 📝 피드백 CTA — 다른 영역 보기 위, 강조. 이미 제출한 sessionId 면 숨김. */}
+        {(cachedText || done) && state.sessionId && !state.feedbackSubmittedSessions.includes(state.sessionId) && (
           <View className="px-container-padding mt-4">
             <Pressable
               onPress={() => {

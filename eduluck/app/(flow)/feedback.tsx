@@ -59,7 +59,7 @@ function ScoreRow({ value, onChange }: { value: Score; onChange: (v: Score) => v
 export default function FeedbackForm() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
-  const { state } = useFlow();
+  const { state, markFeedbackSubmitted } = useFlow();
 
   const source: 'premium-part2' | 'deep-dive' =
     params.source === 'deep-dive' ? 'deep-dive' : 'premium-part2';
@@ -133,6 +133,7 @@ export default function FeedbackForm() {
         q_count_quant: Object.values(scores).filter((v) => v !== null && v !== undefined).length,
         q_count_text: [q1, q8, q9, q10, q11].filter((t) => t.trim()).length,
       });
+      markFeedbackSubmitted(state.sessionId);
       setDone(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '제출 실패. 잠시 후 다시 시도해주세요.');

@@ -233,8 +233,8 @@ export default function InterpretPremium() {
               </View>
             )}
 
-            {/* 📝 피드백 CTA — 가족 공유와 영역 선택 사이, 강조 */}
-            {part2Done && (
+            {/* 📝 피드백 CTA — 가족 공유와 영역 선택 사이, 강조. 이미 제출한 sessionId 면 숨김. */}
+            {part2Done && state.sessionId && !state.feedbackSubmittedSessions.includes(state.sessionId) && (
               <View className="px-container-padding mt-4">
                 <Pressable
                   onPress={() => {
