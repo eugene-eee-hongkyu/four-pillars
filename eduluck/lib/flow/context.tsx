@@ -38,6 +38,19 @@ function loadInitial(): FlowState {
       if (!merged.deepDiveTexts || typeof merged.deepDiveTexts !== 'object') {
         merged.deepDiveTexts = {};
       }
+      // sessionsHistory hydrate (옛 schema 없으면 빈 배열). prompt 캐시 무효와 무관 — 사용자 history 영구 보존.
+      if (!Array.isArray(merged.sessionsHistory)) {
+        merged.sessionsHistory = [];
+      }
+      // history 각 snapshot 안의 ManseResult 도 hydrate (Persistent 스키마 확장 안전)
+      merged.sessionsHistory = merged.sessionsHistory.map((s: SavedSession) => {
+        if (!s?.snapshot) return s;
+        const snap = { ...s.snapshot };
+        if (snap.childManse) snap.childManse = hydrateManse(snap.childManse);
+        if (snap.motherManse) snap.motherManse = hydrateManse(snap.motherManse);
+        if (snap.fatherManse) snap.fatherManse = hydrateManse(snap.fatherManse);
+        return { ...s, snapshot: snap };
+      });
       // 옛 v4 legacy 필드 제거 — 2026-05-27 v4 단절
       delete (merged as Record<string, unknown>).premiumInterpretText;
       delete (merged as Record<string, unknown>).premiumInterpretVersion;
@@ -91,6 +104,19 @@ export interface FatherInput {
   birthLocation: string | null;
 }
 
+/** 진단 완료 후 history 카드 표시·복원용 스냅샷. 랜딩에서 "이전 진단" 카드로 노출. */
+export interface SavedSession {
+  sessionId: string;
+  savedAt: string;                                 // ISO timestamp
+  childNickname: string;
+  childBirth: { year: number; month: number; day: number; hour: number | null };
+  hagunLabel: string | null;
+  primaryTier: number | null;
+  hasPart2: boolean;
+  /** entire state snapshot for restore (Mother·Father 포함) */
+  snapshot: Omit<FlowState, 'sessionsHistory'>;
+}
+
 export interface FlowState {
   sessionId: string | null;
   userId: string | null;
@@ -120,6 +146,8 @@ export interface FlowState {
   deepDiveTexts: Record<number, string>;
   /** v5 premium prompt 버전 — 코드 PREMIUM_PROMPT_VERSION과 mismatch 시 캐시 무효 */
   premiumPromptVersion: string | null;
+  /** 한 디바이스에서 본 진단 history (랜딩 화면 카드 list). PREMIUM_PROMPT_VERSION 변경 시에도 보존 */
+  sessionsHistory: SavedSession[];
 }
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumPart1Text·premiumPart2Text·deepDiveTexts) */
@@ -199,6 +227,7 @@ const initial: FlowState = {
   premiumPart2Text: null,
   deepDiveTexts: {},
   premiumPromptVersion: null,
+  sessionsHistory: [],
 };
 
 interface FlowContextValue {
@@ -231,6 +260,12 @@ interface FlowContextValue {
   resetChild: () => void;
   /** 전체 초기화 — 다른 가족 진단 시 */
   resetAll: () => void;
+  /** 현재 진단을 history에 저장 (또는 같은 sessionId 있으면 update). Part 2 완료 시점에 자동 호출. */
+  saveCurrentToHistory: (extra?: { hagunLabel?: string | null; primaryTier?: number | null }) => void;
+  /** history에서 sessionId 카드 클릭 시 → state 복원. 페이지 이동은 호출 측 router.push. */
+  loadSessionFromHistory: (sessionId: string) => boolean;
+  /** 새 자녀 진단 시작 — current state 초기화, history는 유지. */
+  startNewSession: () => void;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -361,7 +396,55 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
   const resetAll = useCallback(() => {
-    setState(() => ({ ...initial }));
+    setState((s) => ({ ...initial, sessionsHistory: s.sessionsHistory }));
+  }, []);
+
+  /** 현재 state 를 history snapshot 으로 저장. 같은 sessionId 있으면 update. 최대 20개 유지 (최신 우선). */
+  const saveCurrentToHistory = useCallback((extra?: { hagunLabel?: string | null; primaryTier?: number | null }) => {
+    setState((s) => {
+      if (!s.sessionId || !s.childManse || !s.child.birthYear || !s.child.birthMonth || !s.child.birthDay) {
+        return s;
+      }
+      // sessionsHistory 제외한 snapshot
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { sessionsHistory, ...rest } = s;
+      const snapshot = rest;
+      const entry: SavedSession = {
+        sessionId: s.sessionId,
+        savedAt: new Date().toISOString(),
+        childNickname: s.child.nickname || '아이',
+        childBirth: {
+          year: s.child.birthYear,
+          month: s.child.birthMonth,
+          day: s.child.birthDay,
+          hour: s.child.birthHour,
+        },
+        hagunLabel: extra?.hagunLabel ?? null,
+        primaryTier: extra?.primaryTier ?? null,
+        hasPart2: !!s.premiumPart2Text,
+        snapshot,
+      };
+      const filtered = s.sessionsHistory.filter((h) => h.sessionId !== s.sessionId);
+      const next = [entry, ...filtered].slice(0, 20);
+      return { ...s, sessionsHistory: next };
+    });
+  }, []);
+
+  /** history 카드에서 sessionId 복원. 성공 시 true. */
+  const loadSessionFromHistory = useCallback((sessionId: string): boolean => {
+    let restored = false;
+    setState((s) => {
+      const entry = s.sessionsHistory.find((h) => h.sessionId === sessionId);
+      if (!entry) return s;
+      restored = true;
+      return { ...entry.snapshot, sessionsHistory: s.sessionsHistory } as FlowState;
+    });
+    return restored;
+  }, []);
+
+  /** 새 자녀 진단 시작 — current 초기화, history 유지. */
+  const startNewSession = useCallback(() => {
+    setState((s) => ({ ...initial, sessionsHistory: s.sessionsHistory }));
   }, []);
 
   return (
@@ -388,6 +471,9 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         setPremiumPart2Text,
         setDeepDiveText,
         resetPremiumV5,
+        saveCurrentToHistory,
+        loadSessionFromHistory,
+        startNewSession,
       }}
     >
       {children}

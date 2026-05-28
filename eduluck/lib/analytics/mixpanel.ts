@@ -91,4 +91,6 @@ export const EVENTS = {
   FEEDBACK_CTA_CLICK: 'feedback_cta_click',
   FEEDBACK_OPEN: 'feedback_open',
   FEEDBACK_SUBMIT: 'feedback_submit',
+  HISTORY_CARD_CLICK: 'history_card_click',
+  START_NEW_DIAGNOSIS_CLICK: 'start_new_diagnosis_click',
 } as const;

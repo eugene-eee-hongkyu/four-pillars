@@ -21,6 +21,7 @@ import { DirectionCard } from '@/components/manse/DirectionCard';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
 
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -51,6 +52,7 @@ export default function InterpretPremium() {
     state,
     setPremiumPart1Text,
     setPremiumPart2Text,
+    saveCurrentToHistory,
   } = useFlow();
   const [part1Done, setPart1Done] = useState(false);
   const [part2Visible, setPart2Visible] = useState(false);
@@ -67,6 +69,17 @@ export default function InterpretPremium() {
       track(EVENTS.PART2_COMPLETE, { from_cache: true });
     }
   }, [state.premiumPart2Text, part2Done]);
+
+  // Part 2 완료 시 history 자동 저장 (hagunLabel·primaryTier 메타 포함)
+  useEffect(() => {
+    if (!part2Done || !state.childManse) return;
+    const tier = calculateFinalTierV2({
+      childManse: state.childManse,
+      motherManse: state.motherManse ?? null,
+      fatherManse: state.fatherManse ?? null,
+    });
+    saveCurrentToHistory({ hagunLabel: tier.hagunLabel, primaryTier: tier.primaryTier });
+  }, [part2Done, state.childManse, state.motherManse, state.fatherManse, saveCurrentToHistory]);
 
   const sessionReady = !!(state.sessionId && state.childSubjectId);
   const part2Body = sessionReady ? {
