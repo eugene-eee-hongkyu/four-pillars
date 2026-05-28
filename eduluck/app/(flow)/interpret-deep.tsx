@@ -10,6 +10,7 @@ import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { useFlow } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+import { BirthSummary } from '@/components/manse/BirthSummary';
 
 export default function InterpretDeep() {
   const router = useRouter();
@@ -66,6 +67,17 @@ export default function InterpretDeep() {
             {spec.emoji} {headerShort(spec.header)}
           </Text>
           <Text className="font-body text-body-md text-text-sub">{spec.oneLine}</Text>
+        </View>
+
+        {/* 입력 정보 확인 — 다른 화면과 일관된 형식 */}
+        <View className="px-container-padding">
+          <BirthSummary
+            child={state.child}
+            mother={state.mother}
+            motherStatus={state.motherStatus}
+            father={state.father}
+            fatherStatus={state.fatherStatus}
+          />
         </View>
 
         {/* 본문 — 캐시 hit 또는 SSE 스트림 */}

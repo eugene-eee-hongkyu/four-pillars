@@ -6,6 +6,22 @@ import type { ManseResult } from '@/lib/manse/engine';
 import { hydrateManse } from '@/lib/manse/hydrate';
 
 const STORAGE_KEY = 'eduluck.flow.state';
+const DEVICE_ID_KEY = 'eduluck.device.id';
+
+/** 장비 식별자 — localStorage 영구 보존. 한 어머니가 자녀 여러 명 진단해도 동일 deviceId. Mixpanel distinct_id 매핑용. */
+export function getOrCreateDeviceId(): string {
+  if (typeof window === 'undefined' || !window.localStorage) return 'ssr-no-device';
+  try {
+    let id = window.localStorage.getItem(DEVICE_ID_KEY);
+    if (!id) {
+      id = (crypto?.randomUUID?.() ?? `device-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+      window.localStorage.setItem(DEVICE_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return `device-${Date.now()}`;
+  }
+}
 
 function loadInitial(): FlowState {
   if (typeof window === 'undefined' || !window.localStorage) return initial;
