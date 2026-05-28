@@ -58,11 +58,7 @@ export default function Landing() {
       if (!res.ok) throw new Error(await res.text());
       const { sessionId } = await res.json();
       setSessionId(sessionId);
-      void fetch('/api/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, screen: 'landing', action: 'cta-tap' }),
-      });
+      // /api/track DB funnel_events 호출 제거 (2026-05-28) — Mixpanel funnel 가 main 추적 도구.
       track(EVENTS.START_DIAGNOSIS_CLICK);
       router.push('/(flow)/family-input' as never);
     } catch (e) {

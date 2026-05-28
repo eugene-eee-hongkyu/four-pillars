@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Modal } from '@/components/ui/Modal';
 import { Toast } from '@/components/ui/Toast';
-import { useFlow } from '@/lib/flow/context';
+import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
@@ -135,10 +135,11 @@ export default function FamilyInput() {
   const canSubmit = childReady && motherSectionValid && fatherSectionValid;
 
   const postSubject = async (body: object) => {
+    // deviceId 함께 전달 (보안 audit ISSUE-6) — server 가 sessions.device_id 와 매칭 검증
     const res = await fetch('/api/subjects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, deviceId: getOrCreateDeviceId() }),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();

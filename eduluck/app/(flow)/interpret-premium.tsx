@@ -239,10 +239,6 @@ export default function InterpretPremium() {
                 <ShareButton
                   sessionId={state.sessionId}
                   nickname={state.child.nickname || '아이'}
-                  childSubjectId={state.childSubjectId ?? undefined}
-                  motherSubjectId={state.motherSubjectId}
-                  premiumPart1Text={state.premiumPart1Text}
-                  premiumPart2Text={state.premiumPart2Text}
                 />
               </View>
             )}

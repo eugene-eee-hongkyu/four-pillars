@@ -9,16 +9,12 @@ import { track, EVENTS } from '@/lib/analytics/mixpanel';
 interface Props {
   sessionId: string;
   nickname: string;
-  /** backfill 대비 캐시 텍스트·subject ID. share-link가 404일 때 backfill endpoint로 자동 폴백. */
-  childSubjectId?: string;
-  motherSubjectId?: string | null;
-  premiumPart1Text?: string | null;
-  premiumPart2Text?: string | null;
+  /** backfill 폴백 제거 (2026-05-28 보안 audit — share-backfill 가짜 본문 inject 위험). share-link 404 시 단순 실패. */
 }
 
 type ShareStatus = 'idle' | 'loading' | 'shared' | 'copied' | 'error';
 
-export function ShareButton({ sessionId, nickname, childSubjectId, motherSubjectId, premiumPart1Text, premiumPart2Text }: Props) {
+export function ShareButton({ sessionId, nickname }: Props) {
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -27,35 +23,14 @@ export function ShareButton({ sessionId, nickname, childSubjectId, motherSubject
     setErrMsg(null);
     track(EVENTS.SHARE_CLICK);
     try {
-      // 1. share token 조회
-      let token: string | null = null;
+      // share token 조회 — interpretations row 존재 시점에 share_token 자동 부여 (DB default).
+      // backfill 폴백 제거 (2026-05-28 보안 audit) — 가짜 본문 inject 위험. row 없으면 사용자 재진단 권장.
       const tokenRes = await fetch(`/api/share-link?sessionId=${encodeURIComponent(sessionId)}`);
-      if (tokenRes.ok) {
-        const j = await tokenRes.json();
-        token = j.token ?? null;
-      } else if (tokenRes.status === 404 && childSubjectId && (premiumPart1Text || premiumPart2Text)) {
-        // share-link가 row를 못 찾았지만 클라이언트 캐시는 살아있음 → backfill 시도
-        const backfillRes = await fetch('/api/share-backfill', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            childSubjectId,
-            motherSubjectId: motherSubjectId ?? null,
-            part1Text: premiumPart1Text ?? null,
-            part2Text: premiumPart2Text ?? null,
-          }),
-        });
-        if (!backfillRes.ok) {
-          const body = await backfillRes.json().catch(() => ({}));
-          throw new Error(body.error ?? '공유 링크를 만들 수 없어요');
-        }
-        const j = await backfillRes.json();
-        token = j.token ?? null;
-      } else {
+      if (!tokenRes.ok) {
         const body = await tokenRes.json().catch(() => ({}));
         throw new Error(body.error ?? '공유 링크를 만들 수 없어요');
       }
+      const { token } = await tokenRes.json();
       if (!token) throw new Error('공유 링크가 없어요');
 
       const origin = typeof window !== 'undefined' ? window.location.origin : 'https://luck.z21labs.world';

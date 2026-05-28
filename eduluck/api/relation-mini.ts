@@ -6,6 +6,7 @@ import { sseResponse } from '../lib/llm/stream-sse';
 import { getRelationMiniSystem, buildRelationMiniPrompt } from '../lib/prompts/relation-mini';
 import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
+import { checkLlmQuota } from '../lib/llm/rate-limit';
 
 interface Body {
   sessionId: string;
@@ -25,12 +26,20 @@ export async function POST(request: Request) {
     return Response.json({ error: 'missing required fields' }, { status: 400 });
   }
 
+  // LLM 비용 공격 차단 (보안 audit ISSUE-2): sessionId 당 누적 호출 cap 50.
+  const quota = await checkLlmQuota(body.sessionId);
+  if (!quota.ok) return quota.response!;
+
   const sb = getSupabaseServer();
   const { data: child } = await sb.from('subjects').select('*').eq('id', body.childSubjectId).single();
   const { data: mother } = await sb.from('subjects').select('*').eq('id', body.motherSubjectId).single();
 
   if (!child || !mother) {
     return Response.json({ error: 'subjects not found' }, { status: 404 });
+  }
+  // IDOR 차단 (보안 audit ISSUE-3): 두 subject 모두 요청 sessionId 의 소유 여부 검증
+  if (child.session_id !== body.sessionId || mother.session_id !== body.sessionId) {
+    return Response.json({ error: 'forbidden' }, { status: 403 });
   }
 
   const system = getRelationMiniSystem();

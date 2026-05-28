@@ -12,6 +12,7 @@ import type { InterpretPremiumContext } from '../lib/prompts/interpret-premium-s
 import { PREMIUM_PROMPT_VERSION } from '../lib/prompts/version';
 import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
+import { checkLlmQuota } from '../lib/llm/rate-limit';
 
 interface Body {
   sessionId: string;
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
     return Response.json({ error: 'missing required fields (sessionId/childSubjectId)' }, { status: 400 });
   }
 
+  // LLM 비용 공격 차단 (보안 audit ISSUE-2): sessionId 당 누적 호출 cap 50.
+  const quota = await checkLlmQuota(body.sessionId);
+  if (!quota.ok) return quota.response!;
+
   console.log('[part2] start', { sessionId: body.sessionId, childId: body.childSubjectId });
 
   const sb = getSupabaseServer();
@@ -40,13 +45,23 @@ export async function POST(request: Request) {
   if (!child) {
     return Response.json({ error: 'child subject not found' }, { status: 404 });
   }
+  // IDOR 차단 (보안 audit ISSUE-3): subject 가 요청 sessionId 의 소유 여부 검증
+  if (child.session_id !== body.sessionId) {
+    return Response.json({ error: 'forbidden' }, { status: 403 });
+  }
 
   const { data: mother } = body.motherSubjectId
     ? await sb.from('subjects').select('*').eq('id', body.motherSubjectId).single()
     : { data: null };
+  if (mother && mother.session_id !== body.sessionId) {
+    return Response.json({ error: 'forbidden (mother)' }, { status: 403 });
+  }
   const { data: father } = body.fatherSubjectId
     ? await sb.from('subjects').select('*').eq('id', body.fatherSubjectId).single()
     : { data: null };
+  if (father && father.session_id !== body.sessionId) {
+    return Response.json({ error: 'forbidden (father)' }, { status: 403 });
+  }
 
   console.log('[part2] fetched subjects', { t: Date.now() - t0, hasMother: !!mother, hasFather: !!father });
 
