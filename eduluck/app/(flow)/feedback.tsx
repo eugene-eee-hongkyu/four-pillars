@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Button } from '@/components/ui/Button';
-import { useFlow, PREMIUM_PROMPT_VERSION } from '@/lib/flow/context';
+import { useFlow, PREMIUM_PROMPT_VERSION, getOrCreateDeviceId } from '@/lib/flow/context';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
@@ -106,6 +106,7 @@ export default function FeedbackForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: state.sessionId,
+          deviceId: getOrCreateDeviceId(),
           childSubjectId: state.childSubjectId,
           source,
           promptVersion,
@@ -127,6 +128,13 @@ export default function FeedbackForm() {
           q7Trust: scores.q7,
         }),
       });
+      // 409 = UNIQUE (session_id, source) 위반 — 같은 진단의 같은 위치로 이미 제출. 친화 표시 + done=true.
+      // edge case: cross-device 또는 localStorage 비움 후 같은 sessionId 로 재진입한 어머니.
+      if (res.status === 409) {
+        markFeedbackSubmitted(state.sessionId);
+        setDone(true);
+        return;
+      }
       if (!res.ok) throw new Error(await res.text());
       track(EVENTS.FEEDBACK_SUBMIT, {
         source,

@@ -306,6 +306,10 @@ export function StreamingBody({
               finalize(final);
               setStatus('done');
               onComplete?.(final);
+              // SSE done event 처리 완료 — IIFE 종료. while loop 계속하면 다음 reader.read() 가 done:true 반환 →
+              // `if (done)` branch 에서 onComplete 2번째 호출되는 회귀 (정상 흐름에 모든 onComplete 더블 발사).
+              // SilentSsePrefetch.tsx 의 done event 처리 패턴과 일치.
+              return;
             } else if (ev.event === 'error') {
               log('ERROR event', { message: ev.data.message, deltaCount });
               clearTimeout(timeoutId);
@@ -313,6 +317,9 @@ export function StreamingBody({
               setStatus('error');
               setErrorMessage(`서버 stream 에러: ${m} (deltas: ${deltaCount})`);
               onError?.(m);
+              // error event 처리 완료 — IIFE 종료. 안 빠지면 while loop 가 다음 reader.read() 에서
+              // done:true 받아 `if (done)` branch 진입 → onComplete 가 부분 fullText 로 잘못 호출되어 status='done' 덮어쓰기.
+              return;
             }
           }
         }

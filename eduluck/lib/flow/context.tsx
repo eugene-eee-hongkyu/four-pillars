@@ -4,6 +4,10 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { ManseResult } from '@/lib/manse/engine';
 import { hydrateManse } from '@/lib/manse/hydrate';
+import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
+
+// 옛 import path 호환 — 기존 코드 `import { PREMIUM_PROMPT_VERSION } from '@/lib/flow/context'` 유지.
+export { PREMIUM_PROMPT_VERSION };
 
 const STORAGE_KEY = 'eduluck.flow.state';
 const DEVICE_ID_KEY = 'eduluck.device.id';
@@ -35,6 +39,7 @@ function loadInitial(): FlowState {
         ...parsed,
         child: { ...initial.child, ...(parsed.child ?? {}) },
         mother: { ...initial.mother, ...(parsed.mother ?? {}) },
+        father: { ...initial.father, ...(parsed.father ?? {}) },
       };
       // ManseResult schema 확장 시 옛 객체에 새 필드 없으면 즉석 보충
       // (사용자 memory: Persistent 스키마 확장 시 hydrate)
@@ -61,6 +66,13 @@ function loadInitial(): FlowState {
       // feedbackSubmittedSessions hydrate
       if (!Array.isArray(merged.feedbackSubmittedSessions)) {
         merged.feedbackSubmittedSessions = [];
+      }
+      // analytics fired dedup arrays (sessionId 단위 1회 발사 보장 — Mixpanel funnel 정확도)
+      if (!Array.isArray(merged.part1CompleteFiredSessions)) {
+        merged.part1CompleteFiredSessions = [];
+      }
+      if (!Array.isArray(merged.part2CompleteFiredSessions)) {
+        merged.part2CompleteFiredSessions = [];
       }
       // history 각 snapshot 안의 ManseResult 도 hydrate (Persistent 스키마 확장 안전)
       merged.sessionsHistory = merged.sessionsHistory.map((s: SavedSession) => {
@@ -124,6 +136,13 @@ export interface FatherInput {
   birthLocation: string | null;
 }
 
+/** snapshot 에서 제외되는 "장치 단위 글로벌" 필드 — sessionsHistory + 사용자가 본 모든 sessionId 누적 dedup 목록. */
+type DeviceGlobalKeys =
+  | 'sessionsHistory'
+  | 'feedbackSubmittedSessions'
+  | 'part1CompleteFiredSessions'
+  | 'part2CompleteFiredSessions';
+
 /** 진단 완료 후 history 카드 표시·복원용 스냅샷. 랜딩에서 "이전 진단" 카드로 노출. */
 export interface SavedSession {
   sessionId: string;
@@ -133,8 +152,8 @@ export interface SavedSession {
   hagunLabel: string | null;
   primaryTier: number | null;
   hasPart2: boolean;
-  /** entire state snapshot for restore (Mother·Father 포함) */
-  snapshot: Omit<FlowState, 'sessionsHistory'>;
+  /** entire state snapshot for restore (Mother·Father 포함). 장치 단위 글로벌 필드는 제외해 history 복원 시 보존. */
+  snapshot: Omit<FlowState, DeviceGlobalKeys>;
 }
 
 export interface FlowState {
@@ -157,7 +176,6 @@ export interface FlowState {
   fatherManse: ManseResult | null;
   fatherStatus: 'pending' | 'entered' | 'skipped';
 
-  freeInterpretText: string | null;
   /** v5 정밀 진단 Part 1 (10 섹션 — 본질·인성·관계·즉시 행동) */
   premiumPart1Text: string | null;
   /** v5 정밀 진단 Part 2 (10 섹션 — 학원·진로·미래) */
@@ -170,6 +188,10 @@ export interface FlowState {
   sessionsHistory: SavedSession[];
   /** 피드백 제출 완료한 sessionId 목록 — CTA 자동 숨김 용 (한 sessionId 1회 제출이면 모든 CTA 숨김) */
   feedbackSubmittedSessions: string[];
+  /** PART1_COMPLETE Mixpanel 이벤트 발사 완료 sessionId 목록 — 페이지 재마운트·history 복원 시 중복 발사 차단. */
+  part1CompleteFiredSessions: string[];
+  /** PART2_COMPLETE Mixpanel 이벤트 발사 완료 sessionId 목록 — 페이지 재마운트·history 복원 시 중복 발사 차단. */
+  part2CompleteFiredSessions: string[];
 }
 
 /** Premium prompt 구조 버전. 변경 시 클라이언트 캐시 자동 무효 (premiumPart1Text·premiumPart2Text·deepDiveTexts) */
@@ -197,7 +219,7 @@ export interface FlowState {
 // v5.23: 명리 근거 카드 친화 라벨 강제 — baseline 라벨 영문 식별자 (publicForceScore·medicalScore·researchScore·artsScore·abroadScore) 제거. 명리 근거 카드 카테고리 [본질·시기·기운·관계] 4종 외 ✗ instruct 강화 + 친화 표기 예시 6개 추가 (격국 lookup·학운 sub-tier·적성·주력 방향성·12운성·대운 발현 → 한글 친화 변환).
 // v5.24: HagunLabelV2 10단계 사용자 친화 라벨 (최상위 학업형 / 강한 학업형 / 상위권 학업형 / 중상위 학업형 / 일반 학업형 / 보강 학업형 / 실무 전환형 / 기술 특화형 / 조기 사회진입형 / 비제도권 성장형). HagunSignerBreakdown hero 점수 (X/100) 표시. signer '인성/관성 multiplier (×N)' → '인성/관성 N자리 누적' (displaySigner '×N' 버그 fix). prompt §17 baseline 에 V24 hero 라벨 본문 노출 ✗ instruct.
 // v5.25: 정합성 audit fix — DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 매핑 명시 (prompt baseline §15·§17 cross-check 룰). 5 적성 점수 모듈 (arts·medical·abroad·publicForce·research) 헤더에 'raw cutoff vs normalizedLevel 이원 운영' 경고 주석 추가 (raw cutoff 변경 시 prompt 재검증 가드).
-export const PREMIUM_PROMPT_VERSION = 'v5.25-global-abroad-synonym';
+// (PREMIUM_PROMPT_VERSION 상수는 lib/prompts/version.ts 단일 source 로 분리. client·server 공유. 위 changelog 만 여기 유지.)
 
 const initial: FlowState = {
   sessionId: null,
@@ -244,13 +266,14 @@ const initial: FlowState = {
   fatherSubjectId: null,
   fatherManse: null,
   fatherStatus: 'pending',
-  freeInterpretText: null,
   premiumPart1Text: null,
   premiumPart2Text: null,
   deepDiveTexts: {},
   premiumPromptVersion: null,
   sessionsHistory: [],
   feedbackSubmittedSessions: [],
+  part1CompleteFiredSessions: [],
+  part2CompleteFiredSessions: [],
 };
 
 interface FlowContextValue {
@@ -266,7 +289,6 @@ interface FlowContextValue {
   patchFather: (patch: Partial<FatherInput>) => void;
   setFatherSubject: (id: string, manse: ManseResult) => void;
   setFatherSkipped: () => void;
-  setFreeInterpretText: (t: string) => void;
   /** v5 Part 1 텍스트 설정. null 시 캐시 클리어 */
   setPremiumPart1Text: (t: string | null) => void;
   /** v5 Part 2 텍스트 설정. null 시 캐시 클리어 */
@@ -291,6 +313,10 @@ interface FlowContextValue {
   startNewSession: () => void;
   /** 피드백 제출 완료 표시 — sessionId 단위 1회, 모든 CTA 자동 숨김. */
   markFeedbackSubmitted: (sessionId: string) => void;
+  /** PART1_COMPLETE 발사 mark. 처음 mark 면 true 반환 (caller 가 track() 호출), 이미 발사된 sessionId 면 false. */
+  markPart1CompleteFired: (sessionId: string) => boolean;
+  /** PART2_COMPLETE 발사 mark. 처음 mark 면 true 반환, 중복이면 false. */
+  markPart2CompleteFired: (sessionId: string) => boolean;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -320,7 +346,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         childManse: manse,
         ...(isNewChild
           ? {
-              freeInterpretText: null,
               premiumPart1Text: null,
               premiumPart2Text: null,
               deepDiveTexts: {},
@@ -347,9 +372,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   }, []);
   const setFatherSkipped = useCallback(() => {
     setState((s) => ({ ...s, fatherStatus: 'skipped' }));
-  }, []);
-  const setFreeInterpretText = useCallback((t: string) => {
-    setState((s) => ({ ...s, freeInterpretText: t }));
   }, []);
   const setPremiumPart1Text = useCallback((t: string | null) => {
     setState((s) => ({
@@ -413,7 +435,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       child: { ...initial.child },
       childSubjectId: null,
       childManse: null,
-      freeInterpretText: null,
       premiumPart1Text: null,
       premiumPart2Text: null,
       deepDiveTexts: {},
@@ -425,6 +446,8 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       ...initial,
       sessionsHistory: s.sessionsHistory,
       feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+      part1CompleteFiredSessions: s.part1CompleteFiredSessions,
+      part2CompleteFiredSessions: s.part2CompleteFiredSessions,
     }));
   }, []);
 
@@ -434,9 +457,19 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       if (!s.sessionId || !s.childManse || !s.child.birthYear || !s.child.birthMonth || !s.child.birthDay) {
         return s;
       }
-      // sessionsHistory 제외한 snapshot
+      // 장치 단위 글로벌 필드 (history·feedback dedup·analytics fire dedup) 는 snapshot 에 박제하지 않음 —
+      // 옛 snapshot 으로 복원 시 현재 dedup 상태가 손실되는 회귀 방지.
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { sessionsHistory, ...rest } = s;
+      const {
+        sessionsHistory,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        feedbackSubmittedSessions,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        part1CompleteFiredSessions,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        part2CompleteFiredSessions,
+        ...rest
+      } = s;
       const snapshot = rest;
       const entry: SavedSession = {
         sessionId: s.sessionId,
@@ -459,24 +492,32 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  /** history 카드에서 sessionId 복원. 성공 시 true. */
+  /** history 카드에서 sessionId 복원. 성공 시 true. 장치 단위 글로벌 필드(dedup 배열)는 현재 값 보존. */
   const loadSessionFromHistory = useCallback((sessionId: string): boolean => {
     let restored = false;
     setState((s) => {
       const entry = s.sessionsHistory.find((h) => h.sessionId === sessionId);
       if (!entry) return s;
       restored = true;
-      return { ...entry.snapshot, sessionsHistory: s.sessionsHistory } as FlowState;
+      return {
+        ...entry.snapshot,
+        sessionsHistory: s.sessionsHistory,
+        feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+        part1CompleteFiredSessions: s.part1CompleteFiredSessions,
+        part2CompleteFiredSessions: s.part2CompleteFiredSessions,
+      } as FlowState;
     });
     return restored;
   }, []);
 
-  /** 새 자녀 진단 시작 — current 초기화, history 유지. */
+  /** 새 자녀 진단 시작 — current 초기화, 장치 단위 글로벌 필드 유지. */
   const startNewSession = useCallback(() => {
     setState((s) => ({
       ...initial,
       sessionsHistory: s.sessionsHistory,
       feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+      part1CompleteFiredSessions: s.part1CompleteFiredSessions,
+      part2CompleteFiredSessions: s.part2CompleteFiredSessions,
     }));
   }, []);
 
@@ -490,6 +531,36 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         feedbackSubmittedSessions: [sessionId, ...s.feedbackSubmittedSessions].slice(0, 100),
       };
     });
+  }, []);
+
+  /** PART1_COMPLETE 이벤트 dedup — sessionId 신규 mark 시 true, 이미 발사된 경우 false. */
+  const markPart1CompleteFired = useCallback((sessionId: string): boolean => {
+    if (!sessionId) return false;
+    let isNew = false;
+    setState((s) => {
+      if (s.part1CompleteFiredSessions.includes(sessionId)) return s;
+      isNew = true;
+      return {
+        ...s,
+        part1CompleteFiredSessions: [sessionId, ...s.part1CompleteFiredSessions].slice(0, 100),
+      };
+    });
+    return isNew;
+  }, []);
+
+  /** PART2_COMPLETE 이벤트 dedup — sessionId 신규 mark 시 true, 이미 발사된 경우 false. */
+  const markPart2CompleteFired = useCallback((sessionId: string): boolean => {
+    if (!sessionId) return false;
+    let isNew = false;
+    setState((s) => {
+      if (s.part2CompleteFiredSessions.includes(sessionId)) return s;
+      isNew = true;
+      return {
+        ...s,
+        part2CompleteFiredSessions: [sessionId, ...s.part2CompleteFiredSessions].slice(0, 100),
+      };
+    });
+    return isNew;
   }, []);
 
   return (
@@ -511,7 +582,6 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         resetFather,
         resetChild,
         resetAll,
-        setFreeInterpretText,
         setPremiumPart1Text,
         setPremiumPart2Text,
         setDeepDiveText,
@@ -520,6 +590,8 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         loadSessionFromHistory,
         startNewSession,
         markFeedbackSubmitted,
+        markPart1CompleteFired,
+        markPart2CompleteFired,
       }}
     >
       {children}

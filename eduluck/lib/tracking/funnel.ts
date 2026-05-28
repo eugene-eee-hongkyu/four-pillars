@@ -7,7 +7,6 @@ export type ScreenName =
   | 'child-info'
   | 'child-saju'
   | 'child-manse'
-  | 'interpret-free'
   | 'premium-value'
   | 'signup'
   | 'checkout'

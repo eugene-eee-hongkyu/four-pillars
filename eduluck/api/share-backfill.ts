@@ -6,8 +6,8 @@
 
 import { getSupabaseServer } from '../lib/supabase/server';
 import { ANTHROPIC_MODEL } from '../lib/llm/client';
+import { PREMIUM_PROMPT_VERSION } from '../lib/prompts/version';
 
-const PROMPT_VERSION = 'v5-20sections-split';
 const BUILD_TAG = 'share-backfill-v1';
 
 interface Body {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       child_subject_id: childSubjectId,
       mother_subject_id: motherSubjectId ?? null,
       body_text: row.body_text,
-      prompt_version: PROMPT_VERSION,
+      prompt_version: PREMIUM_PROMPT_VERSION,
       llm_model: ANTHROPIC_MODEL,
     });
     if (insertErr) {

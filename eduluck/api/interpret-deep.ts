@@ -9,6 +9,7 @@ import {
   DEEP_SECTIONS,
 } from '../lib/prompts/interpret-deep';
 import type { InterpretPremiumContext } from '../lib/prompts/interpret-premium-shared';
+import { PREMIUM_PROMPT_VERSION } from '../lib/prompts/version';
 import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
 
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       child_subject_id: body.childSubjectId,
       mother_subject_id: body.motherSubjectId ?? null,
       body_text: bodyText,
-      prompt_version: 'v5-20sections-split',
+      prompt_version: PREMIUM_PROMPT_VERSION,
       llm_model: ANTHROPIC_MODEL,
     });
     if (insertErr) {

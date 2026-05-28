@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { Logo } from '@/components/ui/Logo';
-import { useFlow } from '@/lib/flow/context';
+import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { translateError } from '@/lib/errors/translate';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
@@ -49,7 +49,12 @@ export default function Landing() {
       startNewSession();
       track(EVENTS.START_NEW_DIAGNOSIS_CLICK, { had_history: hasHistory });
 
-      const res = await fetch('/api/session', { method: 'POST' });
+      // deviceId 함께 전달 → sessions.device_id 저장 → /api/feedback 가 검증
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: getOrCreateDeviceId() }),
+      });
       if (!res.ok) throw new Error(await res.text());
       const { sessionId } = await res.json();
       setSessionId(sessionId);

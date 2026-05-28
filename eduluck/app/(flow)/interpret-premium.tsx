@@ -54,22 +54,32 @@ export default function InterpretPremium() {
     setPremiumPart1Text,
     setPremiumPart2Text,
     saveCurrentToHistory,
+    markPart1CompleteFired,
+    markPart2CompleteFired,
   } = useFlow();
   const [part1Done, setPart1Done] = useState(false);
   const [part2Visible, setPart2Visible] = useState(false);
   const [part2Done, setPart2Done] = useState(false);
 
-  // 캐시 hit (또는 동일 자녀 재진입) → 즉시 done + Part 2 보이기 (이미 본 적 있음)
+  // 캐시 hit (또는 동일 자녀 재진입) → 즉시 done + Part 2 보이기 (이미 본 적 있음).
+  // PART1/2_COMPLETE 이벤트는 markPart{1,2}CompleteFired 가 sessionId 단위 1회만 발사하도록 dedup.
   useEffect(() => {
-    if (state.premiumPart1Text && !part1Done) setPart1Done(true);
-  }, [state.premiumPart1Text, part1Done]);
+    if (state.premiumPart1Text && !part1Done) {
+      setPart1Done(true);
+      if (state.sessionId && markPart1CompleteFired(state.sessionId)) {
+        track(EVENTS.PART1_COMPLETE, { from_cache: true });
+      }
+    }
+  }, [state.premiumPart1Text, part1Done, state.sessionId, markPart1CompleteFired]);
   useEffect(() => {
     if (state.premiumPart2Text && !part2Done) {
       setPart2Done(true);
       setPart2Visible(true);  // 캐시 있으면 자동 노출
-      track(EVENTS.PART2_COMPLETE, { from_cache: true });
+      if (state.sessionId && markPart2CompleteFired(state.sessionId)) {
+        track(EVENTS.PART2_COMPLETE, { from_cache: true });
+      }
     }
-  }, [state.premiumPart2Text, part2Done]);
+  }, [state.premiumPart2Text, part2Done, state.sessionId, markPart2CompleteFired]);
 
   // Part 2 완료 시 history 자동 저장 (hagunLabel·primaryTier 메타 포함)
   useEffect(() => {
@@ -157,7 +167,9 @@ export default function InterpretPremium() {
             onComplete={(text) => {
               setPremiumPart1Text(text);
               setPart1Done(true);
-              track(EVENTS.PART1_COMPLETE);
+              if (state.sessionId && markPart1CompleteFired(state.sessionId)) {
+                track(EVENTS.PART1_COMPLETE, { from_cache: false });
+              }
             }}
           />
         ) : null}
@@ -208,7 +220,9 @@ export default function InterpretPremium() {
                 onComplete={(text) => {
                   setPremiumPart2Text(text);
                   setPart2Done(true);
-                  track(EVENTS.PART2_COMPLETE);
+                  if (state.sessionId && markPart2CompleteFired(state.sessionId)) {
+                    track(EVENTS.PART2_COMPLETE, { from_cache: false });
+                  }
                 }}
               />
             ) : null}

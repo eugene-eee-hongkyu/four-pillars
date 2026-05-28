@@ -41,6 +41,9 @@ export interface ManseResult {
   isTimeCorrected: boolean;
   correctedHour?: number;
   correctedMinute?: number;
+  /** 입력 성별 — shensha (도화살 등 gender 분기) · luckCycles (대운 방향) 정확도 재계산 시 필수.
+   *  옛 manse 객체에는 누락. hydrate 가 'male' fallback (정확도 미세 ↓, crash 방지). */
+  gender: 'male' | 'female';
   summary: string;
   luckCycles: LuckCycles;
   shensha: ShenshaResult;
@@ -181,7 +184,7 @@ export function computeManse(input: ManseInput): ManseResult {
   const directionScores = computeDirections({
     yearPillar: raw.yearPillar, monthPillar: raw.monthPillar, dayPillar: raw.dayPillar, hourPillar,
     shensha, sipsin, gyeokguk, unsung, elementCounts,
-  } as any);
+  });
   const directions = buildDirectionEntries(directionScores, {
     arts:    artsScore.recommendedFields,
     medical: medicalScore.recommendedFields,
@@ -206,6 +209,7 @@ export function computeManse(input: ManseInput): ManseResult {
     isTimeCorrected: raw.isTimeCorrected && !timeUnknown,
     correctedHour: raw.correctedTime?.hour,
     correctedMinute: raw.correctedTime?.minute,
+    gender,
     summary: buildSummary(raw, timeUnknown),
     luckCycles,
     shensha,

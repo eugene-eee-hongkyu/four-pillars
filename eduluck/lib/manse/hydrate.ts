@@ -74,8 +74,9 @@ export function hydrateManse(m: ManseResult): ManseResult {
   const hourBranch = m.hourPillar ? splitPillar(m.hourPillar).branch : null;
 
   // dayPillarId는 공망 계산용. 옛 manse에 없으면 0으로 fallback (공망 일부 정확도 ↓하나 crash 방지).
+  // gender 는 m.gender 우선 (engine.ts 가 ManseResult.gender 영구 저장). 정말로 옛 객체 (gender·shensha 둘 다 누락) 일 때만 'male' fallback.
   const shensha = m.shensha ?? calcShensha(
-    m.yearPillar, m.monthPillar, m.dayPillar, m.hourPillar, 0, 'male',
+    m.yearPillar, m.monthPillar, m.dayPillar, m.hourPillar, 0, m.gender ?? 'male',
   );
   const hapchunh = m.hapchunh ?? calcHapchunh({
     yearStem, yearBranch,
@@ -110,7 +111,7 @@ export function hydrateManse(m: ManseResult): ManseResult {
     const directionScores = computeDirections({
       yearPillar: m.yearPillar, monthPillar: m.monthPillar, dayPillar: m.dayPillar, hourPillar: m.hourPillar,
       shensha, sipsin, gyeokguk, unsung, elementCounts,
-    } as any);
+    });
     return buildDirectionEntries(directionScores, {
       arts:    artsScore.recommendedFields,
       medical: medicalScore.recommendedFields,
@@ -120,8 +121,13 @@ export function hydrateManse(m: ManseResult): ManseResult {
     shensha, sipsin, gyeokguk, unsung, elementCounts,
   });
 
+  // ManseResult.gender 영구 보장 — 옛 manse 객체 (engine v1 이전) 에 없는 경우 'male' fallback.
+  // 정확한 gender 가 필요한 downstream (shensha 도화살 등) 은 이 fallback 영향 받으나 crash 방지 우선.
+  const gender = m.gender ?? 'male';
+
   return {
     ...m,
+    gender,
     sipsin, unsung, gyeokguk, napum,
     shensha, hapchunh, jijanggan,
     elementCounts, luckCycles,

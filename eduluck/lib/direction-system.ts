@@ -21,6 +21,16 @@
 import type { ManseResult } from './manse/engine';
 import { splitPillar, getStemSipsin } from './manse/pillars';
 
+/**
+ * detectAllDirectionSigils + fit detector 들이 실제로 사용하는 ManseResult 부분.
+ * engine.ts·hydrate.ts 가 동일한 부분 객체로 호출 → 타입 강제로 누락 필드 컴파일 차단.
+ * 새 detector 가 추가 필드 (예: m.napum, m.luckCycles) 사용 시 이 타입에 추가 → 호출 측 강제 동기화.
+ */
+export type DirectionInput = Pick<ManseResult,
+  | 'yearPillar' | 'monthPillar' | 'dayPillar' | 'hourPillar'
+  | 'shensha' | 'sipsin' | 'gyeokguk' | 'unsung' | 'elementCounts'
+>;
+
 export type DirectionKey =
   | 'scholar' | 'engineer' | 'medical' | 'business' | 'arts'
   | 'education' | 'authority' | 'global' | 'practical' | 'entrepreneur'
@@ -61,7 +71,7 @@ export const UNCALIBRATED_CATEGORIES: DirectionKey[] = ['scholar', 'education', 
  * Eugene fit: 정인격 + 일주 건록 + 비겁 ≥ 3 + 인성 ≥ 2 + 식상 0 + (화 부재 or 금 부재)
  *   = "정인 자립 학자형 → IT 응용형" (POSTECH 컴공 + CTO 15년 + 창업)
  */
-function detectJeonginJaripEngineer(m: ManseResult): boolean {
+function detectJeonginJaripEngineer(m: DirectionInput): boolean {
   const c = m.sipsin.counts;
   const ec = m.elementCounts;
   return m.gyeokguk.name === '정인격'
@@ -76,7 +86,7 @@ function detectJeonginJaripEngineer(m: ManseResult): boolean {
  * 박진우 fit: 정재격/편재격 + 재성 ≥ 3 + 식상 ≥ 2 + 비겁 ≥ 1 + 일주 약 + 인성 ≥ 1
  *   = "정재 식상 신약 = 외부 환경 IT 개발자형" (학운 V11 combo_jaeSiksangBigeopJarip 동일 조건)
  */
-function detectJaeSiksangIT(m: ManseResult): boolean {
+function detectJaeSiksangIT(m: DirectionInput): boolean {
   const c = m.sipsin.counts;
   const isJae = m.gyeokguk.name === '정재격' || m.gyeokguk.name === '편재격';
   const dayWeak = ['절', '태', '양', '병', '사', '묘'].includes(m.unsung.dayPillar.stage);
@@ -88,7 +98,7 @@ function detectJaeSiksangIT(m: ManseResult): boolean {
  *   = "양인 학자귀인 트리플 + 식상 다중 = 권력+전략+표현 결합형"
  *   business/authority/entrepreneur 모두 강 — 대기업 임원·전략·창업 (삼성 부사장 패턴)
  */
-function detectYanginGuiTripleStrategy(m: ManseResult): boolean {
+function detectYanginGuiTripleStrategy(m: DirectionInput): boolean {
   const c = m.sipsin.counts;
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
@@ -109,7 +119,7 @@ function detectYanginGuiTripleStrategy(m: ManseResult): boolean {
  *   = "편인 관인상생 + 자립 + 재성 = 전문지식 기반 전략·경영형"
  *   business/authority/entrepreneur 모두 강 — 게임 C-level·창업 (게임회사 CSO 패턴)
  */
-function detectPyeoninGwaninStrategy(m: ManseResult): boolean {
+function detectPyeoninGwaninStrategy(m: DirectionInput): boolean {
   const c = m.sipsin.counts;
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
@@ -130,7 +140,7 @@ function detectPyeoninGwaninStrategy(m: ManseResult): boolean {
  *   = "편관 의약 정통형" — 권위·의약 복합 명식에서 의약을 primary로
  *   medical primary 도달 (현침살 = 정밀 의료, 학당귀인 = 학자 본질, 일주 제왕 = 권위 발현)
  */
-function detectPyeongwanMedicalCore(m: ManseResult): boolean {
+function detectPyeongwanMedicalCore(m: DirectionInput): boolean {
   const c = m.sipsin.counts;
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
@@ -150,7 +160,7 @@ function detectPyeongwanMedicalCore(m: ManseResult): boolean {
 // ============================================================================
 // detectAllDirectionSigils — 50개 시그너 추출 (calibration script와 동일)
 // ============================================================================
-export function detectAllDirectionSigils(m: ManseResult): Record<string, number> {
+export function detectAllDirectionSigils(m: DirectionInput): Record<string, number> {
   const c = m.sipsin.counts;
   const allShensha = [
     ...m.shensha.yearPillar, ...m.shensha.monthPillar,
@@ -566,7 +576,7 @@ export function buildDirectionEntries(
 // ============================================================================
 // computeDirections — 카테고리별 raw 점수 산출
 // ============================================================================
-export function computeDirections(m: ManseResult): DirectionScores {
+export function computeDirections(m: DirectionInput): DirectionScores {
   const sigils = detectAllDirectionSigils(m);
   const scores: Record<DirectionKey, number> = {} as any;
 

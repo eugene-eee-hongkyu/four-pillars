@@ -47,25 +47,20 @@ export async function POST(request: Request) {
     messages: [{ role: 'user', content: userMsg }],
   });
 
-  void (async () => {
-    try {
-      const final = await stream.finalMessage();
-      const bodyText = final.content
-        .map((b: { type: string; text?: string }) => (b.type === 'text' && b.text ? b.text : ''))
-        .join('');
-      await sb.from('interpretations').insert({
-        session_id: body.sessionId,
-        kind: 'relation-mini',
-        child_subject_id: body.childSubjectId,
-        mother_subject_id: body.motherSubjectId,
-        body_text: bodyText,
-        prompt_version: 'relation-mini-v1',
-        llm_model: ANTHROPIC_MODEL,
-      });
-    } catch (e) {
-      console.error('[relation-mini] save failed', e);
+  // sseResponse 가 stream 을 1회 소비 + onComplete 가 DB insert.
+  // 옛 코드는 `stream.finalMessage()` 와 `sseResponse(stream)` 의 for-await 가 같은 single-consumer stream 에 race 였음.
+  return sseResponse(stream, 'relation-mini', async (bodyText) => {
+    const { error } = await sb.from('interpretations').insert({
+      session_id: body.sessionId,
+      kind: 'relation-mini',
+      child_subject_id: body.childSubjectId,
+      mother_subject_id: body.motherSubjectId,
+      body_text: bodyText,
+      prompt_version: 'relation-mini-v1',
+      llm_model: ANTHROPIC_MODEL,
+    });
+    if (error) {
+      console.error('[relation-mini] insert error', { code: error.code, message: error.message });
     }
-  })();
-
-  return sseResponse(stream);
+  });
 }
