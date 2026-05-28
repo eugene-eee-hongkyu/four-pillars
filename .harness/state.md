@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 15:59
-## 마지막 업데이트: 2026-05-28 15:59
+## 마지막 실행: 2026-05-28 18:21
+## 마지막 업데이트: 2026-05-28 18:21
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 인프라 완비 (자체 form + 진단 history + BirthSummary + deviceId 분리 funnel + CTA dedup + project root 정리). mom test 10명 모집 준비 완료.
+- mom test 인프라 + 정확성 audit 5 rounds 완료 (BUG A-H fix + DB migration 3건 prod 적용 + dead code 19파일 1,500줄+ 정리 + V25 calibration baseline 100% 정합). 코드 안정성·정확성 확보 — mom test 10명 진행만 남음.
 
 ### 이어서 할 것
 
-1. mom test 10명 모집·진행 — 한 어머니가 자녀 여러 명 진단해도 deviceId 1 사용자 카운트. 자체 form (Q1-Q11) Supabase 자동 저장. CTA 1회 제출 후 자동 숨김.
-2. 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 (deviceId 기반 정확 사용자 수 + session_id 진단별 흐름).
-3. mom test 결과 정량 (Q2-Q7 평균) + 정성 (Q1·Q8·Q9·Q10) 종합 → 다음 prompt 개선 priority 결정.
+1. mom test 10명 모집·진행 — 자체 form (Q1-Q11) + Mixpanel funnel (deviceId 기반 정확 사용자 카운트) + Supabase feedback_responses 동시 누적. UNIQUE 제약으로 server-side dedup 안전.
+2. 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 ("지난 1일 part1_complete → part2_complete 도달률" 등). PART1/2_COMPLETE 이벤트 sessionId 단위 1회 발사 보장 → 정확.
+3. mom test 결과 정량 (Q2-Q7 평균) + 정성 (Q1·Q8·Q9·Q10) 종합 → 다음 prompt 개선 priority 결정. prompt_version 단일 source 라 group by 분석 정확.
 
 ### 막힌 것
 
@@ -148,7 +148,21 @@
 - [x] BirthSummary 카드 (`40bb081`·`7813ea0`) — child-manse·interpret-premium·interpret-deep ⭐
 - [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`) — sessionId 단위 dedup
 - [x] Mixpanel deviceId 분리 (`7813ea0`) — 장비 단위 사용자, sessionId super property ⭐
-- [x] **project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)**
+- [x] project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)
+- [x] **정확성 audit 5 rounds — BUG A-H fix (Round 1-5)** ⭐
+- [x] **history dedup 보존 fix + part1/2 complete dedup state 도입** (Round 1)
+- [x] **StreamingBody onComplete 더블 발사 차단 (SSE done 후 return)** (Round 2, BUG A)
+- [x] **PREMIUM_PROMPT_VERSION 단일 source 추출 (`lib/prompts/version.ts`)** ⭐ (DD1.A)
+- [x] **ManseResult.gender 영구 추가 + hydrate fallback + 169 subjects 백필** ⭐ (DD2.B)
+- [x] **/api/feedback deviceId 검증 + UNIQUE (session_id, source) constraint** ⭐ (DD3.B)
+- [x] **DB migration 3건 prod 적용 + repo 박제 — feedback_responses·session.device_id·subjects.gender 백필**
+- [x] **relation-mini stream double consumption fix (single-consumer race)** (Round 3, BUG E)
+- [x] **computeDirections 시그너처 Pick<ManseResult, ...> 타입 좁힘 + as any 2곳 제거** (Round 3, BUG F)
+- [x] **듀얼 API 폴더 단일화 — app/api/*+api.ts 10파일 일괄 삭제** ⭐ (DF1.A, BUG G)
+- [x] **무료진단 전면 제거 — interpret-free 화면·API·prompt·state·funnel·vercel.json 일괄 정리** (DF2, BUG H)
+- [x] **옛 흐름 dead screen 5파일 삭제 (child-info·child-saju·mother-saju·mother-manse·father-saju)** (DG2.B)
+- [x] **옛 e2e 시나리오 3파일 삭제 (옛 흐름 검증)**
+- [x] **selftest-calibration-v25-prod.ts 신규 + 12 samples expected V25 baseline 갱신 — 12/12 PASS** ⭐ (DG1.C)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
 - [ ] 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석

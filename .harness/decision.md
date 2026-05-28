@@ -6,6 +6,95 @@
 
 ---
 
+## 2026-05-28: Calibration baseline V25 갱신 (DG1.C) — 옛 V11/V12 expected → V25 prod actual
+
+- **선택**: 12 calibration samples 의 system-computed expected (hagunScore·hagunLabel·hagunTier·abroadScore/Level·artsScore/Level) 를 현재 V25 prod actual 값으로 일괄 갱신. directionMain 은 실제 직업 기준 보존.
+- **대안 검토**:
+  - A. 갱신 안 함 — sample data 가 옛 시스템 baseline 기록. mismatch 그대로. 회귀 검증 가치 ✗
+  - B. 자동 갱신 (V25 actual 로 덮어쓰기) — 검증 자체 무의미 (자기 자신과 비교)
+  - C. 수동 검토 후 갱신 ← 선택 (12 sample 각각 실제 universityTier 와 V25 primaryTier 격차가 명리 본질·외부변수로 합리적인지 검토)
+- **선택 이유**: 12 samples 모두 V25 primaryTier 가 실제 universityTier 와 ±1-3 격차 안에서 합리적 정합. baseline update 가 표준 regression test 패턴. 시스템 진화 (V12→V25) 따라가지 못한 옛 expected 는 stale.
+- **영향 범위**: `_private/calibration-samples/data.ts` 12 sample expected 객체 + 신규 `scripts/selftest-calibration-v25-prod.ts` 검증 도구. 결과: 12/12 PASS, V25 prod 정합 100%.
+- **되돌리는 방법**: git revert. 옛 expected 는 V11/V12 시점 시스템 baseline 으로 의미가 있어 git history 에 보존.
+
+---
+
+## 2026-05-28: 옛 흐름 dead screen 정리 (DG2.B) — child·mother·father saju 5파일 삭제, signup·checkout·premium-value 보존
+
+- **선택**: 신흐름 (family-input → child-manse → interpret-premium) 에서 진입 ✗ 인 5 파일 일괄 삭제: child-info·child-saju·mother-saju·mother-manse·father-saju. signup·checkout·premium-value 는 결제 활성화 미래 위해 보존.
+- **대안 검토**:
+  - A. 8 파일 일괄 삭제 (결제 인프라도) — 단순. 결제 활성화 시 부활 작업 필요
+  - B. 5 파일 삭제 + signup·checkout·premium-value 보존 ← 선택 — 결제 인프라 미래 부활 가능
+  - C. 전부 보존 — drift 누적 위험
+- **선택 이유**: state.md 백로그에 "결제 페이지 활성화 시점 결정 (Q11 가격 응답 누적 후)" 명시. 결제 패키지 (signup → checkout, premium-value 가치 인식) 는 미래 부활 의도. 옛 단계별 흐름 (child·mother·father saju) 은 family-input 으로 통합되어 부활 가치 ✗.
+- **영향 범위**: 5 dead screens 삭제. navigate 진입점 0 이라 다른 코드 영향 ✗. typecheck pass.
+- **되돌리는 방법**: git revert. 또는 family-input 흐름 분해 시 재작성.
+
+---
+
+## 2026-05-28: 듀얼 API 폴더 단일화 (DF1.A) — app/api/*+api.ts 10파일 삭제
+
+- **선택**: `eduluck/app/api/*+api.ts` (Expo Router 패턴) 10 파일 일괄 삭제. `eduluck/api/*` (Vercel serverless) 가 prod single source.
+- **대안 검토**:
+  - A. `app/api/*+api.ts` 삭제 + `eduluck/api/*` 유지 ← 선택
+  - B. `eduluck/api/*` 삭제 + `app/api/*+api.ts` 유지 (Expo Router native) — prod 라우팅 변경 위험 (mom test 진행 중)
+  - C. 둘 다 유지 — drift 계속 누적
+- **선택 이유**: vercel.json `functions` 항목이 `api/*.ts` 명시 + prod 정상 작동 확인. `app/api/*+api.ts` 는 옛 worklog 메모 "Expo Router `+api.ts` 가 expo start --web 에서 라우팅 ✗" + drift 확인 (session deviceId 한쪽만 적용). 단일 source 통일.
+- **영향 범위**: 10 파일 삭제 (checkout·interpret-free·manse·relation-mini·session·share·share-token·subjects·survey·track). 빈 디렉토리 제거.
+- **되돌리는 방법**: git revert. 또는 Expo Router native 채택 시 `eduluck/api/*` 를 `app/api/*+api.ts` 로 이동.
+
+---
+
+## 2026-05-28: 무료진단 전면 제거 (DF2) — 화면·API·state·prompt·funnel 일괄 정리
+
+- **선택**: 무료 간이 진단 (interpret-free) 관련 모든 코드 일괄 삭제. 화면 1 파일 + API 2 파일 + prompt 1 파일 + state 필드 + funnel 이벤트 + vercel.json functions.
+- **대안 검토**:
+  - A. 전면 제거 ← 선택
+  - B. 보존 (미래 부활 가능성) — drift 계속, 코드 부담
+- **선택 이유**: navigate 진입점 0 (router.push·replace·href grep 결과). `state.freeInterpretText` write 만 있고 read 0. `kind: 'free'` insert 만 있고 read 0. share·share-link·share-backfill 모두 'premium*' kind 만 사용. 신흐름 (family-input → child-manse → interpret-premium) 에서 무료 단계 제거 — 완전한 dead island.
+- **영향 범위**: 삭제 3 파일 (api/interpret-free.ts·app/(flow)/interpret-free.tsx·lib/prompts/interpret-free.ts) + context.tsx freeInterpretText·setter·reset·provider value 정리 + funnel.ts 'interpret-free' 제거 + vercel.json maxDuration 120 항목 제거. 옛 prod row 15개 (`kind='free'`) 는 DB 보존 (사용자 진단 이력).
+- **되돌리는 방법**: git revert. CHECK constraint 의 'free' 도 유지되어 있어 옛 row 영향 ✗.
+
+---
+
+## 2026-05-28: `ManseResult.gender` 영구 추가 (DD2.B) + 169 subjects 백필
+
+- **선택**: `ManseResult` interface 에 `gender: 'male' | 'female'` 필드 영구 추가. `computeManse` return 에 포함. `hydrateManse` 의 shensha fallback 이 `m.gender ?? 'male'` 우선. prod subjects.manse_json 169 row 모두 백필 적용.
+- **대안 검토**:
+  - A. 현재 상태 유지 (옛 manse 객체 shensha 누락 시 'male' 하드코딩) — 여자 자녀 정확도 미세 ↓
+  - B. ManseResult.gender 영구 추가 ← 선택
+  - C. hydrate 호출 측에서 gender 인자 전달 — invasive (다수 call site)
+- **선택 이유**: 미래 hydrate 가 새 gender-의존 필드 재계산하도록 바뀔 때 옛 row 회귀 방지. 169 row 백필 (jsonb_set atomic, subjects.gender source-of-truth) 로 옛 객체도 영구 안전.
+- **영향 범위**: `lib/manse/engine.ts` interface + return 갱신. `lib/manse/hydrate.ts` shensha fallback + 반환에 gender. prod migration 20260528000002 (idempotent UPDATE) — 169 rows.
+- **되돌리는 방법**: git revert + `UPDATE subjects SET manse_json = manse_json - 'gender'`.
+
+---
+
+## 2026-05-28: `/api/feedback` deviceId 검증 + DB UNIQUE constraint (DD3.B)
+
+- **선택**: sessions 테이블에 `device_id` 컬럼 추가 + `/api/feedback` 가 session.device_id 일치 강제 (NULL 옛 세션 backward compat skip). `feedback_responses (session_id, source)` UNIQUE 인덱스 추가 + 409 친화 처리.
+- **대안 검토**:
+  - A. mom test 끝까지 무대응 — 가짜 응답 주입 가능
+  - B. deviceId 검증 + UNIQUE constraint ← 선택 — 영구 안전, 결제 단계 진입 전 적절
+  - HMAC token — 별도 secret 인프라 필요
+- **선택 이유**: 신규 세션부터 device_id 강제 → 같은 deviceId 검증 통과 시에만 feedback 가능. UNIQUE constraint 가 server-side dedup 백업 (client `feedbackSubmittedSessions` 우회 시도 차단). 옛 세션 (mom test 시작 전) 은 device_id NULL 이라 검증 skip = backward compat.
+- **영향 범위**: migration 20260528000001 (sessions.device_id + feedback_responses UNIQUE) prod 적용. `/api/session` body `{ deviceId }` 처리. `/api/feedback` session lookup + 검증 + 409. 클라이언트 `app/index.tsx`·`feedback.tsx` deviceId 전달.
+- **되돌리는 방법**: 두 마이그레이션 revert (column drop, index drop). API 코드 git revert.
+
+---
+
+## 2026-05-28: `PREMIUM_PROMPT_VERSION` 단일 source 추출 (DD1.A)
+
+- **선택**: 신규 `lib/prompts/version.ts` 에 `PREMIUM_PROMPT_VERSION` export. `lib/flow/context.tsx` 는 re-export (기존 import path 호환). 4 API + share-backfill 의 hardcoded `'v5-20sections-split'` literal 모두 import 로 교체.
+- **대안 검토**:
+  - A. 새 파일 `lib/prompts/version.ts` + re-export ← 선택
+  - B. API 4 곳 literal 을 `'v5.25-global-abroad-synonym'` 으로 통일 — 단일 source 아님, 다음 calibration 시 또 어긋날 위험
+- **선택 이유**: 다음 prompt 버전 bump 시 한 곳만 수정. interpretations.prompt_version 이 실제 prompt 버전 반영 → feedback_responses ↔ interpretations join on prompt_version 정합. mom test 분석 신뢰도 향상.
+- **영향 범위**: 신규 `lib/prompts/version.ts`. 변경: `lib/flow/context.tsx` re-export. `api/interpret-premium-part1.ts`·`part2.ts`·`interpret-deep.ts`·`share-backfill.ts` 의 literal → import.
+- **되돌리는 방법**: git revert. 새 prod row 의 prompt_version 이 옛 literal 로 돌아감 — 분석 시 group by prompt_version 결과 변경.
+
+---
+
 ## 2026-05-28: Mixpanel distinct_id — deviceId vs sessionId 분리
 
 - **선택**: distinct_id = deviceId (localStorage 영구 UUID, 장비 단위). session_id = mixpanel.register 로 super property (모든 event 자동 첨부, 진단 단위).

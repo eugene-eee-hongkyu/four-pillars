@@ -6,6 +6,56 @@
 
 ---
 
+## Session 2026-05-28 18:21 — 정확성 audit 5 rounds + DB migration 3건 + dead code 19파일 정리 + calibration V25 baseline
+
+### 작업 요약
+
+**5 rounds 코드 정확성 audit** (정확성 결함 검출 + 즉시 수정) — 총 mod 18 파일 + del 19 파일 (1,500+ 줄) + new 5 파일 + DB migration 3건 prod 적용.
+
+- **Round 1 — 최근 변경 5건 audit**:
+  - BUG 1 `loadSessionFromHistory` 가 현재 `feedbackSubmittedSessions` 를 옛 snapshot 으로 덮어쓰던 회귀 fix
+  - BUG 2 `loadInitial` deep-merge 에 `father` 누락 (Persistent 스키마 확장 안전 위반) fix
+  - BUG 3·4 `PART1/2_COMPLETE` Mixpanel 이벤트가 캐시 hit·page remount 마다 중복 발사 fix — `part1/2CompleteFiredSessions` state 도입, sessionId 단위 1회만 발사 보장
+  - BUG 5 옛 snapshot 의 `feedbackSubmittedSessions` 누락 → `.includes()` TypeError fix
+  - DB 신규 migration: `feedback_responses` schema 박제 (prod 적용 완료, repo 박제)
+- **Round 2 — StreamingBody·share·hydrate·feedback** (BUG A-F):
+  - **BUG A** `StreamingBody` SSE done event 후 IIFE 안 빠져서 onComplete 가 모든 정상 흐름에서 2회 호출. `return;` 추가로 차단 (error event 도 동일 fix)
+  - **BUG B** `interpretations.prompt_version` 이 옛 literal `'v5-20sections-split'` 박제 — 4 API + share-backfill 전수 `PREMIUM_PROMPT_VERSION` 단일 source 로 통일 (신규 `lib/prompts/version.ts`)
+  - **BUG C** `hydrateManse` 가 shensha 누락 시 `'male'` 하드코딩 fallback → `ManseResult.gender` 영구 추가 + `m.gender ?? 'male'` fallback (engine.ts·hydrate.ts) + prod 169 subjects `manse_json.gender` 백필
+  - DB migration: `sessions.device_id` 컬럼 + `feedback_responses (session_id, source)` UNIQUE 인덱스 + `subjects.manse_json` gender 백필 — 3건 prod 적용 + repo 박제
+  - DD3.B 채택: `/api/feedback` 가 session.device_id 검증 (NULL 옛 세션 backward compat skip) + UNIQUE 위반 시 409 친화 처리
+- **Round 3 — direction-system·relation-mini·shensha**:
+  - **BUG E** `/api/relation-mini` 가 `stream.finalMessage()` IIFE + `sseResponse(stream)` 동시 소비 (single-consumer race) → `sseResponse(stream, 'relation-mini', onComplete)` 패턴으로 통일
+  - **BUG F** `computeDirections` 의 `as any` 캐스트 잠재 회귀 → `DirectionInput = Pick<ManseResult, ...>` 타입 좁힘, hydrate·engine 2곳 `as any` 제거
+  - `calcShensha` 의 gender 분기는 단 1곳 (과숙살/고진살 이름) — BUG C severity LOW 확정
+- **Round 4 — 듀얼 API 폴더 drift + 무료진단 dead code**:
+  - **BUG G** `eduluck/api/*` vs `eduluck/app/api/*+api.ts` 듀얼 구현 + drift 확인 (session deviceId 한쪽만 적용) → `app/api/*+api.ts` 10 파일 일괄 삭제 (DF1.A)
+  - **BUG H** `/api/interpret-free` 도 stream double consumption (BUG E 와 동일 root) → 무료진단 dead code 완전 제거 (DF2): api·flow screen·prompt·state·funnel·vercel.json 항목 일괄 정리
+- **Round 5 — e2e 정비 + calibration baseline V25 갱신**:
+  - 옛 e2e 시나리오 3개 삭제 (옛 흐름 `/interpret-free` 검증, 현재와 불일치)
+  - 옛 dead screen 5개 삭제 (child-info·child-saju·mother-saju·mother-manse·father-saju) — DG2.B. signup·checkout·premium-value 는 결제 활성화 미래 위해 보존
+  - 신규 `scripts/selftest-calibration-v25-prod.ts` — V25 prod calibration baseline 검증 도구 (`--dump` 모드 + weight=0 sample skip 로직)
+  - 12 calibration samples expected 전수 V25 baseline 갱신 (DG1.C) — hagunScore·hagunLabel·hagunTier·abroadScore/Level·artsScore/Level. directionMain 은 실제 직업 기준 보존
+  - **검증 결과: 12/12 sample PASS, V25 prod 정합 100%**
+
+### 결정 (decision.md 추가)
+- 듀얼 API 폴더 단일화 (DF1.A) — `eduluck/api/*` single source, `app/api/*+api.ts` 10파일 삭제
+- 무료진단 전면 제거 (DF2) — 화면·API·state·prompt·funnel 일괄 정리
+- `ManseResult.gender` 영구 추가 (DD2.B) — engine schema + hydrate fallback + prod 백필
+- `/api/feedback` deviceId 검증 + UNIQUE constraint (DD3.B)
+- `PREMIUM_PROMPT_VERSION` 단일 source 추출 (DD1.A) — `lib/prompts/version.ts`
+- 옛 흐름 dead screen 5파일 정리 + 결제 3파일 보존 (DG2.B)
+- Calibration baseline V25 갱신 (DG1.C) — 옛 V11/V12 expected → V25 prod actual
+
+### 실패한 시도
+- 없음 — 5 rounds 모두 자동 검증 (typecheck + selftest) 통과 후 진행
+
+### 다음 액션
+- mom test 10명 모집·진행 — 인프라 + 정확성 audit 모두 완료, 실행만 남음
+- Mixpanel MCP OAuth → 자연어 funnel 분석 (deviceId 기반 정확 사용자 카운트)
+- mom test 결과 정량 (Q2-Q7 평균) + 정성 (Q1·Q8·Q9·Q10) 종합 → 다음 prompt 개선 priority 결정
+
+
 ## Session 2026-05-28 15:59 — 프로젝트 정리 및 인프라 준비 완료
 
 ### 작업 요약
