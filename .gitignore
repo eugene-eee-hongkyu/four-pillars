@@ -11,7 +11,8 @@
 # playwright MCP 세션 아티팩트
 .playwright-mcp/
 
-# 임시 UI 테스트 스크린샷
+# 임시 UI 테스트 스크린샷 (project root 만, eduluck/assets 의 앱 메타 PNG 는 영향 ✗)
+/*.png
 screen*.png
 *-test.png
 *-check.png
@@ -19,6 +20,9 @@ screen*.png
 *-header.png
 *-premium-hero.png
 *-full.png
+*-render.png
+*-scrolled.png
+*-section.png
 youngjin-*.png
 sehyung-*.png
 
