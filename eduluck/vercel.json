@@ -1,13 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:web",
+  "buildCommand": "EXPO_PUBLIC_GIT_SHA=$VERCEL_GIT_COMMIT_SHA pnpm build:web",
   "installCommand": "pnpm install",
   "outputDirectory": "dist",
-  "build": {
-    "env": {
-      "EXPO_PUBLIC_GIT_SHA": "$VERCEL_GIT_COMMIT_SHA"
-    }
-  },
   "rewrites": [
     { "source": "/((?!_expo|assets|favicon|api).*)", "destination": "/index.html" }
   ],
