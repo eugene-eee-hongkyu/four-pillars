@@ -30,6 +30,10 @@
 - 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global 통일)
 - 결제 가격·결제 페이지 활성화 시점 (Q11 가격 응답 누적 후 결정)
 
+### 운영 자료
+
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (5종 검증, 약 8-10분, $0.20)
+
 ### 백로그 요약
 
 - 대기 중: 6개
