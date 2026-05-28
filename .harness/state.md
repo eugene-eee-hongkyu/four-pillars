@@ -6,18 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 14:49
-## 마지막 업데이트: 2026-05-28 14:49
+## 마지막 실행: 2026-05-28 15:59
+## 마지막 업데이트: 2026-05-28 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 인프라 완비 (자체 form + 진단 history + BirthSummary + deviceId 분리 funnel + CTA dedup + project root 정리). mom test 10명 실제 진행 대기.
+- mom test 인프라 완비 (자체 form + 진단 history + BirthSummary + deviceId 분리 funnel + CTA dedup + project root 정리). mom test 10명 모집 준비 완료.
 
 ### 이어서 할 것
 
 1. mom test 10명 모집·진행 — 한 어머니가 자녀 여러 명 진단해도 deviceId 1 사용자 카운트. 자체 form (Q1-Q11) Supabase 자동 저장. CTA 1회 제출 후 자동 숨김.
-2. 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 (deviceId 기반 정확 사용자 수 + session_id 진단별 흐름).
+2. 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 (deviceId 기반 정확 사용자 수 + session_id 진단별 흐름).
 3. mom test 결과 정량 (Q2-Q7 평균) + 정성 (Q1·Q8·Q9·Q10) 종합 → 다음 prompt 개선 priority 결정.
 
 ### 막힌 것
@@ -151,8 +151,8 @@
 - [x] **project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
-- [ ] 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
-- [ ] Mom test 결과 종합 → 다음 prompt 개선 priority 결정
+- [ ] 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
+- [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24

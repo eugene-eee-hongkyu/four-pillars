@@ -6,6 +6,20 @@
 
 ---
 
+## Session 2026-05-28 15:59 — 프로젝트 정리 및 인프라 준비 완료
+
+### 작업 요약
+- worklog.md, state.md 업데이트 (2026-05-28 타임스탬프)
+- project root PNG 12개 정리 및 .gitignore 보강
+- 변경사항 커밋 및 푸시
+- expo dev server background task 종료
+
+### 다음 액션
+- mom test 10명 모집 및 진행 (인프라 준비 완료)
+- 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
+- mom test 결과 기반 prompt 개선 priority 결정
+
+
 ## Session 2026-05-28 14:49 — project root PNG 12개 정리 + .gitignore 보강
 
 ### 작업 요약
