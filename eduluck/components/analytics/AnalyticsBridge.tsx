@@ -25,7 +25,8 @@ export function AnalyticsBridge() {
     setCurrentSession(state.sessionId);
   }, [state.sessionId]);
 
-  // 자녀 정보 변경 시 people properties 갱신 — 가장 최근 진단 자녀 기준
+  // 자녀 정보 변경 시 people properties 갱신 — 가장 최근 진단 자녀 기준.
+  // PII 회피 (2026-05-28 보안 audit DI1.A): gender·grade 만 cohort 단위 보존, 출생정보·격국·일주 등은 Supabase 에서만 (Mixpanel 전송 ✗).
   useEffect(() => {
     if (!state.sessionId) return;
     updateUserProps({
@@ -36,15 +37,8 @@ export function AnalyticsBridge() {
     });
   }, [state.sessionId, state.child.grade, state.child.gender, state.motherSubjectId, state.fatherSubjectId]);
 
-  // 진단 결과 (격국·일간) 추가 — 가장 최근
-  useEffect(() => {
-    if (state.childManse) {
-      updateUserProps({
-        latest_gyeokguk: state.childManse.gyeokguk?.name ?? null,
-        latest_day_pillar: state.childManse.dayPillar ?? null,
-      });
-    }
-  }, [state.childManse]);
+  // 진단 결과 (격국·일주) 전송 제거 — gyeokguk + dayPillar 조합으로 birth date 추론 가능 (사실상 PII).
+  // cohort 분석 필요 시 Supabase (RLS 보호) 에서 직접 join.
 
   return null;
 }
