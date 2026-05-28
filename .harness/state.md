@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-27 23:28
-## 마지막 업데이트: 2026-05-27 23:28
+## 마지막 실행: 2026-05-28 10:20
+## 마지막 업데이트: 2026-05-28 10:20
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- V18-V25 누적 (학교 데이터 통합·hero UX·정합성 audit) 모두 prod 배포 완료. PROMPT_VERSION v5.25-global-abroad-synonym. 다음은 사용자 직접 prod 검증 + mom test 진행.
+- Mixpanel funnel 트래킹 + MCP 통합 완료. mom test 질문 11문항 설계 완료. mom test 10명 진행 + Mixpanel funnel 정량·정성 검증 단계.
 
 ### 이어서 할 것
 
-1. V25 prod 배포 (`b8c9154`) 사용자 직접 확인 — hero 0.5 단위 별·점수·V24 라벨·VersionFooter 정상 작동
-2. 영진 외 sample mom test — §16·§17·§18 본문 라벨이 친화 변환 형태로 노출되는지
-3. 5 적성 점수 raw cutoff 다음 calibration 변경 시 V25 헤더 가드 작동 확인
+1. mom test 10명 모집·진행. 질문 11문항 (정량 6 + 정성 4 + 결제 의향 1) 활용. 진단 후 Mixpanel `Events` 메뉴에서 9 step funnel 도달 확인.
+2. 다음 채팅 시작 시 Mixpanel MCP 첫 호출 → 브라우저 OAuth → 이후 자연어 funnel 분석.
+3. mom test 결과 정량 (funnel drop-off·prompt_version 분포) + 정성 (Q1·Q8·Q9·Q10 자유서술) 종합 → 다음 prompt 개선 priority 결정.
 
 ### 막힌 것
 
@@ -26,9 +26,9 @@
 
 ### 사람 판단 필요
 
-- Mom test 5~10명 모집·정성 피드백
-- 방향성 시스템 정비 (score.ts / categoryScores / 체육 명명) — 다음 세션 일정
-- DirectionKey 'global' → 'abroad' 코드 통일 여부 (V25는 prompt instruct만, 코드 명명은 그대로)
+- Mom test 참여자 모집·정성 피드백 수집
+- 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global→abroad)
+- mom test 결과 기반 결제 가격·페이지 활성화 결정
 
 ### 백로그 요약
 
@@ -123,25 +123,28 @@
 - [x] hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt ⭐
 - [x] Score·티어 audit (4 영역) + Phase A-E 일괄 정리 ⭐
 - [x] Playwright e2e 영진·세형 prod 검증 + hero chip raw signer fix
-- [x] **V14 physical direction + researchScore + publicForceScore 신규 (`6582b21`)** ⭐
-- [x] **V15 명명 통일 (주력 방향성·적성 점수) + 가치 메모 + 대운 발현 시기 라벨 (`2c5ed9a`)** ⭐
-- [x] **V16 정규화 16 모듈 0-100 + 두 level 시스템 (`24562fb`·`939a5e8`)**
-- [x] **V17 도전 chip 재도입 + 가능·도전 룰 (`6c212ab`)**
-- [x] **V18 30 sub-tier 학교 데이터 단일 source + 학과·별도 트랙 (`c21aa4f`)** ⭐
-- [x] **V19 generalDetail 세세화 + specialTracks {name, triggers[]} 객체화 (`2cc8077`)** ⭐
-- [x] **V20 성인 회고 모드 찬사 멘트 (`10975d8`)** — hero 푸터 + §17 LLM instruction
-- [x] **V21 남자 사주 여대 권유 차단 (`6583c26`)** — chip + LLM prompt
-- [x] **V22 학교명 약어 풀어쓰기 (`fd812a0`)** — '서·성·한' → '서강대·성균관대·한양대'
-- [x] **V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)** — 영문 ID 제거 + 카테고리 4종 강제
-- [x] **V24 10단계 학운 라벨 + hero 점수 + signer ×N fix (`13771be`·`25eb1bf`)** ⭐
-- [x] **VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`)**
-- [x] **V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`)** ⭐
-- [x] **verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)**
+- [x] V14 physical direction + researchScore + publicForceScore 신규 (`6582b21`) ⭐
+- [x] V15 명명 통일 (주력 방향성·적성 점수) + 가치 메모 + 대운 발현 시기 라벨 (`2c5ed9a`) ⭐
+- [x] V16 정규화 16 모듈 0-100 + 두 level 시스템 (`24562fb`·`939a5e8`)
+- [x] V17 도전 chip 재도입 + 가능·도전 룰 (`6c212ab`)
+- [x] V18 30 sub-tier 학교 데이터 단일 source + 학과·별도 트랙 (`c21aa4f`) ⭐
+- [x] V19 generalDetail 세세화 + specialTracks {name, triggers[]} 객체화 (`2cc8077`) ⭐
+- [x] V20 성인 회고 모드 찬사 멘트 (`10975d8`)
+- [x] V21 남자 사주 여대 권유 차단 (`6583c26`)
+- [x] V22 학교명 약어 풀어쓰기 (`fd812a0`)
+- [x] V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)
+- [x] V24 10단계 학운 라벨 + hero 점수 + signer ×N fix (`13771be`·`25eb1bf`) ⭐
+- [x] VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`·`5892a2d` $VERCEL fix)
+- [x] V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`) ⭐
+- [x] verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)
+- [x] **mom test 질문 세트 설계 11문항** (정량 6 + 정성 4 + 결제 1) ⭐
+- [x] **Mixpanel SDK + 9 step funnel 트래킹 통합 (`de40a3f`)** ⭐
+- [x] **AnalyticsBridge + sessionId 매핑 + PROMPT_VERSION property**
+- [x] **Mixpanel 공식 MCP 활성화 (Org Overview Enable MCP) + claude mcp add four-pillars scope**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] V25 prod 사용자 직접 확인 (hero 별·점수·V24 라벨·VersionFooter)
-- [ ] Mom test 5~10명 — V18-V25 누적 prompt + UI 정성 검증
-- [ ] 방향성 시스템 정비 별도 세션 — score.ts (좀비)·categoryScores (directions 중복)·체육 명명 통일
-- [ ] DirectionKey 'global' → 'abroad' 코드 통일 여부 (V25는 prompt instruct만)
+- [ ] Mom test 10명 진행 + Mixpanel funnel 검증 (V25 prompt + UI + 11문항 피드백)
+- [ ] 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
+- [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — 2026-05-27 free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
 - [ ] 음력 입력 UI 토글 추가 (윤달) (선택)

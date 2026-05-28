@@ -6,6 +6,34 @@
 
 ---
 
+## 2026-05-28: Analytics 도구 — Mixpanel 단독 선택
+
+- **선택**: Mixpanel 단독 사용 (mixpanel-browser SDK + 공식 Mixpanel MCP 서버). EXPO_PUBLIC_MIXPANEL_TOKEN (Vercel env) 으로 활성화.
+- **대안 검토**:
+  - A. Vercel Web Analytics + Custom Events — funnel 시각화 ✗ (이벤트 수만, 차트는 raw export 후 직접). 탈락
+  - B. GA4 단독 — 여러 프로젝트 통합·마케팅·SEO·BigQuery export 강점. UI 복잡·session replay ✗·product 정밀도 약함
+  - C. Mixpanel 단독 — product analytics 정밀 + 직관 UI + session replay + 공식 MCP. 마케팅·SEO·BigQuery 약함 (현재 미시작 단계라 영향 ✗)
+  - D. GA4 + Microsoft Clarity 조합 — robust 하나 도구 두 개. 현재 단계 과잉
+  - E. PostHog — funnel + session replay + feature flag. 한국 docs 약함·MCP ✗
+- **선택 이유**: 현재 mom test·결제 미시작 단계 = 마케팅 영역 활용 ✗. mom test 정수는 funnel drop-off + session replay 정밀 분석 → Mixpanel 강점. 공식 Mixpanel MCP 로 자연어 funnel·dashboard 조회 가능 = 분석 자동화. 향후 결제·광고 시작 시 GA4 추가 가능 (코드 한 줄).
+- **영향 범위**: package.json (mixpanel-browser dep), lib/analytics/mixpanel.ts·components/analytics/AnalyticsBridge.tsx 신규, app/_layout.tsx (AnalyticsBridge mount), app/index.tsx·family-input·child-manse·interpret-premium·ShareButton (트래킹 호출), vercel.json (EXPO_PUBLIC_MIXPANEL_TOKEN 환경변수는 Vercel UI 에서 직접 설정)
+- **되돌리는 방법**: AnalyticsBridge 제거 + mixpanel-browser uninstall + 각 화면 track() 호출 제거. EXPO_PUBLIC_MIXPANEL_TOKEN 미설정이면 모든 호출 no-op 이라 즉시 비활성도 가능.
+
+---
+
+## 2026-05-28: VersionFooter SHA inject 방식 — buildCommand shell 치환
+
+- **선택**: vercel.json `buildCommand` 앞에 shell 변수 치환 inline (`EXPO_PUBLIC_GIT_SHA=$VERCEL_GIT_COMMIT_SHA pnpm build:web`). build.env 섹션 삭제.
+- **대안 검토**:
+  - A. vercel.json `build.env.EXPO_PUBLIC_GIT_SHA = "$VERCEL_GIT_COMMIT_SHA"` — Vercel 의 build.env 는 KEY=VALUE 매핑만 지원, `$VAR` 참조 unsupported. literal 문자열로 inject → 화면에 `$VERCEL` 7자 잘려 노출. **버그**
+  - B. Vercel 대시보드 UI 에서 EXPO_PUBLIC_GIT_SHA 환경변수 직접 추가 — UI 에서 다른 변수 reference 불가
+  - C. buildCommand 앞 shell 치환 ← 선택
+- **선택 이유**: shell 변수 치환이 buildCommand 실행 시점에 자연 처리 → EXPO_PUBLIC_* 환경변수로 set → Expo 빌드가 process.env.EXPO_PUBLIC_GIT_SHA 로 client bundle 에 inline. 다른 방식 ✗ 보다 단순·robust.
+- **영향 범위**: vercel.json (build.env 섹션 삭제 + buildCommand 변경). 코드 변경 ✗ (process.env.EXPO_PUBLIC_GIT_SHA 접근 그대로).
+- **되돌리는 방법**: buildCommand 원복 + build.env 부활. 단 버그라 rollback 비추천.
+
+---
+
 ## 2026-05-27: V18 30 sub-tier 학교 데이터 단일 source (옵션 C)
 
 - **선택**: lib/manse/tier-schools.ts SUB_TIER_DATA 단일 매핑 (general·departments·specialTracks). user message [§17] baseline 풍부화. system prompt SHARED_UNIVERSITY_TIER_GUIDE 30-row 표 제거.

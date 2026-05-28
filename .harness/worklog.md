@@ -6,7 +6,37 @@
 
 ---
 
-## Session 2026-05-27 23:28 — V18-V25 학교 데이터 통합·hero UX·정합성 audit
+## Session 2026-05-28 10:20 — mom test 질문 설계 + Mixpanel funnel 트래킹 통합
+
+### 작업 요약
+
+- **mom test 10명 피드백 질문 세트 설계**: 정량 6 + 정성 4 = 11문항 5-10분 이내 완료. 학운 그릇·주력 방향성·적성 점수·읽기 쉬움·신뢰감·정직성·가치·결제 의향 영역. mom test 베스트 프랙티스 (Session replay·1-2일 뒤 재연락) 진행 팁 포함.
+- **Analytics 도구 선택**: Vercel Analytics는 funnel 시각화 ✗. Mixpanel vs GA4 vs PostHog vs Mixpanel+Clarity 비교. 사용자가 Mixpanel 단독 선택 (product 정밀 + Mixpanel MCP 자동화).
+- **Mixpanel MCP 발견**: 2026 공개 공식 MCP 서버 (`https://mcp.mixpanel.com/mcp`). claude mcp add 로 four-pillars project scope에 추가 완료. 다음 세션부터 자연어로 funnel·event·dashboard 조회 가능.
+- **Mixpanel SDK 통합** (`de40a3f`):
+  - `mixpanel-browser` 2.79.0 설치 (corepack pnpm)
+  - `lib/analytics/mixpanel.ts` 신규 — init·identify·updateUserProps·track + 9 EVENTS 상수. PROMPT_VERSION·git_sha 자동 첨부.
+  - `components/analytics/AnalyticsBridge.tsx` 신규 — FlowProvider state 변경 자동 동기화 (UI render ✗)
+  - `_layout.tsx` AnalyticsBridge mount
+- **9 step funnel 이벤트 트래킹**:
+  - LANDING_VIEW (app/index.tsx mount)
+  - START_DIAGNOSIS_CLICK (랜딩 '무료 진단 시작')
+  - FAMILY_INPUT_COMPLETE (family-input + has_mother·has_father props)
+  - CHILD_MANSE_VIEW (child-manse mount)
+  - PREMIUM_START_CLICK ('정밀 진단 받기')
+  - PART1_COMPLETE / PART2_COMPLETE (StreamingBody onComplete + 캐시 from_cache:true)
+  - SHARE_CLICK (ShareButton)
+  - DEEPDIVE_SELECT_CLICK ('더 자세히 알고 싶은 영역 선택')
+- **User properties**: grade·gender·has_mother·has_father (sessionId 매핑 시) + gyeokguk·day_pillar (진단 후) + $first_seen·prompt_version·git_sha 자동
+- **VersionFooter `$VERCEL` 버그 fix** (`5892a2d`): vercel.json `build.env.EXPO_PUBLIC_GIT_SHA = "$VERCEL_GIT_COMMIT_SHA"` 매핑이 literal 문자열로 inject돼 화면에 `$VERCEL`로 잘렸음. fix: buildCommand 앞에 shell 변수 치환 inline `EXPO_PUBLIC_GIT_SHA=$VERCEL_GIT_COMMIT_SHA pnpm build:web`. prod 직접 검증 (Playwright) — `v5.25-global-abroad-synonym · 5892a2d` 정상.
+
+### 다음 액션
+
+- mom test 10명 모집·진행 (질문 11문항 설계 완료). 진단 후 Mixpanel `Events`·funnel 즉시 확인.
+- 다음 채팅에서 Mixpanel MCP 첫 호출 시 OAuth 브라우저 인증 → 이후 자연어 funnel 분석 가능 ("지난 24시간 9 step drop-off 보여줘" 등).
+- 사용자 측 캐시된 옛 VersionFooter (`$VERCEL`) 보이면 Cmd+Shift+R hard refresh 권장.
+
+
 
 ### 작업 요약
 
