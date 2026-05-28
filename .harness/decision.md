@@ -6,6 +6,20 @@
 
 ---
 
+## 2026-05-28: 자체 피드백 폼 — Tally·Google Form 대신 eduluck 내장
+
+- **선택**: Supabase feedback_responses 테이블 + /api/feedback endpoint + app/(flow)/feedback.tsx 자체 form. CTA 2자리 (Part 2 끝·Deep dive 끝). 외부 도구 ✗.
+- **대안 검토**:
+  - A. Tally Forms — 5분 셋업·무제한 무료·UTM hidden field prefill. 단 외부 도구 관리·sessionId join 우회 (UTM)
+  - B. Google Forms — 한국 어머니 익숙도 ↑. 외부 도구 관리
+  - C. Notion Forms — Notion DB 통합. 사용자 익숙도 낮음
+  - D. 자체 form ← 선택
+- **선택 이유**: sessionId·진단 메타 (grade·gender·hagun_label·sub_tier·prompt_version·git_sha) Supabase 직접 join 가능 (UTM 우회 ✗). 응답률 ↑ (외부 페이지 이동 ✗). 외부 도구 관리·OAuth ✗. 미래 사용자 식별·결제 통합 시 자체 인프라가 자연. 1-2일 작업이지만 mom test 외 영구 활용.
+- **영향 범위**: DB migration (feedback_responses 테이블), api/feedback.ts·app/(flow)/feedback.tsx 신규, interpret-premium.tsx·interpret-deep.tsx CTA 추가, vercel.json functions, lib/analytics/mixpanel.ts EVENTS 3개 추가.
+- **되돌리는 방법**: CTA 버튼 제거 + feedback.tsx 페이지 삭제 + api/feedback.ts 삭제. DB 테이블은 유지 (다른 용도 활용 가능). 또는 외부 form 추가 병행 시 EXPO_PUBLIC_FEEDBACK_URL 환경변수로 toggle.
+
+---
+
 ## 2026-05-28: Analytics 도구 — Mixpanel 단독 선택
 
 - **선택**: Mixpanel 단독 사용 (mixpanel-browser SDK + 공식 Mixpanel MCP 서버). EXPO_PUBLIC_MIXPANEL_TOKEN (Vercel env) 으로 활성화.

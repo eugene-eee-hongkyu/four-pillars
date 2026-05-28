@@ -6,7 +6,31 @@
 
 ---
 
-## Session 2026-05-28 10:20 — mom test 질문 설계 + Mixpanel funnel 트래킹 통합
+## Session 2026-05-28 12:49 — 자체 피드백 폼 구현 + Supabase 저장 검증
+
+### 작업 요약
+
+- **Supabase 진단 데이터 저장 확인** (사용자 질의 응답): sessions 110·subjects 165 (자녀 96·어머니 39·아빠 30)·interpretations 128 (premium part2 47·part1 42·free 15·deep N=14)·funnel_events 105·surveys 5 모두 prod 보존. subjects.manse_json 으로 만세력 결과 통째 저장 + interpretations.body_text + prompt_version + llm_model. mom test 진행해도 자동으로 누적.
+- **자체 피드백 폼 구현** (`550b99e`) — Tally·Google Form 외부 의존 ✗ 결정. eduluck 자체 form 으로 sessionId·진단 메타 자동 join 가능:
+  - **DB migration** (Supabase prod 적용 완료): feedback_responses 테이블 + RLS (anon insert OK + FK 강제). 정량 6 (q2-q7 1-5 CHECK) + 정성 5 (q1·q8·q9·q10·q11 text) + denormalize 메타 (prompt_version·git_sha·grade·gender·hagun_label·sub_tier).
+  - **api/feedback.ts** — POST endpoint, score clamp, source CHECK
+  - **app/(flow)/feedback.tsx** — 11문항 form (Star rating + textarea), ?source=premium-part2 또는 deep-dive 분기, useFlow + calculateFinalTierV2 자동 메타 첨부
+  - **CTA 2자리** (큰 강조 노란 배경 + 주황 border + 헤딩 + 부제): interpret-premium.tsx Part 2 끝 (ShareButton ↔ 영역 선택 사이) + interpret-deep.tsx 끝 (다른 영역 보기 위)
+  - **Mixpanel 이벤트**: FEEDBACK_CTA_CLICK · FEEDBACK_OPEN · FEEDBACK_SUBMIT (3단 funnel)
+- **e2e 검증** (Playwright + Supabase MCP):
+  - API direct POST (sessionId 발급 → /api/feedback) → 200 OK + 모든 컬럼 정확 insert 확인
+  - /feedback?source=premium-part2 페이지 진입 → 헤딩·11문항·제출 버튼 모두 render 확인
+  - VersionFooter `v5.25-global-abroad-synonym · 550b99e` 최신 확인
+  - test row + test session DELETE (CASCADE 작동, 0 row remaining)
+- **Singtel Mobile Protect 차단 안내** (사용자 폰 SG ISP): 신생 도메인 `luck.z21labs.world` reputation 부족 + `.world` TLD ISP 차단. Continue 버튼 또는 `four-pillars-alpha.vercel.app` (Vercel 글로벌 reputation) 사용 권장. 한국 mom test 사용자 영향 ✗.
+
+### 다음 액션
+
+- mom test 10명 모집·진행 → 자체 form 피드백 정량 + 정성 수집 (sessionId 자동 매핑 + Mixpanel funnel + Supabase feedback_responses 동시 쌓임).
+- 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 ("지난 1일 feedback_cta_click → submit 도달률").
+- mom test 결과 정량 (Q2-Q7 평균 ≥4 합격) + 정성 (Q1·Q8·Q9·Q10 textarea) 종합 후 다음 prompt 개선 priority 결정.
+
+
 
 ### 작업 요약
 

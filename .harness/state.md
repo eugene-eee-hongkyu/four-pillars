@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 10:20
-## 마지막 업데이트: 2026-05-28 10:20
+## 마지막 실행: 2026-05-28 12:49
+## 마지막 업데이트: 2026-05-28 12:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Mixpanel funnel 트래킹 + MCP 통합 완료. mom test 질문 11문항 설계 완료. mom test 10명 진행 + Mixpanel funnel 정량·정성 검증 단계.
+- 자체 피드백 폼 + Mixpanel funnel + Supabase 저장 e2e 검증 완료. mom test 10명 진행 + 정량·정성 데이터 수집 단계.
 
 ### 이어서 할 것
 
-1. mom test 10명 모집·진행. 질문 11문항 (정량 6 + 정성 4 + 결제 의향 1) 활용. 진단 후 Mixpanel `Events` 메뉴에서 9 step funnel 도달 확인.
-2. 다음 채팅 시작 시 Mixpanel MCP 첫 호출 → 브라우저 OAuth → 이후 자연어 funnel 분석.
-3. mom test 결과 정량 (funnel drop-off·prompt_version 분포) + 정성 (Q1·Q8·Q9·Q10 자유서술) 종합 → 다음 prompt 개선 priority 결정.
+1. mom test 10명 모집·진행 — Part 2·Deep dive 끝 CTA 큰 노란 버튼 → 자체 form (11문항) → Supabase feedback_responses · Mixpanel funnel 자동 누적
+2. 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 (cta_click → open → submit 3단 + 진단 9 step)
+3. mom test 결과 종합 (정량 Q2-Q7 평균·정성 Q1·Q8·Q9·Q10 textarea) → 다음 prompt 개선 priority 결정
 
 ### 막힌 것
 
@@ -26,9 +26,9 @@
 
 ### 사람 판단 필요
 
-- Mom test 참여자 모집·정성 피드백 수집
-- 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global→abroad)
-- mom test 결과 기반 결제 가격·페이지 활성화 결정
+- Mom test 10명 모집 + 진행 시점 결정
+- 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global 통일)
+- 결제 가격·결제 페이지 활성화 시점 (Q11 가격 응답 누적 후 결정)
 
 ### 백로그 요약
 
@@ -137,15 +137,19 @@
 - [x] VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`·`5892a2d` $VERCEL fix)
 - [x] V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`) ⭐
 - [x] verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)
-- [x] **mom test 질문 세트 설계 11문항** (정량 6 + 정성 4 + 결제 1) ⭐
-- [x] **Mixpanel SDK + 9 step funnel 트래킹 통합 (`de40a3f`)** ⭐
-- [x] **AnalyticsBridge + sessionId 매핑 + PROMPT_VERSION property**
-- [x] **Mixpanel 공식 MCP 활성화 (Org Overview Enable MCP) + claude mcp add four-pillars scope**
+- [x] mom test 질문 세트 설계 11문항 (정량 6 + 정성 4 + 결제 1)
+- [x] Mixpanel SDK + 9 step funnel 트래킹 통합 (`de40a3f`) ⭐
+- [x] AnalyticsBridge + sessionId 매핑 + PROMPT_VERSION property
+- [x] Mixpanel 공식 MCP 활성화 (Org Overview Enable MCP) + claude mcp add four-pillars scope
+- [x] **자체 피드백 폼 풀스택 (`550b99e`)** — DB·API·UI·CTA 2자리·Mixpanel 이벤트 ⭐
+- [x] **e2e 검증 (API+UI+DB) + test data DELETE 완료**
+- [x] **Supabase 진단 데이터 저장 확인** — sessions 110·subjects 165·interpretations 128 prod 보존
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] Mom test 10명 진행 + Mixpanel funnel 검증 (V25 prompt + UI + 11문항 피드백)
+- [ ] Mom test 10명 모집·진행 → 자체 form 정량·정성 수집 + Mixpanel funnel 동시 누적
 - [ ] 다음 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
+- [ ] Mom test 결과 종합 → 다음 prompt 개선 priority 결정
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
-- [ ] interpretations.kind 정책 — 2026-05-27 free text 유지로 확정 (CHECK constraint 제거 완료)
+- [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
 - [ ] 음력 입력 UI 토글 추가 (윤달) (선택)
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
