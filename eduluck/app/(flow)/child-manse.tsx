@@ -20,6 +20,7 @@ import { MotherChildSyncCard } from '@/components/manse/MotherChildSyncCard';
 import { hydrateManse } from '@/lib/manse/hydrate';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
+import { BirthSummary } from '@/components/manse/BirthSummary';
 
 export default function ChildManse() {
   const router = useRouter();
@@ -43,6 +44,14 @@ export default function ChildManse() {
         <Text className="font-heading-bold text-headline-lg text-text-pri">
           가족 만세력
         </Text>
+
+        <BirthSummary
+          child={state.child}
+          mother={state.mother}
+          motherStatus={state.motherStatus}
+          father={state.father}
+          fatherStatus={state.fatherStatus}
+        />
 
         {m ? (
           <>

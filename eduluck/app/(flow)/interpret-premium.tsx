@@ -17,6 +17,7 @@ import { ShareButton } from '@/components/interpret/ShareButton';
 import { SilentSsePrefetch } from '@/components/interpret/SilentSsePrefetch';
 import { TraitScoreCard } from '@/components/manse/TraitScoreCard';
 import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
+import { BirthSummary } from '@/components/manse/BirthSummary';
 import { DirectionCard } from '@/components/manse/DirectionCard';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -104,6 +105,17 @@ export default function InterpretPremium() {
           <Text className="font-heading-bold text-headline-lg text-text-pri">
             {state.child.nickname || '아이'}의 정밀 학운
           </Text>
+        </View>
+
+        {/* 입력 정보 확인 — 잘못 입력 즉시 식별 + 미입력 부모 페널티 안내 */}
+        <View className="px-container-padding">
+          <BirthSummary
+            child={state.child}
+            mother={state.mother}
+            motherStatus={state.motherStatus}
+            father={state.father}
+            fatherStatus={state.fatherStatus}
+          />
         </View>
 
         {/* Hero — 학운 그릇 */}
