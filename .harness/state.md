@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 18:21
-## 마지막 업데이트: 2026-05-28 18:21
+## 마지막 실행: 2026-05-28 20:15
+## 마지막 업데이트: 2026-05-28 20:15
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 인프라 + 정확성 audit 5 rounds 완료 (BUG A-H fix + DB migration 3건 prod 적용 + dead code 19파일 1,500줄+ 정리 + V25 calibration baseline 100% 정합). 코드 안정성·정확성 확보 — mom test 10명 진행만 남음.
+- 보안 audit 2 rounds (Critical 2 + High 6 + Med 4 + Low 2 fix) + e2e playbook 표준화 + Mixpanel MCP OAuth 인증 완료. mom test 진행 준비 완비.
 
 ### 이어서 할 것
 
-1. mom test 10명 모집·진행 — 자체 form (Q1-Q11) + Mixpanel funnel (deviceId 기반 정확 사용자 카운트) + Supabase feedback_responses 동시 누적. UNIQUE 제약으로 server-side dedup 안전.
-2. 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 ("지난 1일 part1_complete → part2_complete 도달률" 등). PART1/2_COMPLETE 이벤트 sessionId 단위 1회 발사 보장 → 정확.
-3. mom test 결과 정량 (Q2-Q7 평균) + 정성 (Q1·Q8·Q9·Q10) 종합 → 다음 prompt 개선 priority 결정. prompt_version 단일 source 라 group by 분석 정확.
+1. **mom test 10명 모집·진행** — 인프라 (자체 form + Mixpanel funnel + deviceId 분리) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) + e2e playbook 모두 완비.
+2. 채팅 Mixpanel funnel 분석 — 자연어 query 로 진행률·drop-off 검토 (Mixpanel MCP 인증 완료).
+3. CSP Report-Only → Enforce 전환 (2026-06-04 권장) — Console violation 0 확인 후 vercel.json 키 이름만 변경.
 
 ### 막힌 것
 
@@ -29,10 +29,12 @@
 - Mom test 10명 모집·시점 결정
 - 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global 통일)
 - 결제 가격·결제 페이지 활성화 시점 (Q11 가격 응답 누적 후 결정)
+- CSP Enforce 전환 (1주 모니터링 후)
 
 ### 운영 자료
 
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (5종 검증, 약 8-10분, $0.20)
+- **Mixpanel MCP**: OAuth 인증 완료, Z21labs org 자연어 funnel 분석 가능
 
 ### 백로그 요약
 
@@ -153,23 +155,29 @@
 - [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`) — sessionId 단위 dedup
 - [x] Mixpanel deviceId 분리 (`7813ea0`) — 장비 단위 사용자, sessionId super property ⭐
 - [x] project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)
-- [x] **정확성 audit 5 rounds — BUG A-H fix (Round 1-5)** ⭐
-- [x] **history dedup 보존 fix + part1/2 complete dedup state 도입** (Round 1)
-- [x] **StreamingBody onComplete 더블 발사 차단 (SSE done 후 return)** (Round 2, BUG A)
-- [x] **PREMIUM_PROMPT_VERSION 단일 source 추출 (`lib/prompts/version.ts`)** ⭐ (DD1.A)
-- [x] **ManseResult.gender 영구 추가 + hydrate fallback + 169 subjects 백필** ⭐ (DD2.B)
-- [x] **/api/feedback deviceId 검증 + UNIQUE (session_id, source) constraint** ⭐ (DD3.B)
-- [x] **DB migration 3건 prod 적용 + repo 박제 — feedback_responses·session.device_id·subjects.gender 백필**
-- [x] **relation-mini stream double consumption fix (single-consumer race)** (Round 3, BUG E)
-- [x] **computeDirections 시그너처 Pick<ManseResult, ...> 타입 좁힘 + as any 2곳 제거** (Round 3, BUG F)
-- [x] **듀얼 API 폴더 단일화 — app/api/*+api.ts 10파일 일괄 삭제** ⭐ (DF1.A, BUG G)
-- [x] **무료진단 전면 제거 — interpret-free 화면·API·prompt·state·funnel·vercel.json 일괄 정리** (DF2, BUG H)
-- [x] **옛 흐름 dead screen 5파일 삭제 (child-info·child-saju·mother-saju·mother-manse·father-saju)** (DG2.B)
-- [x] **옛 e2e 시나리오 3파일 삭제 (옛 흐름 검증)**
-- [x] **selftest-calibration-v25-prod.ts 신규 + 12 samples expected V25 baseline 갱신 — 12/12 PASS** ⭐ (DG1.C)
+- [x] 정확성 audit 5 rounds — BUG A-H fix (`02aaa18`) ⭐
+- [x] DB migration prod 적용 — feedback_responses·session.device_id·subjects.gender 백필
+- [x] 듀얼 API 폴더 단일화 — app/api/*+api.ts 10파일 삭제 (BUG G)
+- [x] 무료진단 전면 제거 (BUG H)
+- [x] 옛 흐름 dead screen 5파일 삭제 (DG2.B)
+- [x] selftest-calibration-v25-prod.ts + 12 samples expected V25 baseline (DG1.C) — 12/12 PASS ⭐
+- [x] **보안 audit Round 1 (`3eb52c3`)** — Critical 1 + High 4 + Med 3 + dead endpoint 정리 ⭐
+- [x] **/api/checkout mock 결제 endpoint 삭제** (paid flag bypass)
+- [x] **sessions.llm_call_count + cap 50** (LLM 비용 공격 차단, ISSUE-2)
+- [x] **4 LLM API IDOR fix** (subject.session_id 검증, ISSUE-3)
+- [x] **/api/share-backfill 삭제** + ShareButton 폴백 제거 (가짜 본문 spam 차단)
+- [x] **subjects nickname sanitize** (prompt injection 방어)
+- [x] **/api/subjects deviceId 검증** (feedback 패턴 확장)
+- [x] **보안 audit Round 2 (`233f091`)** — Supabase RPC·RLS + headers + Mixpanel PII ⭐
+- [x] **increment_llm_call_count INVOKER + EXECUTE 회수** (anon DoS 차단)
+- [x] **feedback_responses.anon_insert_feedback policy 제거** (anon RLS bypass 차단)
+- [x] **vercel.json 보안 헤더 추가** — X-Frame DENY, X-Content nosniff, Referrer, Permissions, CSP Report-Only
+- [x] **Mixpanel `latest_gyeokguk`·`latest_day_pillar` 제거** (자녀 사주 PII 추론 차단)
+- [x] **e2e Playbook 작성** (`.harness/e2e-playbook.md`) — 5종 검증 표준화 + Mixpanel MCP OAuth 완료 ⭐
+- [x] **e2e 검증 2회 (`02aaa18` + `9bd4b0d`) 모두 PASS** — 5종 + 보안 헤더 활성 확인
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
-- [ ] 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석
+- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (인증 완료)
 - [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
@@ -179,3 +187,8 @@
 - [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
 - [ ] 외부 100명 검증 (Holland Interest Profiler 동시) → backlog 2026-05-20
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
+- [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
+- [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
+- [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
+- [ ] localStorage PII 정리 — 로그인 기능 도입 시 자연 해결 (DI3.A)
+- [ ] Supabase Auth leaked password protection (signup 활성화 시점)

@@ -6,6 +6,57 @@
 
 ---
 
+## Session 2026-05-28 20:15 — 보안 audit 2 rounds + e2e playbook + e2e 검증 2회
+
+### 작업 요약
+
+**보안 audit Round 1** (commit `3eb52c3`) — Critical 1 + High 4 + Med 3:
+- **ISSUE-1 Critical**: `/api/checkout` mock 결제 endpoint 삭제 + 옛 결제 패키지 화면 3개 (signup, checkout, premium-value) 일괄 정리 (paid flag bypass 폭탄 차단)
+- **ISSUE-2 High**: `sessions.llm_call_count` 컬럼 + cap 50 + `lib/llm/rate-limit.ts` (LLM 비용 공격 차단)
+- **ISSUE-3 High**: 4개 LLM API (part1·part2·deep·relation-mini) IDOR fix — `subject.session_id === body.sessionId` 검증
+- **ISSUE-4 High**: `/api/share-backfill` 삭제 + ShareButton 폴백 분기 제거 (가짜 본문 inject + spam URL 차단)
+- **ISSUE-5 Med**: subjects nickname sanitize (특수문자 차단 + 20자 cap, prompt injection 방어)
+- **ISSUE-6 Med**: `/api/subjects` deviceId 검증 (feedback 패턴 확장)
+- **ISSUE-7 Med**: 의존성 11 high (expo 51 transitive, prod runtime 영향 ✗ 가능성 — 추후 평가)
+- **ISSUE-8 Low**: `interpretations.share_token` migration 박제
+- **dead endpoint 정리**: /api/survey + /api/track (callers 0, Mixpanel main funnel) 삭제
+
+**보안 audit Round 2** (commit `233f091`) — Supabase advisors + headers + Mixpanel PII:
+- **ISSUE-A Critical**: `increment_llm_call_count` SECURITY DEFINER → INVOKER 변경 + EXECUTE 권한 anon·authenticated·public 회수 (anon-key 로 victim sessionId DoS 차단)
+- **ISSUE-B High**: `feedback_responses.anon_insert_feedback` policy 제거 (`with check (true)` bypass → anon PostgREST 직접 insert 차단)
+- **ISSUE-C High**: vercel.json `headers` 추가 — X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, **CSP Report-Only** (1주 모니터링 후 enforce)
+- **DI1.A Med**: Mixpanel `latest_gyeokguk`·`latest_day_pillar` updateUserProps 제거 (자녀 사주 PII 추론 차단)
+- Supabase advisors lints: Critical/High 모두 해결 (leaked_password_protection Low 만 잔존, signup 활성화 시점 처리)
+
+**DB Migration prod 적용 (2건 + 1 idempotent 박제)**:
+- `20260528000003_sessions_llm_call_count` (Round 1 의 후속) — column + RPC
+- `20260528000004_security_audit_hardening` (Round 2) — RPC INVOKER + policy drop
+- `20260518000003_add_share_token_to_interpretations` — historical 박제
+
+**e2e Playbook 작성** (commit `9bd4b0d`) — `.harness/e2e-playbook.md`:
+- 5종 검증 표준화 (feedback UNIQUE / LLM 진단 / DB row / history 카드 / feedback 재제출)
+- 사전 준비 (deploy 확인) + 도구 (Playwright + Supabase + Vercel MCP) + 검증 흐름 + cleanup + 보고 템플릿
+- 약 8-10분, 비용 $0.20
+- "e2e 검증" / "playbook 따라" / "prod 검증" 트리거
+- state.md 의 운영 자료 섹션에 reference
+
+**e2e 검증 2회 진행** (Round 1 후 + Round 2 후):
+- 1차 (commit `02aaa18` 후): 5종 모두 PASS
+- 2차 (commit `9bd4b0d` 활성, Round 2 deploy 검증): 5종 모두 PASS + 보안 헤더 모두 활성 확인
+- 실 진단 1회 = sessionId 발급 + LLM Part1+Part2 + interpretations 2 row 검증 + history 카드 복원 (LLM 호출 0건) + feedback UNIQUE 409
+- 테스트 데이터 CASCADE 정리
+
+**Mixpanel MCP OAuth 인증 완료** — Z21labs org (id 3102292) + Z21labs project (id 4028508). 자연어 funnel·event·dashboard 조회 가능. 50+ 도구 deferred load.
+
+### 실패한 시도
+- 없음. 모든 fix 적용 후 typecheck + selftest + e2e 통과
+
+### 다음 액션
+- **mom test 10명 모집·진행** (인프라 + 정확성 + 보안 audit + e2e 표준화 완비)
+- 채팅 Mixpanel funnel 분석 — 자연어 query 로 진행률·drop-off 검토
+- CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0건 확인 후)
+
+
 ## Session 2026-05-28 18:21 — 정확성 audit 5 rounds + DB migration 3건 + dead code 19파일 정리 + calibration V25 baseline
 
 ### 작업 요약

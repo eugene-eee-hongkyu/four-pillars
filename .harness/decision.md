@@ -6,6 +6,51 @@
 
 ---
 
+## 2026-05-28: 보안 audit Round 2 hardening — Supabase RPC 권한·anon RLS policy·security headers
+
+- **선택**: 3건 fix 일괄 적용:
+  - `increment_llm_call_count` SECURITY DEFINER → INVOKER + EXECUTE 권한 anon·authenticated·public 회수
+  - `feedback_responses.anon_insert_feedback` policy 제거 (`with check (true)` bypass)
+  - vercel.json `headers` 추가 (X-Frame-Options DENY · X-Content-Type-Options nosniff · Referrer-Policy · Permissions-Policy · CSP **Report-Only**)
+  - Mixpanel updateUserProps 에서 `latest_gyeokguk`·`latest_day_pillar` 제거
+- **대안 검토**:
+  - A. RPC: SECURITY INVOKER + EXECUTE revoke ← 선택 (service_role 만 호출, RLS bypass 로 정상 동작)
+  - A. RLS: policy 제거 ← 선택 (API service_role 통해서만 insert)
+  - A. CSP: Report-Only 1주 모니터링 → Enforce 전환 ← 선택 (안전한 도입 패턴)
+  - B. CSP 즉시 Enforce — react-native web 의 inline style 등 false positive 위험. 탈락
+  - DI1.A: Mixpanel PII 제거 ← 선택 (gyeokguk+day_pillar 조합으로 birth date 추론 가능, GDPR/KISA 측면 PII)
+- **선택 이유**: anon-key 가 client bundle 에 노출되어 누구나 PostgREST 직접 호출 가능 → API 의 service_role 검증을 우회할 수 있음. RPC·RLS 모두 anon 직접 접근 차단으로 root cause fix. Headers Report-Only 는 prod break 위험 최소화. Mixpanel PII 제거는 funnel 분석 가치 ✗ (cohort 분석은 Supabase RLS 보호).
+- **영향 범위**:
+  - DB: migration `20260528000004_security_audit_hardening` prod 적용
+  - 코드: `vercel.json` headers + `components/analytics/AnalyticsBridge.tsx` (gyeokguk·day_pillar 전송 제거)
+  - 검증: Supabase advisors Critical/High 0 (Low 1만 잔존, signup 활성화 시점)
+- **되돌리는 방법**: migration revert (function security definer 복원 + policy 재생성) + git revert vercel.json·AnalyticsBridge
+
+---
+
+## 2026-05-28: 보안 audit Round 1 — Critical paid bypass + LLM 비용 공격 + IDOR + dead endpoint 정리
+
+- **선택**: 8건 fix 일괄 적용:
+  - `/api/checkout` mock 결제 endpoint 삭제 + 옛 결제 화면 3개 (signup/checkout/premium-value) 정리
+  - `sessions.llm_call_count` + cap 50 + atomic increment RPC (LLM 비용 공격 차단)
+  - 4개 LLM API IDOR fix (sessionId↔subjectId 매칭 검증)
+  - `/api/share-backfill` 삭제 + ShareButton 폴백 제거 (가짜 본문 inject 차단)
+  - subjects nickname sanitize + deviceId 검증
+  - dead endpoint (/api/survey, /api/track) 삭제
+- **대안 검토**:
+  - **ISSUE-1**: A. checkout endpoint 삭제 + 화면 정리 ← 선택 (결제 활성화 시 신규 작성). B. 501 Not Implemented (보존). C. 그대로 (위험 누적)
+  - **ISSUE-2**: A. sessionId in-DB counter ← 선택. B. Vercel Edge + Upstash Redis (별도 인프라). C. deviceId 단위 (client-controlled, 회피 가능)
+  - **ISSUE-4**: A. endpoint 제거 ← 선택. B. deviceId 검증 (BUG A fix 후 폴백 시나리오 희소)
+  - **ISSUE-6**: A. subjects+survey deviceId 검증 + track 후처리 ← 선택. survey 는 callers 0 으로 삭제, track 도 Mixpanel 가 main 이라 삭제
+- **선택 이유**: mom test 진행 전 prod 안정성 + 미래 결제 활성화 폭탄 차단. 옛 결제 패키지는 결제 활성화 시점에 어차피 신규 작성 = 옛 mock 보존 가치 ✗. LLM 비용 공격은 anon API 호출만으로 가능 (sessionId 만 알면) — DB counter 가 가장 단순 + 영구.
+- **영향 범위**:
+  - 코드 mod 9 + del 9 + new 3 (rate-limit.ts, 2 migrations)
+  - DB migration: `20260528000003_sessions_llm_call_count` (column + RPC)
+  - vercel.json: share-backfill·survey·track functions 제거
+- **되돌리는 방법**: git revert + migration revert (column·index·RPC drop). 단 결제·survey·track 옛 endpoint 가 다시 필요하면 신규 작성 권장.
+
+---
+
 ## 2026-05-28: Calibration baseline V25 갱신 (DG1.C) — 옛 V11/V12 expected → V25 prod actual
 
 - **선택**: 12 calibration samples 의 system-computed expected (hagunScore·hagunLabel·hagunTier·abroadScore/Level·artsScore/Level) 를 현재 V25 prod actual 값으로 일괄 갱신. directionMain 은 실제 직업 기준 보존.
