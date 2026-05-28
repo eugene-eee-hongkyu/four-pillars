@@ -6,7 +6,33 @@
 
 ---
 
-## Session 2026-05-28 12:49 — 자체 피드백 폼 구현 + Supabase 저장 검증
+## Session 2026-05-28 14:28 — 진단 history·BirthSummary·deviceId 분리·VersionFooter patch
+
+### 작업 요약
+
+- **진단 history 카드 + 새 진단 분기** (`e469511`): FlowContext.sessionsHistory[] 신규 (localStorage 영구·최대 20개). SavedSession 타입 (sessionId·savedAt·childNickname·childBirth·hagunLabel·primaryTier·hasPart2 + 전체 state snapshot). saveCurrentToHistory·loadSessionFromHistory·startNewSession helper. interpret-premium.tsx Part 2 완료 시 자동 save. 랜딩 화면 분기: history 있으면 카드 list (자녀 닉네임·생년월일·hagunLabel chip) + "🆕 다른 자녀 무료 진단" CTA / 없으면 기존 단일 CTA. 카드 클릭 → state 복원 → /interpret-premium 직접 (LLM 재호출 ✗). PROMPT_VERSION 변경에도 history 영구 보존.
+- **VersionFooter build number patch 자동 증가** (`a1e2edb`·`4d1f4c8`): 옛 git rev-list --count 가 Vercel shallow clone (--depth=10) 한계로 ".10" 까지만 → KST timestamp `MMddHHmm` 로 교체. 배포마다 unique + 시간 순서 자연 식별. 표시: v5.25.05281310 식.
+- **BirthSummary 카드** (`40bb081`): 자녀·어머니·아빠 생년월일·시·출생지 한 카드. 미입력 부모는 안내 톤 ("입력 시 §8/9 합 정밀 풀이") + 푸터 패널티 설명. 마운트: child-manse.tsx·interpret-premium.tsx + interpret-deep.tsx (Q3 후속).
+- **피드백 제출 후 CTA 자동 숨김** (`8579349`): FlowContext.feedbackSubmittedSessions[] + markFeedbackSubmitted(sessionId). feedback.tsx 제출 성공 시 push. interpret-premium·interpret-deep CTA 양쪽 조건 추가. sessionId 단위 1회 = 두 곳 모두 숨김. resetAll·startNewSession 도 보존.
+- **VersionFooter UX 3건 + Mixpanel deviceId 분리** (`7813ea0`):
+  - VersionFooter suffix 제거 — 어머니 화면 노이즈 (global-abroad-synonym 등 의미 모름) → 짧게 v5.25.05281510 · sha
+  - interpret-deep.tsx 맨 위 BirthSummary 추가 (다른 화면과 일관)
+  - **Mixpanel deviceId 분리** (mom test funnel 정확도 fix): 옛 distinct_id = sessionId (진단 단위) 라서 어머니 1명이 자녀 2명 진단하면 Mixpanel 2 사용자로 카운트되던 버그. 새: distinct_id = deviceId (localStorage eduluck.device.id, UUID, 영구), session_id 는 super property (모든 event 자동 첨부). 한 장비 = 1 사용자 (자녀 여러 명 진단해도). lib/flow/context.tsx getOrCreateDeviceId() + lib/analytics/mixpanel.ts identifyDevice·setCurrentSession + AnalyticsBridge deviceId identify · sessionId register · latest_* people properties.
+- **Supabase 진단 데이터 보존 확인** (사용자 질의): sessions 110·subjects 165 (자녀 96·어머니 39·아빠 30) — 같은 자녀 31 row 중복 (의도된 동작, calibration·prompt 버전별 분석). subjects.manse_json 통째 저장.
+- **Singtel Mobile Protect 차단 안내**: 신생 도메인 reputation 부족 ISP 차단. Continue 또는 four-pillars-alpha.vercel.app 우회. 한국 mom test 영향 ✗.
+
+### 실패한 시도
+
+- 옛 git rev-list --count HEAD 로 build number 시도 → Vercel shallow clone depth=10 한계로 .10 까지만 표시. KST timestamp 로 교체.
+- vercel.json build.env "$VERCEL_GIT_COMMIT_SHA" 매핑 → literal 문자열 inject 되어 화면에 "$VERCEL" 노출. buildCommand 앞 shell 치환 inline 으로 해결 (이전 worklog 에 기록).
+
+### 다음 액션
+
+- mom test 10명 모집·진행 — 자체 form (Q1-Q11) + Mixpanel funnel (deviceId 기반 정확 사용자 카운트) + Supabase feedback_responses 동시 누적.
+- 새 채팅 Mixpanel MCP OAuth → 자연어 funnel 분석 ("지난 1일 part2_complete 도달률" 등).
+- mom test 결과 종합 + 다음 prompt 개선 priority 결정.
+
+
 
 ### 작업 요약
 

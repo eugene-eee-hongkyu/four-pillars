@@ -6,6 +6,46 @@
 
 ---
 
+## 2026-05-28: Mixpanel distinct_id — deviceId vs sessionId 분리
+
+- **선택**: distinct_id = deviceId (localStorage 영구 UUID, 장비 단위). session_id = mixpanel.register 로 super property (모든 event 자동 첨부, 진단 단위).
+- **대안 검토**:
+  - A. distinct_id = sessionId (기존, V20) — 진단 단위, 새 자녀 진단마다 새 사용자로 카운트
+  - B. distinct_id = deviceId + session_id super property ← 선택
+  - C. distinct_id = userId (가입 후) — 익명 환경 ✗
+- **선택 이유**: 한 어머니 (한 장비) 가 자녀 여러 명 진단해도 Mixpanel funnel 에서 1 사용자로 정확 카운트. 진단 흐름은 session_id event property 로 분리 추적. mom test 정성 시작 전이라 데이터 분기 ✗.
+- **영향 범위**: lib/flow/context.tsx (getOrCreateDeviceId), lib/analytics/mixpanel.ts (identifyDevice·setCurrentSession), components/analytics/AnalyticsBridge.tsx (deviceId identify·sessionId register·latest_* people props)
+- **되돌리는 방법**: 옛 identifyUser(sessionId) 복구. 단 funnel 정확도 ↓ 라 비추천.
+
+---
+
+## 2026-05-28: 진단 history — localStorage 기반 sessionsHistory[] 배열
+
+- **선택**: FlowContext.sessionsHistory: SavedSession[] (최대 20, localStorage 영구). Part 2 완료 시 자동 save. 랜딩 카드 list + "다른 자녀 진단" CTA. 카드 클릭 → state 복원 → LLM 재호출 ✗.
+- **대안 검토**:
+  - A. localStorage 단일 state 유지 — 최신 1개만 (현재 자녀 ↔ 이전 자녀 전환 ✗). 탈락
+  - B. localStorage history array ← 선택 (한 브라우저·기기 한정)
+  - C. Supabase server-side fetch (sessions 테이블 query) — 회원가입 ✗ 익명이라 sessionId 발급한 본인 식별 어려움. 향후 가입 도입 시 검토
+- **선택 이유**: 가장 단순·빠름·서버 부담 ✗. 한국 mom test 어머니 (자기 휴대폰 1개로 자녀 여러 명) 시나리오 적합. cached premiumPart1/2Text 즉시 표시 → LLM 비용 절약.
+- **영향 범위**: lib/flow/context.tsx (SavedSession 타입·sessionsHistory state·saveCurrentToHistory·loadSessionFromHistory·startNewSession), interpret-premium.tsx (Part 2 완료 시 save), app/index.tsx (분기 render)
+- **되돌리는 방법**: sessionsHistory 필드 제거 + index.tsx 분기 제거. localStorage 데이터는 무시되어 자연 폐기.
+
+---
+
+## 2026-05-28: VersionFooter build patch — KST timestamp (git count 한계 fix)
+
+- **선택**: EXPO_PUBLIC_BUILD_NUMBER = `$(TZ=Asia/Seoul date +%m%d%H%M)` (KST MMddHHmm). VersionFooter 표시: v5.25.05281510 · sha. PROMPT_VERSION suffix 제외 (어머니 화면 노이즈).
+- **대안 검토**:
+  - A. git rev-list --count HEAD — Vercel shallow clone (--depth=10) 한계로 최대 .10 까지만. 탈락
+  - B. KST timestamp ← 선택
+  - C. UTC timestamp — 한국 사용자 친화 ↓
+  - D. SHA를 patch에 — VersionFooter 끝 sha 와 중복
+- **선택 이유**: 매 배포 unique + 시간 순서 자연 식별 + 한국 사용자 KST 직관. 8자라 길지만 정보 명확 (5/28 15:10 = 정확 시점).
+- **영향 범위**: vercel.json buildCommand, components/ui/VersionFooter.tsx (buildDisplayVersion — suffix 제외 + patch 삽입)
+- **되돌리는 방법**: vercel.json buildCommand 원복 + VersionFooter 옛 PROMPT_VERSION 전체 표시. 단 git count 한계 그대로 돌아감.
+
+---
+
 ## 2026-05-28: 자체 피드백 폼 — Tally·Google Form 대신 eduluck 내장
 
 - **선택**: Supabase feedback_responses 테이블 + /api/feedback endpoint + app/(flow)/feedback.tsx 자체 form. CTA 2자리 (Part 2 끝·Deep dive 끝). 외부 도구 ✗.
