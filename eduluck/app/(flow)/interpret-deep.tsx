@@ -3,12 +3,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { useFlow } from '@/lib/flow/context';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 export default function InterpretDeep() {
   const router = useRouter();
@@ -90,6 +91,27 @@ export default function InterpretDeep() {
             }}
           />
         ) : null}
+
+        {/* 📝 피드백 CTA — 다른 영역 보기 위, 강조 */}
+        {(cachedText || done) && (
+          <View className="px-container-padding mt-4">
+            <Pressable
+              onPress={() => {
+                track(EVENTS.FEEDBACK_CTA_CLICK, { source: 'deep-dive' });
+                router.push('/feedback?source=deep-dive' as never);
+              }}
+              className="px-card-padding py-5 rounded-md border-2 items-center gap-1"
+              style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}
+            >
+              <Text className="font-heading-bold text-headline-md text-text-pri text-center">
+                📝 한 줄 피드백 부탁드려요 (3분)
+              </Text>
+              <Text className="font-body text-label-md text-text-sub text-center">
+                어머님의 한 줄이 다음 진단을 더 정확하게 만듭니다
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* 액션 — 다른 영역 보기 / 정밀 진단으로 / 처음으로 */}
         {(cachedText || done) && (

@@ -77,7 +77,7 @@ export function track(event: string, props?: Record<string, unknown>): void {
   }
 }
 
-/** 9 step 진단 funnel 이벤트 키 상수. */
+/** 진단 funnel + 피드백 이벤트 키 상수. */
 export const EVENTS = {
   LANDING_VIEW: 'landing_view',
   START_DIAGNOSIS_CLICK: 'start_diagnosis_click',
@@ -88,4 +88,7 @@ export const EVENTS = {
   PART2_COMPLETE: 'part2_complete',
   SHARE_CLICK: 'share_click',
   DEEPDIVE_SELECT_CLICK: 'deepdive_select_click',
+  FEEDBACK_CTA_CLICK: 'feedback_cta_click',
+  FEEDBACK_OPEN: 'feedback_open',
+  FEEDBACK_SUBMIT: 'feedback_submit',
 } as const;

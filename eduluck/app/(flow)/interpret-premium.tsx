@@ -8,7 +8,7 @@
 //   4. Part 2 완료 → 학습 특성·공유 버튼·"📋 더 자세히 알고 싶은 영역 선택" 버튼
 
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
@@ -205,6 +205,27 @@ export default function InterpretPremium() {
                   premiumPart1Text={state.premiumPart1Text}
                   premiumPart2Text={state.premiumPart2Text}
                 />
+              </View>
+            )}
+
+            {/* 📝 피드백 CTA — 가족 공유와 영역 선택 사이, 강조 */}
+            {part2Done && (
+              <View className="px-container-padding mt-4">
+                <Pressable
+                  onPress={() => {
+                    track(EVENTS.FEEDBACK_CTA_CLICK, { source: 'premium-part2' });
+                    router.push('/feedback?source=premium-part2' as never);
+                  }}
+                  className="px-card-padding py-5 rounded-md border-2 items-center gap-1"
+                  style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}
+                >
+                  <Text className="font-heading-bold text-headline-md text-text-pri text-center">
+                    📝 한 줄 피드백 부탁드려요 (3분)
+                  </Text>
+                  <Text className="font-body text-label-md text-text-sub text-center">
+                    어머님의 한 줄이 다음 진단을 더 정확하게 만듭니다
+                  </Text>
+                </Pressable>
               </View>
             )}
 
