@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { FlowProvider } from '@/lib/flow/context';
 import { AppHeader } from '@/components/AppHeader';
+import { BuildInfoFooter } from '@/components/BuildInfoFooter';
 import { AnalyticsBridge } from '@/components/analytics/AnalyticsBridge';
 
 export default function RootLayout() {
@@ -21,6 +22,7 @@ export default function RootLayout() {
               }}
             />
           </View>
+          <BuildInfoFooter />
         </SafeAreaView>
       </FlowProvider>
     </SafeAreaProvider>

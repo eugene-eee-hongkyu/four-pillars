@@ -103,13 +103,7 @@ export default function InterpretPremium() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-6 pb-32 gap-6">
-        {/* 상단 navigation — 새 자녀로 시작하려면 처음으로 */}
-        <View className="px-container-padding flex-row items-center justify-end">
-          <Button variant="ghost" size="md" onPress={() => router.replace('/')}>
-            🏠 처음으로
-          </Button>
-        </View>
-
+        {/* "🏠 처음으로" 상단 버튼 제거 — 헤더 로고가 대신. 하단 buttons 에는 유지. */}
         <View className="px-container-padding gap-2">
           <StepIndicator current={5} />
           <Text className="font-heading-bold text-headline-lg text-text-pri">

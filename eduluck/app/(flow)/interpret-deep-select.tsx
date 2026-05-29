@@ -38,13 +38,10 @@ export default function InterpretDeepSelect() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-6 pb-24 gap-6">
-        {/* 상단 navigation — 길 잃지 않게 항상 노출 */}
-        <View className="px-container-padding flex-row items-center justify-between">
+        {/* 상단 navigation — 이전 화면 복귀 ("🏠 처음으로" 는 헤더 로고가 대신) */}
+        <View className="px-container-padding">
           <Button variant="ghost" size="md" onPress={() => router.replace('/interpret-premium')}>
             ← 정밀 진단으로
-          </Button>
-          <Button variant="ghost" size="md" onPress={() => router.replace('/')}>
-            🏠 처음으로
           </Button>
         </View>
 
