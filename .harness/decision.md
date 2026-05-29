@@ -6,6 +6,78 @@
 
 ---
 
+## 2026-05-29: paywall cap — 회원도 자녀 2 + 영역 5 cap 적용 (이전 무제한 → cap)
+
+- **선택**: 회원 cap 추가 — 자녀 2명 + 영역 5개. cap 도달 시 placeholder ("곧 추가 예정") + 닫기 (commit `3b463ea`). 다음 단계 결제 모달로 교체 예정.
+- **대안 검토**:
+  - A. **회원 cap 적용** (현 선택) — mom test 가치 신호 (cap 도달 비율 = 강한 가치 인식) + LTV 측정 가능 + 결제 funnel 자연 도입
+  - B. 회원 무제한 — 결제 전환 동기 ✗, 가치 신호 0
+  - C. 회원 cap 자녀 1 + 영역 3 (더 타이트) — mom 만족도 ↓, Q11 가격 응답 편향 위험
+  - D. 회원 cap 자녀 3 + 영역 10 (더 관대) — 한국 가정 95%+ 만족하지만 결제 friction 신호 ✗
+- **선택 이유**: 한국 평균 자녀 1-1.5명 → 2명 cap = 95%+ 가정 충족 + 다자녀에만 friction. 자녀 1명에 5영역 = 핵심 호기심 충족 (본질·강점·환경·훈육·합) + 추가 영역에 가치 어필. mom test 어머니 자연 만족 + 결제 동기 균형.
+- **영향 범위**: `lib/paywall/policy.ts` (신규), `app/index.tsx` 트리거 1, `app/(flow)/interpret-deep-select.tsx` 트리거 2, `components/PaywallModal.tsx` (isMember prop).
+- **되돌리는 방법**: `lib/paywall/policy.ts` 의 `CAP.member` 값 변경 1줄. UI 자동 반영.
+
+---
+
+## 2026-05-29: mom test 결제 — 이메일 게이트 X, 카카오페이 사후 도입 (현 상태 유지)
+
+- **선택**: mom test 단계엔 회원 cap 도달 시 placeholder ("곧 추가 예정") + 닫기 유지. EmailGateModal·결제 인프라 도입 없이 mom test 진행. mom test 후 카카오페이 결제 도입.
+- **대안 검토**:
+  - A. **현 상태 유지** (선택) — 코드 변경 ✗, mom test 즉시 시작 가능. cap 도달 자체가 mom test 신호.
+  - B. EmailGateModal ("원래 29,900원 → 이메일 입력 시 무료") — SaaS 전문가 컨센서스 (Patrick McKenzie · Sean Ellis · The Mom Test 책) 모두 "이메일은 false positive" 명시. 무료 입력은 진짜 결제 의지 신호 ✗.
+  - C. 수동 결제 (카톡 안내 → 계좌이체 → Supabase admin 수동 unlock) — 즉시 가능, 사업자 X. mom test 10-30명엔 충분. 매뉴얼 처리 부담.
+  - D. Stripe 개인 결제 (1일 setup, 사업자 X) — 한국 사용자 UX △ (USD·해외 카드).
+  - E. 카카오페이 결제 (1-2주 심사 + 사업자 등록 필요) — 한국 mom 친화 최고, 시간 ↑.
+- **선택 이유**: 현 상태로 mom test 즉시 시작 가능 + cap 도달 비율 자체가 강한 가치 신호. mom test 진행 중 병행: 사업자 등록 + 카카오페이 비즈니스 가입 (1-2주). mom test 종료 시점에 정가 결정 + 카카오페이 가맹점 발급 동시 도달. 결제 인프라 도입 후 placeholder → 카카오페이 결제 페이지로 교체. 옵션 B 의 이메일 false positive 회피.
+- **영향 범위**: 코드 변경 ✗. 다음 단계 — mom test 후 `/api/checkout` 신규 + 결제 페이지 + Supabase `user_profiles.paid_at`.
+- **되돌리는 방법**: 옵션 B (EmailGateModal) 가 필요해지면 PaywallModal 의 회원 메시지 부분에 이메일 입력 + Supabase `email_leads` 테이블 추가. 코드 변경 1시간.
+
+---
+
+## 2026-05-29: eduluck 정가 19,900원 (mom test 후 결제 도입 시점)
+
+- **선택**: 정가 **19,900원**. mom test 단계엔 "원래 29,900원 → 무료" anchor 활용 가능 (메시지만 — 실 결제 X). 출시 시 한정 할인 가능.
+- **대안 검토**:
+  - A. **19,900원** (선택) — 한국 PSI ("1만원대" 인식), 사주아이 (990원/항목) 대비 20배 가치 정당, 학원 1회 상담 (10-50만원) 대비 매우 저렴 인식
+  - B. 29,900원 — anchor 효과 ↑ 가능성, 결제율 ↓ 위험
+  - C. 9,900원 — 가치 인식 ↓ ("사주아이 수준" 인식 위험)
+  - D. 사주아이 모방 990원/항목 — 가치 차별화 자살, LTV ↓
+  - E. 정기 구독 (월 9,900원) — 사주 진단 = 단발성 구매 의지, 구독 모델 mismatch
+- **선택 이유**: 한국 사주 시장 가격 anchor 분석 — 저가 (사주아이 990원) 와 전문 상담 (50,000~) 사이의 빈 중간 포지션. eduluck 의 자녀 특화 AI + 입시 매핑 + 어머니·아버지 합 = 사주아이의 20배 가치 정당화. 정가 19,900원은 "1만원대" PSI + 어머니 부담 ✗ + 의사결정 1건당 합리적 비용 인식. 출시 시 anchor "원래 29,900원 → 19,900원" 한정 할인 가능.
+- **영향 범위**: mom test 후 결제 페이지 디자인 + Supabase `user_profiles.paid_at` schema + 결제 인프라 (카카오페이 CID).
+- **되돌리는 방법**: mom test 결과 (Q11 응답·cap 도달 비율) 따라 14,900원·24,900원·29,900원 조정 가능. 변경 코드 1줄 (가격 상수).
+
+---
+
+## 2026-05-29: 어휘 통일 "아빠" → "아버지" + PREMIUM_PROMPT_VERSION bump v5.26
+
+- **선택**: UI 라벨 + LLM prompt 어휘 + 코드 주석 11개 파일 "아빠" → "아버지" 전수 변경 + `PREMIUM_PROMPT_VERSION` bump (commit `d2783a2`).
+- **대안 검토**:
+  - A. **전수 변경** (선택) — UI 일관성 (어머니·아버지 균형) + LLM 톤 일관 + 캐시 invalidate 안전
+  - B. UI 라벨만 변경, LLM prompt 어휘는 "아빠" 유지 (어머니 톤) — 라벨·LLM 본문 불일치 가능성, 어색
+  - C. "엄마"·"아빠" 둘 다 친근하게 통일 — 사용자 의도 ✗ (사용자가 "어머니·아빠" 언밸런스 지적했음)
+  - D. version bump 안 함 — 옛 LLM 응답 ("아빠") 과 새 응답 ("아버지") 섞임 → 사용자 혼란
+- **선택 이유**: 사용자 명시 ("어머니 사주, 아빠 사주" → "어머니 사주, 아버지 사주"). 어휘 일관성이 LLM 톤 격식 ↑ 보다 우선. PREMIUM_PROMPT_VERSION bump 로 옛 캐시 응답 자동 invalidate — mom test 시작 전이라 사용자 영향 ✗.
+- **영향 범위**: family-input·child-manse·interpret-premium·BirthSummary + LLM prompt 5 파일 + api·scripts·flow context 주석 + version.ts. docs/ 문서는 mom test 영향 ✗ — 백로그.
+- **되돌리는 방법**: grep "아버지" → 일괄 "아빠" 로 변경. version bump 원복 (필요시). 코드 작업 30분.
+
+---
+
+## 2026-05-29: 두 번째 자녀 진단 시 부모 사주 자동 로드 — snapshot fallback
+
+- **선택**: `startNewSession` 에 sessionsHistory snapshot fallback 추가 — 현재 state.mother 없으면 옛 진단 snapshot 에서 복원 (commit `b681aaf`). family-input 의 토글 조건도 완화 (`motherStatus === 'entered' || mother.birthYear`).
+- **대안 검토**:
+  - A. **snapshot fallback** (선택) — 옛 진단 시 부모 입력했어도 이전 startNewSession 이 reset 한 사용자도 복원 가능. robust.
+  - B. 단순 보존 (`d2783a2` 1차) — 새 사용자만 작동. 옛 진단 + 이미 한 번 "다른 자녀" 클릭한 사용자는 복구 ✗ (사용자 본인 케이스).
+  - C. "이전 자녀와 같은 가족인가요?" 가져오기 버튼 — 명시적 클릭 1번 추가 마찰. 자동이 더 자연.
+  - D. 매번 재입력 (현재) — mom 친화도 ↓.
+- **선택 이유**: 사용자 (eugene) 본인 케이스에서 옛 startNewSession 이 이미 부모 데이터 reset 한 상태. d2783a2 의 보존만으로는 복구 ✗. snapshot 에 박제된 데이터로 fallback 복원 = robust. UX 표준 (쿠팡·카카오톡·Notion) — 한 번 입력한 정보 자동 유지 + 수정·삭제 가능.
+- **영향 범위**: `lib/flow/context.tsx` `startNewSession` + `app/(flow)/family-input.tsx` 토글 조건. 이미 진단 후 family 정보 있는 사용자만 영향 (자동 펼침). 첫 사용자는 영향 ✗.
+- **되돌리는 방법**: `startNewSession` 의 fallback 제거 + 토글 조건 `motherStatus === 'entered'` 만으로 복원. 코드 5줄.
+
+---
+
 ## 2026-05-29: 카카오 로그인 구현 방식 — Supabase Auth Provider 활용 (자체 OAuth 우회)
 
 - **선택**: Supabase Auth Provider 의 Kakao OAuth 활용. `useAuth` hook 은 `supabase.auth.getSession` + `onAuthStateChange` 기반. 로그인 시 `signInWithOAuth({provider:'kakao'})` 호출.

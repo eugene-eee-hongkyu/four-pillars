@@ -4,6 +4,16 @@
 
 ## 대기 중
 
+## 2026-05-29: docs/ 문서의 "아빠" → "아버지" 일괄 정리
+
+- **백로그 이유**: 사용자에게 보이는 코드 (UI + LLM prompt) 는 이미 "아버지" 로 통일됨 (`d2783a2`). 내부 docs/* (plan·build·prompts 문서) 의 "아빠" 는 mom test 진행에 영향 ✗. 정리 시간 vs 가치 비교 시 후순위.
+- **할 것**: docs/design·docs/plan·docs/build·docs/prompts·docs/scoring 5 디렉토리의 .md 파일들에서 "아빠" → "아버지" 일괄 변경 (legacy v4 prompt 문서는 박제용 그대로 유지).
+- **필요한 것**: 시간 (30분). 변경 후 grep 으로 0 확인.
+- **이전 검토**: `d2783a2` 시점에 UI + LLM prompt + api 주석 + scripts 11 파일은 변경 완료. docs/ 18곳 남음 (`docs/design/MANSE_UI_RESEARCH.md`·`docs/INTERPRET_FLOW_v5.md`·`docs/plan/*`·`docs/scoring/*`·`docs/prompts/*`·`docs/build/*`).
+- **관련 파일**: `eduluck/docs/INTERPRET_FLOW_v5.md` L28, `docs/scoring/HAGUN_SCORING.md` L253·254, `docs/prompts/interpret-premium-part2.md`·`interpret-premium-part1.md`·`interpret-deep.md`, `docs/scoring/SCORING_SYSTEM.md` L195·196, `docs/build/B-1_v1.md`·`B-1_v2.md`, `docs/plan/A-1_v4.md`·`A-2_v2.md`, `docs/prompts/interpret-premium-legacy-v4.md` (legacy 유지 검토).
+
+---
+
 ## 2026-05-27: DirectionKey 'global' → 'abroad' 코드 통일
 
 - **백로그 이유**: V25 정합성 audit에서 DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 발견. V25는 prompt instruct로 명시적 매핑만 추가 (코드 변경 ✗). 다음 큰 refactor 세션 때 코드 단일 명명으로 통일 고려.

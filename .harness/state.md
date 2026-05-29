@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-29 19:00
-## 마지막 업데이트: 2026-05-29 19:00
+## 마지막 실행: 2026-05-29 20:31
+## 마지막 업데이트: 2026-05-29 20:31
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 카카오 로그인 + paywall (옵션 가) + KOE205 해결 + UX 4 rounds 완료. mom test 진행 준비 완비 — 인프라 (회원 식별·funnel·Lexicon·e2e playbook 10종) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) 모두 완성.
+- mom test 즉시 시작 가능 상태 — paywall cap (회원 자녀 2 + 영역 5) + "아빠" → "아버지" 통일 + 부모 사주 자동 로드 (snapshot fallback) + 정가 19,900원 결정 (mom test 후 카카오페이 결제 도입). 결제 인프라는 mom test 병행 사업자 등록 + 카카오페이 비즈니스 가입으로 1-2주 내 준비.
 
 ### 이어서 할 것
 
-1. **mom test 10명 모집·진행** — 실제 사용자 데이터 수집 시작
-2. 채팅 Mixpanel funnel 분석 — Lexicon 정비 + 카카오 로그인 funnel 신규 추가로 정확도 ↑
-3. CSP Report-Only → Enforce 전환 (2026-06-04 권장) — Console violation 0 확인 후 vercel.json 키 이름만 변경
+1. **mom test 10명 모집·진행** — 인프라 완비 (카카오 로그인 + paywall cap + 자동 로드 + 어휘 통일)
+2. mom test 병행: **사업자 등록 (홈택스)** + **카카오페이 비즈니스 가입 (1-2주 심사)** + 통신판매업 신고
+3. mom test 결과 → Q11 가격 응답 + cap 도달 비율 → 정가 확정 → 카카오페이 결제 페이지 구현
 
 ### 막힌 것
 
@@ -27,7 +27,7 @@
 ### 사람 판단 필요
 
 - Mom test 10명 모집·시점 결정
-- 결제 도입 시점 — 카카오 비즈 앱 검수 + 사업자 등록 + 카카오페이 가맹점 (Q11 가격 응답 누적 후)
+- 사업자 등록 시점 (mom test 시작 즈음 권장)
 - CSP Enforce 전환 (1주 모니터링 후)
 
 ### 운영 자료
@@ -35,11 +35,13 @@
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (10종 검증, 약 10-12분, $0.20)
 - **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 + auth/paywall 5 EVENTS 추가
 - **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override (skipBrowserRedirect + URL scope 직접 교체) — 닉네임만 수집
+- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 2·영역 5. `lib/paywall/policy.ts` 단일 source
+- **정가 (mom test 후 출시)**: 19,900원 (한국 PSI + 사주아이 990원 대비 20배 가치 정당)
 
 ### 백로그 요약
 
-- 대기 중: 6개
-- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
+- 대기 중: 7개
+- 최근 추가: 2026-05-29 — docs/ 문서 "아빠" → "아버지" 일괄 정리
 
 ### 진행 상황
 
@@ -140,7 +142,6 @@
 - [x] V22 학교명 약어 풀어쓰기 (`fd812a0`)
 - [x] V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)
 - [x] V24 10단계 학운 라벨 + hero 점수 + signer X N fix (`13771be`·`25eb1bf`) ⭐
-- [x] VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`·`5892a2d` $VERCEL fix)
 - [x] V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`) ⭐
 - [x] verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)
 - [x] mom test 질문 세트 설계 11문항 (정량 6 + 정성 4 + 결제 1)
@@ -186,10 +187,15 @@
 - [x] **UX round 2** (`8eb7003`) — 헤더 ⓘ → 푸터 ⓘ + 회원 닉네임 드롭다운 + 상단 홈버튼 정리
 - [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
 - [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
+- [x] **paywall cap 정책** (`3b463ea`) — 회원 자녀 2·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
+- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000~ 분석 + eduluck 정가 19,900원 결정 (mom test 후)
+- [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
+- [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel + 카카오 로그인 데이터 동시 누적
-- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth funnel 추가 완료)
-- [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
+- [ ] 사업자 등록 (홈택스) + 카카오페이 비즈니스 가입 (mom test 병행)
+- [ ] mom test 결과 정량·정성 종합 → 정가 19,900원 확정 → 카카오페이 결제 페이지 구현
+- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth/paywall funnel 추가 완료)
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
@@ -203,4 +209,4 @@
 - [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
 - [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
 - [ ] Supabase Auth leaked password protection (signup 활성화 시점)
-- [ ] 결제 도입 — 카카오 비즈 앱 검수 + 사업자 등록 + 카카오페이 가맹점 + account_email scope 추가
+- [ ] docs/ 문서 "아빠" → "아버지" 일괄 정리 (mom test 영향 ✗) — backlog 2026-05-29
