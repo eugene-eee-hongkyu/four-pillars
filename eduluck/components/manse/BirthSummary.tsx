@@ -1,4 +1,4 @@
-// 자녀·어머니·아빠 생년월일·시 한 줄씩 요약 — 잘못 입력 즉시 식별.
+// 자녀·어머니·아버지 생년월일·시 한 줄씩 요약 — 잘못 입력 즉시 식별.
 // 미입력 가족 멤버는 안내 톤 ("입력 시 더 정밀한 §X 합 풀이").
 //
 // 사용처:
@@ -80,10 +80,10 @@ export function BirthSummary({ child, mother, motherStatus, father, fatherStatus
         missingHint="입력 시 §8 엄마-자녀 합이 정밀하게 풀려요"
       />
       <Row
-        label="아빠"
+        label="아버지"
         birth={!fatherMissing ? formatBirth(father) : undefined}
         missing={fatherMissing}
-        missingHint="입력 시 §9 아빠-자녀 합이 정밀하게 풀려요"
+        missingHint="입력 시 §9 아버지-자녀 합이 정밀하게 풀려요"
       />
       {(motherMissing || fatherMissing) && (
         <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-1">

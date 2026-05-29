@@ -471,15 +471,15 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
     const childIlgan = splitPillar(input.childManse.dayPillar).stem;
     const fatherIlgan = splitPillar(input.fatherManse.dayPillar).stem;
     const fatherEffect = getStemSipsin(childIlgan, fatherIlgan);
-    // 아빠는 어머니의 절반 가중치 — 합산 시 ±0.5 효과로 처리하되 표시는 ±0~1로 묶음
+    // 아버지는 어머니의 절반 가중치 — 합산 시 ±0.5 효과로 처리하되 표시는 ±0~1로 묶음
     if (fatherEffect === '정인' || fatherEffect === '편관') {
       total += 1;
-      breakdown.push(`아빠-자녀 합 ${fatherEffect} +1 (성장 자극, 가중치 절반)`);
+      breakdown.push(`아버지-자녀 합 ${fatherEffect} +1 (성장 자극, 가중치 절반)`);
     } else if (fatherEffect === '비견' || fatherEffect === '겁재' || fatherEffect === '정재' || fatherEffect === '편재') {
       total -= 0; // 절반이므로 0으로 처리, breakdown만 기록
-      breakdown.push(`아빠-자녀 합 ${fatherEffect} 0~-1 (자원 분산 가능, 가중치 절반)`);
+      breakdown.push(`아버지-자녀 합 ${fatherEffect} 0~-1 (자원 분산 가능, 가중치 절반)`);
     } else if (fatherEffect) {
-      breakdown.push(`아빠-자녀 합 ${fatherEffect} 0`);
+      breakdown.push(`아버지-자녀 합 ${fatherEffect} 0`);
     }
   }
 

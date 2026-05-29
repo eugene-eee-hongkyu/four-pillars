@@ -1,6 +1,6 @@
 // POST /api/interpret-premium-part1 — v5 정밀 진단 Part 1 (10 섹션) SSE
 // body: { sessionId, childSubjectId, motherSubjectId?, fatherSubjectId? }
-// Part 1: 시작·본질·강점·약점·환경·훈육·건강·엄마합·아빠합·강요금지
+// Part 1: 시작·본질·강점·약점·환경·훈육·건강·엄마합·아버지합·강요금지
 
 import { getAnthropicClient, ANTHROPIC_MODEL } from '../lib/llm/client';
 import { sseResponse } from '../lib/llm/stream-sse';

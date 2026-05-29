@@ -98,7 +98,7 @@ export function fatherChildSyncLine(child: ManseResult, father: ManseResult): st
   const childIlgan = splitPillar(child.dayPillar).stem;
   const fatherIlgan = splitPillar(father.dayPillar).stem;
   const effect = getStemSipsin(childIlgan, fatherIlgan);
-  return `아빠 일간(${fatherIlgan}) → 자녀 일간(${childIlgan}) 기준 십성: ${effect || '—'}`;
+  return `아버지 일간(${fatherIlgan}) → 자녀 일간(${childIlgan}) 기준 십성: ${effect || '—'}`;
 }
 
 /** 학년 → (분량 문장 범위, 학교 예측 분기 가이드 문장).
@@ -201,7 +201,7 @@ export const SHARED_TONE_GUIDE = `## 페르소나·톤·어미 — 매우 중요
 - '본질' — 일간·격국·납음·오행 부재·신왕신약 · 학운 자리 · 주력 방향성 · 학자형 부재
 - '시기' — 대운·세운·12운성·공망·관인상생 흐름
 - '기운' — 신살(문창귀인·천을귀인·학당귀인·천의성·도화살·역마살·화개살·양인살·백호대살) + 합·충·형·해 · 적성 점수 (예술·의·연구·공무·해외). 명리 정통 '신살(神煞)·성(星)'을 어머니 친화 단어로 통칭.
-- '관계' — 어머니 일간·아빠 일간·부모-자녀 십성 매핑·일주 합
+- '관계' — 어머니 일간·아버지 일간·부모-자녀 십성 매핑·일주 합
 
 **금지 카테고리 (LLM 이탈 패턴 — 절대 ✗)**:
 - ❌ '[격국 lookup]' '[학운 sub-tier]' '[적성]' '[주력 방향성]' '[대운 발현]' '[12운성]' — baseline 라벨을 카테고리로 가져오기 ✗
@@ -417,8 +417,8 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     ...(m ? [`  ${motherChildSyncLine(c, m)}`] : []),
     ``,
     ctx.fatherManse
-      ? `[아빠 사주] — 옵션 입력됨.`
-      : `[아빠 사주] — 미입력. 아빠-자녀 합 섹션은 placeholder 톤.`,
+      ? `[아버지 사주] — 옵션 입력됨.`
+      : `[아버지 사주] — 미입력. 아버지-자녀 합 섹션은 placeholder 톤.`,
     ...(ctx.fatherManse ? manseSummary(ctx.fatherManse).map(s => '  ' + s) : []),
     ...(ctx.fatherManse ? [`  ${fatherChildSyncLine(c, ctx.fatherManse)}`] : []),
     ``,

@@ -1,4 +1,4 @@
-// 화면 3 (재설계): 가족 만세력 — 자녀 중심 + 어머니·아빠 만세력 카드 + 합 카드 inline
+// 화면 3 (재설계): 가족 만세력 — 자녀 중심 + 어머니·아버지 만세력 카드 + 합 카드 inline
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -103,18 +103,18 @@ export default function ChildManse() {
               </View>
             )}
 
-            {/* === 아빠 만세력 (있으면) === */}
+            {/* === 아버지 만세력 (있으면) === */}
             {father && (
               <View className="gap-3 mt-2 pt-4 border-t border-outline-warm">
                 <Text className="font-heading text-headline-md text-text-pri">
-                  아빠 만세력
+                  아버지 만세력
                 </Text>
                 <PalcaTable {...manseToPalcaPillars(father)} />
-                {/* 아빠-자녀 합 한 줄 hint — 명리 톤 */}
+                {/* 아버지-자녀 합 한 줄 hint — 명리 톤 */}
                 <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low">
-                  <Text className="font-body text-label-sm text-text-sub mb-1">아빠와 {name}의 합</Text>
+                  <Text className="font-body text-label-sm text-text-sub mb-1">아버지와 {name}의 합</Text>
                   <Text className="font-body text-body-md text-text-pri leading-relaxed">
-                    아빠 사주는 {name}의 사회적 자원·물질 환경 변수예요. 진단에서 보조 풀이로 활용됩니다.
+                    아버지 사주는 {name}의 사회적 자원·물질 환경 변수예요. 진단에서 보조 풀이로 활용됩니다.
                   </Text>
                 </View>
               </View>

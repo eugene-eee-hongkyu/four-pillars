@@ -1,8 +1,8 @@
-// 화면 2: 가족 정보 통합 입력 — 자녀(필수) + 어머니(옵션 토글) + 아빠(옵션 토글)
+// 화면 2: 가족 정보 통합 입력 — 자녀(필수) + 어머니(옵션 토글) + 아버지(옵션 토글)
 //
 // 시간 정책:
 //   - 자녀: 시간 필수. 모르면 진단 거부 (모달 안내).
-//   - 어머니·아빠: 옵션. 시간 정확히 모르면 입력 ✗ 권장 (안내 문구).
+//   - 어머니·아버지: 옵션. 시간 정확히 모르면 입력 ✗ 권장 (안내 문구).
 //
 // N=9 calibration에서 자녀 사주만으로도 학운 점수 97.8/100 달성 — 부모 입력은 옵션,
 // 입력 시 §14 어머니-자녀 합 풀이가 추가로 풍부해짐.
@@ -75,7 +75,7 @@ export default function FamilyInput() {
       : '';
   });
 
-  // === 아빠 (옵션) ===
+  // === 아버지 (옵션) ===
   const [showFather, setShowFather] = useState(state.fatherStatus === 'entered');
   const [fatherDate, setFatherDate] = useState<string>(() => {
     const f = state.father;
@@ -187,7 +187,7 @@ export default function FamilyInput() {
         setMotherSkipped();
       }
 
-      // 3. 아빠 (옵션, 토글 열렸을 때만)
+      // 3. 아버지 (옵션, 토글 열렸을 때만)
       if (showFather && fatherParsedDate && fatherParsedTime) {
         patchFather({
           birthYear: fatherParsedDate.y, birthMonth: fatherParsedDate.m, birthDay: fatherParsedDate.d,
@@ -227,7 +227,7 @@ export default function FamilyInput() {
           가족 정보를 알려주세요
         </Text>
         <Text className="font-body text-body-md text-text-sub">
-          자녀 사주는 필수, 어머니·아빠 사주는 옵션이에요. 함께 입력하시면 진단이 더 풍성해져요.
+          자녀 사주는 필수, 어머니·아버지 사주는 옵션이에요. 함께 입력하시면 진단이 더 풍성해져요.
         </Text>
 
         {/* === 자녀 (필수) === */}
@@ -316,13 +316,13 @@ export default function FamilyInput() {
           </View>
         )}
 
-        {/* === 아빠 (옵션) === */}
+        {/* === 아버지 (옵션) === */}
         <Pressable
           onPress={() => setShowFather(!showFather)}
           className="flex-row items-center justify-between px-card-padding py-3 rounded-md border border-outline-warm bg-surface-container-low"
         >
           <Text className="font-body-bold text-body-md text-text-pri">
-            아빠 사주 (옵션)
+            아버지 사주 (옵션)
           </Text>
           <Text className="font-body text-label-md text-text-sub">
             {showFather ? '▴ 접기' : '▾ 추가 입력'}
@@ -334,10 +334,10 @@ export default function FamilyInput() {
               💡 출생 시간을 정확히 아실 때만 입력해주세요. 정확하지 않으면 비워두시는 게 더 정확한 진단으로 이어져요.
             </Text>
             <CalendarToggle value={state.father.birthCalendar} onChange={(c) => patchFather({ birthCalendar: c })} />
-            <DateTimeInput label="아빠 생년월일" value={fatherDate} onChange={setFatherDate} type="date" />
+            <DateTimeInput label="아버지 생년월일" value={fatherDate} onChange={setFatherDate} type="date" />
             <SolarPreview calendar={state.father.birthCalendar} dateStr={fatherDate} />
             <DateTimeInput
-              label="아빠 출생 시간" value={fatherTime}
+              label="아버지 출생 시간" value={fatherTime}
               onChange={setFatherTime}
               type="time"
             />
@@ -351,7 +351,7 @@ export default function FamilyInput() {
               }}
               className="flex-row items-center justify-center mt-1 py-2 rounded-sm border border-outline-warm"
             >
-              <Text className="font-body text-label-md text-text-sub">↻ 아빠 사주 초기화</Text>
+              <Text className="font-body text-label-md text-text-sub">↻ 아버지 사주 초기화</Text>
             </Pressable>
           </View>
         )}

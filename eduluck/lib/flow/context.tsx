@@ -299,9 +299,9 @@ interface FlowContextValue {
   resetPremiumV5: () => void;
   /** 어머니 정보·만세력 초기화 — 사용자가 옵션 입력 후 삭제 원하는 경우 */
   resetMother: () => void;
-  /** 아빠 정보·만세력 초기화 */
+  /** 아버지 정보·만세력 초기화 */
   resetFather: () => void;
-  /** 자녀 정보·만세력·결과 초기화 — 같은 디바이스로 다른 아이 진단 시 (어머니·아빠는 유지) */
+  /** 자녀 정보·만세력·결과 초기화 — 같은 디바이스로 다른 아이 진단 시 (어머니·아버지는 유지) */
   resetChild: () => void;
   /** 전체 초기화 — 다른 가족 진단 시 */
   resetAll: () => void;
@@ -510,7 +510,9 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     return restored;
   }, []);
 
-  /** 새 자녀 진단 시작 — current 초기화, 장치 단위 글로벌 필드 유지. */
+  /** 새 자녀 진단 시작 — child·sessionId·interpretation 초기화.
+   *  부모 정보는 자동 보존 — 같은 가족이라는 가정 (한 어머니가 자녀 여러 명).
+   *  subjectId 는 새 session 에서 재발급되므로 reset. mother/father 데이터·만세력은 유지. */
   const startNewSession = useCallback(() => {
     setState((s) => ({
       ...initial,
@@ -518,6 +520,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       feedbackSubmittedSessions: s.feedbackSubmittedSessions,
       part1CompleteFiredSessions: s.part1CompleteFiredSessions,
       part2CompleteFiredSessions: s.part2CompleteFiredSessions,
+      // 부모 자동 로드 — family-input 의 토글 (showMother/showFather) 도 자동 펼침
+      mother: s.mother,
+      father: s.father,
+      motherStatus: s.motherStatus,
+      fatherStatus: s.fatherStatus,
+      motherManse: s.motherManse,
+      fatherManse: s.fatherManse,
     }));
   }, []);
 

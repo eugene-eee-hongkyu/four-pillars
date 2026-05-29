@@ -11,4 +11,4 @@
 //   - MINOR: calibration 단위 (v5.1·v5.2·...·v5.25)
 //   - slug : 해당 minor 의 키워드 (한 단어)
 
-export const PREMIUM_PROMPT_VERSION = 'v5.25-global-abroad-synonym';
+export const PREMIUM_PROMPT_VERSION = 'v5.26-father-rename';

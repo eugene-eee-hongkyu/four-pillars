@@ -75,7 +75,7 @@ if (process.env.SHOW_FULL === '1') {
   console.log(part2User);
 }
 
-// Deep-dive — 신규 4 섹션 (§7 건강 / §8 엄마합 / §9 아빠합 / §10 강요금지)
+// Deep-dive — 신규 4 섹션 (§7 건강 / §8 엄마합 / §9 아버지합 / §10 강요금지)
 const deepSys = getInterpretDeepSystem();
 for (const section of [7, 8, 9, 10]) {
   const deepUser = buildInterpretDeepPrompt(ctx, section);
