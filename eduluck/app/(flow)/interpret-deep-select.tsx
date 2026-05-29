@@ -11,6 +11,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { useFlow } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { isSectionCapReached } from '@/lib/paywall/policy';
 
 export default function InterpretDeepSelect() {
   const router = useRouter();
@@ -22,13 +23,13 @@ export default function InterpretDeepSelect() {
   const part1 = sections.filter(s => s.group === 'Part1');
   const part2 = sections.filter(s => s.group === 'Part2');
   const seenSections = Object.keys(state.deepDiveTexts).map(Number);
-  // 트리거 2: 이 자녀에서 이미 1개 이상 영역 봤고 + 비회원 → 다른 영역 시도 시 paywall
-  const additionalRequiresLogin = seenSections.length >= 1 && !user;
+  // 트리거 2: 영역 cap 도달 시 paywall (비회원 1개, 회원 5개). 이미 본 영역은 캐시 hit 자유 진입.
+  const sectionCapReached = isSectionCapReached(seenSections.length, !!user);
 
   const handleSelect = (n: number) => {
     // 이미 본 영역은 무료로 다시 보기 가능 (캐시 hit)
     const alreadySeen = seenSections.includes(n);
-    if (!alreadySeen && additionalRequiresLogin) {
+    if (!alreadySeen && sectionCapReached) {
       setPaywallOpen(true);
       return;
     }
@@ -56,26 +57,25 @@ export default function InterpretDeepSelect() {
           </Text>
           <Text className="font-body text-body-md text-text-sub">
             카드 1개를 선택하면 그 영역만 깊이 풀어드려요 (~8000자, 약 1분).
-            {additionalRequiresLogin
-              ? '\n첫 번째 영역은 무료, 다른 영역은 카카오 로그인 후 보실 수 있어요.'
-              : ' 여러 영역도 차례대로 볼 수 있어요.'}
+            여러 영역도 차례대로 볼 수 있어요.
           </Text>
         </View>
 
         <SectionGrid title="📖 Part 1 · 본질·관계·즉시 행동" sections={part1}
           onSelect={handleSelect}
           seenSections={seenSections}
-          lockedForNew={additionalRequiresLogin}
+          lockedForNew={sectionCapReached}
         />
         <SectionGrid title="🔮 Part 2 · 학원·진로·미래" sections={part2}
           onSelect={handleSelect}
           seenSections={seenSections}
-          lockedForNew={additionalRequiresLogin}
+          lockedForNew={sectionCapReached}
         />
 
         <PaywallModal
           visible={paywallOpen}
           trigger="deepdive"
+          isMember={!!user}
           onClose={() => setPaywallOpen(false)}
         />
       </ScrollView>

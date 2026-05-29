@@ -16,6 +16,7 @@ import { Toast } from '@/components/ui/Toast';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { isChildCapReached } from '@/lib/paywall/policy';
 import { translateError } from '@/lib/errors/translate';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
@@ -41,8 +42,8 @@ export default function Landing() {
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   const hasHistory = state.sessionsHistory.length > 0;
-  // 트리거 1: 이미 1자녀 이상 진단했고 + 비회원 → 새 자녀 진단 시도 시 paywall
-  const newChildRequiresLogin = hasHistory && !user;
+  // 트리거 1: 자녀 cap 도달 시 paywall (비회원 1명, 회원 2명)
+  const newChildCapReached = isChildCapReached(state.sessionsHistory.length, !!user);
 
   useEffect(() => {
     track(EVENTS.LANDING_VIEW, {
@@ -77,7 +78,7 @@ export default function Landing() {
   };
 
   const handleStart = () => {
-    if (newChildRequiresLogin) {
+    if (newChildCapReached) {
       setPaywallOpen(true);
       return;
     }
@@ -145,13 +146,18 @@ export default function Landing() {
 
         <StickyCTA>
           <Button onPress={handleStart} loading={loading}>
-            {newChildRequiresLogin ? '🔒 다른 자녀 진단 · 카카오톡 로그인 필요' : '🆕 다른 자녀 무료 진단'}
+            {newChildCapReached
+              ? user
+                ? '🔒 다른 자녀 진단 · 곧 추가 예정'
+                : '🔒 다른 자녀 진단 · 카카오톡 로그인 필요'
+              : '🆕 다른 자녀 무료 진단'}
           </Button>
         </StickyCTA>
 
         <PaywallModal
           visible={paywallOpen}
           trigger="new_child"
+          isMember={!!user}
           onClose={() => setPaywallOpen(false)}
         />
       </View>
