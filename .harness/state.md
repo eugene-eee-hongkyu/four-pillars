@@ -6,30 +6,27 @@
 
 ---
 
-## 마지막 실행: 2026-05-29 08:54
-## 마지막 업데이트: 2026-05-29 08:54
+## 마지막 실행: 2026-05-29 15:59
+## 마지막 업데이트: 2026-05-29 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Mixpanel 트래킹 인벤토리 정리 + Lexicon 일괄 정비 (이벤트 13 + Event prop 14 + User prop 14) + `history_card_click` prop 이름 `sessionId` → `clicked_session_id` 분리 (commit `abbd950`). mom test 진행 + Mixpanel 자연어 funnel 분석 준비 완비.
+- 카카오 로그인 구현 준비 — public.users 테이블 마이그레이션 (kakao_id, nickname 저장) 승인 대기 중. RLS 정책 포함, 신규 테이블이므로 기존 테이블 영향 없음.
 
 ### 이어서 할 것
 
-1. **mom test 10명 모집·진행** — 인프라 (자체 form + Mixpanel funnel + deviceId 분리 + Lexicon 정비) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) + e2e playbook 모두 완비.
-2. 채팅 Mixpanel funnel 분석 — Lexicon 정비 완료로 MCP 자연어 질의 정확도 ↑. 진행률·drop-off 검토.
-3. CSP Report-Only → Enforce 전환 (2026-06-04 권장) — Console violation 0 확인 후 vercel.json 키 이름만 변경.
+1. **DB 마이그레이션 승인 및 적용** — public.users 테이블 생성 (apply_migration 필요)
+2. **카카오 로그인 Phase A-E 구현** — 마이그레이션 완료 후 진행
+3. Mom test 10명 모집·진행 계획 수립
 
 ### 막힌 것
 
-- 없음
+- DB 마이그레이션 권한 필요 (apply_migration 승인 대기)
 
 ### 사람 판단 필요
 
-- Mom test 10명 모집·시점 결정
-- 방향성 시스템 정비 별도 세션 일정 (score.ts·categoryScores·체육 명명·DirectionKey global 통일)
-- 결제 가격·결제 페이지 활성화 시점 (Q11 가격 응답 누적 후 결정)
-- CSP Enforce 전환 (1주 모니터링 후)
+- public.users 테이블 마이그레이션 (kakao_id, nickname) 승인 여부
 
 ### 운영 자료
 
@@ -116,22 +113,22 @@
 - [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증
 - [x] 100만 random 사주 시뮬 + cutoff 안정성 검증
 - [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐
-- [x] V1-V12 calibration loop · 30~100 시나리오 sweep
+- [x] V1-V12 calibration loop · 30부터 100까지 시나리오 sweep
 - [x] V11 Loop 603 prod hagun-tier + 13명 self-test 100% 일치 (`466fbf2`) ⭐
 - [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성
 - [x] Direction System V1-V12 — Step 0-6 + perfect fit 7/7 ⭐
 - [x] V12 Loop 720 hagun + 14명 정합 (`cb2df11`)
 - [x] Phase 1-5 정밀 진단 v5 (Part1/2 분리 + 신규 4섹션 + Context·hydrate)
-- [x] 가족 공유 풀스택 (`d9077ba`~`df777f2`) ⭐
+- [x] 가족 공유 풀스택 (`d9077ba`부터 `df777f2`) ⭐
 - [x] v2 30 sub-tier 시스템 도입 (`d8c2307`) ⭐
-- [x] tier-schools 옵션 A — sub-tier 별 3~5개 학교 chip (`473b5c0`) ⭐
+- [x] tier-schools 옵션 A — sub-tier 별 3부터 5개 학교 chip (`473b5c0`) ⭐
 - [x] hagun-tier refactor v2 (sub-tier 직접 매핑, PROMPT_VERSION v5.11) ⭐
 - [x] hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt ⭐
 - [x] Score·티어 audit (4 영역) + Phase A-E 일괄 정리 ⭐
 - [x] Playwright e2e 영진·세형 prod 검증 + hero chip raw signer fix
 - [x] V14 physical direction + researchScore + publicForceScore 신규 (`6582b21`) ⭐
 - [x] V15 명명 통일 (주력 방향성·적성 점수) + 가치 메모 + 대운 발현 시기 라벨 (`2c5ed9a`) ⭐
-- [x] V16 정규화 16 모듈 0-100 + 두 level 시스템 (`24562fb`·`939a5e8`)
+- [x] V16 정규화 16 모듈 0부터 100까지 + 두 level 시스템 (`24562fb`·`939a5e8`)
 - [x] V17 도전 chip 재도입 + 가능·도전 룰 (`6c212ab`)
 - [x] V18 30 sub-tier 학교 데이터 단일 source + 학과·별도 트랙 (`c21aa4f`) ⭐
 - [x] V19 generalDetail 세세화 + specialTracks {name, triggers[]} 객체화 (`2cc8077`) ⭐
@@ -139,7 +136,7 @@
 - [x] V21 남자 사주 여대 권유 차단 (`6583c26`)
 - [x] V22 학교명 약어 풀어쓰기 (`fd812a0`)
 - [x] V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)
-- [x] V24 10단계 학운 라벨 + hero 점수 + signer ×N fix (`13771be`·`25eb1bf`) ⭐
+- [x] V24 10단계 학운 라벨 + hero 점수 + signer X N fix (`13771be`·`25eb1bf`) ⭐
 - [x] VersionFooter — 모든 화면 우측 하단 버전 라벨 (`4434676`·`5892a2d` $VERCEL fix)
 - [x] V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`) ⭐
 - [x] verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)
@@ -176,8 +173,10 @@
 - [x] **e2e Playbook 작성** (`.harness/e2e-playbook.md`) — 5종 검증 표준화 + Mixpanel MCP OAuth 완료 ⭐
 - [x] **e2e 검증 2회 (`02aaa18` + `9bd4b0d`) 모두 PASS** — 5종 + 보안 헤더 활성 확인
 - [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) — 이벤트 13 + Event prop 14 + User prop 14 description·display_name·verified + 구 `sessionId` hidden ⭐
-- [x] **`history_card_click` prop 분리** (`abbd950`) — `sessionId` → `clicked_session_id` (super property 와 의미 분리)
+- [x] **`history_card_click` prop 분리** (`abbd950`) — `sessionId`에서 `clicked_session_id` (super property와 의미 분리)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
+- [ ] **DB 마이그레이션 (public.users 테이블)** — kakao_id, nickname, RLS 정책 포함
+- [ ] 카카오 로그인 Phase A-E 구현
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
 - [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon 정비 완료, 정확도 ↑)
 - [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
