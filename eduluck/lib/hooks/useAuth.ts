@@ -65,20 +65,27 @@ export function useAuth(): UseAuthReturn {
 
   const login = useCallback(async () => {
     setError(null);
+    if (typeof window === 'undefined') return;
     const supabase = getSupabaseClient();
-    const redirectTo =
-      typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
-    // Supabase default scope = "account_email profile_image profile_nickname"
-    // 카카오 콘솔에 닉네임만 활성화돼 있으면 KOE205. 닉네임만 명시 요청.
-    // 추후 이메일·프로필 이미지 필요해지면 카카오 비즈 검수 후 scope 추가.
-    const { error: err } = await supabase.auth.signInWithOAuth({
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    // Supabase Kakao provider default scope = "account_email profile_image profile_nickname".
+    // 일반 앱은 account_email 비즈 검수 필요 → KOE205. options.scopes 는 append 만 됨.
+    //
+    // 우회: skipBrowserRedirect 로 OAuth URL 만 받아온 뒤 scope 파라미터를 직접 교체.
+    // Supabase 의 state·redirect_uri 는 그대로 유지되어 콜백 검증 통과.
+    const { data, error: err } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: {
-        ...(redirectTo ? { redirectTo } : {}),
-        scopes: 'profile_nickname',
-      },
+      options: { redirectTo, skipBrowserRedirect: true },
     });
-    if (err) setError(err);
+    if (err) {
+      setError(err);
+      return;
+    }
+    if (data?.url) {
+      const url = new URL(data.url);
+      url.searchParams.set('scope', 'profile_nickname');
+      window.location.href = url.toString();
+    }
   }, []);
 
   const logout = useCallback(async () => {
