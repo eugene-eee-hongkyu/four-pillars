@@ -78,15 +78,6 @@ export default function InterpretDeepSelect() {
           trigger="deepdive"
           onClose={() => setPaywallOpen(false)}
         />
-
-        <View className="px-container-padding mt-4 gap-2">
-          <Button variant="ghost" onPress={() => router.replace('/interpret-premium')}>
-            ← 정밀 진단으로 돌아가기
-          </Button>
-          <Button variant="ghost" onPress={() => router.replace('/')}>
-            🏠 처음으로
-          </Button>
-        </View>
       </ScrollView>
     </View>
   );

@@ -259,12 +259,9 @@ export default function InterpretPremium() {
             )}
 
             {part2Done && (
-              <View className="px-container-padding mt-4 gap-2">
+              <View className="px-container-padding mt-4">
                 <Button onPress={() => { track(EVENTS.DEEPDIVE_SELECT_CLICK); router.push('/interpret-deep-select'); }}>
                   📋 더 자세히 알고 싶은 영역 선택 (20 섹션)
-                </Button>
-                <Button variant="ghost" onPress={() => router.replace('/')}>
-                  🏠 처음으로
                 </Button>
               </View>
             )}

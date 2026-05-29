@@ -127,17 +127,11 @@ export default function InterpretDeep() {
           </View>
         )}
 
-        {/* 액션 — 다른 영역 보기 / 정밀 진단으로 / 처음으로 */}
+        {/* 액션 — 다른 영역 보기 (forward only, back/home 은 헤더·상단 link 가 대신) */}
         {(cachedText || done) && (
-          <View className="px-container-padding mt-4 gap-2">
+          <View className="px-container-padding mt-4">
             <Button onPress={() => router.replace('/interpret-deep-select')}>
               📋 다른 영역 보기
-            </Button>
-            <Button variant="ghost" onPress={() => router.replace('/interpret-premium')}>
-              ← 정밀 진단으로
-            </Button>
-            <Button variant="ghost" onPress={() => router.replace('/')}>
-              🏠 처음으로
             </Button>
           </View>
         )}
