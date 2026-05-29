@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
-import { Logo } from '@/components/ui/Logo';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -36,7 +35,7 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
 export default function Landing() {
   const router = useRouter();
   const { state, setSessionId, loadSessionFromHistory, startNewSession } = useFlow();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
@@ -92,39 +91,12 @@ export default function Landing() {
     router.push('/(flow)/interpret-premium' as never);
   };
 
-  const handleLogout = async () => {
-    track(EVENTS.LOGOUT_CLICK);
-    await logout();
-  };
-
-  // 상단 로그인 상태 배지 (history 화면·랜딩 공통)
-  const AuthBadge = () => (
-    <View className="flex-row items-center gap-2 self-end">
-      {user ? (
-        <>
-          <Text className="font-body text-label-sm text-text-sub">
-            {user.nickname}
-          </Text>
-          <Pressable onPress={handleLogout} accessibilityRole="button" className="px-2 py-1 active:opacity-70">
-            <Text className="font-body text-label-sm text-text-sub underline">로그아웃</Text>
-          </Pressable>
-        </>
-      ) : null}
-    </View>
-  );
-
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA
   if (hasHistory) {
     return (
       <View className="flex-1 bg-surface">
-        <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
-          <AuthBadge />
-          <View className="items-center gap-2">
-            <Logo size={48} />
-            <Text className="font-heading text-headline-sm text-text-sub">eduluck</Text>
-          </View>
-
-          <View className="gap-2 mt-4">
+        <ScrollView contentContainerClassName="px-container-padding pt-6 pb-32 gap-6">
+          <View className="gap-2 mt-2">
             <Text className="font-heading-bold text-display-sm text-text-pri">
               📂 이전에 본 진단
             </Text>
@@ -173,7 +145,7 @@ export default function Landing() {
 
         <StickyCTA>
           <Button onPress={handleStart} loading={loading}>
-            {newChildRequiresLogin ? '🔒 다른 자녀 진단 (로그인 필요)' : '🆕 다른 자녀 무료 진단 (5분)'}
+            {newChildRequiresLogin ? '🔒 다른 자녀 진단 · 카카오톡 로그인 필요' : '🆕 다른 자녀 무료 진단'}
           </Button>
         </StickyCTA>
 
@@ -192,9 +164,6 @@ export default function Landing() {
       <ScrollView
         contentContainerClassName="flex-1 items-center justify-center px-container-padding gap-6"
       >
-        <Logo size={72} />
-        <Text className="font-heading text-headline-md text-text-sub">eduluck</Text>
-
         <Text className="font-heading-bold text-display-lg text-text-pri text-center leading-tight mt-2">
           사주에 없는 길은{'\n'}가지 않아도 됩니다
         </Text>
@@ -219,7 +188,7 @@ export default function Landing() {
 
       <StickyCTA>
         <Button onPress={handleStart} loading={loading}>
-          무료 진단 시작 (5분)
+          무료 진단 시작
         </Button>
       </StickyCTA>
     </View>
