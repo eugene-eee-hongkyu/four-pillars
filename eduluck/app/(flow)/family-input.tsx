@@ -61,7 +61,12 @@ export default function FamilyInput() {
   });
 
   // === 어머니 (옵션) ===
-  const [showMother, setShowMother] = useState(state.motherStatus === 'entered');
+  // 자동 펼침: motherStatus='entered' 또는 (mother 데이터 살아있고 + skipped 아님)
+  // 옛 진단으로 입력 후 startNewSession 이 status 만 reset 한 경우도 자동 로드되도록 관대하게.
+  const [showMother, setShowMother] = useState(
+    state.motherStatus === 'entered' ||
+      (state.motherStatus !== 'skipped' && !!state.mother.birthYear)
+  );
   const [motherDate, setMotherDate] = useState<string>(() => {
     const m = state.mother;
     return m.birthYear && m.birthMonth && m.birthDay
@@ -76,7 +81,11 @@ export default function FamilyInput() {
   });
 
   // === 아버지 (옵션) ===
-  const [showFather, setShowFather] = useState(state.fatherStatus === 'entered');
+  // 자동 펼침: fatherStatus='entered' 또는 (father 데이터 살아있고 + skipped 아님)
+  const [showFather, setShowFather] = useState(
+    state.fatherStatus === 'entered' ||
+      (state.fatherStatus !== 'skipped' && !!state.father.birthYear)
+  );
   const [fatherDate, setFatherDate] = useState<string>(() => {
     const f = state.father;
     return f.birthYear && f.birthMonth && f.birthDay

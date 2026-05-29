@@ -511,23 +511,32 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** 새 자녀 진단 시작 — child·sessionId·interpretation 초기화.
-   *  부모 정보는 자동 보존 — 같은 가족이라는 가정 (한 어머니가 자녀 여러 명).
-   *  subjectId 는 새 session 에서 재발급되므로 reset. mother/father 데이터·만세력은 유지. */
+   *  부모 정보는 자동 로드 — 같은 가족이라는 가정 (한 어머니가 자녀 여러 명).
+   *  복원 우선순위: 현재 state.mother → sessionsHistory[0].snapshot.mother → initial.mother
+   *  (옛 startNewSession 으로 state 가 reset 됐어도 snapshot 에 박제된 데이터로 복원) */
   const startNewSession = useCallback(() => {
-    setState((s) => ({
-      ...initial,
-      sessionsHistory: s.sessionsHistory,
-      feedbackSubmittedSessions: s.feedbackSubmittedSessions,
-      part1CompleteFiredSessions: s.part1CompleteFiredSessions,
-      part2CompleteFiredSessions: s.part2CompleteFiredSessions,
-      // 부모 자동 로드 — family-input 의 토글 (showMother/showFather) 도 자동 펼침
-      mother: s.mother,
-      father: s.father,
-      motherStatus: s.motherStatus,
-      fatherStatus: s.fatherStatus,
-      motherManse: s.motherManse,
-      fatherManse: s.fatherManse,
-    }));
+    setState((s) => {
+      const lastSnapshot = s.sessionsHistory[0]?.snapshot;
+      const mother = s.mother.birthYear ? s.mother : (lastSnapshot?.mother ?? initial.mother);
+      const father = s.father.birthYear ? s.father : (lastSnapshot?.father ?? initial.father);
+      const motherManse = s.motherManse ?? lastSnapshot?.motherManse ?? null;
+      const fatherManse = s.fatherManse ?? lastSnapshot?.fatherManse ?? null;
+      const motherStatus = mother.birthYear ? 'entered' as const : 'pending' as const;
+      const fatherStatus = father.birthYear ? 'entered' as const : 'pending' as const;
+      return {
+        ...initial,
+        sessionsHistory: s.sessionsHistory,
+        feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+        part1CompleteFiredSessions: s.part1CompleteFiredSessions,
+        part2CompleteFiredSessions: s.part2CompleteFiredSessions,
+        mother,
+        father,
+        motherStatus,
+        fatherStatus,
+        motherManse,
+        fatherManse,
+      };
+    });
   }, []);
 
   /** 피드백 제출 완료 — sessionId 1회 push (dedup). */
