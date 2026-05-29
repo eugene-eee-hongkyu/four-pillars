@@ -71,7 +71,7 @@ export default function Landing() {
   const handleHistoryClick = (sessionId: string) => {
     const ok = loadSessionFromHistory(sessionId);
     if (!ok) return;
-    track(EVENTS.HISTORY_CARD_CLICK, { sessionId });
+    track(EVENTS.HISTORY_CARD_CLICK, { clicked_session_id: sessionId });
     router.push('/(flow)/interpret-premium' as never);
   };
 
