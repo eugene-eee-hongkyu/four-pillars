@@ -109,4 +109,10 @@ export const EVENTS = {
   FEEDBACK_SUBMIT: 'feedback_submit',
   HISTORY_CARD_CLICK: 'history_card_click',
   START_NEW_DIAGNOSIS_CLICK: 'start_new_diagnosis_click',
+  // 카카오 로그인 + paywall
+  LOGIN_CLICK: 'login_click',
+  LOGIN_SUCCESS: 'login_success',
+  LOGOUT_CLICK: 'logout_click',
+  PAYWALL_VIEW: 'paywall_view',
+  PAYWALL_LOGIN_CLICK: 'paywall_login_click',
 } as const;

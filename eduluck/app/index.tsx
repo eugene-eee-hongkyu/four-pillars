@@ -4,6 +4,8 @@
 //
 // 히스토리 카드 클릭 → loadSessionFromHistory → state 복원 → /interpret-premium 직접 진입.
 // LLM 재호출 ✗ (캐시된 part1/2 즉시 표시).
+//
+// Paywall 옵션 가: 첫 자녀 무료 → 2번째 자녀부터 카카오 로그인 강제 (비회원만).
 
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
@@ -12,7 +14,9 @@ import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { Logo } from '@/components/ui/Logo';
+import { PaywallModal } from '@/components/PaywallModal';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { translateError } from '@/lib/errors/translate';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
@@ -32,24 +36,30 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
 export default function Landing() {
   const router = useRouter();
   const { state, setSessionId, loadSessionFromHistory, startNewSession } = useFlow();
+  const { user, logout } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const hasHistory = state.sessionsHistory.length > 0;
+  // 트리거 1: 이미 1자녀 이상 진단했고 + 비회원 → 새 자녀 진단 시도 시 paywall
+  const newChildRequiresLogin = hasHistory && !user;
 
   useEffect(() => {
-    track(EVENTS.LANDING_VIEW, { has_history: hasHistory, history_count: state.sessionsHistory.length });
-  }, [hasHistory, state.sessionsHistory.length]);
+    track(EVENTS.LANDING_VIEW, {
+      has_history: hasHistory,
+      history_count: state.sessionsHistory.length,
+      logged_in: !!user,
+    });
+  }, [hasHistory, state.sessionsHistory.length, user]);
 
-  const handleStart = async () => {
+  const beginNewSession = async () => {
     setLoading(true);
     setError(null);
     try {
-      // 새 자녀 진단 시작 — 이전 current 초기화, history는 유지
       startNewSession();
-      track(EVENTS.START_NEW_DIAGNOSIS_CLICK, { had_history: hasHistory });
+      track(EVENTS.START_NEW_DIAGNOSIS_CLICK, { had_history: hasHistory, logged_in: !!user });
 
-      // deviceId 함께 전달 → sessions.device_id 저장 → /api/feedback 가 검증
       const res = await fetch('/api/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,7 +68,6 @@ export default function Landing() {
       if (!res.ok) throw new Error(await res.text());
       const { sessionId } = await res.json();
       setSessionId(sessionId);
-      // /api/track DB funnel_events 호출 제거 (2026-05-28) — Mixpanel funnel 가 main 추적 도구.
       track(EVENTS.START_DIAGNOSIS_CLICK);
       router.push('/(flow)/family-input' as never);
     } catch (e) {
@@ -68,6 +77,14 @@ export default function Landing() {
     }
   };
 
+  const handleStart = () => {
+    if (newChildRequiresLogin) {
+      setPaywallOpen(true);
+      return;
+    }
+    beginNewSession();
+  };
+
   const handleHistoryClick = (sessionId: string) => {
     const ok = loadSessionFromHistory(sessionId);
     if (!ok) return;
@@ -75,11 +92,33 @@ export default function Landing() {
     router.push('/(flow)/interpret-premium' as never);
   };
 
+  const handleLogout = async () => {
+    track(EVENTS.LOGOUT_CLICK);
+    await logout();
+  };
+
+  // 상단 로그인 상태 배지 (history 화면·랜딩 공통)
+  const AuthBadge = () => (
+    <View className="flex-row items-center gap-2 self-end">
+      {user ? (
+        <>
+          <Text className="font-body text-label-sm text-text-sub">
+            {user.nickname}
+          </Text>
+          <Pressable onPress={handleLogout} accessibilityRole="button" className="px-2 py-1 active:opacity-70">
+            <Text className="font-body text-label-sm text-text-sub underline">로그아웃</Text>
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
+
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA
   if (hasHistory) {
     return (
       <View className="flex-1 bg-surface">
         <ScrollView contentContainerClassName="px-container-padding pt-12 pb-32 gap-6">
+          <AuthBadge />
           <View className="items-center gap-2">
             <Logo size={48} />
             <Text className="font-heading text-headline-sm text-text-sub">eduluck</Text>
@@ -134,9 +173,15 @@ export default function Landing() {
 
         <StickyCTA>
           <Button onPress={handleStart} loading={loading}>
-            🆕 다른 자녀 무료 진단 (5분)
+            {newChildRequiresLogin ? '🔒 다른 자녀 진단 (로그인 필요)' : '🆕 다른 자녀 무료 진단 (5분)'}
           </Button>
         </StickyCTA>
+
+        <PaywallModal
+          visible={paywallOpen}
+          trigger="new_child"
+          onClose={() => setPaywallOpen(false)}
+        />
       </View>
     );
   }
