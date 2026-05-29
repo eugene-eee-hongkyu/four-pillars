@@ -1,7 +1,7 @@
 # e2e Playbook — eduluck prod 검증
 
 > 사용자가 "e2e 검증", "playbook 따라", "prod 검증" 등 요청 시 이 문서 따른다.
-> 최초 작성: 2026-05-28. 검증 5종 + 정리. 약 8-10분 + Anthropic 비용 약 $0.20.
+> 최초 작성: 2026-05-28. 검증 10종 + 정리. 약 10-12분 + Anthropic 비용 약 $0.20.
 
 ## 언제 실행
 
@@ -247,6 +247,147 @@ async () => {
 - `first.status = 200`
 - `second_duplicate.status = 409`, `body.error = "already submitted for this session/source"`
 - `third_diff_source.status = 200` (다른 source 별도 row 허용)
+
+### 검증 6 — paywall 트리거 1 (새 자녀 진단)
+
+옵션 가: 첫 자녀 무료 + 이미 1자녀 + 비회원 → 새 자녀 시도 시 PaywallModal 노출.
+
+전제: 비회원 상태에서 검증 2~5 가 끝나 `sessionsHistory.length >= 1` 인 localStorage.
+
+```js
+// localStorage 확인 — sessionsHistory + user 상태
+() => {
+  const flow = JSON.parse(localStorage.getItem('eduluck.flow.state') || '{}');
+  return {
+    historyCount: (flow.sessionsHistory || []).length,
+    hasUser: !!Object.keys(localStorage).find(k => k.startsWith('sb-') && k.includes('auth-token')),
+  };
+}
+```
+**기대**: `historyCount >= 1`, `hasUser = false` (비회원).
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world")
+mcp__playwright__browser_snapshot(depth=3)
+```
+
+**기대 랜딩**: 상단 닉네임·로그아웃 배지 ✗ (비회원). StickyCTA 텍스트 = "🔒 다른 자녀 진단 (로그인 필요)".
+
+```
+mcp__playwright__browser_click(target=<🔒 다른 자녀 진단 버튼 ref>)
+mcp__playwright__browser_snapshot(depth=3)
+```
+
+**기대 모달**: "🌱 다른 자녀도 보시려면" 헤더 + "첫 번째 자녀 진단은 무료예요..." 본문 + "💬 카카오로 로그인" 버튼 + "나중에 할게요" 버튼.
+
+### 검증 7 — 카카오 OAuth redirect 시작
+
+```js
+// 클릭 후 카카오 OAuth URL 로 redirect 시작되는지 + 콘솔 에러 캡처
+async () => {
+  window.__urlChanges = [window.location.href];
+  window.__consoleErrors = [];
+  const origErr = console.error;
+  console.error = (...args) => {
+    window.__consoleErrors.push(args.join(' '));
+    origErr.apply(console, args);
+  };
+  return { instrumented: true };
+}
+```
+
+```
+mcp__playwright__browser_click(target=<카카오로 로그인 버튼 ref>)
+mcp__playwright__browser_wait_for(time=3)
+mcp__playwright__browser_evaluate(function="() => ({ url: window.location.href, errors: window.__consoleErrors || [] })")
+```
+
+**기대**:
+- `url` 이 `kauth.kakao.com/oauth/authorize?...` 로 시작 — Supabase 가 카카오 OAuth URL 로 redirect 성공
+- 또는 Supabase Redirect URLs 미설정 시 `errors` 에 "redirect_to URL not allowed" 같은 메시지 노출 (이 경우 사용자에게 Supabase 콘솔 설정 안내)
+- 데스크탑 브라우저는 카카오 ID/PW 페이지로 분기 (모바일은 카카오톡 앱 deeplink 자동)
+
+### 검증 8 — /auth/callback 라우트 작동
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world/auth/callback")
+mcp__playwright__browser_wait_for(time=2)
+mcp__playwright__browser_snapshot(depth=2)
+```
+
+**기대**: "로그인 처리 중..." 로딩 화면 (ActivityIndicator). 5초 후 자동 홈 redirect.
+
+```
+mcp__playwright__browser_wait_for(time=6)
+mcp__playwright__browser_evaluate(function="() => ({ url: window.location.href })")
+```
+
+**기대**: `url` 끝이 `/` (홈) — 안전망 timeout 으로 redirect.
+
+### 검증 9 — paywall 트리거 2 (deep-dive 영역 추가)
+
+옵션 가: 첫 영역 무료 + 이미 1개 봤음 + 비회원 → 새 영역 시도 시 PaywallModal 노출.
+
+전제: 검증 2 흐름의 sessionId 에서 deepDiveTexts 에 가짜 1개 주입 (또는 검증 2 후 실제 deep-dive 1회 수행).
+
+```js
+// 가짜 deepDiveTexts 1개 주입 (테스트용 단축)
+() => {
+  const key = 'eduluck.flow.state';
+  const s = JSON.parse(localStorage.getItem(key) || '{}');
+  s.deepDiveTexts = { ...(s.deepDiveTexts || {}), '5': '[테스트용 캐시 본문]' };
+  localStorage.setItem(key, JSON.stringify(s));
+  return { injected: Object.keys(s.deepDiveTexts) };
+}
+```
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world/interpret-deep-select")
+mcp__playwright__browser_snapshot(depth=4)
+```
+
+**기대**: 안내 문구 = "첫 번째 영역은 무료, 다른 영역은 카카오 로그인 후 보실 수 있어요." + section 5 카드는 "✓ 본 적 있음" + 나머지 카드는 "🔒" + 흐릿한 opacity.
+
+```
+mcp__playwright__browser_click(target=<section 5 카드 ref>)  # 본 영역 자유 진입 확인
+mcp__playwright__browser_navigate_back()
+mcp__playwright__browser_click(target=<다른 section 카드 ref>)  # 새 영역 시도
+mcp__playwright__browser_snapshot(depth=3)
+```
+
+**기대**: PaywallModal "🔎 다른 영역도 보시려면" + "💬 카카오로 로그인" 버튼.
+
+```js
+// 정리 — 주입한 가짜 deepDiveTexts 제거
+() => {
+  const key = 'eduluck.flow.state';
+  const s = JSON.parse(localStorage.getItem(key) || '{}');
+  delete (s.deepDiveTexts || {})['5'];
+  localStorage.setItem(key, JSON.stringify(s));
+  return { restored: true };
+}
+```
+
+### 검증 10 — Mixpanel 이벤트 인입
+
+```
+mcp__mixpanel__Run-Query(
+  project_id=4028508,
+  report_type="insights",
+  report={
+    "name": "auth events last hour",
+    "metrics": [
+      {"eventName": "paywall_view", "measurement": {"type": "basic", "math": "total"}},
+      {"eventName": "paywall_login_click", "measurement": {"type": "basic", "math": "total"}},
+      {"eventName": "login_click", "measurement": {"type": "basic", "math": "total"}}
+    ],
+    "chartType": "table",
+    "dateRange": {"type": "relative", "range": {"unit": "day", "value": 1}}
+  }
+)
+```
+
+**기대**: 검증 6·7·9 발사한 이벤트들 카운트 양수. trigger property breakdown 으로 `new_child` / `deepdive` 구분 확인 가능.
 
 ## Cleanup (필수)
 
