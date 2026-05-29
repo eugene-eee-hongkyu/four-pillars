@@ -38,11 +38,16 @@ export default function InterpretDeepSelect() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-6 pb-24 gap-6">
-        {/* 상단 navigation — 이전 화면 복귀 ("🏠 처음으로" 는 헤더 로고가 대신) */}
+        {/* 상단 back link — 좌측 정렬 작은 ghost link (Notion·Linear 패턴) */}
         <View className="px-container-padding">
-          <Button variant="ghost" size="md" onPress={() => router.replace('/interpret-premium')}>
-            ← 정밀 진단으로
-          </Button>
+          <Pressable
+            onPress={() => router.replace('/interpret-premium')}
+            accessibilityRole="button"
+            accessibilityLabel="정밀 진단으로 돌아가기"
+            className="self-start py-2 active:opacity-70"
+          >
+            <Text className="font-body text-label-sm text-text-sub">← 정밀 진단으로</Text>
+          </Pressable>
         </View>
 
         <View className="px-container-padding gap-2">

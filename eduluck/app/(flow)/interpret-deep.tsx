@@ -48,11 +48,16 @@ export default function InterpretDeep() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView contentContainerClassName="pt-6 pb-24 gap-4">
-        {/* 상단 navigation — 이전 화면 복귀 ("🏠 처음으로" 는 헤더 로고가 대신) */}
+        {/* 상단 back link — 좌측 정렬 작은 ghost link (Notion·Linear 패턴) */}
         <View className="px-container-padding">
-          <Button variant="ghost" size="md" onPress={() => router.replace('/interpret-deep-select')}>
-            ← 영역 선택
-          </Button>
+          <Pressable
+            onPress={() => router.replace('/interpret-deep-select')}
+            accessibilityRole="button"
+            accessibilityLabel="영역 선택으로 돌아가기"
+            className="self-start py-2 active:opacity-70"
+          >
+            <Text className="font-body text-label-sm text-text-sub">← 영역 선택</Text>
+          </Pressable>
         </View>
 
         {/* 헤더 — 어느 섹션 deep-dive 중인지 명시 */}
