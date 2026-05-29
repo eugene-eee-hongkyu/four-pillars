@@ -6,18 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-05-28 20:15
-## 마지막 업데이트: 2026-05-28 20:15
+## 마지막 실행: 2026-05-29 08:54
+## 마지막 업데이트: 2026-05-29 08:54
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 보안 audit 2 rounds (Critical 2 + High 6 + Med 4 + Low 2 fix) + e2e playbook 표준화 + Mixpanel MCP OAuth 인증 완료. mom test 진행 준비 완비.
+- Mixpanel 트래킹 인벤토리 정리 + Lexicon 일괄 정비 (이벤트 13 + Event prop 14 + User prop 14) + `history_card_click` prop 이름 `sessionId` → `clicked_session_id` 분리 (commit `abbd950`). mom test 진행 + Mixpanel 자연어 funnel 분석 준비 완비.
 
 ### 이어서 할 것
 
-1. **mom test 10명 모집·진행** — 인프라 (자체 form + Mixpanel funnel + deviceId 분리) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) + e2e playbook 모두 완비.
-2. 채팅 Mixpanel funnel 분석 — 자연어 query 로 진행률·drop-off 검토 (Mixpanel MCP 인증 완료).
+1. **mom test 10명 모집·진행** — 인프라 (자체 form + Mixpanel funnel + deviceId 분리 + Lexicon 정비) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) + e2e playbook 모두 완비.
+2. 채팅 Mixpanel funnel 분석 — Lexicon 정비 완료로 MCP 자연어 질의 정확도 ↑. 진행률·drop-off 검토.
 3. CSP Report-Only → Enforce 전환 (2026-06-04 권장) — Console violation 0 확인 후 vercel.json 키 이름만 변경.
 
 ### 막힌 것
@@ -34,7 +34,7 @@
 ### 운영 자료
 
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (5종 검증, 약 8-10분, $0.20)
-- **Mixpanel MCP**: OAuth 인증 완료, Z21labs org 자연어 funnel 분석 가능
+- **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 완료, 자연어 funnel 분석 가능
 
 ### 백로그 요약
 
@@ -175,9 +175,11 @@
 - [x] **Mixpanel `latest_gyeokguk`·`latest_day_pillar` 제거** (자녀 사주 PII 추론 차단)
 - [x] **e2e Playbook 작성** (`.harness/e2e-playbook.md`) — 5종 검증 표준화 + Mixpanel MCP OAuth 완료 ⭐
 - [x] **e2e 검증 2회 (`02aaa18` + `9bd4b0d`) 모두 PASS** — 5종 + 보안 헤더 활성 확인
+- [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) — 이벤트 13 + Event prop 14 + User prop 14 description·display_name·verified + 구 `sessionId` hidden ⭐
+- [x] **`history_card_click` prop 분리** (`abbd950`) — `sessionId` → `clicked_session_id` (super property 와 의미 분리)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
-- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (인증 완료)
+- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon 정비 완료, 정확도 ↑)
 - [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)

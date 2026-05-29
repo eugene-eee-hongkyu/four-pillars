@@ -6,6 +6,40 @@
 
 ---
 
+## Session 2026-05-29 08:54 — Mixpanel 트래킹 인벤토리 + Lexicon 일괄 정비 + sessionId 표기 분리
+
+### 작업 요약
+
+**Mixpanel eduluck 프로젝트 트래킹 데이터 인벤토리** (project_id 4028508):
+- 이벤트 15개 (커스텀 13 + 자동 $session_start/end), Event prop 14개 (커스텀), User prop 14개 (커스텀) 전수 정리
+- 진단 funnel 흐름: landing_view → start_new_diagnosis_click → start_diagnosis_click → family_input_complete → child_manse_view → premium_start_click → part1_complete → part2_complete → deepdive_select_click + feedback funnel (cta → open → submit)
+
+**표기 불일치·중복 진단**:
+- `session_id` (snake, super property — `mixpanel.register()` 로 모든 이벤트 자동 첨부) vs `sessionId` (camel, `history_card_click` 명시 prop 1곳) — 의미 다른 두 값이 한 이벤트에 같이 박히는 문제
+- `has_history` (현재형, LANDING_VIEW) vs `had_history` (과거형, START_NEW_DIAGNOSIS_CLICK) — 시점 분리, 의도된 것임 확인 → 변경 없음
+
+**코드 수정** (commit `abbd950`):
+- [eduluck/app/index.tsx:74](../eduluck/app/index.tsx#L74) `track(EVENTS.HISTORY_CARD_CLICK, { sessionId })` → `{ clicked_session_id: sessionId }` 로 명시 분리
+- super property session_id (현재 활성 진단) 과 별개로 클릭된 과거 진단 id 추적 가능
+
+**Mixpanel Lexicon 일괄 정비** (MCP Bulk-Edit-Events / Bulk-Edit-Properties / Edit-Property):
+- 이벤트 13개: 한글 display_name + description (트리거 시점·prop 명세) + verified: true
+- Event 프로퍼티 14개: description (`session_id` super property 명시, `has_history`/`had_history` 시점 차이 명시, `from_cache`·`q_count_quant/text`·`source` 등)
+- User 프로퍼티 14개: description (현재 vs `latest_*` 시점 차이 명시)
+- 구 `sessionId` (camel) hidden + DEPRECATED 표시
+
+**배포 후 검증**:
+- push 후 Vercel 자동 배포 → 사용자 실제 클릭으로 `clicked_session_id` 인입 확인 (Mixpanel Run-Query)
+- 신규 등록된 `clicked_session_id` 프로퍼티에 display_name + description 후속 추가
+
+### 다음 액션
+
+- Mom test 10명 모집·진행 (변경 없음, 인프라 준비 완비)
+- 채팅 Mixpanel funnel 분석 — Lexicon 정비 완료로 MCP 자연어 질의 정확도 ↑
+- CSP Report-Only → Enforce 전환 (2026-06-04 권장)
+
+---
+
 ## Session 2026-05-28 20:15 — 보안 audit 2 rounds + e2e playbook + e2e 검증 2회
 
 ### 작업 요약

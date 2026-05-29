@@ -6,6 +6,31 @@
 
 ---
 
+## 2026-05-29: Mixpanel history_card_click prop 이름 sessionId → clicked_session_id 분리
+
+- **선택**: `track(EVENTS.HISTORY_CARD_CLICK, { sessionId })` → `{ clicked_session_id: sessionId }` 로 명시 분리 (commit `abbd950`). 구 `sessionId` (camel) 은 Mixpanel Lexicon 에서 hidden 처리 + DEPRECATED 표시.
+- **대안 검토**:
+  - A. `clicked_session_id` 로 이름 바꿔 살리기 ← 선택. 클릭된 과거 진단 id 와 현재 활성 진단 id 를 funnel/cohort 분석에서 분리 가능.
+  - B. 단순 제거 (super property `session_id` 만으로 충분) — `loadSessionFromHistory()` 가 state.sessionId 를 즉시 교체하면 두 값이 동일하지만, 정밀한 시점 분리는 불가능. 정보 손실.
+- **선택 이유**: super property `session_id` 는 클릭 시점의 활성 진단을 가리키는데, 사용자가 새 진단을 발급받은 상태에서 이전 진단 카드를 클릭하는 시나리오가 가능. 두 값이 다를 수 있으므로 별도 prop 으로 보존이 가치 있음. snake case 통일도 덤.
+- **영향 범위**: [eduluck/app/index.tsx:74](../eduluck/app/index.tsx#L74) (1줄 변경). Mixpanel `history_card_click` 이벤트의 prop 만 변경 — funnel/dashboard 영향 ✗ (해당 prop 을 차트에서 직접 쓰는 곳 없음). 구 `sessionId` 데이터는 보존됨 (hidden 만).
+- **되돌리는 방법**: prop 이름 1줄만 원복하면 됨. Lexicon hidden 해제 (Edit-Property 호출). 데이터 손실 ✗.
+
+---
+
+## 2026-05-29: Mixpanel Lexicon 메타데이터 일괄 정비 — display_name + description + verified
+
+- **선택**: Mixpanel MCP `Bulk-Edit-Events` / `Bulk-Edit-Properties` 를 사용해 eduluck 프로젝트 (4028508) 의 이벤트 13개 + Event prop 14개 + User prop 14개 메타데이터를 일괄 작성. 한글 display_name + 트리거 시점·의미 description + 이벤트 `verified: true` 마킹.
+- **대안 검토**:
+  - A. MCP 로 일괄 자동 작성 ← 선택. 코드 변경 ✗ + 외부 메타데이터만 수정 + 잘못되면 재편집 가능 + 13+14+14 = 41개 단건 처리 비용 절감.
+  - B. Mixpanel UI 에서 수동 입력 — 정확도 ↑ 가능성, 시간 ↑↑. 41개 항목에는 비효율.
+  - C. 정비 안 함 (현상 유지) — 차트·funnel UI 가독성 ↓, MCP 자연어 질의 정확도 ↓, 신규 합류자 온보딩 비용 ↑.
+- **선택 이유**: 사람 결정 영역 (외부 시스템 반영) 이라 사용자에게 1회 위임 요청 → 승인 받음. 후속 트래킹 코드 추가·수정 시에도 같은 패턴 (MCP 일괄 편집) 으로 반영하면 됨. 자연어 funnel 분석을 Mixpanel MCP 에 위임하기 위한 전제 조건.
+- **영향 범위**: Mixpanel Lexicon 메타데이터만 변경 — 트래킹 데이터·코드·UI ✗. 차트 UI 에 한글 라벨 + hover description 노출됨.
+- **되돌리는 방법**: 같은 MCP 도구로 description / display_name 비우거나 verified=false 마킹 가능. hidden 해제도 동일.
+
+---
+
 ## 2026-05-28: 보안 audit Round 2 hardening — Supabase RPC 권한·anon RLS policy·security headers
 
 - **선택**: 3건 fix 일괄 적용:
