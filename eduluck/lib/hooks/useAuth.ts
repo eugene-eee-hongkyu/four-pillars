@@ -68,9 +68,15 @@ export function useAuth(): UseAuthReturn {
     const supabase = getSupabaseClient();
     const redirectTo =
       typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+    // Supabase default scope = "account_email profile_image profile_nickname"
+    // 카카오 콘솔에 닉네임만 활성화돼 있으면 KOE205. 닉네임만 명시 요청.
+    // 추후 이메일·프로필 이미지 필요해지면 카카오 비즈 검수 후 scope 추가.
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: redirectTo ? { redirectTo } : undefined,
+      options: {
+        ...(redirectTo ? { redirectTo } : {}),
+        scopes: 'profile_nickname',
+      },
     });
     if (err) setError(err);
   }, []);
