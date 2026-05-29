@@ -6,6 +6,44 @@
 
 ---
 
+## 2026-05-29: 카카오 로그인 구현 방식 — Supabase Auth Provider 활용 (자체 OAuth 우회)
+
+- **선택**: Supabase Auth Provider 의 Kakao OAuth 활용. `useAuth` hook 은 `supabase.auth.getSession` + `onAuthStateChange` 기반. 로그인 시 `signInWithOAuth({provider:'kakao'})` 호출.
+- **대안 검토**:
+  - A. **Supabase Auth Provider 활용** ← 선택. sessions.user_id 가 이미 auth.users(id) FK 라 자연 연결. RLS auth.uid() 기반 깔끔. JWT·쿠키·세션 갱신 모두 Supabase 처리. 코드량 ↓↓.
+  - B. 자체 OAuth + 우리 백엔드에서 토큰 교환 + service_role 로 user 생성 — 코드량 5x, 보안 직접 관리, sessions.user_id 와 auth.users 연결 분리 필요.
+- **선택 이유**: 이 프로젝트 DB 가 이미 `auth.users` 기반 (init_tables.sql 의 sessions.user_id FK·user_profiles FK). 자체 OAuth 로 가면 인프라 우회 + 이중 user 관리 필요. Supabase Auth provider 가 카카오톡 앱 인증 흐름 (모바일 자동 deeplink) 도 그대로 살림.
+- **영향 범위**: `lib/hooks/useAuth.ts`·`components/KakaoLoginButton.tsx`·`app/auth/callback.tsx`. 옛 자체 OAuth WIP (api/auth/·KakaoSdkProvider·옛 useAuth) 일괄 정리. 외부 시스템 — Supabase Dashboard Provider 활성화 + Redirect URLs 등록 + Kakao Developers Redirect URI 에 Supabase callback URL 추가.
+- **되돌리는 방법**: 자체 OAuth 로 전환 시 `api/auth/kakao/callback.ts` 신규 + Supabase Admin SDK 로 user 생성. 단 sessions.user_id 와의 연결 재설계 필요.
+
+---
+
+## 2026-05-29: KOE205 (카카오 OAuth 잘못된 요청) 우회 — skipBrowserRedirect + URL scope 직접 교체
+
+- **선택**: `signInWithOAuth({skipBrowserRedirect:true})` 로 Supabase 가 생성한 OAuth URL 만 받아온 뒤, URL 의 `scope` 파라미터를 `profile_nickname` 으로 직접 교체 + 우리가 `window.location.href` 로 redirect (commit `4246f04`).
+- **대안 검토**:
+  - A. `options.scopes='profile_nickname'` 명시 ← 시도 후 실패. Supabase JS SDK 는 default scope 에 **append** 만 함 — URL 에 `account_email profile_image profile_nickname profile_nickname` (중복) 들어가 KOE205 그대로 발생.
+  - B. **skipBrowserRedirect + URL scope 직접 교체** ← 선택. Supabase 의 state·redirect_uri 그대로 유지되어 콜백 검증 통과.
+  - C. Kakao 콘솔 동의항목에 `account_email` 등록 — 카카오 비즈 앱 검수 필요 (사업자등록증 + 1주 심사). 일반 앱으로는 불가능.
+  - D. 자체 OAuth 로 전환 — scope 우리가 완전 통제. 단 코드량 ↑.
+- **선택 이유**: `account_email` 은 비즈 검수 필수 항목인데 일반 앱 단계라 카카오 콘솔에 등록조차 불가능. Supabase 가 default 로 강제 요청. SDK 옵션 (scopes·queryParams) 으로는 default 를 override 불가. URL 직접 교체가 가장 단순 + 안전 (Supabase 다른 파라미터는 모두 유지).
+- **영향 범위**: `lib/hooks/useAuth.ts` login() 함수 7줄. 카카오 인증 후 사용자 정보는 닉네임만 수집 (이메일·프로필 이미지 ✗).
+- **되돌리는 방법**: 결제·CS 단계에서 이메일 필요해지면 카카오 비즈 앱 전환 + 검수 통과 → 이 fix 제거하고 표준 `signInWithOAuth` 호출. Supabase 가 보내는 default scope 그대로 사용.
+
+---
+
+## 2026-05-29: paywall 정책 옵션 가 확정 — 첫 자녀·첫 영역 무료, 추가는 로그인 강제
+
+- **선택**: 옵션 가 — (1) 첫 자녀 무료 + 2번째 자녀부터 카카오 로그인 강제, (2) 첫 deep-dive 영역 무료 + 다른 영역은 로그인 강제. 결제는 별개 단계 (mom test 후 도입).
+- **대안 검토**:
+  - A. **옵션 가**: 로그인은 식별·재방문 용도로 결제와 분리 도입 ← 선택. mom test 동안 로그인 데이터 누적 → 결제 도입 시 자연스럽게 전환.
+  - B. 옵션 나: 로그인 = 결제 전제 (= 로그인 + 결제 동시 도입, mom test 후 한꺼번에).
+- **선택 이유**: 메모리상 "결제 가격은 Q11 응답 후 결정" 과 정합. 로그인을 paywall 식별 수단으로 분리 도입 → mom test 단계엔 결제 인프라 (사업자 등록·카카오페이 가맹점 등) 불필요. 사용자 친화도 ↑ (첫 진단 무료라 진입 마찰 ✗).
+- **영향 범위**: `app/index.tsx` (랜딩 트리거 1), `app/(flow)/interpret-deep-select.tsx` (트리거 2), `components/PaywallModal.tsx`, Mixpanel 5 EVENTS.
+- **되돌리는 방법**: paywall 트리거 조건만 변경 (예: 무료 횟수 늘리기 / 줄이기 / 모두 무료 등). 코드 1-2줄.
+
+---
+
 ## 2026-05-29: Mixpanel history_card_click prop 이름 sessionId → clicked_session_id 분리
 
 - **선택**: `track(EVENTS.HISTORY_CARD_CLICK, { sessionId })` → `{ clicked_session_id: sessionId }` 로 명시 분리 (commit `abbd950`). 구 `sessionId` (camel) 은 Mixpanel Lexicon 에서 hidden 처리 + DEPRECATED 표시.

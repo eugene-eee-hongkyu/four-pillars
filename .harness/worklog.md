@@ -6,6 +6,79 @@
 
 ---
 
+## Session 2026-05-29 19:00 — 카카오 로그인 + paywall + KOE205 해결 + UX 4 rounds
+
+### 작업 요약
+
+**카카오 로그인 + paywall 풀스택 구현** (commit `b01a158`):
+- 옵션 가 확정 — 처음 자녀 무료 → 2번째 자녀부터 로그인 + 첫 영역 무료 → 다른 영역도 로그인
+- 구현 방식: **Supabase Auth Provider 활용** (자체 OAuth 우회) — 옛 자체 OAuth WIP 코드 (api/auth/·KakaoSdkProvider·옛 useAuth) 일괄 정리
+- 신규 파일:
+  - `lib/hooks/useAuth.ts` — Supabase auth.getSession + onAuthStateChange
+  - `components/KakaoLoginButton.tsx` — RN/Expo Web 호환 노란 버튼
+  - `components/PaywallModal.tsx` — 트리거별 메시지 (new_child / deepdive)
+  - `app/auth/callback.tsx` — detectSessionInUrl 자동 처리 + 5초 안전망 redirect
+- 트리거 1: 랜딩 (`sessionsHistory.length >= 1 && !user`) 시 paywall
+- 트리거 2: deepdive 선택 (`seenSections.length >= 1 && !user`) 시 paywall — 이미 본 영역은 캐시 hit 자유 진입
+- Mixpanel EVENTS 5개 추가: LOGIN_CLICK · LOGIN_SUCCESS · LOGOUT_CLICK · PAYWALL_VIEW · PAYWALL_LOGIN_CLICK
+
+**e2e-playbook 검증 6-10 추가** (commit `219bab9`):
+- 검증 6: paywall 트리거 1 (자녀 추가) — localStorage sessionsHistory 주입 → 모달 노출
+- 검증 7: 카카오 OAuth redirect — paywall 로그인 클릭 → kauth.kakao.com URL 검증
+- 검증 8: `/auth/callback` 라우트 — 로딩 화면 + 5초 후 홈 redirect
+- 검증 9: paywall 트리거 2 (deepdive) — deepDiveTexts 주입 → 잠금 표시 + 모달
+- 검증 10: Mixpanel paywall_view / paywall_login_click / login_click 인입 확인
+- 5종 모두 b01a158 prod 에서 PASS 확인 후 박제
+
+**KOE205 (카카오 OAuth 잘못된 요청) 해결 — 2단계 시도**:
+1. **시도 1 (실패, `e63593b`)**: `options.scopes='profile_nickname'` 명시 — Supabase JS SDK 가 default scope 에 append 만 해서 무효. URL 에 `account_email profile_image profile_nickname profile_nickname` 4개 (중복 포함) 들어가서 KOE205 그대로 발생
+2. **시도 2 (성공, `4246f04`)**: `skipBrowserRedirect:true` 로 Supabase 가 생성한 OAuth URL 만 받아온 뒤, URL 의 scope 파라미터를 `profile_nickname` 으로 직접 교체하고 우리가 `window.location.href` 로 redirect. Supabase 의 state·redirect_uri 는 그대로 유지되어 콜백 검증 통과
+- 원인: `account_email` 은 카카오 비즈 앱 검수 필요 항목. 일반 앱으로는 동의항목 등록 자체가 불가능. Supabase Auth Kakao provider 가 default 로 강제 요청
+- 추후 결제·CS 단계에서 이메일 필요해지면 카카오 비즈 검수 후 scope 추가
+
+**Kakao Developers + Supabase + Vercel 외부 시스템 설정 완료** (eugene 님 액션):
+- Kakao Developers: 앱 생성 + REST API Key + JS Key + Client Secret + Redirect URIs 등록 (prod + localhost 3002 + Supabase callback URL)
+- Supabase Dashboard: Authentication → Providers → Kakao 활성화 + "Allow users without email" ON
+- Supabase Dashboard: URL Configuration → Redirect URLs 등록 (`/auth/callback` 2개)
+- Vercel Environment Variables: EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY 등 4개 추가
+
+**UX 4 rounds — sticky AppHeader + 정보 모달 + 워딩·정렬·하단 navigation 정리**:
+- **Round 1** (`75fd19c`):
+  - sticky AppHeader 신규 (좌측 로고+eduluck → 클릭 시 홈, 우측 비회원=노란 "💬 로그인" / 회원=닉네임+로그아웃, 우측 끝 ⓘ)
+  - BuildInfoModal 신규 — 헤더 ⓘ 클릭 시 버전·빌드시각(KST 디코딩)·SHA 노출
+  - CTA 워딩 정리: "(5분)" 제거 + "🔒 다른 자녀 진단 · 카카오톡 로그인 필요"
+  - 랜딩 처음 사용자 로고+텍스트 중복 제거 (AppHeader 가 대신)
+- **Round 2** (`8eb7003`):
+  - 헤더 ⓘ 제거 → BuildInfoFooter 신규 (우측 하단 작고 흐린 ⓘ, opacity 0.35) — 중요한 위치 시각 노이즈 해소
+  - 회원 메뉴 드롭다운: 닉네임 ▼ 클릭 → Modal 기반 토글 (로그아웃 항목, 향후 결제·구독 확장 가능)
+  - 진단 3 화면 상단 "🏠 처음으로" 일괄 제거 — 헤더 로고가 대신
+- **Round 3** (`485eb95`):
+  - back link 좌측 정렬 + 작은 link 스타일 (Notion·Linear 패턴)
+  - Button (full-width, 가운데 정렬) → Pressable + Text (self-start, label-sm + text-text-sub)
+  - 본문 제목과 동일 x=24 시작점 — 시각 흐름 자연
+- **Round 4** (`96a8536`):
+  - 하단 navigation back/home 일괄 제거 (interpret-deep-select 전체, interpret-deep·premium 의 back/home)
+  - forward action 만 유지 ("📋 다른 영역 보기", "📋 더 자세히 알고 싶은 영역 선택")
+  - feedback 화면은 짧은 confirmation 페이지라 "🏠 처음으로" 유지
+
+**E2E 자동 검증 4회** (UX round 1·2·3·4 각각):
+- Playwright 로 랜딩·진단·deepdive 화면 + ⓘ 모달 + back link bbox 좌표 + 하단 navigation 제거 모두 PASS
+- Mixpanel 이벤트 `paywall_view=2`, `paywall_login_click=1` 인입 확인
+- 자동 검증 한계: 실제 카카오 로그인 후 회원 UI 는 eugene 님 직접 검증 필요
+
+### 실패한 시도
+
+- KOE205 fix 시도 1 — `options.scopes` 가 Supabase 에서 append 만 되어 무효 (위 시도 2 로 우회)
+- 검증 9 초기 — childManse 가짜 객체 주입이 hydrateManse 에러 → loadInitial catch 가 silent 라 state 전체 reset. manse 관련 객체 제외하고 재시도해서 해결
+
+### 다음 액션
+
+- **mom test 10명 모집·진행** — 인프라 (카카오 로그인 + paywall + funnel + Lexicon + e2e playbook) 모두 완비. 실제 사용자 데이터 수집 시작
+- 결제 도입 시점에 카카오 비즈 앱 검수 + `account_email` scope 추가 + Kakao Pay 가맹점 등록 (사업자등록증 필요)
+- CSP Report-Only → Enforce 전환 (2026-06-04 권장)
+
+---
+
 ## Session 2026-05-29 15:59 — Supabase DB 마이그레이션 계획 및 권한 요청
 
 ### 작업 요약

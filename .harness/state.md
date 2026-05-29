@@ -6,32 +6,35 @@
 
 ---
 
-## 마지막 실행: 2026-05-29 15:59
-## 마지막 업데이트: 2026-05-29 15:59
+## 마지막 실행: 2026-05-29 19:00
+## 마지막 업데이트: 2026-05-29 19:00
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 카카오 로그인 구현 준비 — public.users 테이블 마이그레이션 (kakao_id, nickname 저장) 승인 대기 중. RLS 정책 포함, 신규 테이블이므로 기존 테이블 영향 없음.
+- 카카오 로그인 + paywall (옵션 가) + KOE205 해결 + UX 4 rounds 완료. mom test 진행 준비 완비 — 인프라 (회원 식별·funnel·Lexicon·e2e playbook 10종) + 정확성 (BUG A-H + V25 calibration) + 보안 (Critical 2 + High 6 fix) 모두 완성.
 
 ### 이어서 할 것
 
-1. **DB 마이그레이션 승인 및 적용** — public.users 테이블 생성 (apply_migration 필요)
-2. **카카오 로그인 Phase A-E 구현** — 마이그레이션 완료 후 진행
-3. Mom test 10명 모집·진행 계획 수립
+1. **mom test 10명 모집·진행** — 실제 사용자 데이터 수집 시작
+2. 채팅 Mixpanel funnel 분석 — Lexicon 정비 + 카카오 로그인 funnel 신규 추가로 정확도 ↑
+3. CSP Report-Only → Enforce 전환 (2026-06-04 권장) — Console violation 0 확인 후 vercel.json 키 이름만 변경
 
 ### 막힌 것
 
-- DB 마이그레이션 권한 필요 (apply_migration 승인 대기)
+- 없음
 
 ### 사람 판단 필요
 
-- public.users 테이블 마이그레이션 (kakao_id, nickname) 승인 여부
+- Mom test 10명 모집·시점 결정
+- 결제 도입 시점 — 카카오 비즈 앱 검수 + 사업자 등록 + 카카오페이 가맹점 (Q11 가격 응답 누적 후)
+- CSP Enforce 전환 (1주 모니터링 후)
 
 ### 운영 자료
 
-- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (5종 검증, 약 8-10분, $0.20)
-- **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 완료, 자연어 funnel 분석 가능
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (10종 검증, 약 10-12분, $0.20)
+- **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 + auth/paywall 5 EVENTS 추가
+- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override (skipBrowserRedirect + URL scope 직접 교체) — 닉네임만 수집
 
 ### 백로그 요약
 
@@ -174,11 +177,18 @@
 - [x] **e2e 검증 2회 (`02aaa18` + `9bd4b0d`) 모두 PASS** — 5종 + 보안 헤더 활성 확인
 - [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) — 이벤트 13 + Event prop 14 + User prop 14 description·display_name·verified + 구 `sessionId` hidden ⭐
 - [x] **`history_card_click` prop 분리** (`abbd950`) — `sessionId`에서 `clicked_session_id` (super property와 의미 분리)
+- [x] **카카오 로그인 + paywall 풀스택** (`b01a158`) — Supabase Auth Provider Kakao + useAuth + KakaoLoginButton + PaywallModal + /auth/callback ⭐
+- [x] **paywall 트리거 1·2 통합** (`b01a158`) — 랜딩 자녀 추가 + deepdive 영역 추가 시 비회원만 로그인 강제
+- [x] **Mixpanel auth/paywall 5 EVENTS** (`b01a158`) — LOGIN_CLICK·SUCCESS·OUT + PAYWALL_VIEW·LOGIN_CLICK
+- [x] **e2e-playbook 검증 6-10 추가** (`219bab9`) — paywall 트리거 1·2 + OAuth redirect + callback + Mixpanel 인입 ⭐
+- [x] **KOE205 해결 — Supabase scope URL 직접 교체** (`4246f04`) — skipBrowserRedirect + scope=profile_nickname 단독 ⭐
+- [x] **UX round 1** (`75fd19c`) — sticky AppHeader + BuildInfoModal + CTA 워딩 정리 ((5분) 제거)
+- [x] **UX round 2** (`8eb7003`) — 헤더 ⓘ → 푸터 ⓘ + 회원 닉네임 드롭다운 + 상단 홈버튼 정리
+- [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
+- [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] **DB 마이그레이션 (public.users 테이블)** — kakao_id, nickname, RLS 정책 포함
-- [ ] 카카오 로그인 Phase A-E 구현
-- [ ] Mom test 10명 모집·진행 → 자체 form + funnel 동시 누적
-- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon 정비 완료, 정확도 ↑)
+- [ ] Mom test 10명 모집·진행 → 자체 form + funnel + 카카오 로그인 데이터 동시 누적
+- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth funnel 추가 완료)
 - [ ] mom test 결과 정량·정성 종합 → 다음 prompt 개선 priority 결정
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
@@ -191,5 +201,6 @@
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
 - [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
-- [ ] localStorage PII 정리 — 로그인 기능 도입 시 자연 해결 (DI3.A)
+- [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
 - [ ] Supabase Auth leaked password protection (signup 활성화 시점)
+- [ ] 결제 도입 — 카카오 비즈 앱 검수 + 사업자 등록 + 카카오페이 가맹점 + account_email scope 추가
