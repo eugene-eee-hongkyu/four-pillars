@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-30 18:20
-## 마지막 업데이트: 2026-05-30 18:20
+## 마지막 실행: 2026-05-30 18:34
+## 마지막 업데이트: 2026-05-30 18:34
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- PG 심사 5종 충족 풀스택 완료 + 사업자 등록 정보 4종 입력 완료 (`38cdec1`·`43c25d1`·`f51669d`). 남은 placeholder 1종: 통신판매업 신고번호. mom test 친구 배포는 즉시 가능 (Fake Door는 사업자 등록 전에도 작동).
+- PG 심사 5종 충족 풀스택 완료 + 사업자 등록 정보 4종 입력 완료 + 랜딩 LegalFooter 위치 fix (`38cdec1`·`43c25d1`·`f51669d`·`3b4f563`). 남은 placeholder 1종: 통신판매업 신고번호. mom test 친구 배포는 즉시 가능.
 
 ### 이어서 할 것
 
@@ -34,14 +34,14 @@
 ### 운영 자료
 
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 16종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라)
-- **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel (진단 핵심 / PDF 결제 의향 / 확산성)
-- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표 + 함정 메모
+- **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
+- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음
-- **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx` — 한국 SaaS 표준 + 전자상거래법 §17 ② 5호 (다운로드/열람 시점 환불 불가)
-- **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG) — 카카오페이는 토스 안의 결제수단으로 ON
-- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override — 닉네임만 수집
-- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5. `lib/paywall/policy.ts` 단일 source
-- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
+- **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx`
+- **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
+- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) — 닉네임만 수집
+- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5
+- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*
 - **사전 예약 명단**: Supabase `pdf_preorders` 테이블 — 출시 시 알림용 + 의향 신호 (RLS active)
 
 ### 백로그 요약
@@ -201,6 +201,7 @@
 - [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** — PIPA + Fake Door + cap 6종 prod PASS 박제 ⭐
 - [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐ — BUSINESS_INFO 단일 source + LegalFooter + 정책 3종 페이지 + pdf-preorder 청약철회 동의 + BuildInfoModal 정책 링크
 - [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
+- [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)** — 짧은 콘텐츠 시 spacer로 화면 끝으로
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)

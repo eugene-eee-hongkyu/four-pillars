@@ -19,6 +19,25 @@
 - mom test 결과 수집 후 정가 confirm → 결제 페이지 구현
 
 
+## Session 2026-05-30 18:34 — 랜딩 history 화면 LegalFooter 위치 fix
+
+### 작업 요약
+
+- 사용자 보고: 자녀 1명 진단한 상태에서 랜딩 진입 시 LegalFooter가 페이지 중간에 떠 있고 그 아래 sticky CTA까지 큰 빈 공간 (어색)
+- 진단: 짧은 콘텐츠 + sticky CTA 위 padding 큰 영역 + 푸터와 빈 공간 색조 동일 → 푸터가 중간에 뜬 것처럼 보임
+- 수정 (`3b4f563`): ScrollView contentContainer `flex-grow` + 콘텐츠 View 분리 + spacer (`flex-1 min-h-[40px]`) 추가
+  - 짧은 콘텐츠 → spacer가 남은 공간 차지 → 푸터 화면 끝
+  - 긴 콘텐츠 (자녀 5명+) → spacer 0 수축 → 자연 스크롤
+- 처음 사용자 화면은 이미 `min-h-[60vh]`로 자연. pdf-preorder도 콘텐츠 길어 자연. history 화면만 fix.
+
+### 다음 액션
+
+- **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일)
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
+- mom test 친구들 배포 + 인터뷰 4문항
+
+---
+
 ## Session 2026-05-30 18:20 — PG 심사 5종 충족 + 사업자 등록 정보 입력 + 결제 인프라 결정
 
 ### 작업 요약
