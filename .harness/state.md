@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-30 15:59
-## 마지막 업데이트: 2026-05-30 15:59
+## 마지막 실행: 2026-05-30 18:20
+## 마지막 업데이트: 2026-05-30 18:20
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 친구들 배포 + 4문항 인터뷰 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
+- PG 심사 5종 충족 풀스택 완료 + 사업자 등록 정보 4종 입력 완료 (`38cdec1`·`43c25d1`·`f51669d`). 남은 placeholder 1종: 통신판매업 신고번호. mom test 친구 배포는 즉시 가능 (Fake Door는 사업자 등록 전에도 작동).
 
 ### 이어서 할 것
 
-1. **mom test 친구들 배포 + 진단 끝난 친구 인터뷰 4문항** — 가이드: `eduluck/docs/mom-test/interview-guide.md`
-2. **사업자 등록 (홈택스)** + **카카오페이 비즈니스 가입 (1-2주 심사)** + 통신판매업 신고 — mom test 병행
-3. mom test 결과 → Mixpanel funnel + 인터뷰 종합 GO/HOLD/KILL 판정 → 정가 19,900원 confirm → 카카오페이 결제 페이지 구현
+1. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → 신고번호 받으면 `business-info.ts` `ecommerceNumber` 채움
+2. **포트원 PG 사전 점검 재실행** → 5종 통과 → 가맹점 심사 신청 (토스페이먼츠 메인 PG)
+3. **mom test 친구들 배포 + 인터뷰 4문항** — 가이드: `eduluck/docs/mom-test/interview-guide.md`
 
 ### 막힌 것
 
@@ -26,8 +26,9 @@
 
 ### 사람 판단 필요
 
+- 통신판매업 신고 시점 (지금 진행 권장 — mom test 병행, 3-7영업일)
+- 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
 - mom test 친구 배포 시점·표본 구성 (가까운 친구·친구의친구·잘 모르는 어머니 분리 권장)
-- 사업자 등록 시점 (mom test 시작 즈음 권장)
 - CSP Enforce 전환 (1주 모니터링 후, 2026-06-04 권장)
 
 ### 운영 자료
@@ -35,6 +36,9 @@
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 16종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라)
 - **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel (진단 핵심 / PDF 결제 의향 / 확산성)
 - **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표 + 함정 메모
+- **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음
+- **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx` — 한국 SaaS 표준 + 전자상거래법 §17 ② 5호 (다운로드/열람 시점 환불 불가)
+- **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG) — 카카오페이는 토스 안의 결제수단으로 ON
 - **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override — 닉네임만 수집
 - **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5. `lib/paywall/policy.ts` 단일 source
 - **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
@@ -190,15 +194,18 @@
 - [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
 - [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
 - [x] **paywall cap 정책** (`3b463ea` + `e75978a`) — 회원 자녀 5·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
-- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000 분석 + eduluck 정가 19,900원 결정 (mom test 후)
+- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000~ 분석 + eduluck 정가 19,900원 결정 (mom test 후)
 - [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
 - [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐
 - [x] **mom test 측정 인프라 (`2108d49`)** ⭐ — Fake Door 사전 예약 페이지 + PIPA 동의 + cap 도달 이벤트 6종 + PaywallModal 회원 분기 전환 + Part2 PDF 조기 CTA + Mixpanel funnel 3종 dashboard + 인터뷰 가이드
 - [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** — PIPA + Fake Door + cap 6종 prod PASS 박제 ⭐
+- [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐ — BUSINESS_INFO 단일 source + LegalFooter + 정책 3종 페이지 + pdf-preorder 청약철회 동의 + BuildInfoModal 정책 링크
+- [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
+- [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
+- [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
 - [ ] Mom test 친구들 배포 + 인터뷰 4문항 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
-- [ ] 사업자 등록 (홈택스) + 카카오페이 비즈니스 가입 (mom test 병행)
-- [ ] mom test 결과 → 정가 19,900원 confirm → 카카오페이 결제 페이지 구현
+- [ ] mom test 결과 → 정가 19,900원 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
 - [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth/paywall + cap·preorder funnel 추가 완료)
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
@@ -214,3 +221,4 @@
 - [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
 - [ ] Supabase Auth leaked password protection (signup 활성화 시점)
 - [ ] docs/ 문서 "아빠" → "아버지" 일괄 정리 (mom test 영향 ✗) — backlog 2026-05-29
+- [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)

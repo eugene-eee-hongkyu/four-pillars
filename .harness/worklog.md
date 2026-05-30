@@ -19,6 +19,43 @@
 - mom test 결과 수집 후 정가 confirm → 결제 페이지 구현
 
 
+## Session 2026-05-30 18:20 — PG 심사 5종 충족 + 사업자 등록 정보 입력 + 결제 인프라 결정
+
+### 작업 요약
+
+- 결제 PG 선택 의사결정 — 토스페이먼츠 직접 vs 포트원 vs 카카오페이 직심사 비교
+  - 포트원 + 토스페이먼츠 (PG라우터 + 메인 PG) 채택
+  - 이유: 1-2년 후 PG 협상·교체 가능성 + 다중 결제수단 동시 추가
+- 포트원 PG 사전 점검에서 fail 5종 발견 → 5종 풀스택 충족 (`38cdec1`)
+  - `lib/legal/business-info.ts` — 사업자 정보 단일 source (placeholder)
+  - `components/ui/LegalFooter.tsx` — 사업자 정보 5종 + 정책 링크 3종
+  - `app/legal/_layout.tsx` + `terms.tsx` + `privacy.tsx` + `refund.tsx` — 정책 페이지 3종
+    - 약관·개인정보: 한국 SaaS 표준 템플릿 + privacy.go.kr + PIPA §22 (만 14세 미만 법정대리인 동의)
+    - 환불 정책: 전자상거래법 §17 ② 5호 — "다운로드 또는 열람 시점부터 환불 불가" (리디북스·밀리·클래스101·점신·포스텔러 표준)
+  - `pdf-preorder` 청약철회 제한 동의 체크박스 필수 + LegalFooter
+  - `app/index.tsx` 랜딩 LegalFooter
+  - `BuildInfoModal` 정책 링크 3종 추가 — 모든 화면에서 접근
+- 사업자 등록증 (홈택스 발급) 정보 입력 (`43c25d1`)
+  - 상호: 프리머스랩스피티이엘티디
+  - 대표: 박정환
+  - 사업자등록번호: 881-84-00049
+  - 사업장: 서울특별시 강남구 남부순환로359길 14, 3층 D312호
+- 이메일·연락처 확정 (`f51669d`)
+  - email: info@z21labs.xyz
+  - phone: 010-4195-3278 (임시 휴대폰, 회사 유선 확보 시 교체)
+
+### 실패한 시도
+
+- 없음
+
+### 다음 액션
+
+- **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → 신고번호 받으면 `business-info.ts` `ecommerceNumber` 채움 → PG 심사 5종 모두 통과
+- 포트원 PG 사전 점검 재실행 → 신청 진행
+- mom test 친구들 배포 + 인터뷰 4문항 (Fake Door는 사업자 등록 전에도 작동)
+
+---
+
 ## Session 2026-05-30 13:58 — mom test 측정 인프라 (Fake Door + PIPA + cap 이벤트) + e2e 검증 11-16
 
 ### 작업 요약
