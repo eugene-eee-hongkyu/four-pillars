@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-30 13:58
-## 마지막 업데이트: 2026-05-30 13:58
+## 마지막 실행: 2026-05-30 15:59
+## 마지막 업데이트: 2026-05-30 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 측정 인프라 완비 (`2108d49`·`60f6a98`) — Fake Door (사전 예약 페이지) + PIPA 동의 체크박스 + cap 도달 이벤트 6종 + Mixpanel funnel 3종 dashboard + 인터뷰 가이드. e2e prod 검증 6종 PASS 박제 (검증 11-16). 친구들에게 넓게 배포 시작 준비 완료.
+- mom test 친구들 배포 + 4문항 인터뷰 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
 
 ### 이어서 할 것
 
@@ -190,7 +190,7 @@
 - [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
 - [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
 - [x] **paywall cap 정책** (`3b463ea` + `e75978a`) — 회원 자녀 5·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
-- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000~ 분석 + eduluck 정가 19,900원 결정 (mom test 후)
+- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000 분석 + eduluck 정가 19,900원 결정 (mom test 후)
 - [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
 - [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐
 - [x] **mom test 측정 인프라 (`2108d49`)** ⭐ — Fake Door 사전 예약 페이지 + PIPA 동의 + cap 도달 이벤트 6종 + PaywallModal 회원 분기 전환 + Part2 PDF 조기 CTA + Mixpanel funnel 3종 dashboard + 인터뷰 가이드
