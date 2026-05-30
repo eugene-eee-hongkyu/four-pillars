@@ -9,18 +9,19 @@ export const BUSINESS_INFO = {
   serviceName: 'eduluck',
   domain: 'luck.z21labs.world',
 
-  // === 사업자 등록 후 채울 placeholder ===
-  companyName: '[사업자명]',
-  ceoName: '[대표자명]',
-  /** XXX-XX-XXXXX 형식 */
-  businessNumber: '[XXX-XX-XXXXX]',
-  /** 통신판매업 신고번호 (구청 신고 후) — 제2026-XXXXX호 */
-  ecommerceNumber: '[제2026-XXXXX호]',
-  /** 사업장 주소 */
-  address: '[사업장 주소]',
+  // === 사업자 등록증 (홈택스 발급, 2026-05-30) ===
+  companyName: '프리머스랩스피티이엘티디',
+  ceoName: '박정환',
+  businessNumber: '881-84-00049',
+  address: '서울특별시 강남구 남부순환로359길 14, 3층 D312호',
+  // ===================================================
+
+  // === 별도 확보 필요 (통신판매업 신고·회사 대표번호) ===
+  /** 통신판매업 신고번호 (구청 신고 후) — 제2026-XXXXX호 형식 */
+  ecommerceNumber: '[통신판매업 신고 후 입력]',
   /** 고객 문의 전화번호 — 유선 권장 (PG 심사 항목) */
-  phone: '[XXX-XXXX-XXXX]',
-  // ============================================
+  phone: '[회사 대표번호 입력]',
+  // ===================================================
 
   email: 'support@z21labs.world',
 
@@ -32,5 +33,8 @@ export const BUSINESS_INFO = {
 
 /** 사업자 정보가 placeholder인지 확인 (development helper) */
 export function isBusinessInfoPlaceholder(): boolean {
-  return BUSINESS_INFO.companyName.startsWith('[');
+  return (
+    BUSINESS_INFO.ecommerceNumber.startsWith('[') ||
+    BUSINESS_INFO.phone.startsWith('[')
+  );
 }
