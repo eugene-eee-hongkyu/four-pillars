@@ -30,8 +30,8 @@ const ANON_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
 
 const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
   new_child: {
-    title: '🌱 셋째 자녀도 진단해보시려구요?',
-    body: '진심으로 가족을 챙기시는 어머님이네요 💝\n셋째 자녀 진단은 곧 추가될 예정이에요.',
+    title: '🌱 다른 자녀도 진단해보시려구요?',
+    body: '진심으로 가족을 챙기시는 어머님이네요 💝\n추가 자녀 진단은 곧 추가될 예정이에요.',
   },
   deepdive: {
     title: '🔎 더 깊이 보고 싶으신가요?',
