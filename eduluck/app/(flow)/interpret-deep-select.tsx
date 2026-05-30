@@ -3,7 +3,7 @@
 //
 // Paywall 옵션 가: 첫 영역 무료 → 이미 1개 본 후 다른 영역 시도 시 비회원이면 로그인 강제.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +12,7 @@ import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { useFlow } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { isSectionCapReached } from '@/lib/paywall/policy';
+import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 export default function InterpretDeepSelect() {
   const router = useRouter();
@@ -25,6 +26,18 @@ export default function InterpretDeepSelect() {
   const seenSections = Object.keys(state.deepDiveTexts).map(Number);
   // 트리거 2: 영역 cap 도달 시 paywall (비회원 1개, 회원 5개). 이미 본 영역은 캐시 hit 자유 진입.
   const sectionCapReached = isSectionCapReached(seenSections.length, !!user);
+
+  // sessionId 단위 1회만 fire — Mixpanel funnel 정확도
+  const capFiredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (sectionCapReached && state.sessionId && capFiredRef.current !== state.sessionId) {
+      capFiredRef.current = state.sessionId;
+      track(EVENTS.SECTION_CAP_REACHED, {
+        seen_count: seenSections.length,
+        member: !!user,
+      });
+    }
+  }, [sectionCapReached, state.sessionId, seenSections.length, user]);
 
   const handleSelect = (n: number) => {
     // 이미 본 영역은 무료로 다시 보기 가능 (캐시 hit)

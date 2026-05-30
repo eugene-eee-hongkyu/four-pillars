@@ -265,6 +265,29 @@ export default function InterpretPremium() {
                 </Button>
               </View>
             )}
+
+            {/* PDF 사전 예약 조기 CTA — Part2 완료자 중 PDF 가치를 즉시 인지한 어머니의 의향 측정 */}
+            {part2Done && (
+              <View className="px-container-padding mt-3">
+                <Pressable
+                  onPress={() => {
+                    track(EVENTS.PAYWALL_PREORDER_CLICK, { trigger: 'part2_bonus' });
+                    router.push({
+                      pathname: '/(flow)/pdf-preorder' as never,
+                      params: { source: 'part2_bonus' },
+                    } as never);
+                  }}
+                  className="px-card-padding py-4 rounded-md border border-outline-warm bg-surface-container-low items-center gap-1 active:opacity-70"
+                >
+                  <Text className="font-body-bold text-body-md text-text-pri text-center">
+                    📄 20영역 PDF로 받아보고 싶으세요?
+                  </Text>
+                  <Text className="font-body text-label-sm text-text-sub text-center">
+                    정식 출시 시 19,900원 · 사전 예약 시 할인
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </>
         )}
       </ScrollView>

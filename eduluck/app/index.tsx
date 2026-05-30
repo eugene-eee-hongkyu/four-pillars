@@ -7,7 +7,7 @@
 //
 // Paywall 옵션 가: 첫 자녀 무료 → 2번째 자녀부터 카카오 로그인 강제 (비회원만).
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
@@ -52,6 +52,18 @@ export default function Landing() {
       logged_in: !!user,
     });
   }, [hasHistory, state.sessionsHistory.length, user]);
+
+  // 자녀 cap 도달 강력 의향 신호 — deviceId 단위 1회만 fire (재방문 시 중복 X)
+  const childCapFiredRef = useRef(false);
+  useEffect(() => {
+    if (newChildCapReached && !childCapFiredRef.current) {
+      childCapFiredRef.current = true;
+      track(EVENTS.CHILD_CAP_REACHED, {
+        history_count: state.sessionsHistory.length,
+        member: !!user,
+      });
+    }
+  }, [newChildCapReached, state.sessionsHistory.length, user]);
 
   const beginNewSession = async () => {
     setLoading(true);

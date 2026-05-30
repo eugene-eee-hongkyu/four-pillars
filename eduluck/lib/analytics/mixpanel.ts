@@ -115,4 +115,11 @@ export const EVENTS = {
   LOGOUT_CLICK: 'logout_click',
   PAYWALL_VIEW: 'paywall_view',
   PAYWALL_LOGIN_CLICK: 'paywall_login_click',
+  // cap 도달 강력 의향 신호 (회원이 무료 한도까지 다 본 시점)
+  CHILD_CAP_REACHED: 'child_cap_reached',
+  SECTION_CAP_REACHED: 'section_cap_reached',
+  // PDF 사전 예약 Fake Door — mom test 진짜 의향 측정
+  PAYWALL_PREORDER_CLICK: 'paywall_preorder_click',
+  PDF_PREORDER_VIEW: 'pdf_preorder_view',
+  PAYMENT_INFO_SUBMIT: 'payment_info_submit',
 } as const;
