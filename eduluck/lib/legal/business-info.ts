@@ -16,14 +16,15 @@ export const BUSINESS_INFO = {
   address: '서울특별시 강남구 남부순환로359길 14, 3층 D312호',
   // ===================================================
 
-  // === 별도 확보 필요 (통신판매업 신고·회사 대표번호) ===
+  /** 고객 문의 전화번호 — 임시 휴대폰 (회사 유선 확보 시 교체) */
+  phone: '010-4195-3278',
+
+  // === 별도 확보 필요 (통신판매업 신고) ===
   /** 통신판매업 신고번호 (구청 신고 후) — 제2026-XXXXX호 형식 */
   ecommerceNumber: '[통신판매업 신고 후 입력]',
-  /** 고객 문의 전화번호 — 유선 권장 (PG 심사 항목) */
-  phone: '[회사 대표번호 입력]',
-  // ===================================================
+  // ============================================
 
-  email: 'support@z21labs.world',
+  email: 'info@z21labs.xyz',
 
   // 정책 페이지 발효일
   termsEffectiveDate: '2026-05-30',
@@ -33,8 +34,5 @@ export const BUSINESS_INFO = {
 
 /** 사업자 정보가 placeholder인지 확인 (development helper) */
 export function isBusinessInfoPlaceholder(): boolean {
-  return (
-    BUSINESS_INFO.ecommerceNumber.startsWith('[') ||
-    BUSINESS_INFO.phone.startsWith('[')
-  );
+  return BUSINESS_INFO.ecommerceNumber.startsWith('[');
 }
