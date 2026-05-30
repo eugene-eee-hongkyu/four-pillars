@@ -6,6 +6,22 @@
 
 ---
 
+## 2026-05-30: mom test GO/KILL 측정 인프라 — Fake Door + Funnel 분모 + 2라운드 X (단일 라운드)
+
+- **선택**: 사전 예약 페이지 (이름·연락처 입력 마찰) Fake Door + GO/KILL 분모를 funnel 통과자로 + mom test 1라운드 (라운드 분리 X, 친구 넓게).
+- **대안 검토**:
+  - A. **Fake Door 깊이 = 결제 정보 입력 페이지** (선택) — 이름·연락처 입력 마찰 통과율이 진짜 의향. 모달 Yes/No 보다 절반 정도로 떨어지지만 그게 진짜.
+  - B. Fake Door = 모달 Yes/No — 작업 30분, 신호 부풀음.
+  - C. 카카오페이 결제창까지 띄우고 직전 차단 — 카카오페이 심사 전이라 기술적으로 무리.
+- **선택 이유**: A가 *마찰(skin in the game)* 도입으로 진짜 의향 추출 + 사전 예약 명단을 출시 시 알림용으로 자연 활용 가능. 작업 약 3시간.
+- **분모 결정**: 전체 N (예: 10명) 아닌 funnel 단계별 통과자 — `결제 게이트 도달자` 중 결제 의향 비율, `Part2 완독자` 중 PDF CTA 클릭 비율. 제품 매력도 vs 입력 UX 분리 가능.
+- **mom test 라운드**: N=10 한 번 → 한 번에 결정 X (1-2명 차이로 결정 뒤집힘). 사용자 결정: *친구들에게 넓게 보냄*. 표본 카운트 가변(20-50명 예상), funnel %로 판정.
+- **새 BM 반영**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원 (재결제율 가정 따라).
+- **영향 범위**: `supabase/migrations/20260530000000_create_pdf_preorders.sql`·`api/pdf-preorder.ts`·`app/(flow)/pdf-preorder.tsx`·`components/PaywallModal.tsx`·`app/(flow)/interpret-premium.tsx`·`app/(flow)/family-input.tsx`·`app/index.tsx`·`app/(flow)/interpret-deep-select.tsx`·`lib/analytics/mixpanel.ts`·`docs/mom-test/interview-guide.md`·`.harness/e2e-playbook.md` 검증 11-16.
+- **되돌리는 방법**: PaywallModal 회원 분기를 placeholder로 복원 (commit `2108d49` 직전 상태). Fake Door 페이지·이벤트·DB 테이블 삭제 가능 (RLS 활성, 데이터 손실 X — 사전 예약 명단만 사라짐). PIPA 동의 체크박스는 법규상 유지 권장.
+
+---
+
 ## 2026-05-30: paywall 회원 자녀 cap 2 → 5 (다자녀 가구 cover)
 
 - **선택**: 회원 자녀 cap 2명 → **5명** (commit `e75978a`). 영역 cap 5는 유지. PaywallModal new_child 메시지 일반화 ("셋째" → "다른").

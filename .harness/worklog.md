@@ -6,6 +6,47 @@
 
 ---
 
+## Session 2026-05-30 13:58 — mom test 측정 인프라 (Fake Door + PIPA + cap 이벤트) + e2e 검증 11-16
+
+### 작업 요약
+
+- mom test GO/KILL 지표 정리 (3사 AI 답변 비교 → 통합안)
+  - North Star: Meaningful Diagnosis Rate (MDR Core + Premium Intent 분리)
+  - 분모를 funnel 통과자로 (전체 N 아닌 단계별)
+  - mom test N=10 카운트로 GO/KILL 표 + 인터뷰 4문항
+  - eduluck flow에 맞게 일반론 보정 (저장·공유 중심 X, 어머니 사주 정밀 진단 결제 funnel 중심)
+- 새 BM 반영 — 자녀 5명·영역 5개까지 무료 / 그 이상 유료 PDF (20영역 + 추가 기능 19,900원)
+- mom test 측정 인프라 풀스택 (`2108d49`)
+  - `pdf_preorders` Supabase 테이블 + RLS + `/api/pdf-preorder` POST
+  - `/pdf-preorder` 페이지 (Fake Door — 이름·연락처 입력 마찰 + 4 source 분기)
+  - PaywallModal 회원 placeholder → PDF 사전 예약 CTA로 전환
+  - Part2 완료 후 PDF 조기 CTA (Part2 완독자 즉시 의향 측정)
+  - PIPA 14조 법정대리인 동의 체크박스 (자녀 정보 입력 필수)
+  - Mixpanel 이벤트 6종 신규 (`CHILD_CAP_REACHED`·`SECTION_CAP_REACHED`·`PAYWALL_PREORDER_CLICK`·`PDF_PREORDER_VIEW`·`PAYMENT_INFO_SUBMIT`)
+  - Mixpanel funnel 3종 dashboard 생성 (https://mixpanel.com/project/4028508/app/boards#id=11235075)
+  - mom test 인터뷰 가이드 + GO/HOLD/KILL 판정표 (`eduluck/docs/mom-test/interview-guide.md`)
+- e2e-playbook 검증 11-16 추가 (`60f6a98`)
+  - 검증 11-12: PIPA 동의 (LLM 비용 0)
+  - 검증 13-14: Part2 PDF CTA + 사전 예약 제출 (LLM ~$0.10)
+  - 검증 15: 영역 cap (localStorage 주입, LLM 0)
+  - 검증 16: 자녀 cap (localStorage 주입, LLM 0)
+  - 6종 모두 prod에서 PASS 확인 후 박제
+  - Mixpanel 검증 방식: `window.mixpanel` 미노출 (module-scoped import) → network capture (api-js.mixpanel.com/track) + URL-decoded JSON body
+- LTV/CAC 정리 — 새 BM 기준 보수 6,633원 / 중간 9,950원 / 적극 15,000원 (재결제율 가정 따라)
+
+### 실패한 시도
+
+- Mixpanel spy 첫 시도 `window.mixpanel.track` 후킹 실패 — module-scoped로 노출 X. Network capture로 전환.
+- 검증 15·16의 회원(`isMember=true`) PaywallModal 분기 직접 prod 검증 X — 카카오 OAuth 어려움. /pdf-preorder source 분기 직접 navigate + 코드 인스펙션으로 대체.
+
+### 다음 액션
+
+- **mom test 10명 모집·진행** — 인프라 완비 (Fake Door + 이벤트 + 인터뷰 가이드)
+- mom test 병행: 사업자 등록 + 카카오페이 비즈니스 가입 (1-2주 심사)
+- mom test 결과 → §1 MDR + payment_info_submit 비율 → 정가 19,900원 confirm → 카카오페이 결제 페이지 구현
+
+---
+
 ## Session 2026-05-30 10:36 — paywall 회원 자녀 cap 2 → 5
 
 ### 작업 요약

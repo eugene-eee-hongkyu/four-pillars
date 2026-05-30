@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-30 10:36
-## 마지막 업데이트: 2026-05-30 10:36
+## 마지막 실행: 2026-05-30 13:58
+## 마지막 업데이트: 2026-05-30 13:58
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 즉시 시작 가능 상태 — paywall cap (회원 자녀 **5** + 영역 5) + 부모 자동 로드 + 어휘 통일 + 정가 19,900원 결정 (mom test 후 카카오페이 결제 도입). 자녀 cap 5 = 3자녀 가족까지 자연 cover. 결제 인프라는 mom test 병행 사업자 등록 + 카카오페이 비즈니스 가입.
+- mom test 측정 인프라 완비 (`2108d49`·`60f6a98`) — Fake Door (사전 예약 페이지) + PIPA 동의 체크박스 + cap 도달 이벤트 6종 + Mixpanel funnel 3종 dashboard + 인터뷰 가이드. e2e prod 검증 6종 PASS 박제 (검증 11-16). 친구들에게 넓게 배포 시작 준비 완료.
 
 ### 이어서 할 것
 
-1. **mom test 10명 모집·진행** — 인프라 완비 (카카오 로그인 + paywall cap + 자동 로드 + 어휘 통일)
-2. mom test 병행: **사업자 등록 (홈택스)** + **카카오페이 비즈니스 가입 (1-2주 심사)** + 통신판매업 신고
-3. mom test 결과 → Q11 가격 응답 + cap 도달 비율 → 정가 확정 → 카카오페이 결제 페이지 구현
+1. **mom test 친구들 배포 + 진단 끝난 친구 인터뷰 4문항** — 가이드: `eduluck/docs/mom-test/interview-guide.md`
+2. **사업자 등록 (홈택스)** + **카카오페이 비즈니스 가입 (1-2주 심사)** + 통신판매업 신고 — mom test 병행
+3. mom test 결과 → Mixpanel funnel + 인터뷰 종합 GO/HOLD/KILL 판정 → 정가 19,900원 confirm → 카카오페이 결제 페이지 구현
 
 ### 막힌 것
 
@@ -26,17 +26,19 @@
 
 ### 사람 판단 필요
 
-- Mom test 10명 모집·시점 결정
+- mom test 친구 배포 시점·표본 구성 (가까운 친구·친구의친구·잘 모르는 어머니 분리 권장)
 - 사업자 등록 시점 (mom test 시작 즈음 권장)
-- CSP Enforce 전환 (1주 모니터링 후)
+- CSP Enforce 전환 (1주 모니터링 후, 2026-06-04 권장)
 
 ### 운영 자료
 
-- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (10종 검증, 약 10-12분, $0.20)
-- **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 + auth/paywall 5 EVENTS 추가
-- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override (skipBrowserRedirect + URL scope 직접 교체) — 닉네임만 수집
-- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 **5**·영역 5. `lib/paywall/policy.ts` 단일 source
-- **정가 (mom test 후 출시)**: 19,900원 (한국 PSI + 사주아이 990원 대비 20배 가치 정당)
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 16종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라)
+- **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel (진단 핵심 / PDF 결제 의향 / 확산성)
+- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표 + 함정 메모
+- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override — 닉네임만 수집
+- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5. `lib/paywall/policy.ts` 단일 source
+- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
+- **사전 예약 명단**: Supabase `pdf_preorders` 테이블 — 출시 시 알림용 + 의향 신호 (RLS active)
 
 ### 백로그 요약
 
@@ -191,11 +193,13 @@
 - [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000~ 분석 + eduluck 정가 19,900원 결정 (mom test 후)
 - [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
 - [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐
+- [x] **mom test 측정 인프라 (`2108d49`)** ⭐ — Fake Door 사전 예약 페이지 + PIPA 동의 + cap 도달 이벤트 6종 + PaywallModal 회원 분기 전환 + Part2 PDF 조기 CTA + Mixpanel funnel 3종 dashboard + 인터뷰 가이드
+- [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** — PIPA + Fake Door + cap 6종 prod PASS 박제 ⭐
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] Mom test 10명 모집·진행 → 자체 form + funnel + 카카오 로그인 데이터 동시 누적
+- [ ] Mom test 친구들 배포 + 인터뷰 4문항 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
 - [ ] 사업자 등록 (홈택스) + 카카오페이 비즈니스 가입 (mom test 병행)
-- [ ] mom test 결과 정량·정성 종합 → 정가 19,900원 확정 → 카카오페이 결제 페이지 구현
-- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth/paywall funnel 추가 완료)
+- [ ] mom test 결과 → 정가 19,900원 confirm → 카카오페이 결제 페이지 구현
+- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth/paywall + cap·preorder funnel 추가 완료)
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
 - [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
