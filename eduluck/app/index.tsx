@@ -109,7 +109,8 @@ export default function Landing() {
   if (hasHistory) {
     return (
       <View className="flex-1 bg-surface">
-        <ScrollView contentContainerClassName="px-container-padding pt-6 pb-32 gap-6">
+        <ScrollView contentContainerClassName="flex-grow pt-6 pb-32">
+        <View className="px-container-padding gap-6">
           <View className="gap-2 mt-2">
             <Text className="font-heading-bold text-display-sm text-text-pri">
               📂 이전에 본 진단
@@ -155,8 +156,12 @@ export default function Landing() {
               <Toast kind="error" message={`시작 실패: ${error}`} />
             </View>
           )}
+        </View>
 
-          <LegalFooter />
+        {/* spacer — 짧은 콘텐츠일 때 푸터를 화면 끝으로 밀어내기 */}
+        <View className="flex-1 min-h-[40px]" />
+
+        <LegalFooter />
         </ScrollView>
 
         <StickyCTA>
