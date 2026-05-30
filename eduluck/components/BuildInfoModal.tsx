@@ -8,6 +8,7 @@
 // VersionFooter (우측 하단 박힘) 대체. 평소엔 안 보임, 클릭으로만 접근.
 
 import { Modal, View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/flow/context';
 
 const GIT_SHA = (process.env.EXPO_PUBLIC_GIT_SHA ?? '').slice(0, 7);
@@ -33,8 +34,14 @@ function buildMajorMinor(version: string): string {
 }
 
 export function BuildInfoModal({ visible, onClose }: Props) {
+  const router = useRouter();
   const buildTime = formatBuildTime(BUILD_NUMBER);
   const displayVersion = buildMajorMinor(PREMIUM_PROMPT_VERSION);
+
+  const navTo = (path: string) => () => {
+    onClose();
+    router.push(path as never);
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -46,6 +53,20 @@ export function BuildInfoModal({ visible, onClose }: Props) {
             <Row label="버전" value={displayVersion} />
             {buildTime && <Row label="빌드 시각" value={buildTime} />}
             {GIT_SHA && <Row label="커밋" value={GIT_SHA} />}
+          </View>
+
+          {/* 법적 정책 링크 — 모든 화면에서 접근 가능 (PG 심사 + 사용자 권리) */}
+          <View className="gap-1 mt-3 pt-3 border-t border-outline-warm">
+            <Text className="font-body text-label-sm text-text-sub mb-1">정책</Text>
+            <Pressable accessibilityRole="link" onPress={navTo('/legal/terms')} className="py-1.5">
+              <Text className="font-body text-body-md text-text-pri">이용약관</Text>
+            </Pressable>
+            <Pressable accessibilityRole="link" onPress={navTo('/legal/privacy')} className="py-1.5">
+              <Text className="font-body text-body-md text-text-pri">개인정보처리방침</Text>
+            </Pressable>
+            <Pressable accessibilityRole="link" onPress={navTo('/legal/refund')} className="py-1.5">
+              <Text className="font-body text-body-md text-text-pri">환불 정책</Text>
+            </Pressable>
           </View>
 
           <Pressable

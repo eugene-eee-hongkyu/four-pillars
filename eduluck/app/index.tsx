@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
+import { LegalFooter } from '@/components/ui/LegalFooter';
 import { PaywallModal } from '@/components/PaywallModal';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -154,6 +155,8 @@ export default function Landing() {
               <Toast kind="error" message={`시작 실패: ${error}`} />
             </View>
           )}
+
+          <LegalFooter />
         </ScrollView>
 
         <StickyCTA>
@@ -180,28 +183,32 @@ export default function Landing() {
   return (
     <View className="flex-1 bg-surface">
       <ScrollView
-        contentContainerClassName="flex-1 items-center justify-center px-container-padding gap-6"
+        contentContainerClassName="px-container-padding pb-32 gap-6"
       >
-        <Text className="font-heading-bold text-display-lg text-text-pri text-center leading-tight mt-2">
-          사주에 없는 길은{'\n'}가지 않아도 됩니다
-        </Text>
+        <View className="flex-1 items-center justify-center gap-6 pt-12 min-h-[60vh]">
+          <Text className="font-heading-bold text-display-lg text-text-pri text-center leading-tight mt-2">
+            사주에 없는 길은{'\n'}가지 않아도 됩니다
+          </Text>
 
-        <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed mt-2">
-          정통 만세력으로 보는 학교·전공·학습 시기.{'\n'}
-          엄마가 일찍 알면, 가야할 길이 보입니다.
-        </Text>
+          <Text className="font-body text-body-lg text-text-sub text-center leading-relaxed mt-2">
+            정통 만세력으로 보는 학교·전공·학습 시기.{'\n'}
+            엄마가 일찍 알면, 가야할 길이 보입니다.
+          </Text>
 
-        <View className="gap-3 mt-6 items-center">
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 학년대별 학운 흐름</Text>
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 어머니와의 합·푸시 시기</Text>
-          <Text className="font-body text-body-md text-text-sub text-center">◆ 학원·전공·과목 맞춤 가이드</Text>
+          <View className="gap-3 mt-6 items-center">
+            <Text className="font-body text-body-md text-text-sub text-center">◆ 학년대별 학운 흐름</Text>
+            <Text className="font-body text-body-md text-text-sub text-center">◆ 어머니와의 합·푸시 시기</Text>
+            <Text className="font-body text-body-md text-text-sub text-center">◆ 학원·전공·과목 맞춤 가이드</Text>
+          </View>
+
+          {error && (
+            <View className="w-full max-w-md mt-4">
+              <Toast kind="error" message={`시작 실패: ${error}`} />
+            </View>
+          )}
         </View>
 
-        {error && (
-          <View className="w-full max-w-md mt-4">
-            <Toast kind="error" message={`시작 실패: ${error}`} />
-          </View>
-        )}
+        <LegalFooter />
       </ScrollView>
 
       <StickyCTA>

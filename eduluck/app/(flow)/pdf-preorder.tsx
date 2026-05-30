@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
+import { LegalFooter } from '@/components/ui/LegalFooter';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
@@ -47,13 +48,16 @@ export default function PdfPreorder() {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [marketingConsent, setMarketingConsent] = useState(true);
+  // 전자상거래법 §17 ② 5호 — 디지털 콘텐츠 청약철회 제한 사전 동의 (필수).
+  // 정식 결제 도입 전 사전 예약 단계지만, 사용자가 정책을 인지하도록 미리 노출.
+  const [refundConsent, setRefundConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(
-    () => name.trim().length > 0 && isValidContact(contact),
-    [name, contact],
+    () => name.trim().length > 0 && isValidContact(contact) && refundConsent,
+    [name, contact, refundConsent],
   );
 
   useEffect(() => {
@@ -177,11 +181,50 @@ export default function PdfPreorder() {
             hint="출시 안내를 받으실 곳이에요"
           />
 
+          {/* 청약철회 제한 동의 (필수) — 정식 결제 도입 시 그대로 사용. 전자상거래법 §17 ② 5호 */}
+          <Pressable
+            onPress={() => setRefundConsent(!refundConsent)}
+            className="flex-row items-start gap-3 p-3 rounded-md border-2 border-primary bg-secondary-container/30"
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: refundConsent }}
+            accessibilityLabel="청약철회 제한 동의"
+          >
+            <View
+              className={`w-5 h-5 rounded border-2 ${
+                refundConsent ? 'bg-primary border-primary' : 'border-primary bg-surface'
+              } items-center justify-center mt-0.5`}
+            >
+              {refundConsent && (
+                <Text className="font-body-bold text-label-sm text-surface-container-low">✓</Text>
+              )}
+            </View>
+            <View className="flex-1">
+              <Text className="font-body-bold text-label-md text-text-pri leading-relaxed">
+                청약철회 제한 동의 (필수)
+              </Text>
+              <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
+                정식 출시 후 결제 시 PDF는 디지털 콘텐츠로,{'\n'}
+                다운로드 또는 열람 시점부터 환불이 제한됩니다.{'\n'}
+                <Text
+                  className="font-body-bold text-primary underline"
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    router.push('/legal/refund' as never);
+                  }}
+                >
+                  환불 정책 자세히 보기
+                </Text>
+              </Text>
+            </View>
+          </Pressable>
+
+          {/* 마케팅 수신 동의 (선택) */}
           <Pressable
             onPress={() => setMarketingConsent(!marketingConsent)}
             className="flex-row items-start gap-3 p-3 rounded-md border border-outline-warm bg-surface-container-low"
             accessibilityRole="checkbox"
             accessibilityState={{ checked: marketingConsent }}
+            accessibilityLabel="마케팅 수신 동의"
           >
             <View
               className={`w-5 h-5 rounded border-2 ${
@@ -193,7 +236,7 @@ export default function PdfPreorder() {
               )}
             </View>
             <Text className="flex-1 font-body text-label-md text-text-pri leading-relaxed">
-              정식 출시·할인·신규 기능 안내 수신에 동의합니다
+              정식 출시·할인·신규 기능 안내 수신에 동의합니다 (선택)
             </Text>
           </Pressable>
         </View>
@@ -204,6 +247,8 @@ export default function PdfPreorder() {
           ⚠️ 지금은 사전 예약만 받고 있어요.{'\n'}
           결제는 정식 출시 후 별도 안내드립니다.
         </Text>
+
+        <LegalFooter />
       </ScrollView>
 
       <StickyCTA>
