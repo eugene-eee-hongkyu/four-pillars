@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-29 20:31
-## 마지막 업데이트: 2026-05-29 20:31
+## 마지막 실행: 2026-05-30 10:36
+## 마지막 업데이트: 2026-05-30 10:36
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- mom test 즉시 시작 가능 상태 — paywall cap (회원 자녀 2 + 영역 5) + "아빠" → "아버지" 통일 + 부모 사주 자동 로드 (snapshot fallback) + 정가 19,900원 결정 (mom test 후 카카오페이 결제 도입). 결제 인프라는 mom test 병행 사업자 등록 + 카카오페이 비즈니스 가입으로 1-2주 내 준비.
+- mom test 즉시 시작 가능 상태 — paywall cap (회원 자녀 **5** + 영역 5) + 부모 자동 로드 + 어휘 통일 + 정가 19,900원 결정 (mom test 후 카카오페이 결제 도입). 자녀 cap 5 = 3자녀 가족까지 자연 cover. 결제 인프라는 mom test 병행 사업자 등록 + 카카오페이 비즈니스 가입.
 
 ### 이어서 할 것
 
@@ -35,7 +35,7 @@
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — "e2e 검증", "playbook 따라", "prod 검증" 요청 시 따른다 (10종 검증, 약 10-12분, $0.20)
 - **Mixpanel MCP**: OAuth 인증 완료, eduluck (4028508) Lexicon 정비 + auth/paywall 5 EVENTS 추가
 - **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) + scope override (skipBrowserRedirect + URL scope 직접 교체) — 닉네임만 수집
-- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 2·영역 5. `lib/paywall/policy.ts` 단일 source
+- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 **5**·영역 5. `lib/paywall/policy.ts` 단일 source
 - **정가 (mom test 후 출시)**: 19,900원 (한국 PSI + 사주아이 990원 대비 20배 가치 정당)
 
 ### 백로그 요약
@@ -187,7 +187,7 @@
 - [x] **UX round 2** (`8eb7003`) — 헤더 ⓘ → 푸터 ⓘ + 회원 닉네임 드롭다운 + 상단 홈버튼 정리
 - [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
 - [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
-- [x] **paywall cap 정책** (`3b463ea`) — 회원 자녀 2·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
+- [x] **paywall cap 정책** (`3b463ea` + `e75978a`) — 회원 자녀 5·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
 - [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000~ 분석 + eduluck 정가 19,900원 결정 (mom test 후)
 - [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
 - [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐

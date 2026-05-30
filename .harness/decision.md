@@ -6,6 +6,20 @@
 
 ---
 
+## 2026-05-30: paywall 회원 자녀 cap 2 → 5 (다자녀 가구 cover)
+
+- **선택**: 회원 자녀 cap 2명 → **5명** (commit `e75978a`). 영역 cap 5는 유지. PaywallModal new_child 메시지 일반화 ("셋째" → "다른").
+- **대안 검토**:
+  - A. **5명** (선택) — 다자녀 가구 (3-5자녀, 약 5%) 도 cover. 사용자 친화도 ↑.
+  - B. 2명 (이전 정책) — 평균 가구 cover (1-2자녀 = 95%+) + 3자녀+ 가구 friction. mom test 신호는 강함 (paywall 도달 다자녀 가구만).
+  - C. 3명 — 중간. 3자녀 가구까지 cover. 4-5자녀는 소수.
+  - D. 무제한 — paywall 도달 0. mom test 신호 ✗. 결제 전환 동기 ✗.
+- **선택 이유**: 사용자 결정 — 다자녀 가구 (4-5명 자녀) 도 자연 cover 하는 게 사용자 친화도 우선. mom test 단계엔 paywall 도달 신호가 약해지지만 (cap 5 도달 가구 거의 없음), 가치 인식·결제 전환은 영역 cap 5 도달이 메인 신호로 충분. 자녀 cap 은 mom test 후 결제 가격 정책 조정 시 재검토.
+- **영향 범위**: `lib/paywall/policy.ts` 1줄 (CAP.member.children 5) + `components/PaywallModal.tsx` 메시지 2줄. helper 함수·UI 자동 반영. e2e 검증 생략 (코드 1줄 변경).
+- **되돌리는 방법**: `CAP.member.children` 값 변경 1줄. PaywallModal 메시지 원복.
+
+---
+
 ## 2026-05-29: paywall cap — 회원도 자녀 2 + 영역 5 cap 적용 (이전 무제한 → cap)
 
 - **선택**: 회원 cap 추가 — 자녀 2명 + 영역 5개. cap 도달 시 placeholder ("곧 추가 예정") + 닫기 (commit `3b463ea`). 다음 단계 결제 모달로 교체 예정.
