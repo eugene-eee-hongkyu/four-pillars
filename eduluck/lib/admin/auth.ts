@@ -10,7 +10,7 @@
 //
 // 서버 only. service_role key 사용해 RLS 우회.
 
-import { getSupabaseServer } from '@/lib/supabase/server';
+import { getSupabaseServer } from '../supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type AdminRole = 'admin' | 'super_admin';
