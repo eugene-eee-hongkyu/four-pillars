@@ -26,6 +26,12 @@ interface DirectionEntry {
 
 interface ManseJson {
   directions?: DirectionEntry[];
+  /** V14·V15 raw 점수 5종 — directions와 별개 산출 */
+  artsScore?: number;
+  abroadScore?: number;
+  medicalScore?: number;
+  researchScore?: number;
+  publicForceScore?: number;
   [k: string]: unknown;
 }
 
@@ -151,9 +157,12 @@ function projectRow(
     }
   }
 
-  // 학운 라벨·티어 — calculateFinalTierV2 호출 (manse_json엔 직접 저장 X)
-  let hagunLabel: string | null = null;
-  let primaryTier: number | null = null;
+  // 학운 점수·티어 — calculateFinalTierV2 호출 (manse_json엔 직접 저장 X)
+  // finalScore: hagunScore + parentAdjust × 10 (0-100 정규화 기반, 1-1 통과 시 100 초과 가능)
+  // subTier: "1-2", "3-3" 등 (primaryTier-subStep 결합)
+  let hagunScore: number | null = null;
+  let finalScore: number | null = null;
+  let subTier: string | null = null;
   try {
     const childManse = r.manse_json as unknown as ManseResult;
     if (childManse) {
@@ -162,12 +171,22 @@ function projectRow(
         motherManse: parents?.mother ?? null,
         fatherManse: parents?.father ?? null,
       });
-      hagunLabel = tier.hagunLabel;
-      primaryTier = tier.primaryTier;
+      hagunScore = Math.round(tier.hagunScore * 10) / 10;
+      finalScore = Math.round(tier.finalScore * 10) / 10;
+      subTier = tier.subTier;
     }
   } catch {
     // 학운 계산 실패 (옛 schema·누락 필드 등) — null로 표시
   }
+
+  // raw 5종 점수 (V14·V15) — UI directions에 일부 반영되지만 calibration용 raw도 표시
+  const rawScores = {
+    arts: typeof manse.artsScore === 'number' ? manse.artsScore : null,
+    abroad: typeof manse.abroadScore === 'number' ? manse.abroadScore : null,
+    medical: typeof manse.medicalScore === 'number' ? manse.medicalScore : null,
+    research: typeof manse.researchScore === 'number' ? manse.researchScore : null,
+    publicForce: typeof manse.publicForceScore === 'number' ? manse.publicForceScore : null,
+  };
 
   return {
     id: r.id,
@@ -182,9 +201,11 @@ function projectRow(
     birthHour: r.birth_hour,
     birthMinute: r.birth_minute,
     birthLocation: unmask ? r.birth_location : maskLocation(r.birth_location),
-    hagunLabel,
-    primaryTier: primaryTier !== null ? String(primaryTier) : null,
+    hagunScore,
+    finalScore,
+    subTier,
     directionScores,
+    rawScores,
     createdAt: r.created_at,
   };
 }
