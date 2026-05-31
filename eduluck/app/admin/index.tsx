@@ -62,7 +62,12 @@ export default function AdminLogin() {
 
           <View className="w-full max-w-md mt-6 gap-3">
             <GoogleLoginButton redirectPath="/admin/subjects" />
-            <KakaoLoginButton source="landing" size="lg" redirectPath="/admin/subjects" />
+            <KakaoLoginButton
+              source="landing"
+              size="lg"
+              redirectPath="/admin/subjects"
+              requireEmail
+            />
           </View>
 
           <Text className="font-body text-label-sm text-text-sub text-center max-w-md leading-relaxed mt-4">

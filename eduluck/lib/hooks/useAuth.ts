@@ -21,8 +21,12 @@ interface UseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
   error: Error | null;
-  /** 카카오 로그인. redirectPath 지정 시 callback 후 해당 경로로 이동 */
-  login: (redirectPath?: string) => Promise<void>;
+  /**
+   * 카카오 로그인.
+   * @param redirectPath callback 후 이동 경로
+   * @param requireEmail true 시 account_email scope 추가 — admin 로그인용 (일반 사용자 default false)
+   */
+  login: (redirectPath?: string, requireEmail?: boolean) => Promise<void>;
   /** Google 로그인 (admin) */
   loginWithGoogle: (redirectPath?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -71,7 +75,7 @@ export function useAuth(): UseAuthReturn {
     };
   }, []);
 
-  const login = useCallback(async (redirectPath?: string) => {
+  const login = useCallback(async (redirectPath?: string, requireEmail = false) => {
     setError(null);
     if (typeof window === 'undefined') return;
     // redirectPath 지정 시 sessionStorage에 박아서 callback에서 분기 (Google OAuth와 동일 패턴)
@@ -88,7 +92,8 @@ export function useAuth(): UseAuthReturn {
     // 일반 앱은 account_email 비즈 검수 필요 → KOE205. options.scopes 는 append 만 됨.
     //
     // 우회: skipBrowserRedirect 로 OAuth URL 만 받아온 뒤 scope 파라미터를 직접 교체.
-    // Supabase 의 state·redirect_uri 는 그대로 유지되어 콜백 검증 통과.
+    // - 일반 사용자: profile_nickname (이메일 부담 X)
+    // - admin (requireEmail=true): profile_nickname + account_email (admin_users 매핑용)
     const { data, error: err } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: { redirectTo, skipBrowserRedirect: true },
@@ -99,7 +104,8 @@ export function useAuth(): UseAuthReturn {
     }
     if (data?.url) {
       const url = new URL(data.url);
-      url.searchParams.set('scope', 'profile_nickname');
+      const scope = requireEmail ? 'profile_nickname account_email' : 'profile_nickname';
+      url.searchParams.set('scope', scope);
       window.location.href = url.toString();
     }
   }, []);

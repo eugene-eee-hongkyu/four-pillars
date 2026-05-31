@@ -13,9 +13,16 @@ interface Props {
   size?: 'lg' | 'md';
   /** 로그인 후 이동 경로 (admin 페이지 등) — 기본 '/' */
   redirectPath?: string;
+  /** true 시 account_email scope 요청 — admin 로그인용 (admin_users 이메일 매핑 필수) */
+  requireEmail?: boolean;
 }
 
-export function KakaoLoginButton({ source = 'landing', size = 'md', redirectPath }: Props) {
+export function KakaoLoginButton({
+  source = 'landing',
+  size = 'md',
+  redirectPath,
+  requireEmail = false,
+}: Props) {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +31,7 @@ export function KakaoLoginButton({ source = 'landing', size = 'md', redirectPath
     setLoading(true);
     track(source === 'landing' ? EVENTS.LOGIN_CLICK : EVENTS.PAYWALL_LOGIN_CLICK, { source });
     try {
-      await login(redirectPath);
-      // 성공 시 카카오로 redirect — 이 컴포넌트 unmount 됨. setLoading(false) 불필요.
+      await login(redirectPath, requireEmail);
     } catch {
       setLoading(false);
     }
