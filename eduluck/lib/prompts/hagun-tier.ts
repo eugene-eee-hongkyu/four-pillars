@@ -36,7 +36,7 @@
 // 명리 출처: 자평진전·적천수·삼명통회·연해자평·다시 배우는 사주명리·sajustudy·healerlee
 // 13명 정합: 7명 gap 0 / 4명 gap 1-3 / 2명 외부변수 fit (영진은 사주 학자형 ✗, 재원은 ground truth 미확정)
 
-import type { ManseResult } from '@/lib/manse/engine';
+import type { ManseResult } from '../manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
 
 // unsung.ts와 일관성: STRONG_STAGES + WEAK_STAGES 분류 그대로.

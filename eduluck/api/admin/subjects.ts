@@ -3,25 +3,29 @@
 // 응답:
 //   { subjects: SubjectRow[], page: number, totalCount: number, hasNext: boolean }
 //
-// SubjectRow는 manse_json에서 hagunLabel·primaryTier·directions(8 카테고리 점수) 펼침.
+// SubjectRow는 manse_json.directions(11 카테고리 normalized 점수) + calculateFinalTierV2 계산값.
+// hagunLabel·primaryTier는 manse_json에 없고 함수로 계산 (어머니/아버지 subjects도 같은 session에서 fetch).
 // unmask=0이면 nickname·birth_location 마스킹 적용. unmask=1이면 풀 노출 + audit log.
 
 import { verifyAdminRequest, logAdminAction } from '../../lib/admin/auth';
 import { maskName, maskLocation, shouldUnmask } from '../../lib/admin/mask';
+import { calculateFinalTierV2 } from '../../lib/prompts/hagun-tier';
+import type { ManseResult } from '../../lib/manse/engine';
 
 const PAGE_SIZE = 50;
 
 interface DirectionEntry {
   key: string;
-  score: number;
-  rank: number;
+  /** UI 정규화 점수 0-100 (실제 키: normalized) */
+  normalized?: number;
+  total?: number;
+  level?: string;
+  normalizedLevel?: string;
   label?: string;
 }
 
 interface ManseJson {
-  hagunSigners?: { hagunLabel?: string; primaryTier?: string };
   directions?: DirectionEntry[];
-  studentTraits?: Record<string, unknown>;
   [k: string]: unknown;
 }
 
@@ -88,7 +92,26 @@ export async function GET(request: Request) {
   }
 
   const rows = (data ?? []) as SubjectRow[];
-  const subjects = rows.map((r) => projectRow(r, unmask));
+
+  // 학운 계산용으로 같은 session의 mother/father subjects 일괄 fetch.
+  // 효율: 한 쿼리로 N개 session의 mother/father subjects 가져와 메모리 join.
+  const sessionIds = Array.from(new Set(rows.map((r) => r.session_id)));
+  const parentMap = new Map<string, { mother: ManseResult | null; father: ManseResult | null }>();
+  if (sessionIds.length > 0) {
+    const { data: parents } = await sb
+      .from('subjects')
+      .select('session_id, role, manse_json')
+      .in('session_id', sessionIds)
+      .in('role', ['mother', 'father']);
+    for (const p of parents ?? []) {
+      const cur = parentMap.get(p.session_id) ?? { mother: null, father: null };
+      if (p.role === 'mother') cur.mother = p.manse_json as ManseResult;
+      if (p.role === 'father') cur.father = p.manse_json as ManseResult;
+      parentMap.set(p.session_id, cur);
+    }
+  }
+
+  const subjects = rows.map((r) => projectRow(r, unmask, parentMap.get(r.session_id)));
 
   // audit log — search은 별도 action, 일반 list와 분리
   await logAdminAction(
@@ -111,18 +134,39 @@ export async function GET(request: Request) {
   });
 }
 
-/** SubjectRow → 프론트에 보낼 형태로 가공 (마스킹·directions 평탄화) */
-function projectRow(r: SubjectRow, unmask: boolean) {
+/** SubjectRow → 프론트에 보낼 형태로 가공 (마스킹·directions 평탄화·학운 계산) */
+function projectRow(
+  r: SubjectRow,
+  unmask: boolean,
+  parents: { mother: ManseResult | null; father: ManseResult | null } | undefined,
+) {
   const manse = r.manse_json ?? {};
-  const hagunSigners = (manse.hagunSigners as Record<string, unknown> | undefined) ?? {};
   const directions = (manse.directions ?? []) as DirectionEntry[];
 
-  // directions를 key→score 객체로 변환 (8 카테고리 컬럼 펼침용)
+  // directions를 key→normalized 객체로 변환 (실제 데이터 키는 normalized)
   const directionScores: Record<string, number> = {};
   for (const d of directions) {
-    if (d && typeof d.key === 'string' && typeof d.score === 'number') {
-      directionScores[d.key] = d.score;
+    if (d && typeof d.key === 'string' && typeof d.normalized === 'number') {
+      directionScores[d.key] = d.normalized;
     }
+  }
+
+  // 학운 라벨·티어 — calculateFinalTierV2 호출 (manse_json엔 직접 저장 X)
+  let hagunLabel: string | null = null;
+  let primaryTier: number | null = null;
+  try {
+    const childManse = r.manse_json as unknown as ManseResult;
+    if (childManse) {
+      const tier = calculateFinalTierV2({
+        childManse,
+        motherManse: parents?.mother ?? null,
+        fatherManse: parents?.father ?? null,
+      });
+      hagunLabel = tier.hagunLabel;
+      primaryTier = tier.primaryTier;
+    }
+  } catch {
+    // 학운 계산 실패 (옛 schema·누락 필드 등) — null로 표시
   }
 
   return {
@@ -138,8 +182,8 @@ function projectRow(r: SubjectRow, unmask: boolean) {
     birthHour: r.birth_hour,
     birthMinute: r.birth_minute,
     birthLocation: unmask ? r.birth_location : maskLocation(r.birth_location),
-    hagunLabel: (hagunSigners.hagunLabel as string | undefined) ?? null,
-    primaryTier: (hagunSigners.primaryTier as string | undefined) ?? null,
+    hagunLabel,
+    primaryTier: primaryTier !== null ? String(primaryTier) : null,
     directionScores,
     createdAt: r.created_at,
   };
