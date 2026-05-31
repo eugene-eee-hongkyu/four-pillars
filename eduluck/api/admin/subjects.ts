@@ -171,8 +171,9 @@ function projectRow(
         motherManse: parents?.mother ?? null,
         fatherManse: parents?.father ?? null,
       });
-      hagunScore = Math.round(tier.hagunScore * 10) / 10;
-      finalScore = Math.round(tier.finalScore * 10) / 10;
+      // 학운 점수 1-100 cap. 시스템 default는 1-1 통과 시 100 초과 가능이지만 admin UI에선 0-100 강제.
+      hagunScore = Math.min(100, Math.round(tier.hagunScore * 10) / 10);
+      finalScore = Math.min(100, Math.round(tier.finalScore * 10) / 10);
       subTier = tier.subTier;
     }
   } catch {
