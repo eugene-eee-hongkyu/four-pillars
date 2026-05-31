@@ -671,6 +671,50 @@ WHERE s.user_id IS NOT NULL
 ORDER BY s.created_at DESC LIMIT 5;
 ```
 
+### 검증 20 — Phase 2: 비회원 → 회원 sessions/claim 마이그레이션 + 동기화
+
+**시나리오 A** — 비회원 진단 1건 후 로그인:
+
+1. 비회원 상태에서 진단 1건 (자녀 입력 → 정밀 진단 보기 클릭 → sessions·subjects 박힘)
+2. DB 확인: `SELECT id, user_id, device_id FROM sessions ORDER BY created_at DESC LIMIT 1` → `user_id=NULL`
+3. 카카오 로그인 (랜딩 우측 상단 💬)
+4. DevTools Network 탭에 `POST /api/sessions/claim` 자동 발사 — 응답 `{claimedCount: 1, totalRequested: 1}` 기대
+5. DB 재확인: 같은 session row의 `user_id`가 회원 uuid로 채워짐
+6. `GET /api/sessions/my` 도 자동 발사 — 응답에 그 session 포함
+
+**시나리오 B** — 다른 device로 같은 회원 로그인 (cross-PC history):
+
+1. PC1에서 회원 진단 → DB에 `user_id` 박힘 + `device_id=PC1_uuid`
+2. PC2 (시크릿 모드·다른 기기)에서 같은 회원 로그인
+3. `GET /api/sessions/my` → PC1에서 만든 session 메타 응답
+4. 랜딩에 카드 표시 (snapshot 없음 → 클릭 시 LLM 재호출 fallback)
+
+**시나리오 C** — 보안: 다른 device의 sessionId claim 시도:
+
+```bash
+# 회원 A 로그인 토큰으로 다른 device의 sessionId claim 시도
+curl -sS -X POST https://luck.z21labs.world/api/sessions/claim \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <회원A_토큰>' \
+  -d '{"sessionIds":["<다른_device의_sessionId>"],"deviceId":"<회원A_deviceId>"}'
+```
+
+**기대**: `{"claimedCount":0, "totalRequested":1}` — device_id 안 맞으면 UPDATE 안 됨 (보안 가드 작동).
+
+**시나리오 D** — 로그아웃 시 PII 회수:
+
+1. 회원 로그인 + history 카드 1개 이상 표시
+2. 로그아웃 (우측 상단 닉네임 → 로그아웃)
+3. localStorage `eduluck.flow.state` 키 삭제 확인:
+   ```js
+   localStorage.getItem('eduluck.flow.state') === null  // 기대
+   ```
+4. 랜딩 새로고침 → history 비어있음 + 처음 사용자 hero 노출
+5. `eduluck.device.id`는 유지 (Mixpanel distinct_id 보존):
+   ```js
+   localStorage.getItem('eduluck.device.id') !== null
+   ```
+
 ### 검증 19 — Phase 1: GET /api/sessions/my 회원 history 서버 fetch
 
 미인증 (Authorization 헤더 없음):
@@ -733,6 +777,7 @@ mcp__playwright__browser_close()
 | 17. SDK 52 hydration | 9a8fe1f | ✅ /·/admin·/legal/refund 200 + console 0 error |
 | 18. /api/session JWT 옵셔널 | 4db2d0e Phase 1 | ✅ 비회원 user_id NULL / 회원 path 사람 검증 필요 |
 | 19. /api/sessions/my | 4db2d0e Phase 1 | ✅ 미인증·invalid JWT 401 / 유효 토큰 사람 검증 필요 |
+| 20. Phase 2 claim·sync·logout | d5b3b9f Phase 2 | ⚠️ A·D 시나리오 사람 검증 필요 / C 보안 가드 curl 검증 가능 |
 
 추가 확인:
 - VersionFooter <new sha> 노출
