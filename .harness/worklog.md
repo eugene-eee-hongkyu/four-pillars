@@ -19,6 +19,47 @@
 - mom test 결과 수집 후 정가 confirm → 결제 페이지 구현
 
 
+## Session 2026-05-31 11:07 — eduluck admin 풀스택 (Google·카카오 multi-OAuth + CRUD + 검색 + audit) + DB 정리
+
+### 작업 요약
+
+- **eduluck admin 풀스택 풀-구현** (run `2026-05-31-eduluck-admin` 완료)
+  - DB 마이그레이션 `20260531000000_admin_tables.sql` — admin_users·admin_audit_log + subjects 검색 인덱스 5종 (trgm 2종)
+  - 인증: `useAuth.loginWithGoogle()` + `loginWithGoogle(redirectPath)` + `login(redirectPath, requireEmail)` 카카오·Google multi-provider
+  - 미들웨어 `lib/admin/auth.ts` — JWT → admin_users role 조회 + SUPER_ADMIN_EMAIL 자동 시드 + audit log fire-and-forget. provider 비제한 (admin_users에 등록만 확인)
+  - API 5개 (`api/admin/*`): me·subjects(50 페이지 + 4종 검색 + 마스킹 토글)·subjects/[id]·admins(GET/POST/PATCH/DELETE 자기삭제·강등 차단)·audit-log(super-admin only)
+  - 페이지 4개 (`app/admin/*`): index·subjects·admins·audit-log + `_layout`
+  - PII 마스킹 `lib/admin/mask.ts` — vitest 22/22
+  - 페이지네이션 `1 2 3 … 10 ›` 점프
+  - PC 14컬럼 + 5 raw (artsScore·abroadScore·medicalScore·researchScore·publicForceScore) / 모바일 토글
+- **fix 9건 누적** (commit chain)
+  - 500 에러: `@/lib/...` alias → 상대경로 (`lib/admin/auth.ts`·`lib/prompts/hagun-tier.ts`)
+  - redirect 손실: Supabase OAuth callback이 query cleanup → sessionStorage로 nextPath 전달
+  - 점수 누락: `manse_json.hagunSigners` 없음 → `calculateFinalTierV2()` 함수 호출. directions key `d.score` → `d.normalized ?? d.total` fallback (v2/v3 schema 모두)
+  - 학운 컬럼: 라벨 X, finalScore 1-100 정규화 (cap 안 함, 108 = 상위 1.67%)
+  - 카카오 admin: scope에 `account_email` 추가 (`requireEmail` prop). 일반 사용자는 닉네임만 유지
+  - 401 stuck: `fetchAdminMe` 401 시 null 대신 의미 있는 객체 반환 → /admin 진단 카드 자연 전이
+- **DB 정리 3차례** subjects 165 → 37 row
+  - 옛 schema (unsung·shensha 누락) 11 row CASCADE
+  - directions 누락 (v3 도입 전) 44 row CASCADE
+  - dev test nickname 6 sessions (haiku검증·테스트·테스크 등) CASCADE
+- **카카오 admin 흐름 검증** (hongary@naver.com)
+  - 카카오 콘솔 동의 화면에 이메일 항목 없음 진단 → scope 코드 강제 'profile_nickname'이 원인
+  - requireEmail prop 추가 + 사용자 카카오 앱 연결 해제 + Supabase user record 삭제 + 재로그인 → admin 정상 진입
+- **run Report 작성 + 완료 처리** (`docs/runs/2026-05-31-eduluck-admin_run.md`) — 완료 기준 3/3 [x], audit log로 실 사용 검증 (login 52·list 21·add_admin 1·view_audit_log 1·mask_off 1)
+
+### 실패한 시도
+
+- 학운 점수 100 cap 적용 — 사용자 의도 오해. 정정해서 cap 제거 (raw 정규화 값 그대로 표시)
+
+### 다음 액션
+
+- **mom test 친구 배포** + 진단 결과 admin에서 검수 (37 칼리브레이션 sample + mom test 신규 데이터)
+- 통신판매업 신고 (정부24·강남구청, 3-7영업일) → BUSINESS_INFO ecommerceNumber 채움
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
+
+---
+
 ## Session 2026-05-30 18:34 — 랜딩 history 화면 LegalFooter 위치 fix
 
 ### 작업 요약

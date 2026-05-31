@@ -6,20 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-05-30 18:34
-## 마지막 업데이트: 2026-05-30 18:34
+## 마지막 실행: 2026-05-31 11:07
+## 마지막 업데이트: 2026-05-31 11:07
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- PG 심사 5종 충족 풀스택 완료 + 사업자 등록 정보 4종 입력 완료 + 랜딩 LegalFooter 위치 fix (`38cdec1`·`43c25d1`·`f51669d`·`3b4f563`). 남은 placeholder 1종: 통신판매업 신고번호. mom test 친구 배포는 즉시 가능.
-- eduluck admin 풀스택 완료 (run `2026-05-31-eduluck-admin` 종료) — Google·카카오 multi-provider OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log 풀 작동.
+- eduluck admin 풀스택 완료 (run `2026-05-31-eduluck-admin` 종료, `0da8879`). Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log 풀 작동. DB 정리 165 → 37 row. mom test 친구 배포 + 진단 검수 즉시 가능.
 
 ### 이어서 할 것
 
-1. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → 신고번호 받으면 `business-info.ts` `ecommerceNumber` 채움
-2. **포트원 PG 사전 점검 재실행** → 5종 통과 → 가맹점 심사 신청 (토스페이먼츠 메인 PG)
-3. **mom test 친구들 배포 + 인터뷰 4문항** — 가이드: `eduluck/docs/mom-test/interview-guide.md`
+1. **mom test 친구들 배포 + 인터뷰 4문항** → admin에서 진단 검수 가능. 가이드: `eduluck/docs/mom-test/interview-guide.md`
+2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움
+3. **포트원 PG 사전 점검 재실행** → 가맹점 심사 신청 (토스페이먼츠 메인)
 
 ### 막힌 것
 
@@ -27,9 +26,9 @@
 
 ### 사람 판단 필요
 
-- 통신판매업 신고 시점 (지금 진행 권장 — mom test 병행, 3-7영업일)
-- 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
 - mom test 친구 배포 시점·표본 구성 (가까운 친구·친구의친구·잘 모르는 어머니 분리 권장)
+- 통신판매업 신고 시점 (지금 진행 권장 — mom test 병행)
+- 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
 - CSP Enforce 전환 (1주 모니터링 후, 2026-06-04 권장)
 
 ### 운영 자료
@@ -40,10 +39,12 @@
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음
 - **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx`
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
-- **카카오 로그인 인프라**: Supabase Auth Provider (Kakao) — 닉네임만 수집
+- **카카오 로그인**: 일반 사용자 = profile_nickname / admin = + account_email (requireEmail prop)
 - **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5
-- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*
-- **사전 예약 명단**: Supabase `pdf_preorders` 테이블 — 출시 시 알림용 + 의향 신호 (RLS active)
+- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
+- **사전 예약 명단**: Supabase `pdf_preorders` 테이블 (RLS active)
+- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users 등록 필요). super-admin: eugene.eee@iskra.world · hongary@naver.com
+- **DB 현황**: subjects 37 (child·v3 schema, 칼리브레이션 sample만)
 
 ### 백로그 요약
 
@@ -203,6 +204,7 @@
 - [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐ — BUSINESS_INFO 단일 source + LegalFooter + 정책 3종 페이지 + pdf-preorder 청약철회 동의 + BuildInfoModal 정책 링크
 - [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
 - [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)** — 짧은 콘텐츠 시 spacer로 화면 끝으로
+- [x] **eduluck admin 풀스택 (`0da8879` run 완료)** ⭐ — Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log + PII 마스킹 + 페이지네이션 점프 + DB 정리 165→37
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
@@ -224,3 +226,4 @@
 - [ ] Supabase Auth leaked password protection (signup 활성화 시점)
 - [ ] docs/ 문서 "아빠" → "아버지" 일괄 정리 (mom test 영향 ✗) — backlog 2026-05-29
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)
+- [ ] admin audit log retention 정책 (90일·분기 archive) — 거래액 ↑ 후 도입
