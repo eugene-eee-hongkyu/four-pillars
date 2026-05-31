@@ -1,10 +1,11 @@
 // flow 데이터 (sessionId, child·mother input, subject_id, manse, interpretation) Context
 // 화면 1~11 single-flow 공유. Phase 6에서 회원가입 후에는 user_id도 같이.
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { ManseResult } from '@/lib/manse/engine';
 import { hydrateManse } from '@/lib/manse/hydrate';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 // 옛 import path 호환 — 기존 코드 `import { PREMIUM_PROMPT_VERSION } from '@/lib/flow/context'` 유지.
 export { PREMIUM_PROMPT_VERSION };
@@ -142,6 +143,16 @@ type DeviceGlobalKeys =
   | 'feedbackSubmittedSessions'
   | 'part1CompleteFiredSessions'
   | 'part2CompleteFiredSessions';
+
+/** /api/sessions/my 응답 1 row (server-side만 가지는 메타 — snapshot 없음). */
+interface ServerSessionMeta {
+  sessionId: string;
+  childNickname: string;
+  childBirth: { year: number; month: number; day: number; hour: number | null };
+  hagunLabel: string | null;
+  primaryTier: number | null;
+  savedAt: string;
+}
 
 /** 진단 완료 후 history 카드 표시·복원용 스냅샷. 랜딩에서 "이전 진단" 카드로 노출. */
 export interface SavedSession {
@@ -328,6 +339,138 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     persist(state);
   }, [state]);
+
+  // ============================================================
+  // Phase 2: 회원 ↔ localStorage 동기화 (auth 상태 변화 기준)
+  // ============================================================
+  // 1. 로그인 직후 (또는 초기 진입에 이미 로그인 상태) — localStorage history sessionId들을
+  //    /api/sessions/claim 호출로 user_id에 박음. device_id 매칭 가드 (보안).
+  // 2. 로그인 상태 — /api/sessions/my fetch → server history와 localStorage 병합.
+  //    server에 있는 sessionId는 server 메타 사용, 그중 localStorage에 snapshot 있는 건 snapshot 유지
+  //    (본문 캐시 — 다른 PC에선 snapshot 없어 카드는 보이지만 클릭 시 LLM 재호출 필요. 비용 trade-off는 별도 Phase에서.)
+  // 3. SIGNED_OUT — localStorage state 전체 초기화 (PII 회수). deviceId만 유지.
+  //
+  // 한 user에 대해 한 페이지 라이프사이클에서 1회만 sync (StrictMode 대비 ref guard).
+  const lastSyncedUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function syncOnLogin(token: string, userId: string) {
+      if (cancelled) return;
+      if (lastSyncedUserIdRef.current === userId) return;
+      lastSyncedUserIdRef.current = userId;
+
+      // 1) claim — 현재 localStorage history sessionId 모두 회원에 박기 시도.
+      //    server는 device_id 매칭 + user_id IS NULL 만 update (idempotent + 보안 가드).
+      const currentSessionIds = state.sessionsHistory.map((h) => h.sessionId);
+      if (currentSessionIds.length > 0) {
+        try {
+          await fetch('/api/sessions/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({
+              sessionIds: currentSessionIds,
+              deviceId: getOrCreateDeviceId(),
+            }),
+          });
+        } catch {
+          // silent — claim 실패해도 UX 영향 없음. 다음 페이지 진입에 재시도.
+        }
+      }
+
+      // 2) server fetch — /api/sessions/my → server history merge.
+      try {
+        const res = await fetch('/api/sessions/my', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const { sessions } = (await res.json()) as { sessions: ServerSessionMeta[] };
+        if (!Array.isArray(sessions) || cancelled) return;
+
+        setState((s) => {
+          const localBySid = new Map(s.sessionsHistory.map((h) => [h.sessionId, h]));
+          // server 응답 sessionId 순서 (created_at desc)로 표시
+          const merged: SavedSession[] = sessions.map((srv) => {
+            const local = localBySid.get(srv.sessionId);
+            if (local) {
+              // server 메타로 학운·티어 freshness 보강 (local 캐시는 옛값일 수 있음)
+              return {
+                ...local,
+                hagunLabel: srv.hagunLabel ?? local.hagunLabel,
+                primaryTier: srv.primaryTier ?? local.primaryTier,
+                savedAt: srv.savedAt ?? local.savedAt,
+              };
+            }
+            // server-only — local snapshot 없음 (다른 PC에서 진단한 자녀). 카드만 표시.
+            //   클릭 시 snapshot 빈 객체로 restore → 진단 화면이 sessionId·child 등 없는 상태에서
+            //   '본문 캐시 없음 — 처음부터 다시' 자연 fallback.
+            return {
+              sessionId: srv.sessionId,
+              savedAt: srv.savedAt,
+              childNickname: srv.childNickname,
+              childBirth: srv.childBirth,
+              hagunLabel: srv.hagunLabel,
+              primaryTier: srv.primaryTier,
+              hasPart2: false,
+              snapshot: {} as Omit<FlowState, DeviceGlobalKeys>,
+            };
+          });
+          // local-only (server에 없음 — claim 실패했거나 다른 device로 진단)는 뒤로 append.
+          const serverSids = new Set(sessions.map((s) => s.sessionId));
+          const localOnly = s.sessionsHistory.filter((h) => !serverSids.has(h.sessionId));
+          return {
+            ...s,
+            userId,
+            sessionsHistory: [...merged, ...localOnly].slice(0, 20),
+          };
+        });
+      } catch {
+        // silent — 네트워크 실패 시 local만으로 작동 (degraded).
+      }
+    }
+
+    function clearOnLogout() {
+      if (cancelled) return;
+      lastSyncedUserIdRef.current = null;
+      // PII 회수 — sessionsHistory + 현재 진단 state + 본문 캐시 모두 초기화. deviceId는 유지 (localStorage 별도 키).
+      setState({ ...initial });
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // private mode 등 — silent
+      }
+    }
+
+    if (typeof window === 'undefined') return;
+    const supabase = getSupabaseClient();
+
+    // 초기 session 확인 — 이미 로그인 상태로 진입한 경우 (페이지 새로고침 등)
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const session = data.session;
+      if (session?.access_token && session.user) {
+        syncOnLogin(session.access_token, session.user.id);
+      }
+    });
+
+    // 향후 변화 구독 — SIGNED_IN (카카오 로그인 직후) · SIGNED_OUT (로그아웃)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.access_token && session.user) {
+        syncOnLogin(session.access_token, session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        clearOnLogout();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 한 번만 구독 — state 변화 무관
 
   const setSessionId = useCallback((id: string) => setState((s) => ({ ...s, sessionId: id })), []);
   const setUserId = useCallback((id: string) => setState((s) => ({ ...s, userId: id })), []);
