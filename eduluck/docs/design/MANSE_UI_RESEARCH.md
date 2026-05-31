@@ -233,4 +233,4 @@ Phase E까지 가면 v3 prompt 토큰 ~2배 증가도 해소 (LLM이 격국·12�
 - 정해 만세력 일간·십성 — https://guide.8-codes.com/lecture/elementary/09.html
 - 사주명식 보는법 brunch — https://brunch.co.kr/@homeplan/10
 - 만세력 입문서 thinknote — https://www.thinknote.co.kr/manse-ryeok-guide/
-- 포스텔러 매뉴얼 두더지아빠 — https://usefullifeguide.com/%ED%8F%AC%EC%8A%A4%ED%85%94%EB%9F%AC-%EB%A7%8C%EC%84%B8%EB%A0%A5/
+- 포스텔러 매뉴얼 두더지아버지 — https://usefullifeguide.com/%ED%8F%AC%EC%8A%A4%ED%85%94%EB%9F%AC-%EB%A7%8C%EC%84%B8%EB%A0%A5/

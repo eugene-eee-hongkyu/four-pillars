@@ -48,8 +48,8 @@
 
 ### 백로그 요약
 
-- 대기 중: 7개
-- 최근 추가: 2026-05-29 — docs/ 문서 "아빠" → "아버지" 일괄 정리
+- 대기 중: 5개
+- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
 
 ### 진행 상황
 
@@ -210,20 +210,15 @@
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
 - [ ] Mom test 친구들 배포 + 인터뷰 4문항 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
 - [ ] mom test 결과 → 정가 19,900원 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
-- [ ] 채팅 Mixpanel MCP 자연어 funnel 분석 (Lexicon + auth/paywall + cap·preorder funnel 추가 완료)
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
-- [ ] interpretations.kind 정책 — free text 유지로 확정 (CHECK constraint 제거 완료)
-- [ ] 외부 변수 모듈 (영진/사주 ✗ + SKY 패턴) → backlog 2026-05-24
-- [ ] 음력 입력 UI 토글 추가 (윤달) (선택)
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
-- [ ] 의대 sample 2개 받기 → N=5 의약 sample 재검증
-- [ ] 외부 100명 검증 (Holland Interest Profiler 동시) → backlog 2026-05-20
+- [ ] 의대 sample 2개 — 사용자가 데이터 줬으면 _private/calibration-samples/ 에 추가 + medical-score 재검증
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
 - [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
 - [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
-- [ ] Supabase Auth leaked password protection (signup 활성화 시점)
-- [ ] docs/ 문서 "아빠" → "아버지" 일괄 정리 (mom test 영향 ✗) — backlog 2026-05-29
+- [ ] Supabase Auth leaked password protection (이메일·비번 가입 도입 시점 — 현재 OAuth만이라 N/A)
+- [x] **docs/ 문서 "아빠" → "아버지" 정리 (2026-05-31)** — 13개 파일 일괄 변경. legacy-v4 (박제용) 4건 의도적 유지
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)
 - [ ] admin audit log retention 정책 (90일·분기 archive) — 거래액 ↑ 후 도입

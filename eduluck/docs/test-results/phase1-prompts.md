@@ -7,7 +7,7 @@
 ## 작성 파일
 
 - `lib/prompts/interpret-premium-shared.ts` — InterpretPremiumContext, manse summary, tier·luck·direction baseline lines, SHARED_TONE_GUIDE, SHARED_UNIVERSITY_TIER_GUIDE
-- `lib/prompts/interpret-premium-part1.ts` — Part 1 (10 섹션 · 신규 4 포함: 건강·엄마합·아빠합·강요금지)
+- `lib/prompts/interpret-premium-part1.ts` — Part 1 (10 섹션 · 신규 4 포함: 건강·엄마합·아버지합·강요금지)
 - `lib/prompts/interpret-premium-part2.ts` — Part 2 (10 섹션 · 진로·미래·학교)
 - `lib/prompts/interpret-deep.ts` — Deep-dive (단일 섹션 5500~8000자, 20 섹션 모두 가능)
 - `scripts/dump-prompts-v5.ts` — Phase 1 자동 검증 스크립트
@@ -23,7 +23,7 @@
 6. 훈육 가이드
 7. **건강** ⭐ 신규 (일간 오행·천의성·백호대살·양인살·12운성·오행 부재)
 8. **엄마-자녀 합** ⭐ 신규 (어머니 일간 → 자녀 십성 매핑 / 미입력 시 placeholder)
-9. **아빠-자녀 합** ⭐ 신규 (가중치 절반 / 미입력 시 placeholder)
+9. **아버지-자녀 합** ⭐ 신규 (가중치 절반 / 미입력 시 placeholder)
 10. **강요 금지** ⭐ 신규 (격국·일간·신살 본질 반대 강요 영역 + 대체 액션)
 
 **Part 2 — 학원·진로·미래 (10 섹션)**
@@ -52,10 +52,10 @@
 - 일주 합·충: 삼합·육합·충·형
 - 미입력 시 placeholder: "어머님 사주 입력하시면 ○○이와의 정확한 합·일간 매핑 풀어드릴 수 있어요" + 입력 유도
 
-### §9 아빠-자녀 합
-- 아빠 일간 → 자녀 십성 (같은 매핑, 가중치 절반)
+### §9 아버지-자녀 합
+- 아버지 일간 → 자녀 십성 (같은 매핑, 가중치 절반)
 - 정관·편관 강조 (규율·도전 자극)
-- 미입력 시 placeholder: "아빠 사주 입력하시면 부친 합·일간 매핑 풀어드릴 수 있어요"
+- 미입력 시 placeholder: "아버지 사주 입력하시면 부친 합·일간 매핑 풀어드릴 수 있어요"
 
 ### §10 강요 금지
 - 격국 본질 반대 강요: 학자형→장사 ✗ / 표현형→정형 시험 ✗ / 자유형→통제 ✗
@@ -71,7 +71,7 @@ PART 1 (10 섹션)         system 6098 + user 2792 = 8890 chars (≈ 2223 tokens
 PART 2 (10 섹션)         system 7182 + user 2891 = 10073 chars (≈ 2518 tokens)
 DEEP §7 (건강)           system 4564 + user 2915 = 7479 chars (≈ 1870 tokens)
 DEEP §8 (엄마합)          system 4564 + user 2981 = 7545 chars (≈ 1886 tokens)
-DEEP §9 (아빠합)          system 4564 + user 2919 = 7483 chars (≈ 1871 tokens)
+DEEP §9 (아버지합)          system 4564 + user 2919 = 7483 chars (≈ 1871 tokens)
 DEEP §10 (강요금지)       system 4564 + user 2902 = 7466 chars (≈ 1867 tokens)
 ```
 
