@@ -602,6 +602,111 @@ mcp__playwright__browser_snapshot(depth=3)
 DELETE FROM public.pdf_preorders WHERE name = '테스트유저';
 ```
 
+### 검증 17 — SDK 52 prod hydration 회귀 (랜딩·admin·legal)
+
+expo SDK 51 → 52 업그레이드 (commit 9a8fe1f) 후 prod에서 React 18.3.1 · expo-router 4.x · NativeWind · React Native Web hydration 정상 작동 확인. shamefully-hoist=true 적용 후 transitive deps 누락 없는지.
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world/")
+mcp__playwright__browser_snapshot()
+mcp__playwright__browser_console_messages(onlyErrors=true)
+```
+
+**기대**: snapshot에 헤더 (eduluck 로고 + 카카오 로그인) + 메인 콘텐츠 (history 카드 또는 랜딩 hero) + LegalFooter (이용약관·개인정보·환불 + 사업자 정보 4종 + 통신판매업 신고번호 자리) + StickyCTA. console errors=0.
+
+admin 라우트 격리 (Stack) 회귀:
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world/admin")
+mcp__playwright__browser_snapshot()
+mcp__playwright__browser_console_messages(onlyErrors=true)
+```
+
+**기대**: "eduluck admin · 진단 데이터 검수·관리 콘솔" + Google·카카오 로그인 버튼 2종 + admin_users 안내. console errors=0.
+
+legal 페이지 (Next 라우트):
+
+```
+mcp__playwright__browser_navigate(url="https://luck.z21labs.world/legal/refund")
+mcp__playwright__browser_evaluate(function="() => ({
+  hasRefund: document.body.innerText.includes('환불'),
+  hasBiz: document.body.innerText.includes('881-84-00049'),
+})")
+```
+
+**기대**: 둘 다 true. 잘 깨질 만한 시그널 — 'You need to install @expo/metro-runtime' / 'expo-asset cannot be found' / chunk 404 → ERROR로 잡힘.
+
+### 검증 18 — Phase 1: POST /api/session JWT 옵셔널 + user_id 자동 매핑
+
+비회원 (JWT 없음):
+
+```bash
+curl -sS -X POST https://luck.z21labs.world/api/session \
+  -H 'Content-Type: application/json' \
+  -d '{"deviceId":"e2e-anon-test"}'
+```
+
+**기대**: `{"sessionId":"<uuid>","expiresAt":"<iso>"}` 200.
+
+DB 확인:
+
+```sql
+SELECT id, user_id, device_id FROM public.sessions
+WHERE device_id = 'e2e-anon-test'
+ORDER BY created_at DESC LIMIT 1;
+```
+
+**기대**: `user_id = NULL`, `device_id = 'e2e-anon-test'`.
+
+회원 (admin이 직접 카카오 로그인 후 진단 시 자동 — curl로 회원 path 단순 모방은 불가, JWT 발급 자체가 OAuth 흐름 필요). 사람이 확인할 항목:
+
+1. 카카오 로그인 → 새 진단 시작 → family-input 완주
+2. 위 sessions row의 `user_id`가 `auth.users.id`로 박혀있는지:
+
+```sql
+SELECT s.id, s.user_id, s.device_id, u.email
+FROM public.sessions s
+LEFT JOIN auth.users u ON u.id = s.user_id
+WHERE s.user_id IS NOT NULL
+ORDER BY s.created_at DESC LIMIT 5;
+```
+
+### 검증 19 — Phase 1: GET /api/sessions/my 회원 history 서버 fetch
+
+미인증 (Authorization 헤더 없음):
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" https://luck.z21labs.world/api/sessions/my
+```
+
+**기대**: `401`.
+
+잘못된 JWT:
+
+```bash
+curl -sS https://luck.z21labs.world/api/sessions/my \
+  -H 'Authorization: Bearer invalid_jwt'
+```
+
+**기대**: `{"error":"invalid token"}` 401.
+
+유효한 JWT (사람 검증 필요 — 회원 카카오 로그인 후 브라우저 DevTools에서 토큰 추출):
+
+```js
+// DevTools 콘솔 (회원 로그인 상태)
+const { data } = await window.supabase.auth.getSession();
+copy(data.session.access_token);
+```
+
+```bash
+curl -sS https://luck.z21labs.world/api/sessions/my \
+  -H "Authorization: Bearer <복사한_토큰>"
+```
+
+**기대**: `{"sessions": [{ sessionId, childNickname, childBirth, hagunLabel, primaryTier, savedAt }, ...]}` — 회원 본인 sessions 최대 20개.
+
+`sessions[].hagunLabel`이 calculateFinalTierV2 결과 (예: "보강 학업형", "평운")로 박혀있는지 확인. 빈 배열이면 회원이 아직 진단 안 한 상태 (검증 18 회원 path 먼저 통과 필요).
+
 ## Cleanup (필수)
 
 ```sql
@@ -625,6 +730,9 @@ mcp__playwright__browser_close()
 | 3. interpretations.prompt_version | DD1.A | ✅ v5.X-... 정확 |
 | 4. history 카드 복원 | BUG 3·5 + 캐시 | ✅ LLM API 호출 0건, llm_call_count 변경 ✗ |
 | 5. feedback 재제출 409 | DD3.B | ✅ 친화 에러 메시지 |
+| 17. SDK 52 hydration | 9a8fe1f | ✅ /·/admin·/legal/refund 200 + console 0 error |
+| 18. /api/session JWT 옵셔널 | 4db2d0e Phase 1 | ✅ 비회원 user_id NULL / 회원 path 사람 검증 필요 |
+| 19. /api/sessions/my | 4db2d0e Phase 1 | ✅ 미인증·invalid JWT 401 / 유효 토큰 사람 검증 필요 |
 
 추가 확인:
 - VersionFooter <new sha> 노출
