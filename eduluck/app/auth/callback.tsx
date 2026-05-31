@@ -12,13 +12,35 @@ import { track, EVENTS } from '@/lib/analytics/mixpanel';
 export default function AuthCallback() {
   const router = useRouter();
   const params = useLocalSearchParams<{ next?: string }>();
-  // next 파라미터로 redirect 분기 — Google admin 로그인 시 '/admin/subjects' 등.
-  // 기본은 카카오 로그인 → 홈 ('/').
-  const nextPath = (params.next as string | undefined) ?? '/';
+
+  // next path 결정 우선순위: sessionStorage > query param > default '/'
+  // sessionStorage가 안정적 (Supabase가 URL cleanup 시 query 손실 가능).
+  function getNextPath(): string {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('eduluck.admin.nextPath');
+        if (stored) {
+          sessionStorage.removeItem('eduluck.admin.nextPath');
+          return stored;
+        }
+      } catch {
+        // sessionStorage 사용 불가
+      }
+    }
+    return (params.next as string | undefined) ?? '/';
+  }
 
   useEffect(() => {
     const supabase = getSupabaseClient();
     let cancelled = false;
+    let redirected = false;
+
+    function doRedirect() {
+      if (redirected || cancelled) return;
+      redirected = true;
+      const nextPath = getNextPath();
+      router.replace(nextPath as never);
+    }
 
     // detectSessionInUrl 가 자동으로 처리 — 우리는 세션이 확정될 때까지 대기 후 redirect.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -26,7 +48,7 @@ export default function AuthCallback() {
       if (event === 'SIGNED_IN' && session?.user) {
         const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'unknown';
         track(EVENTS.LOGIN_SUCCESS, { provider });
-        router.replace(nextPath as never);
+        doRedirect();
       }
     });
 
@@ -34,21 +56,22 @@ export default function AuthCallback() {
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       if (data.session?.user) {
-        router.replace(nextPath as never);
+        doRedirect();
       }
     });
 
-    // 안전망: 5초 후에도 세션 안 잡히면 홈으로 (사용자 멈춤 방지)
+    // 안전망: 8초 후에도 세션 안 잡히면 nextPath로 (Google OAuth는 hash 처리에 시간 더 걸릴 수 있음)
     const timer = setTimeout(() => {
-      if (!cancelled) router.replace('/');
-    }, 5000);
+      if (!cancelled && !redirected) doRedirect();
+    }, 8000);
 
     return () => {
       cancelled = true;
       subscription.unsubscribe();
       clearTimeout(timer);
     };
-  }, [router, nextPath]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   return (
     <View className="flex-1 items-center justify-center bg-surface gap-4">

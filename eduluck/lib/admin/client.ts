@@ -29,8 +29,25 @@ export interface AdminMe {
   role: 'admin' | 'super_admin';
 }
 
-export async function fetchAdminMe(): Promise<AdminMe | null> {
+export interface AdminMeError {
+  isAdmin: false;
+  error: string;
+  debug?: {
+    userEmail?: string;
+    provider?: string;
+    hasSuperAdminEmailEnv?: boolean;
+    superAdminEmailMatches?: boolean;
+    adminUsersRowExists?: boolean;
+  } | null;
+}
+
+export type AdminMeResult = AdminMe | AdminMeError;
+
+export async function fetchAdminMe(): Promise<AdminMeResult | null> {
   const res = await adminFetch('/api/admin/me');
-  if (!res.ok) return null;
-  return (await res.json()) as AdminMe;
+  if (res.status === 401) return null; // 미로그인
+  const json = await res.json();
+  if (res.ok) return json as AdminMe;
+  // 403 등 — 디버그 정보 포함 반환 (UI에서 안내)
+  return { isAdmin: false, error: json.error ?? 'unknown', debug: json.debug ?? null };
 }

@@ -99,6 +99,13 @@ export function useAuth(): UseAuthReturn {
   const loginWithGoogle = useCallback(async (redirectPath: string = '/admin') => {
     setError(null);
     if (typeof window === 'undefined') return;
+    // Supabase가 callback URL을 history.replaceState로 cleanup하면서 query string을 같이 지울 수 있음.
+    // 안전하게 sessionStorage로 전달 — OAuth는 같은 탭에서 redirect되므로 유지됨.
+    try {
+      sessionStorage.setItem('eduluck.admin.nextPath', redirectPath);
+    } catch {
+      // sessionStorage 사용 불가 (privacy mode 등) — query fallback에 의존
+    }
     const supabase = getSupabaseClient();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
     const { error: err } = await supabase.auth.signInWithOAuth({

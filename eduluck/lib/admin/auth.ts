@@ -43,6 +43,14 @@ interface VerifyError {
   ok: false;
   status: number;
   error: string;
+  /** 디버그용 — admin 미등록 등 사용자가 문제 진단할 수 있도록 */
+  debug?: {
+    userEmail?: string;
+    provider?: string;
+    hasSuperAdminEmailEnv?: boolean;
+    superAdminEmailMatches?: boolean;
+    adminUsersRowExists?: boolean;
+  };
 }
 
 /**
@@ -77,11 +85,17 @@ export async function verifyAdminRequest(
   // 2. provider 검증 — google만 admin 허용 (카카오 user는 admin 차단)
   const provider = user.app_metadata?.provider as string | undefined;
   if (provider !== 'google') {
-    return { ok: false, status: 403, error: 'admin requires Google login' };
+    return {
+      ok: false,
+      status: 403,
+      error: 'admin requires Google login',
+      debug: { userEmail: email, provider },
+    };
   }
 
   // 3. SUPER_ADMIN_EMAIL 자동 시드
-  await ensureSuperAdminSeeded(sb, email);
+  const seedEnvEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase().trim() ?? null;
+  await ensureSuperAdminSeeded(sb, email, seedEnvEmail);
 
   // 4. admin_users에서 role 조회
   const { data: adminRow, error: adminErr } = await sb
@@ -93,12 +107,28 @@ export async function verifyAdminRequest(
     return { ok: false, status: 500, error: `admin lookup: ${adminErr.message}` };
   }
   if (!adminRow) {
-    return { ok: false, status: 403, error: 'not an admin' };
+    return {
+      ok: false,
+      status: 403,
+      error: 'not an admin',
+      debug: {
+        userEmail: email,
+        provider,
+        hasSuperAdminEmailEnv: !!seedEnvEmail,
+        superAdminEmailMatches: seedEnvEmail === email,
+        adminUsersRowExists: false,
+      },
+    };
   }
 
   // 5. required role 체크
   if (required === 'super_admin' && adminRow.role !== 'super_admin') {
-    return { ok: false, status: 403, error: 'super_admin required' };
+    return {
+      ok: false,
+      status: 403,
+      error: 'super_admin required',
+      debug: { userEmail: email, provider, adminUsersRowExists: true },
+    };
   }
 
   const ipAddress =
@@ -124,8 +154,11 @@ export async function verifyAdminRequest(
  * SUPER_ADMIN_EMAIL과 일치하는 이메일이 admin_users에 없으면 super_admin role로 자동 시드.
  * 첫 admin 로그인 시 자동 활성. 환경변수가 비어있으면 skip.
  */
-async function ensureSuperAdminSeeded(sb: SupabaseClient, currentEmail: string): Promise<void> {
-  const seedEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase().trim();
+async function ensureSuperAdminSeeded(
+  sb: SupabaseClient,
+  currentEmail: string,
+  seedEmail: string | null,
+): Promise<void> {
   if (!seedEmail || seedEmail !== currentEmail) return;
 
   const { data: existing } = await sb
