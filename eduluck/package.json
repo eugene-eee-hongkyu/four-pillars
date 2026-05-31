@@ -19,6 +19,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
     "@babel/runtime": "^7.29.2",
+    "@expo/metro-runtime": "~4.0.1",
     "@fullstackfamily/manseryeok": "^1.0.8",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.104.1",
