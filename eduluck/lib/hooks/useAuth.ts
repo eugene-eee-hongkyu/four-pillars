@@ -21,9 +21,9 @@ interface UseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
   error: Error | null;
-  /** 카카오 로그인 (일반 사용자) */
-  login: () => Promise<void>;
-  /** Google 로그인 (admin 전용) */
+  /** 카카오 로그인. redirectPath 지정 시 callback 후 해당 경로로 이동 */
+  login: (redirectPath?: string) => Promise<void>;
+  /** Google 로그인 (admin) */
   loginWithGoogle: (redirectPath?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -71,9 +71,17 @@ export function useAuth(): UseAuthReturn {
     };
   }, []);
 
-  const login = useCallback(async () => {
+  const login = useCallback(async (redirectPath?: string) => {
     setError(null);
     if (typeof window === 'undefined') return;
+    // redirectPath 지정 시 sessionStorage에 박아서 callback에서 분기 (Google OAuth와 동일 패턴)
+    if (redirectPath) {
+      try {
+        sessionStorage.setItem('eduluck.admin.nextPath', redirectPath);
+      } catch {
+        // silent
+      }
+    }
     const supabase = getSupabaseClient();
     const redirectTo = `${window.location.origin}/auth/callback`;
     // Supabase Kakao provider default scope = "account_email profile_image profile_nickname".

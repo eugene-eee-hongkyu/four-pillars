@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchAdminMe, type AdminMeResult } from '@/lib/admin/client';
 import { GoogleLoginButton } from '@/components/GoogleLoginButton';
+import { KakaoLoginButton } from '@/components/KakaoLoginButton';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function AdminLogin() {
       if (cancelled) return;
       setChecking(false);
       setMeResult(res);
-      if (res && res.isAdmin) {
+      if (res.isAdmin) {
         router.replace('/admin/subjects' as never);
       }
     });
@@ -59,12 +60,14 @@ export default function AdminLogin() {
             </Text>
           </View>
 
-          <View className="w-full max-w-md mt-6">
+          <View className="w-full max-w-md mt-6 gap-3">
             <GoogleLoginButton redirectPath="/admin/subjects" />
+            <KakaoLoginButton source="landing" size="lg" redirectPath="/admin/subjects" />
           </View>
 
           <Text className="font-body text-label-sm text-text-sub text-center max-w-md leading-relaxed mt-4">
-            ⚠️ 등록된 어드민 계정만 접근 가능합니다.
+            ⚠️ 등록된 어드민 계정(admin_users)만 접근 가능합니다.{'\n'}
+            Google·카카오 어떤 OAuth로 로그인해도 등록된 이메일이면 통과.
           </Text>
         </ScrollView>
       </View>

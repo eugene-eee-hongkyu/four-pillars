@@ -32,11 +32,10 @@ export function useAdminMe(requireSuperAdmin = false): UseAdminMeReturn {
     let cancelled = false;
     fetchAdminMe().then((res) => {
       if (cancelled) return;
-      // res가 null = 미로그인 (401), or res.isAdmin false = 권한 없음
-      if (!res || !res.isAdmin) {
-        // /admin 화면이 진단 정보를 보여주므로 거기로 보냄.
+      if (!res.isAdmin) {
+        // admin 아니거나 토큰 만료. /admin 화면이 진단·재로그인 안내.
         router.replace('/admin' as never);
-        setError(res && !res.isAdmin ? ('error' in res ? res.error : 'admin 권한 없음') : '로그인 필요');
+        setError('error' in res ? res.error : 'admin 권한 없음');
         setLoading(false);
         return;
       }

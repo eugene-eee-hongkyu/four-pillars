@@ -43,9 +43,12 @@ export interface AdminMeError {
 
 export type AdminMeResult = AdminMe | AdminMeError;
 
-export async function fetchAdminMe(): Promise<AdminMeResult | null> {
+export async function fetchAdminMe(): Promise<AdminMeResult> {
   const res = await adminFetch('/api/admin/me');
-  if (res.status === 401) return null; // 미로그인
+  if (res.status === 401) {
+    // 토큰 부재·만료. 재로그인 안내.
+    return { isAdmin: false, error: 'session expired or missing token', debug: null };
+  }
   const json = await res.json();
   if (res.ok) return json as AdminMe;
   // 403 등 — 디버그 정보 포함 반환 (UI에서 안내)

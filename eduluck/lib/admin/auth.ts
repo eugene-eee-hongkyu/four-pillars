@@ -82,16 +82,8 @@ export async function verifyAdminRequest(
     return { ok: false, status: 401, error: 'email missing' };
   }
 
-  // 2. provider 검증 — google만 admin 허용 (카카오 user는 admin 차단)
+  // 2. provider 정보 (admin_users에 있으면 google·kakao 둘 다 허용)
   const provider = user.app_metadata?.provider as string | undefined;
-  if (provider !== 'google') {
-    return {
-      ok: false,
-      status: 403,
-      error: 'admin requires Google login',
-      debug: { userEmail: email, provider },
-    };
-  }
 
   // 3. SUPER_ADMIN_EMAIL 자동 시드
   const seedEnvEmail = process.env.SUPER_ADMIN_EMAIL?.toLowerCase().trim() ?? null;

@@ -11,9 +11,11 @@ interface Props {
   source?: 'landing' | 'paywall_new_child' | 'paywall_deepdive';
   /** 크기 — lg (단독 CTA), md (모달 안 등 기본) */
   size?: 'lg' | 'md';
+  /** 로그인 후 이동 경로 (admin 페이지 등) — 기본 '/' */
+  redirectPath?: string;
 }
 
-export function KakaoLoginButton({ source = 'landing', size = 'md' }: Props) {
+export function KakaoLoginButton({ source = 'landing', size = 'md', redirectPath }: Props) {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +24,7 @@ export function KakaoLoginButton({ source = 'landing', size = 'md' }: Props) {
     setLoading(true);
     track(source === 'landing' ? EVENTS.LOGIN_CLICK : EVENTS.PAYWALL_LOGIN_CLICK, { source });
     try {
-      await login();
+      await login(redirectPath);
       // 성공 시 카카오로 redirect — 이 컴포넌트 unmount 됨. setLoading(false) 불필요.
     } catch {
       setLoading(false);
