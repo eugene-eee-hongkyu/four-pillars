@@ -212,13 +212,12 @@
 - [ ] mom test 결과 → 정가 19,900원 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
-- [ ] 의대 sample 2개 — 사용자가 데이터 줬으면 _private/calibration-samples/ 에 추가 + medical-score 재검증
+- [ ] medical-score 모듈 N=2 sample (08-세형·09-두흥) fit 재검증 → mom test 후 calibration 세션
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
 - [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
 - [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
-- [ ] Supabase Auth leaked password protection (이메일·비번 가입 도입 시점 — 현재 OAuth만이라 N/A)
 - [x] **docs/ 문서 "아빠" → "아버지" 정리 (2026-05-31)** — 13개 파일 일괄 변경. legacy-v4 (박제용) 4건 의도적 유지
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)
 - [ ] admin audit log retention 정책 (90일·분기 archive) — 거래액 ↑ 후 도입
