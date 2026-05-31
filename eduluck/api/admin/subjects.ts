@@ -171,9 +171,10 @@ function projectRow(
         motherManse: parents?.mother ?? null,
         fatherManse: parents?.father ?? null,
       });
-      // 학운 점수 1-100 cap. 시스템 default는 1-1 통과 시 100 초과 가능이지만 admin UI에선 0-100 강제.
-      hagunScore = Math.min(100, Math.round(tier.hagunScore * 10) / 10);
-      finalScore = Math.min(100, Math.round(tier.finalScore * 10) / 10);
+      // 정규화 점수 (raw × 100/141, V4 #195 시뮬 1-1 cutoff 기준) — 티어 매핑에 그대로 사용.
+      // 100 초과 가능 (raw > 141 = 상위 1.67% 통과 sample). cap 안 함 — 정보 손실 방지.
+      hagunScore = Math.round(tier.hagunScore * 10) / 10;
+      finalScore = Math.round(tier.finalScore * 10) / 10;
       subTier = tier.subTier;
     }
   } catch {

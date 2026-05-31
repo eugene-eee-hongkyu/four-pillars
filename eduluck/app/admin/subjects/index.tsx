@@ -216,7 +216,7 @@ function DesktopTable({ rows }: { rows: SubjectListRow[] }) {
             <HeaderCell width={110} text="생년월일" />
             <HeaderCell width={60} text="시간" />
             <HeaderCell width={120} text="고향" />
-            <HeaderCell width={80} text="학운(0-100)" />
+            <HeaderCell width={80} text="학운(정규화)" />
             <HeaderCell width={70} text="티어" />
             {DIRECTION_KEYS.map((k) => (
               <HeaderCell key={k} width={70} text={DIRECTION_UI_LABELS[k].label.split('·')[0]} />
