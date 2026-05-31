@@ -27,11 +27,18 @@ export async function POST(request: Request) {
 
   // 회원 로그인 상태면 JWT에서 user.id 추출. 비회원이면 null.
   let userId: string | null = null;
+  let authDebug: string = 'no-auth-header';
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     const jwt = authHeader.slice(7);
-    const { data: userData } = await sb.auth.getUser(jwt);
-    if (userData.user) userId = userData.user.id;
+    const { data: userData, error: userErr } = await sb.auth.getUser(jwt);
+    if (userData.user) {
+      userId = userData.user.id;
+      authDebug = `ok:${userId}`;
+    } else {
+      authDebug = `verify-failed:${userErr?.message ?? 'no-user'}:jwt-len=${jwt.length}`;
+    }
+    console.log('[POST /api/session] auth:', authDebug);
   }
 
   const { data, error } = await sb
@@ -48,5 +55,11 @@ export async function POST(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
-  return Response.json({ sessionId: data.id, expiresAt: data.expires_at });
+  // ownerUserId — 회원이면 user.id, 비회원이면 null. client·Network 탭에서 회원 매핑 가시화.
+  return Response.json({
+    sessionId: data.id,
+    expiresAt: data.expires_at,
+    ownerUserId: userId,
+    authDebug,
+  });
 }

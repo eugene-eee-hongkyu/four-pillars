@@ -37,6 +37,15 @@ function parseTime(s: string) {
   return { h: +m[1], m: +m[2] };
 }
 
+// 만 나이 계산 (오늘 기준) — PIPA §22 ②: 만 14세 미만만 법정대리인 동의 필수
+function calcAgeYears(year: number, month: number, day: number): number {
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const monthDiff = today.getMonth() + 1 - month;
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) age--;
+  return age;
+}
+
 export default function FamilyInput() {
   const router = useRouter();
   const {
@@ -103,7 +112,8 @@ export default function FamilyInput() {
   const [error, setError] = useState<string | null>(null);
   // "새 진단 시작" 확인 모달 — 자녀 정보 손실 안전망
   const [newSessionModal, setNewSessionModal] = useState(false);
-  // PIPA 14조 — 만 14세 미만 자녀 개인정보 처리에 법정대리인(어머니) 동의 필요. 매 진단마다 다시 받음.
+  // PIPA §22 ② — 만 14세 미만 자녀 개인정보 처리에 법정대리인(어머니/아버지) 동의 필요. 매 진단마다 다시 받음.
+  // 자녀 만 14세 이상이면 동의 불필요 (자녀 본인 동의로 처리).
   const [guardianConsent, setGuardianConsent] = useState(false);
 
   const confirmNewSession = () => {
@@ -143,7 +153,17 @@ export default function FamilyInput() {
       state.father.birthLocation !== null
     );
 
-  const canSubmit = childReady && motherSectionValid && fatherSectionValid && guardianConsent;
+  // 자녀 만 14세 미만일 때만 법정대리인 동의 필수 (PIPA §22 ②)
+  const childAgeYears = childParsedDate
+    ? calcAgeYears(childParsedDate.y, childParsedDate.m, childParsedDate.d)
+    : null;
+  const requiresGuardianConsent = childAgeYears !== null && childAgeYears < 14;
+
+  const canSubmit =
+    childReady &&
+    motherSectionValid &&
+    fatherSectionValid &&
+    (!requiresGuardianConsent || guardianConsent);
 
   const postSubject = async (body: object) => {
     // deviceId 함께 전달 (보안 audit ISSUE-6) — server 가 sessions.device_id 와 매칭 검증
@@ -286,33 +306,35 @@ export default function FamilyInput() {
           </Text>
           <LocationDropdown value={state.child.birthLocation} onChange={(loc) => patchChild({ birthLocation: loc })} />
 
-          {/* PIPA 14조 — 법정대리인 동의 (만 14세 미만 자녀 개인정보 처리) */}
-          <Pressable
-            onPress={() => setGuardianConsent(!guardianConsent)}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: guardianConsent }}
-            accessibilityLabel="법정대리인 동의"
-            className="flex-row items-start gap-3 p-3 mt-1 rounded-md border border-outline-warm bg-surface"
-            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
-          >
-            <View
-              className={`w-5 h-5 rounded border-2 ${
-                guardianConsent ? 'bg-primary border-primary' : 'border-outline-warm bg-surface-container-low'
-              } items-center justify-center mt-0.5`}
+          {/* PIPA §22 ② — 법정대리인 동의 (만 14세 미만 자녀일 때만) */}
+          {requiresGuardianConsent && (
+            <Pressable
+              onPress={() => setGuardianConsent(!guardianConsent)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: guardianConsent }}
+              accessibilityLabel="법정대리인 동의"
+              className="flex-row items-start gap-3 p-3 mt-1 rounded-md border border-outline-warm bg-surface"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              {guardianConsent && (
-                <Text className="font-body-bold text-label-sm text-surface-container-low">✓</Text>
-              )}
-            </View>
-            <View className="flex-1">
-              <Text className="font-body-bold text-label-md text-text-pri leading-relaxed">
-                법정대리인으로서 자녀 개인정보 처리에 동의 (필수)
-              </Text>
-              <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
-                만 14세 미만 자녀의 생년월일·출생시간을 학운 진단 목적으로 처리합니다. 보호자(어머니/아버지)께서 동의해주세요.
-              </Text>
-            </View>
-          </Pressable>
+              <View
+                className={`w-5 h-5 rounded border-2 ${
+                  guardianConsent ? 'bg-primary border-primary' : 'border-outline-warm bg-surface-container-low'
+                } items-center justify-center mt-0.5`}
+              >
+                {guardianConsent && (
+                  <Text className="font-body-bold text-label-sm text-surface-container-low">✓</Text>
+                )}
+              </View>
+              <View className="flex-1">
+                <Text className="font-body-bold text-label-md text-text-pri leading-relaxed">
+                  법정대리인으로서 자녀 개인정보 처리에 동의 (필수)
+                </Text>
+                <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-0.5">
+                  만 14세 미만 자녀의 생년월일·출생시간을 학운 진단 목적으로 처리합니다. 보호자(어머니/아버지)께서 동의해주세요.
+                </Text>
+              </View>
+            </Pressable>
+          )}
         </View>
 
         {/* === 어머니 (옵션) === */}
