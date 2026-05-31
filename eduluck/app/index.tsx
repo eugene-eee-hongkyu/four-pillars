@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { isChildCapReached } from '@/lib/paywall/policy';
 import { translateError } from '@/lib/errors/translate';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 function formatSavedAt(iso: string): string {
   try {
@@ -73,9 +74,20 @@ export default function Landing() {
       startNewSession();
       track(EVENTS.START_NEW_DIAGNOSIS_CLICK, { had_history: hasHistory, logged_in: !!user });
 
+      // 회원 로그인 상태면 JWT 첨부 → sessions.user_id = auth.uid()로 박힘 (Phase 1)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      try {
+        const supabase = getSupabaseClient();
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        // silent — 비회원은 token 없음
+      }
+
       const res = await fetch('/api/session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ deviceId: getOrCreateDeviceId() }),
       });
       if (!res.ok) throw new Error(await res.text());

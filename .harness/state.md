@@ -212,7 +212,6 @@
 - [ ] mom test 결과 → 정가 19,900원 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
-- [ ] medical-score 모듈 N=2 sample (08-세형·09-두흥) fit 재검증 → mom test 후 calibration 세션
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
