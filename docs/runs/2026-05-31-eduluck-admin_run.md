@@ -2,9 +2,9 @@
 name: eduluck admin 기능 — Google OAuth + admin_users CRUD + 진단 리스트·검색 + PIPA 감사 로그
 slug: eduluck-admin
 type: other
-status: 진행중
+status: 완료
 created: 2026-05-31 07:57
-completed:
+completed: 2026-05-31
 ---
 
 # eduluck admin 기능 — Google OAuth + admin_users CRUD + 진단 리스트·검색 + PIPA 감사 로그
@@ -22,9 +22,9 @@ completed:
 
 ## 완료 기준
 
-- [ ] Google OAuth admin 로그인 + super-admin 시드(env)로 첫 진입 + admin_users 테이블 CRUD UI 작동 (admin 추가·제거·role 변경)
-- [ ] /admin/subjects 리스트 (50개 페이지 + 이름·생년월일·고향 검색) 작동 + PC 14컬럼·모바일 토글 + PII 마스킹 기본 + "원본 보기" 토글 + audit log 기록
-- [ ] PIPA 감사 로그 — login·list·search·view·mask_off·CRUD 모든 행동이 `admin_audit_log`에 기록되고 super-admin이 조회 가능
+- [x] Google OAuth admin 로그인 + super-admin 시드(env)로 첫 진입 + admin_users 테이블 CRUD UI 작동 (admin 추가·제거·role 변경)
+- [x] /admin/subjects 리스트 (50개 페이지 + 이름·생년월일·고향 검색) 작동 + PC 14컬럼·모바일 토글 + PII 마스킹 기본 + "원본 보기" 토글 + audit log 기록
+- [x] PIPA 감사 로그 — login·list·search·view·mask_off·CRUD 모든 행동이 `admin_audit_log`에 기록되고 super-admin이 조회 가능
 
 ## 한눈에 보기
 
@@ -150,6 +150,57 @@ completed:
 
 ## Report
 
-> /worklog 실행 시 완료 기준이 모두 충족되면 자동으로 작성 제안됨.
+### 실행 결과
 
-_(진행중)_
+**풀스택 22 파일 신규/수정 + DB 마이그레이션 1개 + Supabase Google·카카오 multi-provider OAuth 통합**:
+
+- DB (`20260531000000_admin_tables.sql`): `admin_users` · `admin_audit_log` 테이블 + RLS active + subjects 검색 인덱스 5종 (trgm 2종 포함)
+- 인증: `useAuth.login(redirectPath, requireEmail)` + `loginWithGoogle(redirectPath)` — 카카오·Google multi-provider, sessionStorage로 nextPath 안전 전달
+- 미들웨어 (`lib/admin/auth.ts`): JWT → admin_users role 조회 → audit log fire-and-forget. `SUPER_ADMIN_EMAIL` env 자동 시드. 일반 사용자(카카오 일반 진단)와 admin(카카오 hongary·Google eugene) 분리 — provider 무관 admin_users 등록만 확인
+- API 5개 (`/api/admin/*`): me·subjects (50 페이지 + 4종 검색 + 마스킹 토글)·subjects/[id]·admins (GET/POST/PATCH/DELETE, 자기 삭제·강등 차단)·audit-log (super-admin only)
+- 페이지 (`/admin/*`): _layout·index (로그인 + 권한 진단 카드)·subjects (PC 14컬럼+5 raw / 모바일 토글)·admins (super-admin CRUD)·audit-log (action·email 필터)
+- PII 마스킹 (`lib/admin/mask.ts`): 이름·고향·생년월일 마스킹 + vitest 22/22 PASS
+- 페이지네이션: `1 2 3 … 10 ›` 형식, 점프 가능
+
+**실제 사용 검증 (audit log 기록)**:
+| action | 발생 횟수 |
+|---|---|
+| login | 52 |
+| list_subjects | 21 |
+| add_admin | 1 (UI로 hongary 추가) |
+| view_audit_log | 1 |
+| mask_off | 1 |
+
+**DB 정리**: subjects 165 → 37 row (CASCADE 삭제 3차례: 옛 schema 11 + directions 누락 44 + dev test 6)
+
+### 이슈
+
+- `@/lib/...` alias가 Vercel Functions 빌드 시 미적용 → `Cannot find module` 500. 해결: 서버 코드 (`lib/admin/auth.ts`, `lib/prompts/hagun-tier.ts`)는 상대경로로 통일.
+- Supabase OAuth callback이 `?next=` query string을 cleanup하면서 손실 → `/`로 잘못 redirect. 해결: sessionStorage로 nextPath 전달.
+- `manse_json`에 hagunLabel·primaryTier 직접 저장 X — `calculateFinalTierV2` 함수 호출 필요. 같은 session의 mother/father subjects 일괄 fetch 후 계산.
+- directions 데이터 키 mismatch: 코드는 `d.score`, 실제 데이터는 `d.normalized` (v3) 또는 `d.total` (v2). fallback 적용.
+- 카카오 OAuth scope를 `profile_nickname` 단독으로 강제 (KOE205 우회 잔재) → admin 이메일 못 받음. `requireEmail` prop 신규로 admin에만 `account_email` scope 추가.
+- 카카오 동의 reset = 사용자가 카카오 앱 연결 해제 + Supabase auth user record 삭제 필요. hongary 1회 진행.
+
+### 결정
+
+- **권한 관리**: `admin_users` 테이블 + UI CRUD (env allowlist 대신, 운영 중 추가/제거 가능)
+- **PII 마스킹**: 기본 ON + "원본 보기" 토글 시 audit log `mask_off` 기록
+- **데이터 컬럼**: PC 14+ (subjects + 11 방향성 + 5 raw) / 모바일 토글
+- **provider 비제한**: admin은 Google/카카오 둘 다 — `admin_users` 등록만 확인
+- **학운 점수 cap X**: raw × 100/141 정규화 그대로. 100 초과(108.5 등) = 상위 1.67% 통과 의미 보존
+- **scope 분리**: 일반 카카오 로그인 = `profile_nickname` (이메일 부담 X). admin 카카오 로그인 = `account_email` 추가
+
+### 다음 액션
+
+- mom test 친구 배포 시 admin에서 진단 데이터 검수 가능 (37 row 칼리브레이션 sample + mom test 신규 데이터)
+- 거래액 ↑ 또는 admin 수 ↑ 시 IP allowlist·2FA 강제·CSV export 기능 추가 검토 (현재는 mom test 단계 과투자)
+- super-admin 본인 삭제·강등 차단 외 추가 안전장치 (예: 마지막 super-admin 보호) — 필요 시 도입
+
+### 남은 리스크
+
+- **카카오 admin 신규 추가 시 카카오 동의 화면이 새로 안 뜸**: 기존 카카오 일반 user(닉네임만)가 admin으로 추가되면, 이메일 동의가 누락된 채 admin_users 매핑 안 됨. hongary처럼 카카오 앱 연결 해제 + Supabase user 삭제 + 재로그인 절차 필요. 자동화 가능하지만 mom test 단계엔 super-admin이 수동 처리.
+- **audit log 무한 증가**: 현재 retention 정책 없음. 1년+ 운영 시 `admin_audit_log` table 부피 ↑. 분기별 archive 또는 90일 retention 정책 별도 도입 필요.
+- **카카오 일반 user + 카카오 admin user 동일 카카오 ID** 케이스: 같은 사람이 일반 진단 후 admin 등록 시 supabase user record 충돌 가능. 현재 hongary는 admin 전용 카카오라 영향 X.
+
+_(완료)_
