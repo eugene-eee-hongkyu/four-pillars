@@ -149,11 +149,13 @@ function projectRow(
   const manse = r.manse_json ?? {};
   const directions = (manse.directions ?? []) as DirectionEntry[];
 
-  // directions를 key→normalized 객체로 변환 (실제 데이터 키는 normalized)
+  // directions를 key→점수 객체로 변환.
+  // v3 schema (5/27 11시 이후): normalized 키. v2 (옛): total만. fallback으로 두 schema 모두 지원.
   const directionScores: Record<string, number> = {};
   for (const d of directions) {
-    if (d && typeof d.key === 'string' && typeof d.normalized === 'number') {
-      directionScores[d.key] = d.normalized;
+    if (d && typeof d.key === 'string') {
+      const score = typeof d.normalized === 'number' ? d.normalized : typeof d.total === 'number' ? d.total : null;
+      if (score !== null) directionScores[d.key] = score;
     }
   }
 
