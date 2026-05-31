@@ -13,6 +13,7 @@
 ### 현재 집중
 
 - PG 심사 5종 충족 풀스택 완료 + 사업자 등록 정보 4종 입력 완료 + 랜딩 LegalFooter 위치 fix (`38cdec1`·`43c25d1`·`f51669d`·`3b4f563`). 남은 placeholder 1종: 통신판매업 신고번호. mom test 친구 배포는 즉시 가능.
+- 현재 run: docs/runs/2026-05-31-eduluck-admin_run.md — eduluck admin 기능 (Google OAuth + admin_users CRUD + 진단 리스트·검색 + PIPA 감사 로그)
 
 ### 이어서 할 것
 

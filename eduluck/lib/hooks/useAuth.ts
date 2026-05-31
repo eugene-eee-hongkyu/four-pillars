@@ -10,15 +10,21 @@ import { getSupabaseClient } from '@/lib/supabase/client';
 
 export interface AuthUser {
   id: string;
+  email: string | null;
   nickname: string;
   avatarUrl: string | null;
+  /** OAuth provider identifier (`kakao` / `google` / ...). admin 분기용 */
+  provider: string | null;
 }
 
 interface UseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
   error: Error | null;
+  /** 카카오 로그인 (일반 사용자) */
   login: () => Promise<void>;
+  /** Google 로그인 (admin 전용) */
+  loginWithGoogle: (redirectPath?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -32,7 +38,9 @@ function toAuthUser(u: User | null): AuthUser | null {
     '회원';
   const avatarUrl =
     (meta.avatar_url as string | undefined) ?? (meta.picture as string | undefined) ?? null;
-  return { id: u.id, nickname, avatarUrl };
+  // identities[0].provider 로 OAuth provider 식별 (kakao / google)
+  const provider = (u.app_metadata?.provider as string | undefined) ?? null;
+  return { id: u.id, email: u.email ?? null, nickname, avatarUrl, provider };
 }
 
 export function useAuth(): UseAuthReturn {
@@ -88,11 +96,30 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
+  const loginWithGoogle = useCallback(async (redirectPath: string = '/admin') => {
+    setError(null);
+    if (typeof window === 'undefined') return;
+    const supabase = getSupabaseClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        queryParams: {
+          // refresh_token 받으려면 access_type=offline + prompt=consent 필요. admin 세션 갱신용.
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+    if (err) setError(err);
+  }, []);
+
   const logout = useCallback(async () => {
     const supabase = getSupabaseClient();
     const { error: err } = await supabase.auth.signOut();
     if (err) setError(err);
   }, []);
 
-  return { user, loading, error, login, logout };
+  return { user, loading, error, login, loginWithGoogle, logout };
 }

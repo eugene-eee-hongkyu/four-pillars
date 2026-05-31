@@ -2,9 +2,11 @@
 name: 만세력 해석 고도화 v2 — 합충형파해·지장간·과학자톤
 slug: manse-v2-hapchunh-sciencetone
 type: other
-status: 진행중
+status: 보류
 created: 2026-04-24 20:35
 completed:
+suspended: 2026-05-31
+suspended_reason: sajutalk 프로젝트 hold (eduluck mom test 우선). 재개 시 status를 다시 진행중으로.
 ---
 
 # 만세력 해석 고도화 v2 — 합충형파해·지장간·과학자톤

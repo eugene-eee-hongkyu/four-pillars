@@ -5,12 +5,16 @@
 
 import { useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 export default function AuthCallback() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ next?: string }>();
+  // next 파라미터로 redirect 분기 — Google admin 로그인 시 '/admin/subjects' 등.
+  // 기본은 카카오 로그인 → 홈 ('/').
+  const nextPath = (params.next as string | undefined) ?? '/';
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -20,8 +24,9 @@ export default function AuthCallback() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
       if (event === 'SIGNED_IN' && session?.user) {
-        track(EVENTS.LOGIN_SUCCESS, { provider: 'kakao' });
-        router.replace('/');
+        const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'unknown';
+        track(EVENTS.LOGIN_SUCCESS, { provider });
+        router.replace(nextPath as never);
       }
     });
 
@@ -29,7 +34,7 @@ export default function AuthCallback() {
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       if (data.session?.user) {
-        router.replace('/');
+        router.replace(nextPath as never);
       }
     });
 
@@ -43,7 +48,7 @@ export default function AuthCallback() {
       subscription.unsubscribe();
       clearTimeout(timer);
     };
-  }, [router]);
+  }, [router, nextPath]);
 
   return (
     <View className="flex-1 items-center justify-center bg-surface gap-4">
