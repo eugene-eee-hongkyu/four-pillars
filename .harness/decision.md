@@ -6,6 +6,43 @@
 
 ---
 
+## 2026-05-31: SDK 52 dependency 전략 — shamefully-hoist + supabase 2.104 lock
+
+- **선택**: `.npmrc shamefully-hoist=true` (pnpm root에 모든 transitive deps hoist, npm 동작 모방) + `@supabase/supabase-js: 2.104.1` exact lock + 누락 4 deps 명시 추가
+- **대안 검토**:
+  - A. **deps 하나씩 fix 계속** — Vercel build error마다 누락 dep만 명시 추가. 4번 시도했으나 매번 새로운 누락 발견 (metro-runtime → expo-asset → worklets → opentelemetry). 추가 누락 가능성 미해결.
+  - B. **shamefully-hoist=true (선택)** — pnpm strict resolution 우회. 모든 transitive deps root에 가시화. Vercel pnpm v10·local v11 동작 통일. 향후 추가 누락도 자동 처리.
+  - C. **SDK 51 유지** — 위험 회피. 단 React Native 0.74·React 18.2 멈춤. 보안 패치 포기.
+- **선택 이유**:
+  - shamefully-hoist는 pnpm 표준 옵션 (이름만 악마적, npm 동작). 모노레포 격리는 단일 패키지라 의미 X.
+  - supabase 2.104.1 exact: ^2.104.1이 2.106.2로 자동 upgrade되며 dynamic `@opentelemetry/api` import 추가 → 누락 감지. 박제로 차단.
+  - SDK 52 upgrade는 mom test 전에 끝내야 — 옛 SDK 보안 패치 부재.
+- **영향 범위**: `eduluck/.npmrc` 신규 + `eduluck/package.json` 17 deps. 모든 의존성이 root hoist → dep ↔ dep 격리 깨질 수 있음 (모노레포 X라 미미). build:web local·prod 모두 PASS.
+- **되돌리는 방법**: `.npmrc` shamefully-hoist 제거 + supabase-js 버전 lock 해제. ERROR 다시 발생 시 누락 명시 추가 패턴으로 회귀.
+
+---
+
+## 2026-05-31: localStorage PII 정리 Phase 1·2 — auth 동기화 위치·로그아웃 처리·claim 가드
+
+- **선택**: **FlowProvider useEffect 한 곳에 모든 auth 동기화** + **로그아웃 시 localStorage[STORAGE_KEY] 완전 삭제** + **POST /api/sessions/claim 가드: device_id 매칭 + user_id IS NULL**
+- **대안 검토**:
+  - **위치**: useAuth hook 안 vs FlowProvider. useAuth는 여러 컴포넌트에서 호출되어 mount당 listener 박힘 위험. FlowProvider는 root 1회 마운트 보장.
+  - **로그아웃 정리 범위**:
+    - A. sessionsHistory만 비우고 본문 캐시 유지 — 본문도 회원 PII로 분류해야 PIPA 안전.
+    - B. **STORAGE_KEY 통째 삭제 (선택)** — 자녀 정보·본문·dedup 배열 일괄. deviceId만 보존 (Mixpanel distinct_id).
+    - C. signOut() 후 페이지 reload — 단순하지만 UX 거침.
+  - **claim 가드**:
+    - sessionId만 매칭: 누구나 sessionId 알면 가로채기 가능.
+    - **device_id 매칭 + user_id IS NULL (선택)**: 같은 device의 사용자만 + 이미 매핑된 row 자동 skip (idempotent).
+- **선택 이유**:
+  - FlowProvider 단일 useEffect: state·auth 변화 한 자리 보존. lastSyncedUserIdRef로 StrictMode 중복 방지.
+  - 로그아웃 통째 삭제: 회원 자녀 데이터가 device에 남으면 가족 공유 PC에서 다음 사용자가 볼 위험. deviceId 유지로 funnel 연속성.
+  - device_id 가드: 비회원 시점에 device_id 박혔으므로 같은 device만 claim. cross-device 침입 불가. 옛 device_id NULL sessions는 자동 제외 (재원 9건 — 사용자 결정 A 그대로).
+- **영향 범위**: `api/sessions/claim.ts` 신규 + `api/sessions/my.ts` 신규 + `api/session.ts` ownerUserId 응답 + `lib/flow/context.tsx` (auth useEffect + ServerSessionMeta) + `app/(flow)/family-input.tsx` (PIPA 14세 분기).
+- **되돌리는 방법**: FlowProvider useEffect 제거 + api/sessions/claim·my 삭제 + ownerUserId 응답 제거. 옛 비회원·회원 sessions는 user_id 있는 채로 남음 (무해).
+
+---
+
 ## 2026-05-31: eduluck admin 설계 — admin_users 테이블 + provider 비제한 + PII 마스킹 + Google·카카오 multi-OAuth
 
 - **선택**: (1) admin 권한 = `admin_users` 테이블 + UI CRUD (env allowlist X). (2) PII 마스킹 기본 ON + "원본 보기" 토글 (audit log mask_off). (3) PC 14컬럼+5 raw / 모바일 토글. (4) provider 비제한 (admin_users 등록만 확인 — Google·카카오 둘 다). (5) 학운 점수 cap X (raw × 100/141 정규화 그대로). (6) admin 카카오 로그인만 `account_email` scope 추가 (`requireEmail` prop).

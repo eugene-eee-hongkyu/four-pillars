@@ -6,6 +6,48 @@
 
 ---
 
+## Session 2026-05-31 13:42 — SDK 52 upgrade + localStorage PII Phase 1·2 + PIPA 14세 분기
+
+### 작업 요약
+
+- **expo SDK 51 → 52 upgrade** (`23dc227` → `ffff045` → `2db5de1` → `9a8fe1f`)
+  - 17 deps 갱신: expo 51.0.39 → 52.0.49, expo-router 3.5 → 4.0.22, react 18.2 → 18.3.1, react-native 0.74.5 → 0.76.9, react-native-* 호환 sync
+  - 4 ERROR 사이클 — Vercel pnpm v10 strict resolution이 transitive deps 누락 감지: @expo/metro-runtime → expo-asset → react-native-worklets → @opentelemetry/api (supabase 2.106 자동 upgrade 시 dynamic import 추가됨)
+  - 전략 전환: 누락 하나씩 fix 대신 `.npmrc shamefully-hoist=true` (pnpm strict resolution 우회, npm 동작 모방) + @supabase/supabase-js 2.104.1 exact lock
+  - prod 검증: hydration 정상 (/ · /admin · /legal/refund), console errors 0건, 사용자 SSE Part1·2 LLM 완주 확인
+- **localStorage PII 정리 Phase 1** (`4db2d0e` + `5fb1855` + `f050cd6`) — 회원 진단 user_id 박힘
+  - POST /api/session: Authorization Bearer JWT 옵셔널 → sessions.user_id = auth.uid() (회원이면 자동)
+  - app/index.tsx beginNewSession: supabase.auth.getSession() 토큰 자동 첨부
+  - GET /api/sessions/my (신규 endpoint): 회원 본인 history 서버 fetch + subjects join + calculateFinalTierV2 (학운·티어 즉시 메타)
+  - 응답 ownerUserId 박기 (회원 매핑 즉시 가시화 — Network 탭으로 직접 확인)
+  - DB 검증: hongary user_id 박힘 3 sessions (1caa3399·63373280·cdaf6934 - 홍규 1976 · 재호 2016)
+- **localStorage PII 정리 Phase 2** (`d5b3b9f`) — claim 마이그레이션 + 동기화 + 로그아웃 PII 회수
+  - POST /api/sessions/claim (신규) — 비회원 sessions를 회원에 박음. 보안 가드 2종: device_id 매칭 + user_id IS NULL (idempotent + sessionId 가로채기 차단). 안전 cap 50.
+  - FlowProvider useEffect: 초기 getSession() + onAuthStateChange SIGNED_IN → syncOnLogin (claim 호출 + /api/sessions/my fetch + sessionsHistory 병합)
+  - server 응답 row는 메타 freshness 사용 + local snapshot 있으면 본문 캐시 유지 + server-only는 빈 snapshot (다른 PC 진단 카드만 표시 → 클릭 시 LLM 재호출 자연 fallback)
+  - SIGNED_OUT → setState(initial) + localStorage[STORAGE_KEY] 삭제 (PII 회수). deviceId는 별도 키라 유지 (Mixpanel distinct_id 보존)
+  - lastSyncedUserIdRef ref guard (React StrictMode 중복 방지)
+  - 사용자 검증: 로그아웃 → 재로그인 → 카드 2개 (홍규·재호) server fetch 정확. 옛 device_id NULL sessions(재원 9건)는 자동 제외 — 보안 가드 의도대로 작동
+- **PIPA §22 ② 자녀 만 14세 미만 조건부 노출** (`5fb1855`)
+  - family-input.tsx: calcAgeYears(year,month,day) → childAgeYears < 14 → requiresGuardianConsent. 박스 노출 + canSubmit validate 동시 분기
+  - 사용자 화면 검증: 1976년생(만 50세) 입력 시 박스 미노출
+- **e2e playbook 검증 17·18·19·20 추가** (`26a7d8a` + `1eb27fa`)
+  - 17: SDK 52 prod hydration 회귀 (랜딩·admin·legal)
+  - 18: POST /api/session JWT 옵셔널 + user_id 매핑
+  - 19: GET /api/sessions/my (미인증·invalid JWT curl 검증 + 유효 토큰 사람)
+  - 20: Phase 2 claim·sync·logout 4 시나리오 (A·B·D 사람 / C 보안 가드 curl)
+- **재원 9건 sessions 처리 — 사용자 결정 A** (그대로 둠): device_id NULL 옛 schema 데이터, 칼리브레이션 sample로 _private/calibration-samples/ 박제됨
+
+### 실패한 시도
+- SDK 52 Vercel deploy 4회 연속 ERROR — local pnpm v11 transitive resolve로 통과했으나 Vercel pnpm v10 strict는 명시 deps 필요. 누락 하나씩 fix하다가 5번째 시도에서 shamefully-hoist 전략 전환으로 일괄 해결.
+- 직전 Phase 1 검증에서 sessions.user_id 0건 — Phase 1 deploy 직전 진단이었던 시점 차이. 디버그 가시화 (ownerUserId 응답 + 임시 authDebug) 추가 후 재검증 → 정상 박힘 확인 → cleanup으로 authDebug 제거.
+
+### 다음 액션
+- mom test 친구들 배포 + 인터뷰 4문항
+- 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
+
+
 ## Session 2026-05-30 15:59 — 하네스 문서 갱신 및 커밋
 
 ### 작업 요약

@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-05-31 11:07
-## 마지막 업데이트: 2026-05-31 11:07
+## 마지막 실행: 2026-05-31 13:42
+## 마지막 업데이트: 2026-05-31 13:42
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- eduluck admin 풀스택 완료 (run `2026-05-31-eduluck-admin` 종료, `0da8879`). Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log 풀 작동. DB 정리 165 → 37 row. mom test 친구 배포 + 진단 검수 즉시 가능.
+- localStorage PII 정리 Phase 1·2 완료 (`d5b3b9f` + `1eb27fa`). SDK 51 → 52 upgrade 완료 (`9a8fe1f`). 회원 진단은 server 박힘 + 로그아웃 시 PII 회수 + cross-PC server fetch 작동. mom test 배포 직전 인프라 모두 안전.
 
 ### 이어서 할 것
 
@@ -33,7 +33,7 @@
 
 ### 운영 자료
 
-- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 16종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라)
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라, 17 SDK 52 회귀, 18·19 Phase 1, 20 Phase 2 claim·sync·logout)
 - **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
 - **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음
@@ -44,7 +44,9 @@
 - **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
 - **사전 예약 명단**: Supabase `pdf_preorders` 테이블 (RLS active)
 - **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users 등록 필요). super-admin: eugene.eee@iskra.world · hongary@naver.com
-- **DB 현황**: subjects 37 (child·v3 schema, 칼리브레이션 sample만)
+- **DB 현황**: subjects 37 (child·v3 schema, 칼리브레이션 sample만) · sessions 70 (회원 매핑 1명 hongary 3건)
+- **localStorage owner ship**: Phase 1 회원 진단은 sessions.user_id 직접 박힘. Phase 2 로그인 시 비회원 sessions 자동 claim (device_id 매칭 + user_id IS NULL 가드). 로그아웃 시 STORAGE_KEY 통째 삭제 (PII 회수, deviceId 보존).
+- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true
 
 ### 백로그 요약
 
@@ -205,6 +207,11 @@
 - [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
 - [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)** — 짧은 콘텐츠 시 spacer로 화면 끝으로
 - [x] **eduluck admin 풀스택 (`0da8879` run 완료)** ⭐ — Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log + PII 마스킹 + 페이지네이션 점프 + DB 정리 165→37
+- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐ — 17 deps + 4 ERROR 사이클 fix + .npmrc shamefully-hoist + supabase-js 2.104.1 lock. prod hydration·console 0 error 검증
+- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)** — family-input calcAgeYears 분기 + canSubmit validate 분기
+- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐ — POST /api/session JWT 옵셔널 + sessions.user_id 자동 매핑 + GET /api/sessions/my 신규 + ownerUserId 응답
+- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐ — POST /api/sessions/claim 신규 + FlowProvider auth 동기화 (claim + sessions/my fetch + 로그아웃 STORAGE_KEY 삭제). 사용자 검증: 로그아웃→재로그인 카드 2개 server fetch 정확
+- [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)** — SDK 52 회귀 + Phase 1 + Phase 2 4 시나리오
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
@@ -215,8 +222,5 @@
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
-- [ ] 의존성 11 high 취약점 prod runtime 영향 평가 + expo 51 → 52 upgrade
-- [ ] localStorage PII 정리 — 카카오 로그인 도입으로 user.id 기반 마이그레이션 가능 (DI3.A)
-- [x] **docs/ 문서 "아빠" → "아버지" 정리 (2026-05-31)** — 13개 파일 일괄 변경. legacy-v4 (박제용) 4건 의도적 유지
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)
 - [ ] admin audit log retention 정책 (90일·분기 archive) — 거래액 ↑ 후 도입
