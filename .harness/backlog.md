@@ -4,6 +4,7 @@
 
 ## 대기 중
 
+
 ## 2026-05-27: DirectionKey 'global' → 'abroad' 코드 통일
 
 - **백로그 이유**: V25 정합성 audit에서 DirectionKey 'global' ≡ TrackTrigger 'abroad' ≡ abroadScore ≡ '해외운' 동의어 발견. V25는 prompt instruct로 명시적 매핑만 추가 (코드 변경 ✗). 다음 큰 refactor 세션 때 코드 단일 명명으로 통일 고려.
@@ -58,6 +59,10 @@
 ---
 
 ## 완료/취소
+
+### 2026-06-01 정리 시 완료 처리
+
+- ~~[3] 2026-06-01: 비회원 진단 server-side device_id cap (anonymous_cap_reached)~~ — **완료** (사용자 결정으로 mom test 전 즉시 적용, defense-in-depth + claim cap 5도 함께)
 
 ### 2026-05-31 정리 시 완료·취소 처리
 

@@ -47,11 +47,35 @@ export async function POST(request: Request) {
   }
   const userId = userData.user.id;
 
+  // === 회원 cap 5 체크 ===
+  // 이미 user가 가진 sessions count + claim 요청 수가 cap 초과 시 → available slots까지만 claim.
+  // client-side cap 우회(로그아웃→비회원 진단→재로그인 사이클) 차단의 server-side defense-in-depth.
+  // policy: member.children = 5 (lib/paywall/policy.ts와 일치, server 상수 분리)
+  const MEMBER_CHILDREN_CAP = 5;
+  const { count: currentCount } = await sb
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  const availableSlots = Math.max(0, MEMBER_CHILDREN_CAP - (currentCount ?? 0));
+  const allowedSessionIds = body.sessionIds.slice(0, availableSlots);
+
+  if (allowedSessionIds.length === 0) {
+    // cap 도달 — 어떤 sessionId도 claim 안 함. 비회원 sessions는 user_id NULL 유지.
+    return Response.json({
+      claimedCount: 0,
+      totalRequested: body.sessionIds.length,
+      capReached: true,
+      cap: MEMBER_CHILDREN_CAP,
+      currentCount: currentCount ?? 0,
+    });
+  }
+
   // 핵심: device_id 매칭 + user_id IS NULL 만 update — 보안 가드
   const { data, error } = await sb
     .from('sessions')
     .update({ user_id: userId })
-    .in('id', body.sessionIds)
+    .in('id', allowedSessionIds)
     .eq('device_id', body.deviceId)
     .is('user_id', null)
     .select('id');
@@ -60,8 +84,12 @@ export async function POST(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
+  const claimedCount = data?.length ?? 0;
   return Response.json({
-    claimedCount: data?.length ?? 0,
+    claimedCount,
     totalRequested: body.sessionIds.length,
+    capReached: (currentCount ?? 0) + claimedCount >= MEMBER_CHILDREN_CAP,
+    cap: MEMBER_CHILDREN_CAP,
+    currentCount: (currentCount ?? 0) + claimedCount,
   });
 }

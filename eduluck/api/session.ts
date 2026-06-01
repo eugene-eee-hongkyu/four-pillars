@@ -34,6 +34,29 @@ export async function POST(request: Request) {
     if (userData.user) userId = userData.user.id;
   }
 
+  // === 비회원 device cap 차단 (옵션 1) ===
+  // 같은 device_id로 만든 sessions이 *어떤 종류든* (회원·비회원 무관) 이미 있으면
+  // 비회원으로의 새 진단 시도 차단. 의도:
+  //   - localStorage clear 후 비회원 진단 재시작 시도 차단
+  //   - 회원이 로그아웃 후 비회원으로 무한 진단 사이클 차단
+  // 우회 한계: 시크릿 창·다른 브라우저 → 새 deviceId 발급 → 차단 안 됨 (intentional, minority noise).
+  if (!userId && body.deviceId) {
+    const { data: existing } = await sb
+      .from('sessions')
+      .select('id')
+      .eq('device_id', body.deviceId)
+      .limit(1);
+    if (existing && existing.length > 0) {
+      return Response.json(
+        {
+          error: 'anonymous_cap_reached',
+          message: '이미 같은 기기에서 진단이 있어요. 카카오 로그인 후 보실 수 있어요.',
+        },
+        { status: 403 },
+      );
+    }
+  }
+
   const { data, error } = await sb
     .from('sessions')
     .insert({

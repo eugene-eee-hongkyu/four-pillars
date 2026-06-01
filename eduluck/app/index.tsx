@@ -92,6 +92,15 @@ export default function Landing() {
         headers,
         body: JSON.stringify({ deviceId: getOrCreateDeviceId() }),
       });
+      // 403 anonymous_cap_reached — server device cap 도달 (옵션 1).
+      // 같은 device에 이미 진단 이력 있음 → 카카오 로그인 강제. PaywallModal new_child trigger.
+      if (res.status === 403) {
+        const body = await res.json().catch(() => ({}));
+        if (body?.error === 'anonymous_cap_reached') {
+          setPaywallOpen(true);
+          return;
+        }
+      }
       if (!res.ok) throw new Error(await res.text());
       const { sessionId } = await res.json();
       setSessionId(sessionId);
