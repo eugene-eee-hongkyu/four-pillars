@@ -27,6 +27,23 @@ const SOURCE_LABEL: Record<Source, string> = {
   part2_cap: '다음 10 섹션도 보고 싶으신 어머님께',
 };
 
+// 사전 예약 완료 후 trigger별 복귀 페이지 + 라벨 (B안 — mom test 단계에선 paywall 시점 맥락 유지).
+// 정식 결제 도입 후 cap 해제 적용 시 A안(다음 액션 직진)으로 swap 권장.
+const POST_PAYMENT_PATH: Record<Source, string> = {
+  section_cap: '/interpret-deep-select',
+  child_cap: '/',
+  part2_bonus: '/interpret-premium',
+  part2_cap: '/interpret-premium',
+  premium_pre: '/',
+};
+const POST_PAYMENT_LABEL: Record<Source, string> = {
+  section_cap: '영역 선택으로',
+  child_cap: '랜딩으로',
+  part2_bonus: '내 진단 보기',
+  part2_cap: '내 진단 보기',
+  premium_pre: '랜딩으로',
+};
+
 function detectContactType(s: string): 'phone' | 'email' {
   return s.includes('@') ? 'email' : 'phone';
 }
@@ -119,7 +136,9 @@ export default function PdfPreorder() {
             보내주신 연락처로 출시일·할인 안내가 갑니다.
           </Text>
           <View className="w-full max-w-md mt-4">
-            <Button onPress={() => router.replace('/')}>처음으로</Button>
+            <Button onPress={() => router.replace(POST_PAYMENT_PATH[source] as never)}>
+              {POST_PAYMENT_LABEL[source]}
+            </Button>
           </View>
         </ScrollView>
       </View>
