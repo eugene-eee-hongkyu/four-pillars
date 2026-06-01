@@ -2,6 +2,7 @@
 // 화면 1~11 single-flow 공유. Phase 6에서 회원가입 후에는 user_id도 같이.
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useRouter } from 'expo-router';
 import type { ManseResult } from '@/lib/manse/engine';
 import { hydrateManse } from '@/lib/manse/hydrate';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
@@ -402,6 +403,7 @@ const FlowContext = createContext<FlowContextValue | null>(null);
 
 export function FlowProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FlowState>(loadInitial);
+  const router = useRouter();
 
   // state 변경 시마다 localStorage persist — 페이지 새로고침 시 화면 1부터 다시 시작 안 해도 됨
   useEffect(() => {
@@ -512,6 +514,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         window.localStorage.removeItem(STORAGE_KEY);
       } catch {
         // private mode 등 — silent
+      }
+      // 어떤 화면(admin·진단·deep-select 등)에서 로그아웃해도 첫 화면으로 자동 복귀.
+      // state reset된 채로 진단 화면 머무르면 빈 본문·깨진 hero 등 UX 손상.
+      try {
+        router.replace('/' as never);
+      } catch {
+        // router not ready (SSR 등) — silent
       }
     }
 
