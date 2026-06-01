@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-06-01 13:41
-## 마지막 업데이트: 2026-06-01 13:41
+## 마지막 실행: 2026-06-01 13:58
+## 마지막 업데이트: 2026-06-01 13:58
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- redirect UX 일관성 정비 완료(`a8461a5`): paywall 카카오 로그인·결제 사전 예약 모두 trigger별 자동 복귀 + 본문 끝 자동 scroll(`8543e92`) + 로그아웃 시 어떤 화면이든 `/` 자동 복귀. mom test funnel 직전 사용자 흐름 마찰 0건.
+- claim 흐름 완전성 fix(`a8bc37e`): 비회원 진단 진행 중 카카오 로그인 시 현재 진단 sessionId도 claim → 로그아웃 재로그인 시 그 진단 누락 X. redirect UX 일관성(`a8461a5`)·본문 끝 scroll(`8543e92`)와 함께 mom test funnel 직전 사용자 흐름 마찰 0건.
 
 ### 이어서 할 것
 
@@ -225,6 +225,7 @@
 - [x] **랜딩 hero 분기 PaywallModal + new_child·deepdive 메시지 정정 (`973de14`)**
 - [x] **로그인·결제 후 본문 끝 자동 scroll (`8543e92`)** ⭐ — useScrollToBottomOnRedirect hook + interpret-premium·deep-select 적용
 - [x] **로그아웃 시 어떤 화면이든 / 자동 복귀 (`a8461a5`)** — FlowProvider clearOnLogout router.replace
+- [x] **syncOnLogin claim에 state.sessionId 포함 (`a8bc37e`)** — Part2 완료 전 카카오 로그인 흐름에서 비회원 sessionId 누락 fix
 - [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)

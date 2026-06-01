@@ -23,6 +23,22 @@
 - 포트원 PG 사전 점검 → 가맹점 심사 신청
 
 
+## Session 2026-06-01 13:58 — syncOnLogin claim 현재 진단 sessionId 포함 fix
+
+### 작업 요약
+
+- **FlowProvider syncOnLogin claim sessionIds에 state.sessionId 포함** (`a8bc37e`)
+  - 증상: 비회원 진단 진행 중(Part1 완료, Part2 미완) 카카오 로그인 → 로그아웃 후 재로그인 시 *그 진단 누락* (회원 history 안 잡힘).
+  - 원인: claim 호출 sessionIds = state.sessionsHistory만 사용. Part2 완료 전엔 sessionsHistory에 박힘 X (saveCurrentToHistory는 Part2 완료 시점) → 현재 sessionId 누락 → server user_id NULL 유지 → 다음 sessions/my fetch에 안 들어옴.
+  - 수정: state.sessionId 있고 sessionsHistory에 없으면 claim sessionIds에 push. server claim endpoint device_id 매칭 + user_id IS NULL 가드라 idempotent.
+  - 흐름: 비회원 Part1 후 카카오 로그인 → state.sessionId 포함한 claim → user_id 박힘 → Part2 마저 봄 → saveCurrentToHistory → 로그아웃 → 재로그인 → sessions/my에 그 sessionId 포함 → 카드 노출 (3명 모두).
+
+### 다음 액션
+- mom test 친구들 배포 + 인터뷰 4문항 (변경 없음)
+- 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
+
+
 ## Session 2026-06-01 13:41 — redirect UX 일관성 (paywall/결제 복귀 + 본문 끝 scroll + 로그아웃 자동 /)
 
 ### 작업 요약
