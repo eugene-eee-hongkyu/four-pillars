@@ -18,6 +18,10 @@ export function LegalFooter() {
     router.push(path as never);
   };
 
+  // placeholder 상태 ('[' 로 시작) — 통신판매업 신고 전이라 노출 안 함.
+  // 신고 완료해 BUSINESS_INFO.ecommerceNumber에 실제 번호 채우면 자동 복원.
+  const showEcommerce = !BUSINESS_INFO.ecommerceNumber.startsWith('[');
+
   return (
     <View className="px-container-padding py-6 mt-8 border-t border-outline-warm bg-surface-container-low gap-3">
       {/* 정책 링크 3종 */}
@@ -43,9 +47,11 @@ export function LegalFooter() {
         <Text className="font-body text-label-sm text-text-sub leading-relaxed">
           사업자등록번호: {BUSINESS_INFO.businessNumber}
         </Text>
-        <Text className="font-body text-label-sm text-text-sub leading-relaxed">
-          통신판매업 신고번호: {BUSINESS_INFO.ecommerceNumber}
-        </Text>
+        {showEcommerce && (
+          <Text className="font-body text-label-sm text-text-sub leading-relaxed">
+            통신판매업 신고번호: {BUSINESS_INFO.ecommerceNumber}
+          </Text>
+        )}
         <Text className="font-body text-label-sm text-text-sub leading-relaxed">
           주소: {BUSINESS_INFO.address}
         </Text>
