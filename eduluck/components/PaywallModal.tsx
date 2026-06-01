@@ -19,7 +19,7 @@ interface Props {
   onClose: () => void;
 }
 
-const ANON_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
+const ANON_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; body: string }> = {
   new_child: {
     title: '🌱 다른 자녀도 보시려면',
     body: '첫 번째 자녀 진단은 무료예요.\n다른 자녀 진단은 카카오로 1초 로그인 후 보실 수 있어요.',
@@ -28,25 +28,15 @@ const ANON_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
     title: '🔎 다른 영역도 보시려면',
     body: '첫 번째 영역 깊이 풀이는 무료예요.\n다른 영역도 보시려면 카카오로 1초 로그인이 필요해요.',
   },
+  // part2_entry는 별도 layout 사용 — body는 fallback string.
   part2_entry: {
-    title: '🔮 다음 10 섹션 — 어머니 고민에 답이 있어요',
-    body:
-      '11. 친구·또래\n' +
-      '12. 학원·선생님 ← 이 아이한테 맞는 학원 선택법\n' +
-      '13. 지금부터 앞으로 흐름 ← 언제 집중해야 하는지\n' +
-      '14. 가장 조심해야 할 한 해 ← 위험 시기 미리\n' +
-      '16. 전공 추천\n' +
-      '17. 학교 추천 (안정·가능·도전)\n' +
-      '18. 직업·진로 흐름\n' +
-      '20. 어머니께 한 마디\n' +
-      '\n' +
-      '🎁 1초 카카오 로그인하면\n' +
-      '   다음 10 섹션 + 추가 4명 + 3개 영역 상세 보기 무료\n' +
-      '   닉네임·이메일만 받아요 (전화 및 추가 정보 X)',
+    title: '🔮 다음 10 섹션',
+    subtitle: '어머니 고민에 답이 있어요',
+    body: '11~20 섹션 미리보기 + 인센티브',
   },
 };
 
-const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
+const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; body: string }> = {
   new_child: {
     title: '🌱 자녀 5명까지 보셨네요',
     body: '5명까지 무료로 보셨어요 💝\n더 많은 자녀까지 보려면 정식 출시되는 PDF 패키지를 사전 예약해주세요.',
@@ -55,7 +45,6 @@ const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = 
     title: '🔎 3개 영역을 다 보셨네요',
     body: '3개 영역까지 무료로 보셨어요 🙏\n나머지 17개 영역을 한 PDF로 정리한 정식 패키지를 사전 예약해주세요.',
   },
-  // 회원은 part2_entry trigger로 모달이 뜨지 않지만 type 안전성을 위해 정의 (회원은 Part 2 자동 진입)
   part2_entry: {
     title: '🔮 회원 전용 — 자동 진입',
     body: '회원은 Part 2 본문에 바로 진입할 수 있어요.',
@@ -68,6 +57,24 @@ const PREORDER_SOURCE: Record<PaywallTrigger, 'child_cap' | 'section_cap' | 'par
   part2_entry: 'part2_cap',
 };
 
+// part2_entry trigger 전용 — 섹션 peek 데이터 (구조화 분리).
+// 사용자 카피 그대로 + 시각 위계 위해 hint 분리.
+interface SectionPeek {
+  num: number;
+  title: string;
+  hint?: string;
+}
+const PART2_SECTION_PEEK: SectionPeek[] = [
+  { num: 11, title: '친구·또래' },
+  { num: 12, title: '학원·선생님', hint: '이 아이한테 맞는 학원 선택법' },
+  { num: 13, title: '지금부터 앞으로 흐름', hint: '언제 집중해야 하는지' },
+  { num: 14, title: '가장 조심해야 할 한 해', hint: '위험 시기 미리' },
+  { num: 16, title: '전공 추천' },
+  { num: 17, title: '학교 추천 (안정·가능·도전)' },
+  { num: 18, title: '직업·진로 흐름' },
+  { num: 20, title: '어머니께 한 마디' },
+];
+
 export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
   const router = useRouter();
 
@@ -77,7 +84,8 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
     }
   }, [visible, trigger, isMember]);
 
-  const { title, body } = (isMember ? MEMBER_CONTENT : ANON_CONTENT)[trigger];
+  const { title, subtitle, body } = (isMember ? MEMBER_CONTENT : ANON_CONTENT)[trigger];
+  const isPart2Entry = trigger === 'part2_entry' && !isMember;
 
   const handlePreorderClick = () => {
     track(EVENTS.PAYWALL_PREORDER_CLICK, { trigger });
@@ -90,11 +98,70 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center bg-black/40 px-6">
-        <View className="w-full max-w-md bg-surface rounded-lg p-6 gap-4">
-          <Text className="font-heading-bold text-headline-lg text-text-pri">{title}</Text>
-          <Text className="font-body text-body-md text-text-sub leading-relaxed">{body}</Text>
+      <View className="flex-1 items-center justify-center bg-black/50 px-6">
+        <View
+          className="w-full max-w-md bg-surface rounded-xl p-6 gap-4 border border-outline-warm/30"
+          style={{
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.18,
+            shadowRadius: 24,
+            elevation: 12,
+          }}
+        >
+          {/* === 헤더 — 폰트 통일 (font-body-bold, RN Modal portal 안에서 heading 패밀리 fallback 회피) === */}
+          <View className="gap-1">
+            <Text className="font-body-bold text-display-sm text-text-pri leading-tight">
+              {title}
+            </Text>
+            {subtitle && (
+              <Text className="font-body text-body-md text-text-sub leading-relaxed mt-1">
+                {subtitle}
+              </Text>
+            )}
+          </View>
 
+          {/* === 본문 — part2_entry 전용 layout (섹션 peek 카드 + 인센티브 highlight 박스) === */}
+          {isPart2Entry ? (
+            <>
+              {/* 섹션 peek 카드 */}
+              <View className="rounded-md border border-outline-warm bg-surface-container-low p-4 gap-2">
+                {PART2_SECTION_PEEK.map((s) => (
+                  <View key={s.num} className="flex-row items-baseline gap-1">
+                    <Text className="font-body-bold text-body-sm text-text-pri" style={{ minWidth: 28 }}>
+                      {s.num}.
+                    </Text>
+                    <Text className="font-body-bold text-body-sm text-text-pri">{s.title}</Text>
+                    {s.hint && (
+                      <Text className="font-body text-label-sm text-text-sub flex-shrink leading-relaxed">
+                        {'  '}← {s.hint}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+
+              {/* 인센티브 highlight 박스 — secondary-container 배경으로 시선 강조 */}
+              <View className="rounded-md p-4 gap-1.5 bg-secondary-container/50 border border-secondary-container">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-body-lg">🎁</Text>
+                  <Text className="font-body-bold text-body-md text-text-pri">
+                    1초 카카오 로그인하면
+                  </Text>
+                </View>
+                <Text className="font-body text-body-sm text-text-pri leading-relaxed">
+                  다음 10 섹션 + 추가 4명 + 3개 영역 상세 보기 무료
+                </Text>
+                <Text className="font-body text-label-sm text-text-sub leading-relaxed">
+                  닉네임·이메일만 받아요 (전화 및 추가 정보 X)
+                </Text>
+              </View>
+            </>
+          ) : (
+            <Text className="font-body text-body-md text-text-sub leading-relaxed">{body}</Text>
+          )}
+
+          {/* === 회원 트리거 — PDF 가격 카드 === */}
           {isMember && (
             <View className="p-card-padding rounded-md border border-outline-warm bg-secondary-container/30 gap-1">
               <Text className="font-body-bold text-label-md text-text-pri">📄 정식 PDF 패키지</Text>
@@ -105,7 +172,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
                 <Text className="font-body text-label-md text-text-sub line-through">
                   {formatPrice(PRICING.pdfRegularPrice)}
                 </Text>
-                <Text className="font-heading-bold text-headline-md text-primary">
+                <Text className="font-body-bold text-headline-md text-primary">
                   {formatPrice(PRICING.pdfPreorderPrice)}
                 </Text>
                 <Text className="font-body-bold text-label-md text-primary">
@@ -115,7 +182,8 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
             </View>
           )}
 
-          <View className="gap-2 mt-2">
+          {/* === CTA + dismiss === */}
+          <View className="gap-2 mt-1">
             {isMember ? (
               <Pressable
                 accessibilityRole="button"
@@ -142,10 +210,10 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
             <Pressable
               accessibilityRole="button"
               onPress={onClose}
-              className="px-6 py-3 rounded-md active:opacity-70 items-center"
+              className="py-2 active:opacity-50 items-center"
             >
-              <Text className="font-body text-label-md text-text-sub">
-                {isMember ? '나중에 할게요' : '나중에 할게요'}
+              <Text className="font-body text-label-sm text-text-sub">
+                나중에 보기
               </Text>
             </Pressable>
           </View>
