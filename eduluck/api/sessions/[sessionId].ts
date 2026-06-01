@@ -34,16 +34,19 @@ interface InterpretationRow {
   created_at: string;
 }
 
-export async function GET(request: Request, { params }: { params: { sessionId: string } }) {
+export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return Response.json({ error: 'missing bearer token' }, { status: 401 });
   }
   const jwt = authHeader.slice(7);
 
-  const sessionId = params.sessionId;
-  if (!sessionId) {
-    return Response.json({ error: 'sessionId required' }, { status: 400 });
+  // Vercel Functions은 두 번째 인자 params를 자동 주입 안 함 — URL에서 직접 파싱.
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const sessionId = pathParts[pathParts.length - 1] || '';
+  if (!sessionId || !/^[0-9a-f-]{36}$/i.test(sessionId)) {
+    return Response.json({ error: 'sessionId required (uuid)' }, { status: 400 });
   }
 
   const sb = getSupabaseServer();
