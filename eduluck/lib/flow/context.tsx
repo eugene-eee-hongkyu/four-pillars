@@ -434,6 +434,12 @@ export function FlowProvider({ children }: { children: ReactNode }) {
       // 1) claim — 현재 localStorage history sessionId 모두 회원에 박기 시도.
       //    server는 device_id 매칭 + user_id IS NULL 만 update (idempotent + 보안 가드).
       const currentSessionIds = state.sessionsHistory.map((h) => h.sessionId);
+      // 현재 진행 중 sessionId (Part2 완료 전 카카오 로그인 흐름 — sessionsHistory에 아직 박힘 X) 포함.
+      // 이게 없으면 비회원 시점에 시작한 진단이 claim 안 됨 → server user_id NULL 유지 →
+      // 다음 로그아웃·재로그인 시 sessions/my에서 누락.
+      if (state.sessionId && !currentSessionIds.includes(state.sessionId)) {
+        currentSessionIds.push(state.sessionId);
+      }
       if (currentSessionIds.length > 0) {
         try {
           await fetch('/api/sessions/claim', {
