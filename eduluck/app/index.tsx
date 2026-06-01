@@ -133,34 +133,69 @@ export default function Landing() {
           </View>
 
           <View className="gap-3">
-            {state.sessionsHistory.map((h) => (
-              <Pressable
-                key={h.sessionId}
-                onPress={() => handleHistoryClick(h.sessionId)}
-                className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
-              >
-                <View className="flex-row items-baseline justify-between">
-                  <Text className="font-heading-bold text-headline-md text-text-pri">
-                    {h.childNickname}
-                  </Text>
-                  <Text className="font-body text-label-sm text-text-sub">
-                    {formatSavedAt(h.savedAt)} 진단
-                  </Text>
-                </View>
-                <Text className="font-body text-label-md text-text-sub">
-                  {formatBirth(h.childBirth)}{h.childBirth.hour !== null ? ` · ${String(h.childBirth.hour).padStart(2, '0')}시` : ''}
-                </Text>
-                {h.hagunLabel && (
-                  <View className="flex-row gap-2 flex-wrap mt-1">
-                    <View className="px-3 py-1 rounded-full bg-secondary-container">
-                      <Text className="font-body-bold text-label-md text-primary">
-                        {h.hagunLabel}
+            {state.sessionsHistory.map((h) => {
+              // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인. 본문 캐시 없으므로 비활성·안내.
+              if (h.isServerOnly) {
+                return (
+                  <View
+                    key={h.sessionId}
+                    className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2 opacity-60"
+                  >
+                    <View className="flex-row items-baseline justify-between">
+                      <Text className="font-heading-bold text-headline-md text-text-pri">
+                        {h.childNickname}
+                      </Text>
+                      <Text className="font-body text-label-sm text-text-sub">
+                        {formatSavedAt(h.savedAt)} 진단
                       </Text>
                     </View>
+                    <Text className="font-body text-label-md text-text-sub">
+                      {formatBirth(h.childBirth)}{h.childBirth.hour !== null ? ` · ${String(h.childBirth.hour).padStart(2, '0')}시` : ''}
+                    </Text>
+                    {h.hagunLabel && (
+                      <View className="flex-row gap-2 flex-wrap mt-1">
+                        <View className="px-3 py-1 rounded-full bg-secondary-container">
+                          <Text className="font-body-bold text-label-md text-primary">
+                            {h.hagunLabel}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    <Text className="font-body text-label-sm text-text-sub mt-1">
+                      📡 다른 기기에서 본 진단 · 본문은 곧 불러올 수 있어요
+                    </Text>
                   </View>
-                )}
-              </Pressable>
-            ))}
+                );
+              }
+              return (
+                <Pressable
+                  key={h.sessionId}
+                  onPress={() => handleHistoryClick(h.sessionId)}
+                  className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
+                >
+                  <View className="flex-row items-baseline justify-between">
+                    <Text className="font-heading-bold text-headline-md text-text-pri">
+                      {h.childNickname}
+                    </Text>
+                    <Text className="font-body text-label-sm text-text-sub">
+                      {formatSavedAt(h.savedAt)} 진단
+                    </Text>
+                  </View>
+                  <Text className="font-body text-label-md text-text-sub">
+                    {formatBirth(h.childBirth)}{h.childBirth.hour !== null ? ` · ${String(h.childBirth.hour).padStart(2, '0')}시` : ''}
+                  </Text>
+                  {h.hagunLabel && (
+                    <View className="flex-row gap-2 flex-wrap mt-1">
+                      <View className="px-3 py-1 rounded-full bg-secondary-container">
+                        <Text className="font-body-bold text-label-md text-primary">
+                          {h.hagunLabel}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
 
           {error && (

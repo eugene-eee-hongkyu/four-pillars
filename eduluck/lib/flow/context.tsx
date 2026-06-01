@@ -165,6 +165,9 @@ export interface SavedSession {
   hasPart2: boolean;
   /** entire state snapshot for restore (Mother·Father 포함). 장치 단위 글로벌 필드는 제외해 history 복원 시 보존. */
   snapshot: Omit<FlowState, DeviceGlobalKeys>;
+  /** Phase 2 server-only — localStorage snapshot 없는 카드 (다른 기기에서 진단 or 로그아웃 후 재로그인).
+   *  본문 캐시 없으므로 클릭 시 server에서 본문 fetch 필요. 그 endpoint 도입 전엔 비활성·재진단 안내. */
+  isServerOnly?: boolean;
 }
 
 export interface FlowState {
@@ -402,9 +405,9 @@ export function FlowProvider({ children }: { children: ReactNode }) {
                 savedAt: srv.savedAt ?? local.savedAt,
               };
             }
-            // server-only — local snapshot 없음 (다른 PC에서 진단한 자녀). 카드만 표시.
-            //   클릭 시 snapshot 빈 객체로 restore → 진단 화면이 sessionId·child 등 없는 상태에서
-            //   '본문 캐시 없음 — 처음부터 다시' 자연 fallback.
+            // server-only — local snapshot 없음 (다른 PC 진단 or 로그아웃 후 재로그인).
+            //   본문 캐시 없으므로 클릭 시 server에서 fetch 필요. Phase B 본문 복원 endpoint 도입 전엔
+            //   isServerOnly 플래그로 UI 비활성 처리 (loadSessionFromHistory도 false 반환).
             return {
               sessionId: srv.sessionId,
               savedAt: srv.savedAt,
@@ -414,6 +417,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
               primaryTier: srv.primaryTier,
               hasPart2: false,
               snapshot: {} as Omit<FlowState, DeviceGlobalKeys>,
+              isServerOnly: true,
             };
           });
           // local-only (server에 없음 — claim 실패했거나 다른 device로 진단)는 뒤로 append.
@@ -635,12 +639,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  /** history 카드에서 sessionId 복원. 성공 시 true. 장치 단위 글로벌 필드(dedup 배열)는 현재 값 보존. */
+  /** history 카드에서 sessionId 복원. 성공 시 true. 장치 단위 글로벌 필드(dedup 배열)는 현재 값 보존.
+   *  isServerOnly 카드는 snapshot이 빈 객체라 복원 불가 — false 반환 (호출 측에서 사용자 안내). */
   const loadSessionFromHistory = useCallback((sessionId: string): boolean => {
     let restored = false;
     setState((s) => {
       const entry = s.sessionsHistory.find((h) => h.sessionId === sessionId);
-      if (!entry) return s;
+      if (!entry || entry.isServerOnly) return s;
       restored = true;
       return {
         ...entry.snapshot,
