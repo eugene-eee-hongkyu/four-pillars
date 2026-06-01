@@ -22,11 +22,11 @@ interface Props {
 const ANON_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; body: string }> = {
   new_child: {
     title: '🌱 다른 자녀도 보시려면',
-    body: '첫 번째 자녀 진단은 무료예요.\n다른 자녀 진단은 카카오로 1초 로그인 후 보실 수 있어요.',
+    body: '이 기기에서 이미 진단을 보셨어요.\n다른 자녀 진단은 카카오로 1초 로그인 후 이어보실 수 있어요.',
   },
   deepdive: {
     title: '🔎 다른 영역도 보시려면',
-    body: '첫 번째 영역 깊이 풀이는 무료예요.\n다른 영역도 보시려면 카카오로 1초 로그인이 필요해요.',
+    body: '이 기기에서 이미 영역 풀이를 보셨어요.\n다른 영역도 보시려면 카카오로 1초 로그인 후 이어보실 수 있어요.',
   },
   // part2_entry는 별도 layout 사용 — body는 fallback string.
   part2_entry: {

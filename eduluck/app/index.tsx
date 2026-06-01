@@ -306,6 +306,14 @@ export default function Landing() {
           무료 진단 시작
         </Button>
       </StickyCTA>
+
+      {/* 비회원이 server device cap 403 받았을 때 노출 (e.g. 회원 진단 이력 있는 device에서 로그아웃 후 시도) */}
+      <PaywallModal
+        visible={paywallOpen}
+        trigger="new_child"
+        isMember={!!user}
+        onClose={() => setPaywallOpen(false)}
+      />
     </View>
   );
 }
