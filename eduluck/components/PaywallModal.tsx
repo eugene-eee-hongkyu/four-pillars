@@ -57,6 +57,16 @@ const PREORDER_SOURCE: Record<PaywallTrigger, 'child_cap' | 'section_cap' | 'par
   part2_entry: 'part2_cap',
 };
 
+// 카카오 로그인 후 자동 복귀 경로 — state.premium*Text 그대로 유지된 채 화면 이어보기.
+// part2_entry: Part1 끝낸 사용자가 로그인 후 곧장 Part2 이어보기 (회원 SilentSsePrefetch 자동 작동)
+// deepdive  : 영역 선택 화면 복귀
+// new_child : 랜딩 복귀 (history 카드 + 새 진단 클릭 가능)
+const POST_LOGIN_PATH: Record<PaywallTrigger, string> = {
+  new_child: '/',
+  deepdive: '/interpret-deep-select',
+  part2_entry: '/interpret-premium',
+};
+
 // part2_entry trigger 전용 — 섹션 peek 데이터 (구조화 분리).
 // 사용자 카피 그대로 + 시각 위계 위해 hint 분리.
 interface SectionPeek {
@@ -205,6 +215,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
                 }
                 size="lg"
                 label={trigger === 'part2_entry' ? '1초 로그인하고 무료로 보기' : '카카오로 로그인'}
+                redirectPath={POST_LOGIN_PATH[trigger]}
               />
             )}
             <Pressable
