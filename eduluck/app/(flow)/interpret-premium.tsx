@@ -7,9 +7,10 @@
 //   3. "더 자세히" 클릭 → Part 2 영역 노출 (캐시 hit 즉시 / 미캐시 시 StreamingBody)
 //   4. Part 2 완료 → 학습 특성·공유 버튼·"📋 더 자세히 알고 싶은 영역 선택" 버튼
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useScrollToBottomOnRedirect } from '@/lib/hooks/useScrollToBottomOnRedirect';
 import { Button } from '@/components/ui/Button';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
@@ -64,6 +65,9 @@ export default function InterpretPremium() {
   const [part1Done, setPart1Done] = useState(false);
   const [part2Visible, setPart2Visible] = useState(false);
   const [part2Done, setPart2Done] = useState(false);
+  // 로그인·결제 후 redirect 시 본문 끝 (Part2 보기 버튼 또는 영역 선택 자리)으로 자동 scroll
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToBottomOnRedirect(scrollRef);
   // Part 2 진입 paywall — 비회원은 첫 10 섹션(Part1)까지 무료, 다음 10 섹션 보기는 카카오 로그인 강제.
   const [part2PaywallOpen, setPart2PaywallOpen] = useState(false);
 
@@ -117,7 +121,7 @@ export default function InterpretPremium() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView contentContainerClassName="pt-6 pb-32 gap-6">
+      <ScrollView ref={scrollRef} contentContainerClassName="pt-6 pb-32 gap-6">
         {/* "🏠 처음으로" 상단 버튼 제거 — 헤더 로고가 대신. 하단 buttons 에는 유지. */}
         <View className="px-container-padding gap-2">
           <StepIndicator current={5} />

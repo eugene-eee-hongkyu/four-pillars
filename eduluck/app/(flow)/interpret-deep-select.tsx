@@ -13,12 +13,15 @@ import { useFlow } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { isSectionCapReached } from '@/lib/paywall/policy';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+import { useScrollToBottomOnRedirect } from '@/lib/hooks/useScrollToBottomOnRedirect';
 
 export default function InterpretDeepSelect() {
   const router = useRouter();
   const { state } = useFlow();
   const { user } = useAuth();
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToBottomOnRedirect(scrollRef);
 
   const sections = Object.values(DEEP_SECTIONS).sort((a, b) => a.number - b.number);
   const part1 = sections.filter(s => s.group === 'Part1');
@@ -51,7 +54,7 @@ export default function InterpretDeepSelect() {
 
   return (
     <View className="flex-1 bg-surface">
-      <ScrollView contentContainerClassName="pt-6 pb-24 gap-6">
+      <ScrollView ref={scrollRef} contentContainerClassName="pt-6 pb-24 gap-6">
         {/* 상단 back link — 좌측 정렬 작은 ghost link (Notion·Linear 패턴) */}
         <View className="px-container-padding">
           <Pressable

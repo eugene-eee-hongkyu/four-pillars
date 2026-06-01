@@ -16,6 +16,7 @@ import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
 import { PRICING, formatPrice } from '@/lib/legal/pricing';
+import { setScrollToBottomFlag } from '@/lib/hooks/useScrollToBottomOnRedirect';
 
 type Source = 'section_cap' | 'child_cap' | 'part2_bonus' | 'premium_pre' | 'part2_cap';
 
@@ -136,7 +137,12 @@ export default function PdfPreorder() {
             보내주신 연락처로 출시일·할인 안내가 갑니다.
           </Text>
           <View className="w-full max-w-md mt-4">
-            <Button onPress={() => router.replace(POST_PAYMENT_PATH[source] as never)}>
+            <Button
+              onPress={() => {
+                setScrollToBottomFlag(); // 복귀 페이지에서 본문 끝(다음 CTA 자리)으로 자동 scroll
+                router.replace(POST_PAYMENT_PATH[source] as never);
+              }}
+            >
               {POST_PAYMENT_LABEL[source]}
             </Button>
           </View>

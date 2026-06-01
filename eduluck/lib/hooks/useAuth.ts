@@ -82,6 +82,8 @@ export function useAuth(): UseAuthReturn {
     if (redirectPath) {
       try {
         sessionStorage.setItem('eduluck.admin.nextPath', redirectPath);
+        // 로그인 후 redirect 페이지에서 본문 끝으로 자동 scroll (useScrollToBottomOnRedirect)
+        sessionStorage.setItem('eduluck.scrollToBottomAfterRedirect', '1');
       } catch {
         // silent
       }
@@ -118,6 +120,8 @@ export function useAuth(): UseAuthReturn {
     // 안전하게 sessionStorage로 전달 — OAuth는 같은 탭에서 redirect되므로 유지됨.
     try {
       sessionStorage.setItem('eduluck.admin.nextPath', redirectPath);
+      // 로그인 후 redirect 페이지에서 본문 끝으로 자동 scroll (useScrollToBottomOnRedirect)
+      sessionStorage.setItem('eduluck.scrollToBottomAfterRedirect', '1');
     } catch {
       // sessionStorage 사용 불가 (privacy mode 등) — query fallback에 의존
     }
