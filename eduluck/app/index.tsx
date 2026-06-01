@@ -112,14 +112,7 @@ export default function Landing() {
     beginNewSession();
   };
 
-  const handleHistoryClick = (sessionId: string) => {
-    const ok = loadSessionFromHistory(sessionId);
-    if (!ok) return;
-    track(EVENTS.HISTORY_CARD_CLICK, { clicked_session_id: sessionId });
-    router.push('/(flow)/interpret-premium' as never);
-  };
-
-  // server-only 카드 클릭 — server 본문 fetch 후 진단 화면 진입
+  // server 본문 fetch 후 진단 화면 진입 (server-only 카드 또는 snapshot 빈 fallback)
   const handleServerOnlyClick = async (sessionId: string) => {
     if (restoringSessionId) return; // 중복 클릭 차단
     setRestoringSessionId(sessionId);
@@ -135,6 +128,17 @@ export default function Landing() {
     } finally {
       setRestoringSessionId(null);
     }
+  };
+
+  const handleHistoryClick = (sessionId: string) => {
+    const ok = loadSessionFromHistory(sessionId);
+    if (ok) {
+      track(EVENTS.HISTORY_CARD_CLICK, { clicked_session_id: sessionId });
+      router.push('/(flow)/interpret-premium' as never);
+      return;
+    }
+    // snapshot 비어있는 entry (isServerOnly 라벨 누락된 옛 schema 호환) — server fetch fallback
+    handleServerOnlyClick(sessionId);
   };
 
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA

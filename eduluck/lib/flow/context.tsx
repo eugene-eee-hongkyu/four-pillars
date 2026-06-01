@@ -75,14 +75,17 @@ function loadInitial(): FlowState {
       if (!Array.isArray(merged.part2CompleteFiredSessions)) {
         merged.part2CompleteFiredSessions = [];
       }
-      // history 각 snapshot 안의 ManseResult 도 hydrate (Persistent 스키마 확장 안전)
+      // history 각 snapshot 안의 ManseResult 도 hydrate (Persistent 스키마 확장 안전).
+      // Phase 2 B안 hydrate: snapshot.sessionId 없는 옛 entry는 server-only로 자동 분류
+      //   (A안 deploy 전에 박힌 빈 snapshot 카드 호환 — 클릭 시 server fetch 안 하면 빈 화면 버그 재발)
       merged.sessionsHistory = merged.sessionsHistory.map((s: SavedSession) => {
         if (!s?.snapshot) return s;
         const snap = { ...s.snapshot };
         if (snap.childManse) snap.childManse = hydrateManse(snap.childManse);
         if (snap.motherManse) snap.motherManse = hydrateManse(snap.motherManse);
         if (snap.fatherManse) snap.fatherManse = hydrateManse(snap.fatherManse);
-        return { ...s, snapshot: snap };
+        const isServerOnly = s.isServerOnly === true || !snap.sessionId;
+        return { ...s, snapshot: snap, isServerOnly };
       });
       // 옛 v4 legacy 필드 제거 — 2026-05-27 v4 단절
       delete (merged as Record<string, unknown>).premiumInterpretText;
@@ -458,10 +461,14 @@ export function FlowProvider({ children }: { children: ReactNode }) {
           // server 응답 sessionId 순서 (created_at desc)로 표시
           const merged: SavedSession[] = sessions.map((srv) => {
             const local = localBySid.get(srv.sessionId);
-            if (local) {
+            // local snapshot이 진짜 채워져 있어야 (sessionId 있는 정상 entry) 본문 복원 가능.
+            // 빈 snapshot은 서버에서 fetch 필요 — server-only path로 강제.
+            const localValid = !!local?.snapshot?.sessionId;
+            if (local && localValid) {
               // server 메타로 학운·티어 freshness 보강 (local 캐시는 옛값일 수 있음)
               return {
                 ...local,
+                isServerOnly: false,
                 hagunLabel: srv.hagunLabel ?? local.hagunLabel,
                 primaryTier: srv.primaryTier ?? local.primaryTier,
                 savedAt: srv.savedAt ?? local.savedAt,
@@ -702,12 +709,12 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** history 카드에서 sessionId 복원. 성공 시 true. 장치 단위 글로벌 필드(dedup 배열)는 현재 값 보존.
-   *  isServerOnly 카드는 snapshot이 빈 객체라 복원 불가 — false 반환 (호출 측에서 사용자 안내). */
+   *  isServerOnly 또는 snapshot.sessionId 없는 빈 entry는 복원 불가 — false 반환 (호출 측에서 server fetch). */
   const loadSessionFromHistory = useCallback((sessionId: string): boolean => {
     let restored = false;
     setState((s) => {
       const entry = s.sessionsHistory.find((h) => h.sessionId === sessionId);
-      if (!entry || entry.isServerOnly) return s;
+      if (!entry || entry.isServerOnly || !entry.snapshot?.sessionId) return s;
       restored = true;
       return {
         ...entry.snapshot,
