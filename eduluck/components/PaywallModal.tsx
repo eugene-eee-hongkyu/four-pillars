@@ -204,7 +204,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
                       : 'paywall_deepdive'
                 }
                 size="lg"
-                label={trigger === 'part2_entry' ? '💬 1초 로그인하고 무료로 보기' : '카카오로 로그인'}
+                label={trigger === 'part2_entry' ? '1초 로그인하고 무료로 보기' : '카카오로 로그인'}
               />
             )}
             <Pressable

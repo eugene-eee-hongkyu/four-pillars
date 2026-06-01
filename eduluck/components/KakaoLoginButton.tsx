@@ -3,8 +3,21 @@
 
 import { useState } from 'react';
 import { Pressable, Text, View, ActivityIndicator } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+
+/** 카카오 chat bubble 로고 (공식 가이드 simplified path). lg=22 / md=18 px. */
+function KakaoLogo({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        d="M12 3C6.48 3 2 6.48 2 11c0 2.84 1.79 5.36 4.5 6.84-.07.27-.7 2.71-.78 2.93 0 0-.02.14.09.19s.18 0 .18 0L9 19.5c.93.16 1.92.25 2.94.25 5.52 0 10-3.48 10-7.75S17.52 3 12 3z"
+        fill="#3B1E1E"
+      />
+    </Svg>
+  );
+}
 
 interface Props {
   /** "paywall" 트리거에서 띄울 때 — Mixpanel 이벤트 분리용. */
@@ -57,9 +70,7 @@ export function KakaoLoginButton({
         <ActivityIndicator color="#3B1E1E" />
       ) : (
         <View className="flex-row items-center gap-2">
-          <Text className={textCls} style={{ color: '#3B1E1E' }}>
-            💬
-          </Text>
+          <KakaoLogo size={size === 'lg' ? 22 : 18} />
           <Text className={textCls} style={{ color: '#3B1E1E' }}>
             {label}
           </Text>
