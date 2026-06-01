@@ -7,8 +7,9 @@ import { Modal, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { KakaoLoginButton } from '@/components/KakaoLoginButton';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
+import { PRICING, formatPrice } from '@/lib/legal/pricing';
 
-export type PaywallTrigger = 'new_child' | 'deepdive';
+export type PaywallTrigger = 'new_child' | 'deepdive' | 'part2_entry';
 
 interface Props {
   visible: boolean;
@@ -27,6 +28,10 @@ const ANON_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
     title: '🔎 다른 영역도 보시려면',
     body: '첫 번째 영역 깊이 풀이는 무료예요.\n다른 영역도 보시려면 카카오로 1초 로그인이 필요해요.',
   },
+  part2_entry: {
+    title: '🔮 다음 10 섹션도 무료로 보세요',
+    body: '지금까지 본 10개 섹션은 자녀의 본질·기질·관계예요.\n다음 10개 섹션은 학원·전공·과목·시기·진로 등 실제 행동을 위한 가이드예요.\n카카오로 1초 로그인하면 무료로 이어서 보실 수 있어요.',
+  },
 };
 
 const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = {
@@ -35,14 +40,20 @@ const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; body: string }> = 
     body: '5명까지 무료로 보셨어요 💝\n더 많은 자녀까지 보려면 정식 출시되는 PDF 패키지를 사전 예약해주세요.',
   },
   deepdive: {
-    title: '🔎 5개 영역을 다 보셨네요',
-    body: '5개 영역까지 무료로 보셨어요 🙏\n나머지 15개 영역을 한 PDF로 정리한 정식 패키지를 사전 예약해주세요.',
+    title: '🔎 3개 영역을 다 보셨네요',
+    body: '3개 영역까지 무료로 보셨어요 🙏\n나머지 17개 영역을 한 PDF로 정리한 정식 패키지를 사전 예약해주세요.',
+  },
+  // 회원은 part2_entry trigger로 모달이 뜨지 않지만 type 안전성을 위해 정의 (회원은 Part 2 자동 진입)
+  part2_entry: {
+    title: '🔮 회원 전용 — 자동 진입',
+    body: '회원은 Part 2 본문에 바로 진입할 수 있어요.',
   },
 };
 
-const PREORDER_SOURCE: Record<PaywallTrigger, 'child_cap' | 'section_cap'> = {
+const PREORDER_SOURCE: Record<PaywallTrigger, 'child_cap' | 'section_cap' | 'part2_cap'> = {
   new_child: 'child_cap',
   deepdive: 'section_cap',
+  part2_entry: 'part2_cap',
 };
 
 export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
@@ -78,7 +89,17 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
               <Text className="font-body text-label-sm text-text-sub leading-relaxed">
                 20영역 전체 · 더 길고 상세한 해석 · 학년별 가이드
               </Text>
-              <Text className="font-heading-bold text-headline-md text-text-pri mt-1">19,900원</Text>
+              <View className="flex-row items-baseline gap-2 mt-1">
+                <Text className="font-body text-label-md text-text-sub line-through">
+                  {formatPrice(PRICING.pdfRegularPrice)}
+                </Text>
+                <Text className="font-heading-bold text-headline-md text-primary">
+                  {formatPrice(PRICING.pdfPreorderPrice)}
+                </Text>
+                <Text className="font-body-bold text-label-md text-primary">
+                  ({PRICING.pdfDiscountPercent}% 할인)
+                </Text>
+              </View>
             </View>
           )}
 
@@ -95,7 +116,13 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
               </Pressable>
             ) : (
               <KakaoLoginButton
-                source={trigger === 'new_child' ? 'paywall_new_child' : 'paywall_deepdive'}
+                source={
+                  trigger === 'new_child'
+                    ? 'paywall_new_child'
+                    : trigger === 'part2_entry'
+                      ? 'paywall_part2_entry'
+                      : 'paywall_deepdive'
+                }
                 size="lg"
               />
             )}

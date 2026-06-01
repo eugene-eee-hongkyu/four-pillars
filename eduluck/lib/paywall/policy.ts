@@ -6,7 +6,7 @@
 
 const CAP = {
   anonymous: { children: 1, sections: 1 },
-  member:    { children: 5, sections: 5 },
+  member:    { children: 5, sections: 3 },
 } as const;
 
 /** 비회원/회원에 따른 자녀 cap. (= 신규 자녀 진단 시작 허용 한도) */

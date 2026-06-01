@@ -8,7 +8,7 @@ import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 interface Props {
   /** "paywall" 트리거에서 띄울 때 — Mixpanel 이벤트 분리용. */
-  source?: 'landing' | 'paywall_new_child' | 'paywall_deepdive';
+  source?: 'landing' | 'paywall_new_child' | 'paywall_deepdive' | 'paywall_part2_entry';
   /** 크기 — lg (단독 CTA), md (모달 안 등 기본) */
   size?: 'lg' | 'md';
   /** 로그인 후 이동 경로 (admin 페이지 등) — 기본 '/' */

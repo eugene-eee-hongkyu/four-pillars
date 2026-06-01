@@ -15,14 +15,16 @@ import { LegalFooter } from '@/components/ui/LegalFooter';
 import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
+import { PRICING, formatPrice } from '@/lib/legal/pricing';
 
-type Source = 'section_cap' | 'child_cap' | 'part2_bonus' | 'premium_pre';
+type Source = 'section_cap' | 'child_cap' | 'part2_bonus' | 'premium_pre' | 'part2_cap';
 
 const SOURCE_LABEL: Record<Source, string> = {
-  section_cap: '5개 영역을 모두 보신 어머님께',
+  section_cap: '3개 영역을 모두 보신 어머님께',
   child_cap: '자녀 5명을 모두 보신 어머님께',
   part2_bonus: '정밀 진단을 끝까지 읽으신 어머님께',
   premium_pre: '정식 출시 전 사전 예약',
+  part2_cap: '다음 10 섹션도 보고 싶으신 어머님께',
 };
 
 function detectContactType(s: string): 'phone' | 'email' {
@@ -157,9 +159,19 @@ export default function PdfPreorder() {
           </Text>
           <View className="pt-2 border-t border-outline-warm/50">
             <Text className="font-body text-label-md text-text-sub">정식 가격</Text>
-            <Text className="font-heading-bold text-headline-md text-text-pri">19,900원</Text>
+            <Text className="font-body text-label-md text-text-sub line-through">
+              {formatPrice(PRICING.pdfRegularPrice)}
+            </Text>
+            <View className="flex-row items-baseline gap-2 mt-1">
+              <Text className="font-heading-bold text-headline-md text-primary">
+                {formatPrice(PRICING.pdfPreorderPrice)}
+              </Text>
+              <Text className="font-body-bold text-label-md text-primary">
+                ({PRICING.pdfDiscountPercent}% 할인)
+              </Text>
+            </View>
             <Text className="font-body text-label-sm text-text-sub mt-1">
-              사전 예약하신 분께는 출시 시 할인 안내드려요
+              사전 예약하신 분께는 출시 시 할인된 가격으로 안내드려요
             </Text>
           </View>
         </View>

@@ -20,9 +20,12 @@ import { HagunSignerBreakdown } from '@/components/manse/HagunSignerBreakdown';
 import { BirthSummary } from '@/components/manse/BirthSummary';
 import { DirectionCard } from '@/components/manse/DirectionCard';
 import { useFlow } from '@/lib/flow/context';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { PaywallModal } from '@/components/PaywallModal';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
+import { formatPreorderPrice } from '@/lib/legal/pricing';
 
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -57,9 +60,21 @@ export default function InterpretPremium() {
     markPart1CompleteFired,
     markPart2CompleteFired,
   } = useFlow();
+  const { user } = useAuth();
   const [part1Done, setPart1Done] = useState(false);
   const [part2Visible, setPart2Visible] = useState(false);
   const [part2Done, setPart2Done] = useState(false);
+  // Part 2 진입 paywall — 비회원은 첫 10 섹션(Part1)까지 무료, 다음 10 섹션 보기는 카카오 로그인 강제.
+  const [part2PaywallOpen, setPart2PaywallOpen] = useState(false);
+
+  // Part 2 버튼 클릭 — 비회원이면 paywall, 회원이면 그대로 노출
+  const handlePart2Click = () => {
+    if (!user) {
+      setPart2PaywallOpen(true);
+      return;
+    }
+    setPart2Visible(true);
+  };
 
   // 캐시 hit (또는 동일 자녀 재진입) → 즉시 done + Part 2 보이기 (이미 본 적 있음).
   // PART1/2_COMPLETE 이벤트는 markPart{1,2}CompleteFired 가 sessionId 단위 1회만 발사하도록 dedup.
@@ -178,14 +193,25 @@ export default function InterpretPremium() {
           />
         )}
 
-        {/* === Part 1 완료 → "더 자세히 진로·미래 보기" 버튼 (Part 1 화면의 끝) === */}
+        {/* === Part 1 완료 → "다음 10개 항목 보기" 버튼 (Part 1 화면의 끝) === */}
+        {/*    비회원: 클릭 시 카카오 로그인 paywall · 회원: 자동 진입 */}
         {part1Done && !part2Visible && !state.premiumPart2Text && (
           <View className="px-container-padding mt-4">
-            <Button onPress={() => setPart2Visible(true)}>
-              📖 더 자세한 진로·미래 보기 (10 섹션)
+            <Button onPress={handlePart2Click}>
+              {user
+                ? '📖 다음 10개 항목 보기 (학원·진로·미래)'
+                : '🔒 다음 10개 항목 보기 (카카오 로그인)'}
             </Button>
           </View>
         )}
+
+        {/* Part 2 paywall — 비회원만 노출 */}
+        <PaywallModal
+          visible={part2PaywallOpen}
+          trigger="part2_entry"
+          isMember={!!user}
+          onClose={() => setPart2PaywallOpen(false)}
+        />
 
         {/* === Part 2 (10 섹션) — 버튼 누른 후 또는 캐시 hit 시 === */}
         {(part2Visible || state.premiumPart2Text) && (
@@ -283,7 +309,7 @@ export default function InterpretPremium() {
                     📄 20영역 PDF로 받아보고 싶으세요?
                   </Text>
                   <Text className="font-body text-label-sm text-text-sub text-center">
-                    정식 출시 시 19,900원 · 사전 예약 시 할인
+                    {formatPreorderPrice()}
                   </Text>
                 </Pressable>
               </View>

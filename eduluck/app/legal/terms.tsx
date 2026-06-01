@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LegalFooter } from '@/components/ui/LegalFooter';
 import { BUSINESS_INFO } from '@/lib/legal/business-info';
+import { PRICING } from '@/lib/legal/pricing';
 
 export default function Terms() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function Terms() {
           </Section>
 
           <Section title="제6조 (유료 콘텐츠 및 결제)">
-            {'1. 유료 PDF 진단의 정가는 19,900원이며, 결제 시점의 표시 가격이 적용됩니다.\n'}
+            {`1. 유료 PDF 진단의 정가는 ${PRICING.pdfRegularPrice.toLocaleString('ko-KR')}원이며, 결제 시점의 표시 가격이 적용됩니다.\n`}
             {'2. 결제 수단은 회사가 제공하는 PG사를 통한 카드결제·간편결제 등으로 한정합니다.\n'}
             {'3. 결제 완료 후 다운로드 또는 열람 시점부터 청약철회가 제한됩니다 (자세한 사항은 환불 정책 참조).'}
           </Section>
