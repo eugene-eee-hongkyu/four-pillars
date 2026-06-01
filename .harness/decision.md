@@ -6,6 +6,21 @@
 
 ---
 
+## 2026-06-01: 사전 예약 완료 후 trigger별 복귀 — B안 (paywall 시점 맥락 유지)
+
+- **선택**: B안 — 결제 후 paywall trigger별 *맥락 페이지*로 복귀 + 완료 안내 화면 거침
+- **대안 검토**:
+  - A안 (다음 액션 직진): new_child → family-input 즉시 / deepdive → 영역 진단 직진. 결제 = paywall 해제 의미. 정식 결제 도입 후 적절
+  - B안 (맥락 페이지 복귀): trigger별로 *어디서 왔는지* 페이지로 복귀. mom test 단계엔 사전 예약이 *명단 수집*이라 cap 해제 X — 사용자가 직진하면 또 paywall 부딪힘
+- **선택 이유**: mom test 단계의 사전 예약은 Fake Door (cap 해제 안 됨). A안 적용 시 사용자가 paywall 다시 부딪히는 부정 신호. B안 = 정직한 정책 (당신 페이지로 돌아갑니다 + 사전 예약 안내드릴게요)
+- **영향 범위**: `app/(flow)/pdf-preorder.tsx` POST_PAYMENT_PATH + POST_PAYMENT_LABEL 매핑. 완료 화면 "처음으로" 버튼 → trigger별 동적
+- **되돌리는 방법**: 정식 결제 도입 시 POST_PAYMENT_PATH를 A안으로 swap:
+  - child_cap → '/(flow)/family-input'
+  - section_cap → '/interpret-deep-select' (cap 해제 가정)
+  - part2_*  → '/interpret-premium' (그대로)
+
+---
+
 ## 2026-06-01: Phase 2 B안 — cross-PC server 본문 복원 endpoint
 
 - **선택**: A안(server-only 카드 비활성 + 안내) **즉시 + B안(GET /api/sessions/[id] endpoint)** 본격 둘 다 적용.

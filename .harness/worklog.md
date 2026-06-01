@@ -23,6 +23,38 @@
 - 포트원 PG 사전 점검 → 가맹점 심사 신청
 
 
+## Session 2026-06-01 13:41 — redirect UX 일관성 (paywall/결제 복귀 + 본문 끝 scroll + 로그아웃 자동 /)
+
+### 작업 요약
+
+- **PaywallModal trigger별 카카오 로그인 후 자동 복귀** (`3e4e14c`)
+  - POST_LOGIN_PATH 매핑: new_child '/' · deepdive '/interpret-deep-select' · part2_entry '/interpret-premium'
+  - 의도: paywall 시점 맥락 그대로 유지된 채로 로그인 후 *내가 보던 곳*으로 복귀
+  - 이전: redirectPath 안 전달해서 callback이 '/' fallback → Part1 진행 다 잃은 듯한 UX
+- **pdf-preorder 사전 예약 완료 후 trigger별 복귀 분기** (`86e7947`, B안)
+  - POST_PAYMENT_PATH + POST_PAYMENT_LABEL: section_cap '영역 선택으로' · child_cap '랜딩으로' · part2_bonus·part2_cap '내 진단 보기' · premium_pre '랜딩으로'
+  - mom test 단계엔 사전 예약 = 명단 수집(cap 해제 X)이라 *맥락 페이지* 복귀가 자연. 정식 결제 도입 후 A안(다음 액션 직진)으로 swap 권장
+- **랜딩 hero 분기 PaywallModal 추가 + new_child·deepdive 메시지 정정** (`973de14`)
+  - 회원이 자녀 N명 진단 후 로그아웃 → 비회원으로 무료 진단 시도 → server 403 받지만 hero 분기에 modal 컴포넌트 미렌더라 아무 반응 X → 추가
+  - body 정정: '첫 번째 자녀 진단은 무료' → '이 기기에서 이미 진단을 보셨어요. 다른 자녀 진단은 카카오로 1초 로그인 후 이어보실 수 있어요.' (비회원 cap 1 도달 + 회원 로그아웃 device cap 두 케이스 모두 자연)
+- **로그인·결제 후 redirect 페이지 본문 끝 자동 scroll** (`8543e92`)
+  - lib/hooks/useScrollToBottomOnRedirect.ts 신규 (setScrollToBottomFlag·useScrollToBottomOnRedirect)
+  - useAuth.login·loginWithGoogle redirectPath 박을 때 flag 동시 박음
+  - pdf-preorder 완료 router.replace 직전 setScrollToBottomFlag 호출
+  - interpret-premium·interpret-deep-select ScrollView ref + hook (250ms setTimeout으로 hydrate·SSE 캐시 렌더 후 scrollToEnd)
+  - 랜딩(index.tsx)은 sticky CTA라 적용 안 함
+- **로그아웃 시 어떤 화면이든 첫 화면(/) 자동 복귀** (`a8461a5`)
+  - FlowProvider clearOnLogout 끝에 router.replace('/') 추가
+  - SIGNED_OUT 이벤트 → state reset + localStorage 삭제 + 랜딩 자동 이동
+  - 깨진 본문·hero 화면 등 state reset 후 잔여 깨짐 방지
+
+### 다음 액션
+- mom test 친구들 배포 + 인터뷰 4문항 (변경 없음)
+- 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
+- mom test 결과 → 정가 confirm → 결제 페이지 구현 (이 시점에 POST_PAYMENT_PATH B안 → A안 swap 검토)
+
+
 ## Session 2026-06-01 11:28 — Phase 2 B안 cross-PC + UX·디자인 정비 + PDF 가격·paywall 정책 + server cap defense
 
 ### 작업 요약

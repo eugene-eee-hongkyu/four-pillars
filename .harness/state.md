@@ -6,18 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-06-01 11:28
-## 마지막 업데이트: 2026-06-01 11:28
+## 마지막 실행: 2026-06-01 13:41
+## 마지막 업데이트: 2026-06-01 13:41
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- Phase 2 B안 cross-PC server 본문 복원(`bcf9553`) + Part2 비회원 paywall + 회원 cap 5→3 + 가격 정가 20,000원·80% 할인 4,000원 단일 source + PaywallModal 3-zone 디자인 + 4-CTA 3-tier 재배치(PDF Tier 1) + 카카오 SVG 로고 + server cap defense(`e210452`) 완료. mom test 배포 직전 funnel 측정 정책·UX 전부 갖춤.
+- redirect UX 일관성 정비 완료(`a8461a5`): paywall 카카오 로그인·결제 사전 예약 모두 trigger별 자동 복귀 + 본문 끝 자동 scroll(`8543e92`) + 로그아웃 시 어떤 화면이든 `/` 자동 복귀. mom test funnel 직전 사용자 흐름 마찰 0건.
 
 ### 이어서 할 것
 
 1. **mom test 친구들 배포 + 인터뷰 4문항** → admin에서 진단 검수 가능. 가이드: `eduluck/docs/mom-test/interview-guide.md`
-2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움. 채워지면 LegalFooter 자동 복원 (placeholder 자동 숨김 처리됨)
+2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움 (LegalFooter 자동 복원)
 3. **포트원 PG 사전 점검 재실행** → 가맹점 심사 신청 (토스페이먼츠 메인)
 
 ### 막힌 것
@@ -30,30 +30,31 @@
 - 통신판매업 신고 시점 (지금 진행 권장 — mom test 병행)
 - 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
 - CSP Enforce 전환 (1주 모니터링 후, 2026-06-04 권장)
+- 정식 결제 도입 시 POST_PAYMENT_PATH B → A안 swap 검토
 
 ### 운영 자료
 
-- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 인프라, 17 SDK 52 회귀, 18·19 Phase 1, 20 Phase 2 claim·sync·logout)
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증
 - **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
-- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표
+- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
-- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. PaywallModal·interpret-premium·pdf-preorder·terms 모두 PRICING 사용
-- **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx`
+- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인
+- **redirect UX 인프라**: `lib/hooks/useScrollToBottomOnRedirect.ts` (setScrollToBottomFlag + hook). PaywallModal POST_LOGIN_PATH + pdf-preorder POST_PAYMENT_PATH 매핑. FlowProvider clearOnLogout → router.replace('/')
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
-- **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope (KOE205 우회 완료). KakaoLoginButton chat bubble SVG 로고
+- **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope. KakaoLoginButton chat bubble SVG 로고
 - **paywall 정책**: 비회원 자녀 1·영역 1·Part2 진입 차단 / 회원 자녀 5·영역 3
-- **server cap defense**: POST /api/session 비회원 device_id 매칭 403 + POST /api/sessions/claim 회원 cap 5 server-side
-- **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF + 추가 기능* (정가 20,000원, 사전 예약 4,000원 80% 할인). LTV/CAC 분석 별도
+- **server cap defense**: POST /api/session 비회원 device_id 매칭 403 + POST /api/sessions/claim 회원 cap 5
+- **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF + 추가 기능* (정가 20,000원, 사전 예약 4,000원 80% 할인)
 - **사전 예약 명단**: Supabase `pdf_preorders` 테이블 (RLS active)
-- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users 등록). super-admin: eugene.eee@iskra.world · hongary@naver.com
-- **DB 현황**: subjects 37 (child·v3, 칼리브레이션 sample만) · sessions 70 (회원 매핑 1명 hongary 3건)
-- **localStorage owner ship**: Phase 1 회원 진단 sessions.user_id 직접 박힘. Phase 2 로그인 시 비회원 sessions 자동 claim (device_id 매칭 + cap 5). 로그아웃 시 STORAGE_KEY 통째 삭제 (PII 회수, deviceId 보존). Phase 2 B안 server 본문 fetch endpoint 활성 (cross-PC sync)
-- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true · react-native-svg 15.8.0 (카카오 로고)
+- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users). super-admin: eugene.eee@iskra.world · hongary@naver.com
+- **DB 현황**: subjects 37 (child·v3) · sessions 70 (회원 매핑 1명 hongary 3건)
+- **localStorage owner ship**: Phase 1 user_id 직접 박힘. Phase 2 claim 자동 + 로그아웃 시 STORAGE_KEY 통째 삭제 + router.replace('/'). Phase 2 B안 server 본문 fetch endpoint 활성 (cross-PC sync)
+- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true · react-native-svg 15.8.0
 
 ### 백로그 요약
 
 - 대기 중: 4개
-- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일 (직전 2026-06-01 device_id cap은 이번 세션 완료 처리됨)
+- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
 
 ### 진행 상황
 
@@ -163,10 +164,10 @@
 - [x] e2e 검증 (API+UI+DB) + test data DELETE 완료
 - [x] Supabase 진단 데이터 저장 확인 — sessions 110·subjects 165·interpretations 128
 - [x] 진단 history 카드 + 새 진단 분기 (`e469511`) — localStorage sessionsHistory[] ⭐
-- [x] VersionFooter build patch KST timestamp (`a1e2edb`·`4d1f4c8`) — 매 배포 unique
-- [x] BirthSummary 카드 (`40bb081`·`7813ea0`) — child-manse·interpret-premium·interpret-deep ⭐
-- [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`) — sessionId 단위 dedup
-- [x] Mixpanel deviceId 분리 (`7813ea0`) — 장비 단위 사용자, sessionId super property ⭐
+- [x] VersionFooter build patch KST timestamp (`a1e2edb`·`4d1f4c8`)
+- [x] BirthSummary 카드 (`40bb081`·`7813ea0`) ⭐
+- [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`)
+- [x] Mixpanel deviceId 분리 (`7813ea0`) ⭐
 - [x] project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)
 - [x] 정확성 audit 5 rounds — BUG A-H fix (`02aaa18`) ⭐
 - [x] DB migration prod 적용 — feedback_responses·session.device_id·subjects.gender 백필
@@ -174,64 +175,66 @@
 - [x] 무료진단 전면 제거 (BUG H)
 - [x] 옛 흐름 dead screen 5파일 삭제 (DG2.B)
 - [x] selftest-calibration-v25-prod.ts + 12 samples expected V25 baseline (DG1.C) — 12/12 PASS ⭐
-- [x] **보안 audit Round 1 (`3eb52c3`)** — Critical 1 + High 4 + Med 3 + dead endpoint 정리 ⭐
+- [x] **보안 audit Round 1 (`3eb52c3`)** ⭐
 - [x] **/api/checkout mock 결제 endpoint 삭제** (paid flag bypass)
-- [x] **sessions.llm_call_count + cap 50** (LLM 비용 공격 차단, ISSUE-2)
-- [x] **4 LLM API IDOR fix** (subject.session_id 검증, ISSUE-3)
-- [x] **/api/share-backfill 삭제** + ShareButton 폴백 제거 (가짜 본문 spam 차단)
+- [x] **sessions.llm_call_count + cap 50** (ISSUE-2)
+- [x] **4 LLM API IDOR fix** (ISSUE-3)
+- [x] **/api/share-backfill 삭제** + ShareButton 폴백 제거
 - [x] **subjects nickname sanitize** (prompt injection 방어)
-- [x] **/api/subjects deviceId 검증** (feedback 패턴 확장)
-- [x] **보안 audit Round 2 (`233f091`)** — Supabase RPC·RLS + headers + Mixpanel PII ⭐
-- [x] **increment_llm_call_count INVOKER + EXECUTE 회수** (anon DoS 차단)
-- [x] **feedback_responses.anon_insert_feedback policy 제거** (anon RLS bypass 차단)
-- [x] **vercel.json 보안 헤더 추가** — X-Frame DENY, X-Content nosniff, Referrer, Permissions, CSP Report-Only
-- [x] **Mixpanel `latest_gyeokguk`·`latest_day_pillar` 제거** (자녀 사주 PII 추론 차단)
-- [x] **e2e Playbook 작성** (`.harness/e2e-playbook.md`) — 5종 검증 표준화 + Mixpanel MCP OAuth 완료 ⭐
-- [x] **e2e 검증 2회 (`02aaa18` + `9bd4b0d`) 모두 PASS** — 5종 + 보안 헤더 활성 확인
-- [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) — 이벤트 13 + Event prop 14 + User prop 14 description·display_name·verified + 구 `sessionId` hidden ⭐
-- [x] **`history_card_click` prop 분리** (`abbd950`) — `sessionId`에서 `clicked_session_id` (super property와 의미 분리)
-- [x] **카카오 로그인 + paywall 풀스택** (`b01a158`) — Supabase Auth Provider Kakao + useAuth + KakaoLoginButton + PaywallModal + /auth/callback ⭐
-- [x] **paywall 트리거 1·2 통합** (`b01a158`) — 랜딩 자녀 추가 + deepdive 영역 추가 시 비회원만 로그인 강제
-- [x] **Mixpanel auth/paywall 5 EVENTS** (`b01a158`) — LOGIN_CLICK·SUCCESS·OUT + PAYWALL_VIEW·LOGIN_CLICK
-- [x] **e2e-playbook 검증 6-10 추가** (`219bab9`) — paywall 트리거 1·2 + OAuth redirect + callback + Mixpanel 인입 ⭐
-- [x] **KOE205 해결 — Supabase scope URL 직접 교체** (`4246f04`) — skipBrowserRedirect + scope=profile_nickname 단독 ⭐
-- [x] **UX round 1** (`75fd19c`) — sticky AppHeader + BuildInfoModal + CTA 워딩 정리 ((5분) 제거)
-- [x] **UX round 2** (`8eb7003`) — 헤더 ⓘ → 푸터 ⓘ + 회원 닉네임 드롭다운 + 상단 홈버튼 정리
-- [x] **UX round 3** (`485eb95`) — back link 좌측 정렬 + 작은 ghost link (Notion·Linear 패턴)
-- [x] **UX round 4** (`96a8536`) — 하단 navigation back/home 제거 (forward action 유지)
-- [x] **paywall cap 정책** (`3b463ea` + `e75978a`) — 회원 자녀 5·영역 5 + isMember PaywallModal + lib/paywall/policy.ts 단일 source ⭐
-- [x] **한국 사주 BM 가격 조사** — 사주아이 990원·포스텔러·전문 상담 50,000 분석 + eduluck 정가 19,900원 결정 (mom test 후)
-- [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — UI + LLM prompt 11 파일 + PREMIUM_PROMPT_VERSION v5.26
-- [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) — startNewSession 보존 + snapshot fallback + family-input 토글 자동 펼침 ⭐
-- [x] **mom test 측정 인프라 (`2108d49`)** ⭐ — Fake Door 사전 예약 페이지 + PIPA 동의 + cap 도달 이벤트 6종 + PaywallModal 회원 분기 전환 + Part2 PDF 조기 CTA + Mixpanel funnel 3종 dashboard + 인터뷰 가이드
-- [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** — PIPA + Fake Door + cap 6종 prod PASS 박제 ⭐
-- [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐ — BUSINESS_INFO 단일 source + LegalFooter + 정책 3종 페이지 + pdf-preorder 청약철회 동의 + BuildInfoModal 정책 링크
-- [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
-- [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)** — 짧은 콘텐츠 시 spacer로 화면 끝으로
-- [x] **eduluck admin 풀스택 (`0da8879`)** ⭐ — Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log + 페이지네이션 점프 + DB 정리 165→37
-- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐ — 17 deps + 4 ERROR 사이클 fix + .npmrc shamefully-hoist + supabase-js 2.104.1 lock
-- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)** — family-input calcAgeYears 분기
-- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐ — POST /api/session JWT 옵셔널 + sessions.user_id 자동 매핑 + GET /api/sessions/my 신규
-- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐ — POST /api/sessions/claim + FlowProvider auth 동기화 + 로그아웃 STORAGE_KEY 삭제
-- [x] **Phase 2 B안 cross-PC server 본문 복원 (`bcf9553`)** ⭐ — GET /api/sessions/[sessionId] + restoreSessionFromServer + 3중 가드 + Vercel Functions URL 파싱
-- [x] **LegalFooter 통신판매업 placeholder 자동 숨김 (`c21bacd`)** — 신고 후 자동 복원
-- [x] **Part2 비회원 paywall + 회원 cap 5→3 + 가격 단일 source 20,000원·80% 할인 4,000원 (`a7f42b9` + `edec4d3`)** ⭐ — lib/legal/pricing.ts 신규 + PaywallModal part2_entry trigger + policy.ts CAP.member.sections 3
-- [x] **Part2 SilentSsePrefetch 회원 only (`5470749`)** — 비회원 paywall 우회 차단
-- [x] **PaywallModal 카피·이메일 scope default·CTA label override (`d405555`)** ⭐ — 사용자 직접 확정 카피 + 일반 사용자도 account_email scope
-- [x] **PaywallModal 3-zone 디자인 + 폰트 통일 + shadow (`7edf995`)** — 헤더 + 섹션 peek 카드 + 인센티브 highlight + ghost dismiss
-- [x] **Part2 완료 4-CTA 3-tier 재배치 (`851f0a4`)** ⭐ — PDF 카드 Tier 1 + 영역 outline Tier 2 + ShareButton compact + 피드백 ghost cluster
-- [x] **KakaoLoginButton 카카오 chat bubble SVG 로고 (`16ebbd8`)** — 이모지 중복 제거 + react-native-svg
-- [x] **server-side cap defense (`e210452`)** ⭐ — POST /api/session device_id cap + POST /api/sessions/claim 회원 cap 5 + client 403 핸들러
-- [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)** — SDK 52 회귀 + Phase 1 + Phase 2 4 시나리오
+- [x] **/api/subjects deviceId 검증**
+- [x] **보안 audit Round 2 (`233f091`)** ⭐
+- [x] **increment_llm_call_count INVOKER + EXECUTE 회수**
+- [x] **feedback_responses.anon_insert_feedback policy 제거**
+- [x] **vercel.json 보안 헤더 추가**
+- [x] **Mixpanel `latest_gyeokguk`·`latest_day_pillar` 제거**
+- [x] **e2e Playbook 작성** ⭐
+- [x] **e2e 검증 2회 모두 PASS**
+- [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) ⭐
+- [x] **history_card_click prop 분리** (`abbd950`)
+- [x] **카카오 로그인 + paywall 풀스택** (`b01a158`) ⭐
+- [x] **paywall 트리거 1·2 통합** (`b01a158`)
+- [x] **Mixpanel auth/paywall 5 EVENTS** (`b01a158`)
+- [x] **e2e-playbook 검증 6-10 추가** (`219bab9`) ⭐
+- [x] **KOE205 해결 — Supabase scope URL 직접 교체** (`4246f04`) ⭐
+- [x] **UX round 1-4** (`75fd19c`·`8eb7003`·`485eb95`·`96a8536`)
+- [x] **paywall cap 정책** (`3b463ea` + `e75978a`) ⭐
+- [x] **한국 사주 BM 가격 조사**
+- [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — PREMIUM_PROMPT_VERSION v5.26
+- [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) ⭐
+- [x] **mom test 측정 인프라 (`2108d49`)** ⭐
+- [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** ⭐
+- [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐
+- [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)**
+- [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)**
+- [x] **eduluck admin 풀스택 (`0da8879`)** ⭐
+- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐
+- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)**
+- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐
+- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐
+- [x] **Phase 2 B안 cross-PC server 본문 복원 (`bcf9553`)** ⭐
+- [x] **LegalFooter 통신판매업 placeholder 자동 숨김 (`c21bacd`)**
+- [x] **Part2 비회원 paywall + 회원 cap 5→3 + 가격 20,000원·80% 할인 4,000원 (`a7f42b9` + `edec4d3`)** ⭐
+- [x] **Part2 SilentSsePrefetch 회원 only (`5470749`)**
+- [x] **PaywallModal 카피·이메일 scope default·CTA label override (`d405555`)** ⭐
+- [x] **PaywallModal 3-zone 디자인 + 폰트 통일 + shadow (`7edf995`)**
+- [x] **Part2 완료 4-CTA 3-tier 재배치 (`851f0a4`)** ⭐
+- [x] **KakaoLoginButton 카카오 chat bubble SVG 로고 (`16ebbd8`)**
+- [x] **server-side cap defense (`e210452`)** ⭐
+- [x] **PaywallModal trigger별 카카오 로그인 자동 복귀 (`3e4e14c`)**
+- [x] **pdf-preorder trigger별 결제 복귀 B안 (`86e7947`)**
+- [x] **랜딩 hero 분기 PaywallModal + new_child·deepdive 메시지 정정 (`973de14`)**
+- [x] **로그인·결제 후 본문 끝 자동 scroll (`8543e92`)** ⭐ — useScrollToBottomOnRedirect hook + interpret-premium·deep-select 적용
+- [x] **로그아웃 시 어떤 화면이든 / 자동 복귀 (`a8461a5`)** — FlowProvider clearOnLogout router.replace
+- [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
-- [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
-- [ ] Mom test 친구들 배포 + 인터뷰 4문항 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
-- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
+- [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
+- [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
+- [ ] Mom test 친구들 배포 + 인터뷰 4문항 → GO/HOLD/KILL 판정
+- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현 + POST_PAYMENT_PATH B→A안 swap
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
-- [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
-- [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
-- [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장, console violation 0 확인 후)
+- [ ] 06·08 sample v7 포맷 갱신
+- [ ] Deep-dive 일 N회 cap 운영 결정
+- [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
-- [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체 (현재 임시 휴대폰)
-- [ ] admin audit log retention 정책 (90일·분기 archive) — 거래액 ↑ 후 도입
+- [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체
+- [ ] admin audit log retention 정책 (90일·분기 archive)

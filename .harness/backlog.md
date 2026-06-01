@@ -62,12 +62,7 @@
 
 ### 2026-06-01 정리 시 완료 처리
 
-- ~~[2] 2026-06-01: 비회원 진단 server-side device_id cap (anonymous_cap_reached)~~ — **완료** (사용자 결정으로 mom test 전 즉시 적용, defense-in-depth + claim cap 5도 함께)
-
-### 2026-05-31 정리 시 완료·취소 처리
-
-- ~~[1] 2026-05-29: docs/ 문서 "아빠" → "아버지" 일괄 정리~~ — **완료** (13개 파일 일괄, legacy-v4 박제용 4건 유지)
-- ~~[1] 2026-05-24: 외부 변수 (환경·노력·SES) 별도 모듈 도입 검토~~ — **취소** (사용자 결정: 구현 X)
+- ~~[1] 2026-06-01: 비회원 진단 server-side device_id cap (anonymous_cap_reached)~~ — **완료** (사용자 결정으로 mom test 전 즉시 적용, defense-in-depth + claim cap 5도 함께)
 
 ### 2026-05-26 정리 시 완료 처리
 
