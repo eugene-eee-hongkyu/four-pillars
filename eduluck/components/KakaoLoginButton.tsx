@@ -13,15 +13,19 @@ interface Props {
   size?: 'lg' | 'md';
   /** 로그인 후 이동 경로 (admin 페이지 등) — 기본 '/' */
   redirectPath?: string;
-  /** true 시 account_email scope 요청 — admin 로그인용 (admin_users 이메일 매핑 필수) */
+  /** account_email scope 요청 — default true (일반 사용자도 닉네임+이메일 동의).
+   *  false로 명시 시 닉네임만 요청. mom test 측정 정책: 이메일까지 받음. */
   requireEmail?: boolean;
+  /** 버튼 라벨 override — 기본 "카카오로 로그인" */
+  label?: string;
 }
 
 export function KakaoLoginButton({
   source = 'landing',
   size = 'md',
   redirectPath,
-  requireEmail = false,
+  requireEmail = true,
+  label = '카카오로 로그인',
 }: Props) {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -57,7 +61,7 @@ export function KakaoLoginButton({
             💬
           </Text>
           <Text className={textCls} style={{ color: '#3B1E1E' }}>
-            카카오로 로그인
+            {label}
           </Text>
         </View>
       )}

@@ -75,7 +75,7 @@ export function useAuth(): UseAuthReturn {
     };
   }, []);
 
-  const login = useCallback(async (redirectPath?: string, requireEmail = false) => {
+  const login = useCallback(async (redirectPath?: string, requireEmail = true) => {
     setError(null);
     if (typeof window === 'undefined') return;
     // redirectPath 지정 시 sessionStorage에 박아서 callback에서 분기 (Google OAuth와 동일 패턴)
@@ -92,8 +92,9 @@ export function useAuth(): UseAuthReturn {
     // 일반 앱은 account_email 비즈 검수 필요 → KOE205. options.scopes 는 append 만 됨.
     //
     // 우회: skipBrowserRedirect 로 OAuth URL 만 받아온 뒤 scope 파라미터를 직접 교체.
-    // - 일반 사용자: profile_nickname (이메일 부담 X)
-    // - admin (requireEmail=true): profile_nickname + account_email (admin_users 매핑용)
+    // 2026-06-01 변경: 일반 사용자도 default로 account_email 받음 (mom test 사용자 명시 정책).
+    // - default (일반 사용자·admin): profile_nickname + account_email
+    // - requireEmail=false 명시: profile_nickname 만 (이메일 부담 회피 케이스용)
     const { data, error: err } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: { redirectTo, skipBrowserRedirect: true },
