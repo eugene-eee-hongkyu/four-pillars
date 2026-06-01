@@ -183,8 +183,11 @@ export default function InterpretPremium() {
           />
         ) : null}
 
-        {/* Part 2 백그라운드 prefetch — Part 1 완료 + Part 2 미완 + part2Body 있을 때 */}
-        {part1Done && !state.premiumPart2Text && part2Body && (
+        {/* Part 2 백그라운드 prefetch — 회원 only.
+            비회원은 Part2 paywall(카카오 로그인 강제)이라 prefetch 차단 — prefetch 끝나면
+            premiumPart2Text 박혀서 useEffect가 자동 노출 → paywall 우회되는 버그 방지.
+            회원은 paywall 통과라 prefetch로 UX 매끄럽게. */}
+        {part1Done && !state.premiumPart2Text && part2Body && user && (
           <SilentSsePrefetch
             endpoint="/api/interpret-premium-part2"
             body={part2Body}
