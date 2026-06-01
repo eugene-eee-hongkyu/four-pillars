@@ -37,11 +37,13 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
 
 export default function Landing() {
   const router = useRouter();
-  const { state, setSessionId, loadSessionFromHistory, startNewSession } = useFlow();
+  const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer } = useFlow();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  /** server-only 카드 본문 fetch 중 표시 — 클릭한 sessionId */
+  const [restoringSessionId, setRestoringSessionId] = useState<string | null>(null);
 
   const hasHistory = state.sessionsHistory.length > 0;
   // 트리거 1: 자녀 cap 도달 시 paywall (비회원 1명, 회원 2명)
@@ -117,6 +119,24 @@ export default function Landing() {
     router.push('/(flow)/interpret-premium' as never);
   };
 
+  // server-only 카드 클릭 — server 본문 fetch 후 진단 화면 진입
+  const handleServerOnlyClick = async (sessionId: string) => {
+    if (restoringSessionId) return; // 중복 클릭 차단
+    setRestoringSessionId(sessionId);
+    setError(null);
+    try {
+      const ok = await restoreSessionFromServer(sessionId);
+      if (!ok) {
+        setError('진단 본문을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      track(EVENTS.HISTORY_CARD_CLICK, { clicked_session_id: sessionId });
+      router.push('/(flow)/interpret-premium' as never);
+    } finally {
+      setRestoringSessionId(null);
+    }
+  };
+
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA
   if (hasHistory) {
     return (
@@ -134,12 +154,17 @@ export default function Landing() {
 
           <View className="gap-3">
             {state.sessionsHistory.map((h) => {
-              // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인. 본문 캐시 없으므로 비활성·안내.
+              // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인.
+              // 클릭 시 /api/sessions/[id] fetch → 본문 복원 → 진단 화면 진입.
               if (h.isServerOnly) {
+                const isRestoring = restoringSessionId === h.sessionId;
                 return (
-                  <View
+                  <Pressable
                     key={h.sessionId}
-                    className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2 opacity-60"
+                    onPress={() => handleServerOnlyClick(h.sessionId)}
+                    disabled={isRestoring}
+                    className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
+                    style={({ pressed }) => ({ opacity: pressed || isRestoring ? 0.6 : 1 })}
                   >
                     <View className="flex-row items-baseline justify-between">
                       <Text className="font-heading-bold text-headline-md text-text-pri">
@@ -162,9 +187,9 @@ export default function Landing() {
                       </View>
                     )}
                     <Text className="font-body text-label-sm text-text-sub mt-1">
-                      📡 다른 기기에서 본 진단 · 본문은 곧 불러올 수 있어요
+                      {isRestoring ? '⏳ 진단 본문 불러오는 중…' : '📡 다른 기기에서 본 진단 · 누르면 불러와요'}
                     </Text>
-                  </View>
+                  </Pressable>
                 );
               }
               return (

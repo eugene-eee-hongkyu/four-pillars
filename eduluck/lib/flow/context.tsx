@@ -154,6 +154,65 @@ interface ServerSessionMeta {
   savedAt: string;
 }
 
+/** /api/sessions/[sessionId] 응답 subject row (snake_case server schema). */
+interface ServerSubject {
+  id: string;
+  role: 'child' | 'mother' | 'father';
+  nickname: string | null;
+  gender: 'male' | 'female';
+  grade: string | null;
+  birth_calendar: 'solar' | 'lunar';
+  birth_year: number;
+  birth_month: number;
+  birth_day: number;
+  birth_hour: number | null;
+  birth_minute: number | null;
+  birth_location: string | null;
+  manse_json: unknown;
+}
+
+function subjectToChildInput(s: ServerSubject): ChildInput {
+  return {
+    nickname: s.nickname ?? '',
+    gender: s.gender,
+    grade: s.grade,
+    birthCalendar: s.birth_calendar,
+    birthYear: s.birth_year,
+    birthMonth: s.birth_month,
+    birthDay: s.birth_day,
+    birthHour: s.birth_hour,
+    birthMinute: s.birth_minute,
+    birthLocation: s.birth_location,
+    reminderEmail: null,
+  };
+}
+
+function subjectToMotherInput(s: ServerSubject): MotherInput {
+  return {
+    gender: 'female',
+    birthCalendar: s.birth_calendar,
+    birthYear: s.birth_year,
+    birthMonth: s.birth_month,
+    birthDay: s.birth_day,
+    birthHour: s.birth_hour,
+    birthMinute: s.birth_minute,
+    birthLocation: s.birth_location,
+  };
+}
+
+function subjectToFatherInput(s: ServerSubject): FatherInput {
+  return {
+    gender: 'male',
+    birthCalendar: s.birth_calendar,
+    birthYear: s.birth_year,
+    birthMonth: s.birth_month,
+    birthDay: s.birth_day,
+    birthHour: s.birth_hour,
+    birthMinute: s.birth_minute,
+    birthLocation: s.birth_location,
+  };
+}
+
 /** 진단 완료 후 history 카드 표시·복원용 스냅샷. 랜딩에서 "이전 진단" 카드로 노출. */
 export interface SavedSession {
   sessionId: string;
@@ -331,6 +390,9 @@ interface FlowContextValue {
   markPart1CompleteFired: (sessionId: string) => boolean;
   /** PART2_COMPLETE 발사 mark. 처음 mark 면 true 반환, 중복이면 false. */
   markPart2CompleteFired: (sessionId: string) => boolean;
+  /** server-only sessionId 클릭 시 server 본문 복원 (Phase 2 B안).
+   *  성공 시 state 복원 + sessionsHistory[].snapshot 채움 + isServerOnly=false 업그레이드. */
+  restoreSessionFromServer: (sessionId: string) => Promise<boolean>;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -714,6 +776,86 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     return isNew;
   }, []);
 
+  /** server-only sessionId 클릭 시 호출. /api/sessions/[sessionId] fetch → state 전체 복원.
+   *  성공 시 sessionsHistory의 해당 entry 도 isServerOnly=false + snapshot 채움 (다음 클릭부터 즉시 복원). */
+  const restoreSessionFromServer = useCallback(async (sessionId: string): Promise<boolean> => {
+    try {
+      const supabase = getSupabaseClient();
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) return false;
+
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return false;
+      const data = (await res.json()) as {
+        subjects: { child: ServerSubject | null; mother: ServerSubject | null; father: ServerSubject | null };
+        interpretations: {
+          part1Text: string | null;
+          part2Text: string | null;
+          deepDiveTexts: Record<number, string>;
+          promptVersion: string | null;
+        };
+      };
+
+      if (!data.subjects.child) return false; // 자녀 없으면 진단 미완료 — 복원 불가
+
+      const child = subjectToChildInput(data.subjects.child);
+      const childManse = data.subjects.child.manse_json
+        ? hydrateManse(data.subjects.child.manse_json as ManseResult)
+        : null;
+      const childSubjectId = data.subjects.child.id;
+
+      const motherSrv = data.subjects.mother;
+      const mother = motherSrv ? subjectToMotherInput(motherSrv) : { ...initial.mother };
+      const motherManse = motherSrv?.manse_json ? hydrateManse(motherSrv.manse_json as ManseResult) : null;
+      const motherSubjectId = motherSrv?.id ?? null;
+      const motherStatus: 'pending' | 'entered' | 'skipped' = motherSrv ? 'entered' : 'pending';
+
+      const fatherSrv = data.subjects.father;
+      const father = fatherSrv ? subjectToFatherInput(fatherSrv) : { ...initial.father };
+      const fatherManse = fatherSrv?.manse_json ? hydrateManse(fatherSrv.manse_json as ManseResult) : null;
+      const fatherSubjectId = fatherSrv?.id ?? null;
+      const fatherStatus: 'pending' | 'entered' | 'skipped' = fatherSrv ? 'entered' : 'pending';
+
+      setState((s) => {
+        const newSnapshot: Omit<FlowState, DeviceGlobalKeys> = {
+          sessionId,
+          userId: s.userId,
+          paid: s.paid,
+          child, childSubjectId, childManse,
+          mother, motherSubjectId, motherManse, motherStatus,
+          father, fatherSubjectId, fatherManse, fatherStatus,
+          premiumPart1Text: data.interpretations.part1Text,
+          premiumPart2Text: data.interpretations.part2Text,
+          deepDiveTexts: data.interpretations.deepDiveTexts ?? {},
+          premiumPromptVersion: data.interpretations.promptVersion,
+        };
+        // sessionsHistory에서 해당 entry를 snapshot 채워진 형태로 업그레이드
+        const upgraded = s.sessionsHistory.map((h) =>
+          h.sessionId === sessionId
+            ? {
+                ...h,
+                isServerOnly: false,
+                hasPart2: !!data.interpretations.part2Text,
+                snapshot: newSnapshot,
+              }
+            : h,
+        );
+        return {
+          ...s,
+          ...newSnapshot,
+          sessionsHistory: upgraded,
+        };
+      });
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   /** PART2_COMPLETE 이벤트 dedup — sessionId 신규 mark 시 true, 이미 발사된 경우 false. */
   const markPart2CompleteFired = useCallback((sessionId: string): boolean => {
     if (!sessionId) return false;
@@ -758,6 +900,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         markFeedbackSubmitted,
         markPart1CompleteFired,
         markPart2CompleteFired,
+        restoreSessionFromServer,
       }}
     >
       {children}
