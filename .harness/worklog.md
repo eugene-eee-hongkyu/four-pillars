@@ -23,6 +23,56 @@
 - 포트원 PG 사전 점검 → 가맹점 심사 신청
 
 
+## Session 2026-06-01 11:28 — Phase 2 B안 cross-PC + UX·디자인 정비 + PDF 가격·paywall 정책 + server cap defense
+
+### 작업 요약
+
+- **Phase 2 B안 cross-PC server 본문 복원** (`ab25892` + `21546cd` + `bcf9553` + `523baa3`)
+  - 신규 endpoint `GET /api/sessions/[sessionId]` — sessions.user_id = auth.uid() 검증 (IDOR 차단) + subjects/interpretations join + 같은 kind latest 1개 (premium-part1·part2·deep-N)
+  - context.tsx `restoreSessionFromServer` action — fetch 후 child·mother·father·manse·Part1·Part2·deepDive 모두 복원 + sessionsHistory entry isServerOnly=false + snapshot 채움
+  - 3중 가드: (1) loadInitial hydrate snapshot.sessionId 없으면 isServerOnly=true 자동 박제 (2) server merge localValid 체크 (3) loadSessionFromHistory 빈 entry 방어
+  - app/index.tsx handleHistoryClick fallback — 일반 카드 snapshot 비어있으면 자동 server fetch
+  - Vercel Functions params 자동 주입 X 발견 → URL pathname split으로 sessionId 추출 (시그니처 fix)
+  - e2e curl 5종 PASS: /api/sessions/my, /api/sessions/[id] 본문 fetch (홍규 part1 7172자·part2 10960자·deep-17), invalid uuid 400, IDOR 403
+- **LegalFooter 통신판매업 placeholder 자동 숨김** (`c21bacd`) — `BUSINESS_INFO.ecommerceNumber.startsWith('[')` 시 줄 자체 hide. 신고 후 값 채우면 자동 복원
+- **Part2 비회원 paywall + cap 5→3 + 가격 20,000·80% 할인 4,000원** (`a7f42b9` + `edec4d3`)
+  - 신규 lib/legal/pricing.ts (PRICING + formatPrice + formatPreorderPrice)
+  - PaywallModal `part2_entry` trigger 신규 — interpret-premium에서 비회원이 "다음 10개 항목 보기" 클릭 시 카카오 로그인 강제
+  - policy.ts CAP.member.sections 5 → 3
+  - PaywallModal·pdf-preorder·interpret-premium·terms 모두 PRICING 단일 source 적용
+- **Part2 SilentSsePrefetch 회원 only** (`5470749`) — 비회원이 Part1 후 5초 대기하면 자동 prefetch로 paywall 우회되던 버그. user 조건 추가
+- **PaywallModal 카피 + 이메일 scope + CTA 강화** (`d405555` + `7edf995`)
+  - 사용자 직접 확정 카피 — 8 섹션 peek + 인센티브 (다음 10 섹션 + 4명 + 3개 영역) + 정직 신뢰 (닉네임·이메일만, 전화 X)
+  - useAuth.login·KakaoLoginButton default requireEmail=true — 일반 사용자도 카카오 account_email scope. KOE205 우회 admin만 적용했던 이전 정책 변경
+  - KakaoLoginButton label prop override + part2_entry CTA "💬 1초 로그인하고 무료로 보기"
+  - 3-zone 디자인: 헤더(font-body-bold 통일) + 섹션 peek 카드 + 인센티브 highlight box + ghost dismiss. rounded-xl + shadow + subtle border (Notion·Stripe·Substack 패턴)
+- **Part2 완료 4-CTA 3-tier 재배치** (`851f0a4`) — mom test 결제 의향 측정 우선
+  - Tier 1: PDF 패키지 큰 primary 카드 (정가 line-through + 강조가 + 80% 할인 chip + 큰 CTA, Stripe pricing 패턴)
+  - Tier 2: 영역 선택 outline (Button secondary, '17 섹션 남음' 동적 라벨)
+  - Tier 3: 공유(ShareButton compact=true) + 피드백 ghost cluster (Substack 패턴)
+  - 노란 피드백 강조 박스 제거 (시각 hijack 원인). mom test 후 PDF↔영역 선택 swap 권장
+- **KakaoLoginButton 카카오 chat bubble SVG 로고** (`16ebbd8`) — 💬 이모지 중복(button + label) 제거 후 react-native-svg KakaoLogo 인라인. 노란 #FEE500 + chat bubble + 갈색 텍스트 = 표준 카카오 로그인 인식
+- **server cap defense-in-depth** (`e210452`) — 옵션 1·#1 둘 다 즉시 적용
+  - POST /api/session: 비회원 + 같은 device_id sessions 1+ 있으면 403 anonymous_cap_reached (회원 로그아웃 후 비회원 무한 진단 사이클 차단 / localStorage clear 우회 차단)
+  - POST /api/sessions/claim: user의 현재 sessions count 조회 → availableSlots = 5 - currentCount → sliceTo만 claim. 응답 capReached·cap·currentCount 동봉
+  - client app/index.tsx beginNewSession 403 분기 → PaywallModal new_child trigger
+  - backlog 항목 "server device_id cap" 완료 처리
+- **PIPA 자녀 만 14세 미만 조건부 노출** (이미 직전 세션이지만 e2e 확장됨)
+- **e2e 검증 데이터 cleanup** — 검증용 비회원 session DELETE
+- 검증 통과: typecheck PASS 모든 단계, Playwright e2e new_child paywall design + 빈 snapshot hydrate isServerOnly 자동 박제 + 클릭 fallback + 카카오 토큰 e2e 본문 fetch + IDOR + 404 + server cap 403/200 curl 검증
+
+### 실패한 시도
+- Vercel Functions `(request, {params})` 두 번째 인자 시그니처 → `Error running exported function` 500. URL pathname split으로 sessionId 직접 파싱 fix (Next App Router 패턴과 다름)
+- 직전 사용자 시각 검증: 새 모달 카피 적용 직후 카드 라벨 안 뜸 → 옛 schema 빈 snapshot 카드가 새 hydrate 분기 못 거쳐 → 3중 가드로 fix
+- localStorage 직접 주입으로 Part1 후 paywall trigger 검증 시도 — FlowProvider mount 타이밍에 state reset되어 자동 검증 어려움. 사용자 직접 검증 흐름으로 위임
+
+### 다음 액션
+- mom test 친구들 배포 + 인터뷰 4문항 (변경 없음)
+- 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
+- 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
+- mom test 결과 → 정가 confirm → 결제 페이지 구현
+
+
 ## Session 2026-05-31 13:42 — SDK 52 upgrade + localStorage PII Phase 1·2 + PIPA 14세 분기
 
 ### 작업 요약

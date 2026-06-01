@@ -6,18 +6,18 @@
 
 ---
 
-## 마지막 실행: 2026-05-31 15:59
-## 마지막 업데이트: 2026-05-31 15:59
+## 마지막 실행: 2026-06-01 11:28
+## 마지막 업데이트: 2026-06-01 11:28
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- localStorage PII 정리 Phase 1·2 완료 (`d5b3b9f` + `1eb27fa`). SDK 51 → 52 upgrade 완료 (`9a8fe1f`). 회원 진단은 server 박힘 + 로그아웃 시 PII 회수 + cross-PC server fetch 작동. mom test 배포 직전 인프라 모두 안전.
+- Phase 2 B안 cross-PC server 본문 복원(`bcf9553`) + Part2 비회원 paywall + 회원 cap 5→3 + 가격 정가 20,000원·80% 할인 4,000원 단일 source + PaywallModal 3-zone 디자인 + 4-CTA 3-tier 재배치(PDF Tier 1) + 카카오 SVG 로고 + server cap defense(`e210452`) 완료. mom test 배포 직전 funnel 측정 정책·UX 전부 갖춤.
 
 ### 이어서 할 것
 
 1. **mom test 친구들 배포 + 인터뷰 4문항** → admin에서 진단 검수 가능. 가이드: `eduluck/docs/mom-test/interview-guide.md`
-2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움
+2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움. 채워지면 LegalFooter 자동 복원 (placeholder 자동 숨김 처리됨)
 3. **포트원 PG 사전 점검 재실행** → 가맹점 심사 신청 (토스페이먼츠 메인)
 
 ### 막힌 것
@@ -33,25 +33,27 @@
 
 ### 운영 자료
 
-- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 측정 인프라, 17 SDK 52 회귀, 18·19 Phase 1, 20 Phase 2 claim·sync·logout)
+- **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증 (1-10 핵심·paywall·로그인, 11-16 mom test 인프라, 17 SDK 52 회귀, 18·19 Phase 1, 20 Phase 2 claim·sync·logout)
 - **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
 - **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL 판정표
-- **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음
+- **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
+- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. PaywallModal·interpret-premium·pdf-preorder·terms 모두 PRICING 사용
 - **정책 페이지 3종**: `app/legal/terms.tsx`·`privacy.tsx`·`refund.tsx`
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
-- **카카오 로그인**: 일반 사용자 = profile_nickname / admin = + account_email (requireEmail prop)
-- **paywall 정책**: 비회원 자녀 1·영역 1 / 회원 자녀 5·영역 5
-- **새 BM**: 자녀 5명·영역 5개까지 무료 / 그 이상 *20영역 PDF + 추가 기능 19,900원*. LTV/CAC 한도 보수 6,633 / 중간 9,950 / 적극 15,000원
+- **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope (KOE205 우회 완료). KakaoLoginButton chat bubble SVG 로고
+- **paywall 정책**: 비회원 자녀 1·영역 1·Part2 진입 차단 / 회원 자녀 5·영역 3
+- **server cap defense**: POST /api/session 비회원 device_id 매칭 403 + POST /api/sessions/claim 회원 cap 5 server-side
+- **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF + 추가 기능* (정가 20,000원, 사전 예약 4,000원 80% 할인). LTV/CAC 분석 별도
 - **사전 예약 명단**: Supabase `pdf_preorders` 테이블 (RLS active)
-- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users 등록 필요). super-admin: eugene.eee@iskra.world · hongary@naver.com
-- **DB 현황**: subjects 37 (child·v3 schema, 칼리브레이션 sample만) · sessions 70 (회원 매핑 1명 hongary 3건)
-- **localStorage owner ship**: Phase 1 회원 진단은 sessions.user_id 직접 박힘. Phase 2 로그인 시 비회원 sessions 자동 claim (device_id 매칭 + user_id IS NULL 가드). 로그아웃 시 STORAGE_KEY 통째 삭제 (PII 회수, deviceId 보존).
-- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true
+- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users 등록). super-admin: eugene.eee@iskra.world · hongary@naver.com
+- **DB 현황**: subjects 37 (child·v3, 칼리브레이션 sample만) · sessions 70 (회원 매핑 1명 hongary 3건)
+- **localStorage owner ship**: Phase 1 회원 진단 sessions.user_id 직접 박힘. Phase 2 로그인 시 비회원 sessions 자동 claim (device_id 매칭 + cap 5). 로그아웃 시 STORAGE_KEY 통째 삭제 (PII 회수, deviceId 보존). Phase 2 B안 server 본문 fetch endpoint 활성 (cross-PC sync)
+- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true · react-native-svg 15.8.0 (카카오 로고)
 
 ### 백로그 요약
 
-- 대기 중: 5개
-- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
+- 대기 중: 4개
+- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일 (직전 2026-06-01 device_id cap은 이번 세션 완료 처리됨)
 
 ### 진행 상황
 
@@ -206,17 +208,26 @@
 - [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐ — BUSINESS_INFO 단일 source + LegalFooter + 정책 3종 페이지 + pdf-preorder 청약철회 동의 + BuildInfoModal 정책 링크
 - [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)** — 프리머스랩스피티이엘티디 / 박정환 / 881-84-00049 / 강남 도곡동 + info@z21labs.xyz + 010-4195-3278
 - [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)** — 짧은 콘텐츠 시 spacer로 화면 끝으로
-- [x] **eduluck admin 풀스택 (`0da8879` run 완료)** ⭐ — Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log + PII 마스킹 + 페이지네이션 점프 + DB 정리 165→37
-- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐ — 17 deps + 4 ERROR 사이클 fix + .npmrc shamefully-hoist + supabase-js 2.104.1 lock. prod hydration·console 0 error 검증
-- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)** — family-input calcAgeYears 분기 + canSubmit validate 분기
-- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐ — POST /api/session JWT 옵셔널 + sessions.user_id 자동 매핑 + GET /api/sessions/my 신규 + ownerUserId 응답
-- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐ — POST /api/sessions/claim 신규 + FlowProvider auth 동기화 (claim + sessions/my fetch + 로그아웃 STORAGE_KEY 삭제). 사용자 검증: 로그아웃→재로그인 카드 2개 server fetch 정확
+- [x] **eduluck admin 풀스택 (`0da8879`)** ⭐ — Google·카카오 multi-OAuth + admin_users CRUD + 진단 리스트·검색·마스킹 + audit log + 페이지네이션 점프 + DB 정리 165→37
+- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐ — 17 deps + 4 ERROR 사이클 fix + .npmrc shamefully-hoist + supabase-js 2.104.1 lock
+- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)** — family-input calcAgeYears 분기
+- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐ — POST /api/session JWT 옵셔널 + sessions.user_id 자동 매핑 + GET /api/sessions/my 신규
+- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐ — POST /api/sessions/claim + FlowProvider auth 동기화 + 로그아웃 STORAGE_KEY 삭제
+- [x] **Phase 2 B안 cross-PC server 본문 복원 (`bcf9553`)** ⭐ — GET /api/sessions/[sessionId] + restoreSessionFromServer + 3중 가드 + Vercel Functions URL 파싱
+- [x] **LegalFooter 통신판매업 placeholder 자동 숨김 (`c21bacd`)** — 신고 후 자동 복원
+- [x] **Part2 비회원 paywall + 회원 cap 5→3 + 가격 단일 source 20,000원·80% 할인 4,000원 (`a7f42b9` + `edec4d3`)** ⭐ — lib/legal/pricing.ts 신규 + PaywallModal part2_entry trigger + policy.ts CAP.member.sections 3
+- [x] **Part2 SilentSsePrefetch 회원 only (`5470749`)** — 비회원 paywall 우회 차단
+- [x] **PaywallModal 카피·이메일 scope default·CTA label override (`d405555`)** ⭐ — 사용자 직접 확정 카피 + 일반 사용자도 account_email scope
+- [x] **PaywallModal 3-zone 디자인 + 폰트 통일 + shadow (`7edf995`)** — 헤더 + 섹션 peek 카드 + 인센티브 highlight + ghost dismiss
+- [x] **Part2 완료 4-CTA 3-tier 재배치 (`851f0a4`)** ⭐ — PDF 카드 Tier 1 + 영역 outline Tier 2 + ShareButton compact + 피드백 ghost cluster
+- [x] **KakaoLoginButton 카카오 chat bubble SVG 로고 (`16ebbd8`)** — 이모지 중복 제거 + react-native-svg
+- [x] **server-side cap defense (`e210452`)** ⭐ — POST /api/session device_id cap + POST /api/sessions/claim 회원 cap 5 + client 403 핸들러
 - [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)** — SDK 52 회귀 + Phase 1 + Phase 2 4 시나리오
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → BUSINESS_INFO `ecommerceNumber` 채움
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청 (토스페이먼츠 메인)
 - [ ] Mom test 친구들 배포 + 인터뷰 4문항 → Mixpanel funnel + 정성 답변 종합 GO/HOLD/KILL 판정
-- [ ] mom test 결과 → 정가 19,900원 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
+- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
 - [ ] 06·08 sample v7 포맷 갱신 → backlog 2026-05-23
 - [ ] Deep-dive 일 N회 cap 운영 결정 (테스트 기간 무제한)
