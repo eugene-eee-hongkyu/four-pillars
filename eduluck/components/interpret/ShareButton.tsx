@@ -9,12 +9,14 @@ import { track, EVENTS } from '@/lib/analytics/mixpanel';
 interface Props {
   sessionId: string;
   nickname: string;
-  /** backfill 폴백 제거 (2026-05-28 보안 audit — share-backfill 가짜 본문 inject 위험). share-link 404 시 단순 실패. */
+  /** compact=true: ghost text-link 형식 (Tier 3 cluster용 — Substack 패턴).
+   *  compact=false (default): 기존 큰 secondary 버튼. */
+  compact?: boolean;
 }
 
 type ShareStatus = 'idle' | 'loading' | 'shared' | 'copied' | 'error';
 
-export function ShareButton({ sessionId, nickname }: Props) {
+export function ShareButton({ sessionId, nickname, compact = false }: Props) {
   const [status, setStatus] = useState<ShareStatus>('idle');
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -76,8 +78,23 @@ export function ShareButton({ sessionId, nickname }: Props) {
     status === 'shared' ? '✓ 공유 완료' :
     status === 'copied' ? '✓ 링크 복사됨' :
     status === 'error' ? '✗ 다시 시도' :
-    '가족에게 공유하기';
+    compact ? '📤 가족에게 공유' : '가족에게 공유하기';
 
+  // compact=true: ghost text-link 형식 (Tier 3 cluster) — Substack 패턴
+  if (compact) {
+    return (
+      <Pressable
+        onPress={handleShare}
+        disabled={status === 'loading'}
+        className="py-2 px-2 active:opacity-50"
+        style={{ opacity: status === 'loading' ? 0.5 : 1 }}
+      >
+        <Text className="font-body text-label-md text-text-sub">{label}</Text>
+      </Pressable>
+    );
+  }
+
+  // 기존 큰 secondary 버튼 (다른 사용처용)
   return (
     <View className="gap-2">
       <Pressable

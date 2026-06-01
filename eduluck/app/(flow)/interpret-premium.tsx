@@ -25,7 +25,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
-import { formatPreorderPrice } from '@/lib/legal/pricing';
+import { PRICING, formatPrice } from '@/lib/legal/pricing';
 
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -257,66 +257,107 @@ export default function InterpretPremium() {
               </View>
             )}
 
-            {part2Done && state.sessionId && (
-              <View className="px-container-padding mt-2">
-                <ShareButton
-                  sessionId={state.sessionId}
-                  nickname={state.child.nickname || '아이'}
-                />
-              </View>
-            )}
+            {/* === Part 2 완료 후 — 3-tier 위계 (mom test 결제 의향 측정 우선) ===
+                Tier 1: PDF 사전 예약 큰 primary 카드 (Stripe pricing 패턴, 가치 인식 정점에 노출)
+                Tier 2: 영역 선택 outline 버튼 (engagement — Button secondary variant)
+                Tier 3: 가족 공유 + 한 줄 피드백 ghost cluster (Substack 패턴, 부가 액션 약화)
+                mom test 종료 후 PDF↔영역 선택 위치 swap 권장 (자연 UX 원칙) */}
 
-            {/* 📝 피드백 CTA — 가족 공유와 영역 선택 사이, 강조. 이미 제출한 sessionId 면 숨김. */}
-            {part2Done && state.sessionId && !state.feedbackSubmittedSessions.includes(state.sessionId) && (
-              <View className="px-container-padding mt-4">
-                <Pressable
-                  onPress={() => {
-                    track(EVENTS.FEEDBACK_CTA_CLICK, { source: 'premium-part2' });
-                    router.push('/feedback?source=premium-part2' as never);
+            {/* === Tier 1: PDF 사전 예약 카드 (큰 primary, 가치 + 가격 + CTA 통합) === */}
+            {part2Done && (
+              <View className="px-container-padding mt-6">
+                <View
+                  className="rounded-xl border border-primary/40 bg-primary-container/30 p-5 gap-3"
+                  style={{
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 12,
+                    elevation: 6,
                   }}
-                  className="px-card-padding py-5 rounded-md border-2 items-center gap-1"
-                  style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}
                 >
-                  <Text className="font-heading-bold text-headline-md text-text-pri text-center">
-                    📝 한 줄 피드백 부탁드려요 (3분)
-                  </Text>
-                  <Text className="font-body text-label-md text-text-sub text-center">
-                    어머님의 한 줄이 다음 진단을 더 정확하게 만듭니다
-                  </Text>
-                </Pressable>
+                  <View className="gap-1">
+                    <Text className="font-body-bold text-headline-md text-text-pri">
+                      📄 20영역 PDF 패키지
+                    </Text>
+                    <Text className="font-body text-body-sm text-text-sub leading-relaxed">
+                      20영역 전체 본문 · 학년·시기별 추가 가이드 · 한 권으로 정리
+                    </Text>
+                  </View>
+                  <View className="flex-row items-baseline gap-2 flex-wrap">
+                    <Text className="font-body text-body-md text-text-sub line-through">
+                      {formatPrice(PRICING.pdfRegularPrice)}
+                    </Text>
+                    <Text className="font-body-bold text-display-sm text-primary">
+                      {formatPrice(PRICING.pdfPreorderPrice)}
+                    </Text>
+                    <View className="px-2 py-0.5 rounded-full bg-primary">
+                      <Text className="font-body-bold text-label-sm text-surface-container-low">
+                        {PRICING.pdfDiscountPercent}% 할인
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      track(EVENTS.PAYWALL_PREORDER_CLICK, { trigger: 'part2_bonus' });
+                      router.push({
+                        pathname: '/(flow)/pdf-preorder' as never,
+                        params: { source: 'part2_bonus' },
+                      } as never);
+                    }}
+                    className="px-6 py-4 rounded-md bg-primary items-center active:opacity-80"
+                  >
+                    <Text className="font-body-bold text-body-md text-surface-container-low">
+                      📄 사전 예약하기
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             )}
 
+            {/* === Tier 2: 영역 선택 outline (engagement) === */}
             {part2Done && (
               <View className="px-container-padding mt-4">
-                <Button onPress={() => { track(EVENTS.DEEPDIVE_SELECT_CLICK); router.push('/interpret-deep-select'); }}>
-                  📋 더 자세히 알고 싶은 영역 선택 (20 섹션)
+                <Button
+                  variant="secondary"
+                  onPress={() => {
+                    track(EVENTS.DEEPDIVE_SELECT_CLICK);
+                    router.push('/interpret-deep-select');
+                  }}
+                >
+                  {`📋 다른 영역도 더 자세히 보기 (${20 - Object.keys(state.deepDiveTexts || {}).length} 섹션 남음)`}
                 </Button>
               </View>
             )}
 
-            {/* PDF 사전 예약 조기 CTA — Part2 완료자 중 PDF 가치를 즉시 인지한 어머니의 의향 측정 */}
-            {part2Done && (
-              <View className="px-container-padding mt-3">
-                <Pressable
-                  onPress={() => {
-                    track(EVENTS.PAYWALL_PREORDER_CLICK, { trigger: 'part2_bonus' });
-                    router.push({
-                      pathname: '/(flow)/pdf-preorder' as never,
-                      params: { source: 'part2_bonus' },
-                    } as never);
-                  }}
-                  className="px-card-padding py-4 rounded-md border border-outline-warm bg-surface-container-low items-center gap-1 active:opacity-70"
-                >
-                  <Text className="font-body-bold text-body-md text-text-pri text-center">
-                    📄 20영역 PDF로 받아보고 싶으세요?
-                  </Text>
-                  <Text className="font-body text-label-sm text-text-sub text-center">
-                    {formatPreorderPrice()}
-                  </Text>
-                </Pressable>
+            {/* === Tier 3: 공유 + 피드백 ghost cluster (부가 액션 한 줄 약화) === */}
+            {part2Done && state.sessionId && (
+              <View className="px-container-padding mt-6 flex-row items-center justify-center gap-1 flex-wrap">
+                <ShareButton
+                  sessionId={state.sessionId}
+                  nickname={state.child.nickname || '아이'}
+                  compact={true}
+                />
+                {!state.feedbackSubmittedSessions.includes(state.sessionId) && (
+                  <>
+                    <Text className="font-body text-label-md text-text-sub">·</Text>
+                    <Pressable
+                      onPress={() => {
+                        track(EVENTS.FEEDBACK_CTA_CLICK, { source: 'premium-part2' });
+                        router.push('/feedback?source=premium-part2' as never);
+                      }}
+                      className="py-2 px-2 active:opacity-50"
+                    >
+                      <Text className="font-body text-label-md text-text-sub">
+                        📝 한 줄 피드백 (3분)
+                      </Text>
+                    </Pressable>
+                  </>
+                )}
               </View>
             )}
+
           </>
         )}
       </ScrollView>
