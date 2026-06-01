@@ -226,6 +226,7 @@
 - [x] **로그인·결제 후 본문 끝 자동 scroll (`8543e92`)** ⭐ — useScrollToBottomOnRedirect hook + interpret-premium·deep-select 적용
 - [x] **로그아웃 시 어떤 화면이든 / 자동 복귀 (`a8461a5`)** — FlowProvider clearOnLogout router.replace
 - [x] **syncOnLogin claim에 state.sessionId 포함 (`a8bc37e`)** — Part2 완료 전 카카오 로그인 흐름에서 비회원 sessionId 누락 fix
+- [x] **랜딩 hero 카피 톤 조정 (`1f1b503`)** — 운명론적 → 발견·권유 톤 (와이프 피드백)
 - [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
