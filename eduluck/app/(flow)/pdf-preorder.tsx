@@ -43,7 +43,7 @@ function isValidContact(s: string): boolean {
 export default function PdfPreorder() {
   const router = useRouter();
   const params = useLocalSearchParams<{ source?: string }>();
-  const source: Source = (['section_cap', 'child_cap', 'part2_bonus', 'premium_pre'] as const)
+  const source: Source = (['section_cap', 'child_cap', 'part2_bonus', 'premium_pre', 'part2_cap'] as const)
     .find(s => s === params.source) ?? 'premium_pre';
 
   const { state } = useFlow();
