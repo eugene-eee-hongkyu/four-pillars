@@ -11,6 +11,8 @@ import { getTierSchoolGroups, getDepartments, getSpecialTracks, getGeneralDetail
 /** 비학자 격국 (학업 본질이 좁고 표현·실무·사업·예술 트랙 중심) — V13 외부변수 안내 분기용. */
 const NON_SCHOLAR_GYEOKGUK = new Set(['상관격', '정재격', '편재격', '양인격', '비견격']);
 import { calcCriticalYear } from '../manse/critical-year';
+import { calcPeerProfile } from '../manse/peer-profile';
+import { calcAcademyFit } from '../manse/academy-fit';
 
 export interface InterpretPremiumContext {
   childNickname: string;
@@ -402,6 +404,8 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
   const luckPhase = calcCurrentLuckPhase(c);
   const academicCtx = buildAcademicContext(c);
   const phaseTimeline = calcLuckPhaseTimeline(c);
+  const peer = calcPeerProfile(c);       // §11 친구·또래 백엔드 결정성
+  const academy = calcAcademyFit(c);     // §12 학원·선생님 백엔드 결정성
 
   const lines = [
     `[분석 기준일] ${today}`,
@@ -569,6 +573,19 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
       : c.publicForceScore.level === '보통'
         ? `  §17 권유: 격국 lookup 기본. 일반 공무원·법조 언급 가능, 사관·경찰은 추가 신체 적성 조건부.`
         : `  §17 권유: 사관·경찰 본업 권유 ✗ (시그너 약함).`,
+    ``,
+    `[§11 친구·또래 — 백엔드 결정성. baseline label 그대로 서술. 비겁 중심·신살 보조. "친구 때문에 성적 오른다/내린다" 인과 단정 ✗ → 또래 환경이 동기·태도에 영향 톤. 점수 본문 노출 ✗]`,
+    `  유형: ${peer.label} | ${peer.oneLineSummary}`,
+    `  축: 사교활성 ${peer.socialScore} · 마찰구설 ${peer.frictionScore} · 깊이내향 ${peer.depthScore}${peer.conflictRisk ? ' · ⚠구설·갈등 주의' : ''}`,
+    `  근거: ${peer.evidence.join(' / ')}`,
+    ``,
+    `[§12 학원·선생님 — 백엔드 결정성. baseline 그대로. "이렇게 가르치면 성적 오른다(efficacy)" 단정 ✗ → "동기·집중·지속에 맞는 환경(fit)" 톤. 근거기반 공통 학습법(반복인출·분산학습)은 누구에게나 유효, 명리는 그 위 '환경 fit'만. 학원 브랜드명 ✗]`,
+    `  유형: ${academy.primaryStyle} | 선생님 톤: ${academy.teacherTone}`,
+    `  보정: 규율필요 ${academy.disciplineNeed} · 아웃풋 ${academy.outputNeed ? 'O' : 'X'} · 규율반발 ${academy.rigidAverse ? 'O' : 'X'} · 압박주의 ${academy.pressureRisk ? 'O' : 'X'}`,
+    `  ${academy.oneLineSummary}`,
+    `  근거: ${academy.evidence.join(' / ')}`,
+    ``,
+    `[일관성 강제 — §11·§12·§19·§20 + Part1 §8·§10] 한 리포트 안에서 친구·또래·학원·선생님 결론은 위 [§11]·[§12] baseline과 *항상 일치*. §19 약점카드·§20 종합·§10 환경 언급도 모순 ✗ (예: §11이 '소수정예·내면형'인데 §19에서 '그룹·또래 학습' 권유 ✗).`,
     ``,
     `[현재 학운 시기 — 백엔드 결정성. §13 "흐름" baseline]`,
     `  ${luckPhase.oneLineSummary}`,
