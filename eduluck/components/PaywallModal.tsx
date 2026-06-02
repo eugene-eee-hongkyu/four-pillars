@@ -7,7 +7,7 @@ import { Modal, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { KakaoLoginButton } from '@/components/KakaoLoginButton';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
-import { PRICING, formatPrice } from '@/lib/legal/pricing';
+import { PRICING, formatPrice, PAYMENT_VISIBLE } from '@/lib/legal/pricing';
 
 export type PaywallTrigger = 'new_child' | 'deepdive' | 'part2_entry';
 
@@ -36,14 +36,19 @@ const ANON_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; b
   },
 };
 
+// PAYMENT_VISIBLE=false 시 body는 '곧 추가 예정' 안내로 자동 변경 (PDF 사전 예약 CTA 없음 = 메시지도 일치)
 const MEMBER_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; body: string }> = {
   new_child: {
     title: '🌱 자녀 5명까지 보셨네요',
-    body: '5명까지 무료로 보셨어요 💝\n더 많은 자녀까지 보려면 정식 출시되는 PDF 패키지를 사전 예약해주세요.',
+    body: PAYMENT_VISIBLE
+      ? '5명까지 무료로 보셨어요 💝\n더 많은 자녀까지 보려면 정식 출시되는 PDF 패키지를 사전 예약해주세요.'
+      : '5명까지 무료로 보셨어요 💝\n더 많은 자녀 진단은 곧 추가될 예정이에요. 잠시만 기다려주세요.',
   },
   deepdive: {
     title: '🔎 3개 영역을 다 보셨네요',
-    body: '3개 영역까지 무료로 보셨어요 🙏\n나머지 17개 영역을 한 PDF로 정리한 정식 패키지를 사전 예약해주세요.',
+    body: PAYMENT_VISIBLE
+      ? '3개 영역까지 무료로 보셨어요 🙏\n나머지 17개 영역을 한 PDF로 정리한 정식 패키지를 사전 예약해주세요.'
+      : '3개 영역까지 무료로 보셨어요 🙏\n나머지 17개 영역은 곧 추가될 예정이에요. 잠시만 기다려주세요.',
   },
   part2_entry: {
     title: '🔮 회원 전용 — 자동 진입',
@@ -171,8 +176,8 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
             <Text className="font-body text-body-md text-text-sub leading-relaxed">{body}</Text>
           )}
 
-          {/* === 회원 트리거 — PDF 가격 카드 === */}
-          {isMember && (
+          {/* === 회원 트리거 — PDF 가격 카드 (PAYMENT_VISIBLE=false 시 숨김) === */}
+          {isMember && PAYMENT_VISIBLE && (
             <View className="p-card-padding rounded-md border border-outline-warm bg-secondary-container/30 gap-1">
               <Text className="font-body-bold text-label-md text-text-pri">📄 정식 PDF 패키지</Text>
               <Text className="font-body text-label-sm text-text-sub leading-relaxed">
@@ -194,7 +199,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
 
           {/* === CTA + dismiss === */}
           <View className="gap-2 mt-1">
-            {isMember ? (
+            {isMember && PAYMENT_VISIBLE ? (
               <Pressable
                 accessibilityRole="button"
                 onPress={handlePreorderClick}
@@ -204,7 +209,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
                   📄 사전 예약하기
                 </Text>
               </Pressable>
-            ) : (
+            ) : isMember ? null : (
               <KakaoLoginButton
                 source={
                   trigger === 'new_child'

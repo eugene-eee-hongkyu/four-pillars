@@ -13,6 +13,12 @@ export const PRICING = {
   pdfDiscountPercent: 80,
 } as const;
 
+/** 결제(사전 예약) CTA 노출 토글.
+ *  false: PaywallModal 회원 cap·interpret-premium Tier 1 PDF 카드 모두 hide.
+ *  true: 정상 노출 (mom test 사전 예약 명단 수집 + 정식 결제 도입 후).
+ *  통신판매업 신고·결제 인프라 정비 완료 시 true로 swap. */
+export const PAYMENT_VISIBLE = false;
+
 /** 천 단위 콤마 + "원" 라벨. 예: 20000 → "20,000원" */
 export function formatPrice(won: number): string {
   return `${won.toLocaleString('ko-KR')}원`;

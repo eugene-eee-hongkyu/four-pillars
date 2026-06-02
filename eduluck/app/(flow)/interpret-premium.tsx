@@ -26,7 +26,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
-import { PRICING, formatPrice } from '@/lib/legal/pricing';
+import { PRICING, formatPrice, PAYMENT_VISIBLE } from '@/lib/legal/pricing';
 
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -267,8 +267,8 @@ export default function InterpretPremium() {
                 Tier 3: 가족 공유 + 한 줄 피드백 ghost cluster (Substack 패턴, 부가 액션 약화)
                 mom test 종료 후 PDF↔영역 선택 위치 swap 권장 (자연 UX 원칙) */}
 
-            {/* === Tier 1: PDF 사전 예약 카드 (큰 primary, 가치 + 가격 + CTA 통합) === */}
-            {part2Done && (
+            {/* === Tier 1: PDF 사전 예약 카드 — PAYMENT_VISIBLE=false 시 hide === */}
+            {part2Done && PAYMENT_VISIBLE && (
               <View className="px-container-padding mt-6">
                 <View
                   className="rounded-xl border border-primary/40 bg-primary-container/30 p-5 gap-3"
