@@ -15,7 +15,7 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { LegalFooter } from '@/components/ui/LegalFooter';
 import { PaywallModal } from '@/components/PaywallModal';
-import { useFlow, getOrCreateDeviceId } from '@/lib/flow/context';
+import { useFlow, getOrCreateDeviceId, type SavedSession } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { isChildCapReached } from '@/lib/paywall/policy';
 import { translateError } from '@/lib/errors/translate';
@@ -37,13 +37,17 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
 
 export default function Landing() {
   const router = useRouter();
-  const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer } = useFlow();
+  const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer, beginRedo } = useFlow();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   /** server-only 카드 본문 fetch 중 표시 — 클릭한 sessionId */
   const [restoringSessionId, setRestoringSessionId] = useState<string | null>(null);
+  /** 어드민이 이 사용자에게 "다시 진단(만세력부터 재실행)" 권한을 줬는지 */
+  const [redoEnabled, setRedoEnabled] = useState(false);
+  /** "다시 진단" 준비 중인 sessionId */
+  const [redoingSessionId, setRedoingSessionId] = useState<string | null>(null);
 
   const hasHistory = state.sessionsHistory.length > 0;
   // 트리거 1: 자녀 cap 도달 시 paywall (비회원 1명, 회원 2명)
@@ -150,6 +154,70 @@ export default function Landing() {
     handleServerOnlyClick(sessionId);
   };
 
+  // 어드민 부여 "다시 진단" 권한 조회 — 로그인 사용자만 (비회원은 항상 false)
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      setRedoEnabled(false);
+      return;
+    }
+    (async () => {
+      try {
+        const supabase = getSupabaseClient();
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+        const res = await fetch('/api/me/redo', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const json = (await res.json()) as { enabled?: boolean };
+        if (!cancelled) setRedoEnabled(!!json.enabled);
+      } catch {
+        // silent — 권한 조회 실패 시 버튼 미노출 (degraded)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // "다시 진단" — 같은 자녀 입력으로 만세력부터 새 세션 재실행
+  const handleRedo = async (h: SavedSession) => {
+    if (redoingSessionId || loading) return;
+    setRedoingSessionId(h.sessionId);
+    setError(null);
+    try {
+      const ok = await beginRedo(h.sessionId);
+      if (!ok) {
+        setError('다시 진단을 시작하지 못했어요. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      // 새 세션 발급 — 회원 JWT 첨부 (user_id 매핑 + 비회원 device cap 미적용)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      try {
+        const supabase = getSupabaseClient();
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (token) headers.Authorization = `Bearer ${token}`;
+      } catch {
+        // silent
+      }
+      const res = await fetch('/api/session', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ deviceId: getOrCreateDeviceId() }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { sessionId } = await res.json();
+      setSessionId(sessionId);
+      track(EVENTS.REDO_DIAGNOSIS_CLICK, { source_session_id: h.sessionId });
+      router.push('/(flow)/family-input' as never);
+    } catch (e) {
+      setError(translateError(e instanceof Error ? e.message : null));
+    } finally {
+      setRedoingSessionId(null);
+    }
+  };
+
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA
   if (hasHistory) {
     return (
@@ -167,16 +235,32 @@ export default function Landing() {
 
           <View className="gap-3">
             {state.sessionsHistory.map((h) => {
+              const isRedoing = redoingSessionId === h.sessionId;
+              // 어드민 허용 사용자만 노출 — 같은 자녀 입력으로 만세력부터 재실행
+              const redoBtn = redoEnabled ? (
+                <Pressable
+                  onPress={() => handleRedo(h)}
+                  disabled={isRedoing}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${h.childNickname} 다시 진단`}
+                  className="px-3 justify-center items-center rounded-md border border-primary bg-secondary-container"
+                  style={({ pressed }) => ({ opacity: pressed || isRedoing ? 0.6 : 1 })}
+                >
+                  <Text className="font-body-bold text-label-sm text-primary text-center leading-tight">
+                    {isRedoing ? '⏳' : '↻\n다시\n진단'}
+                  </Text>
+                </Pressable>
+              ) : null;
               // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인.
               // 클릭 시 /api/sessions/[id] fetch → 본문 복원 → 진단 화면 진입.
               if (h.isServerOnly) {
                 const isRestoring = restoringSessionId === h.sessionId;
                 return (
+                  <View key={h.sessionId} className="flex-row items-stretch gap-2">
                   <Pressable
-                    key={h.sessionId}
                     onPress={() => handleServerOnlyClick(h.sessionId)}
                     disabled={isRestoring}
-                    className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
+                    className="flex-1 p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
                     style={({ pressed }) => ({ opacity: pressed || isRestoring ? 0.6 : 1 })}
                   >
                     <View className="flex-row items-baseline justify-between">
@@ -203,13 +287,15 @@ export default function Landing() {
                       {isRestoring ? '⏳ 진단 본문 불러오는 중…' : '📡 다른 기기에서 본 진단 · 누르면 불러와요'}
                     </Text>
                   </Pressable>
+                  {redoBtn}
+                  </View>
                 );
               }
               return (
+                <View key={h.sessionId} className="flex-row items-stretch gap-2">
                 <Pressable
-                  key={h.sessionId}
                   onPress={() => handleHistoryClick(h.sessionId)}
-                  className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
+                  className="flex-1 p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
                 >
                   <View className="flex-row items-baseline justify-between">
                     <Text className="font-heading-bold text-headline-md text-text-pri">
@@ -232,6 +318,8 @@ export default function Landing() {
                     </View>
                   )}
                 </Pressable>
+                {redoBtn}
+                </View>
               );
             })}
           </View>

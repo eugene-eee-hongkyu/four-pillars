@@ -122,6 +122,9 @@ export default function AdminsPage() {
           <Pressable onPress={() => router.push('/admin/subjects' as never)}>
             <Text className="font-body text-label-md text-text-sub">진단</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/admin/users' as never)}>
+            <Text className="font-body text-label-md text-text-sub">사용자</Text>
+          </Pressable>
           <Pressable onPress={() => router.push('/admin/admins' as never)}>
             <Text className="font-body-bold text-label-md text-primary">어드민</Text>
           </Pressable>

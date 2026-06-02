@@ -397,6 +397,8 @@ interface FlowContextValue {
   /** server-only sessionId 클릭 시 server 본문 복원 (Phase 2 B안).
    *  성공 시 state 복원 + sessionsHistory[].snapshot 채움 + isServerOnly=false 업그레이드. */
   restoreSessionFromServer: (sessionId: string) => Promise<boolean>;
+  /** "다시 진단" — history 진단의 입력값만 유지하고 만세력부터 재실행 준비. 성공 시 true. */
+  beginRedo: (sessionId: string) => Promise<boolean>;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -405,8 +407,12 @@ export function FlowProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FlowState>(loadInitial);
   const router = useRouter();
 
+  // 최신 state 를 async 콜백(beginRedo 등)에서 deps 없이 읽기 위한 ref
+  const stateRef = useRef(state);
+
   // state 변경 시마다 localStorage persist — 페이지 새로고침 시 화면 1부터 다시 시작 안 해도 됨
   useEffect(() => {
+    stateRef.current = state;
     persist(state);
   }, [state]);
 
@@ -878,6 +884,64 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /** "다시 진단" — 기존 history 진단의 자녀·부모 입력만 그대로 채우고 만세력·subject·해석 캐시는 비워
+   *  family-input 부터 새로 실행할 준비. sessionId 는 비워 호출 측에서 새 세션 발급 후 setSessionId.
+   *  local snapshot 우선, 없으면(server-only) /api/sessions/[id] 에서 입력값 복원.
+   *  성공 시 true (호출 측에서 새 세션 발급 + family-input 이동). */
+  const beginRedo = useCallback(async (sessionId: string): Promise<boolean> => {
+    let child: ChildInput | null = null;
+    let mother: MotherInput = { ...initial.mother };
+    let father: FatherInput = { ...initial.father };
+
+    const entry = stateRef.current.sessionsHistory.find((h) => h.sessionId === sessionId);
+    const snap = entry?.snapshot;
+    if (snap && snap.child?.birthYear && snap.sessionId) {
+      // local snapshot — 입력값 바로 사용
+      child = { ...snap.child };
+      mother = snap.mother ? { ...snap.mother } : { ...initial.mother };
+      father = snap.father ? { ...snap.father } : { ...initial.father };
+    } else {
+      // server-only — 서버에서 subject 입력값 복원
+      try {
+        const supabase = getSupabaseClient();
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (!token) return false;
+        const res = await fetch(`/api/sessions/${sessionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return false;
+        const data = (await res.json()) as {
+          subjects: { child: ServerSubject | null; mother: ServerSubject | null; father: ServerSubject | null };
+        };
+        if (!data.subjects?.child) return false;
+        child = subjectToChildInput(data.subjects.child);
+        mother = data.subjects.mother ? subjectToMotherInput(data.subjects.mother) : { ...initial.mother };
+        father = data.subjects.father ? subjectToFatherInput(data.subjects.father) : { ...initial.father };
+      } catch {
+        return false;
+      }
+    }
+
+    if (!child) return false;
+
+    // 입력값만 유지, 파생 데이터(만세력·subjectId·해석 캐시)·sessionId 는 초기화 → family-input 재실행.
+    setState((s) => ({
+      ...initial,
+      sessionsHistory: s.sessionsHistory,
+      feedbackSubmittedSessions: s.feedbackSubmittedSessions,
+      part1CompleteFiredSessions: s.part1CompleteFiredSessions,
+      part2CompleteFiredSessions: s.part2CompleteFiredSessions,
+      userId: s.userId,
+      child: { ...(child as ChildInput) },
+      mother: { ...mother },
+      father: { ...father },
+      motherStatus: mother.birthYear ? 'entered' : 'pending',
+      fatherStatus: father.birthYear ? 'entered' : 'pending',
+    }));
+    return true;
+  }, []);
+
   /** PART2_COMPLETE 이벤트 dedup — sessionId 신규 mark 시 true, 이미 발사된 경우 false. */
   const markPart2CompleteFired = useCallback((sessionId: string): boolean => {
     if (!sessionId) return false;
@@ -923,6 +987,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         markPart1CompleteFired,
         markPart2CompleteFired,
         restoreSessionFromServer,
+        beginRedo,
       }}
     >
       {children}

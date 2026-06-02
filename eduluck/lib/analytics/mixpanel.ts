@@ -109,6 +109,8 @@ export const EVENTS = {
   FEEDBACK_SUBMIT: 'feedback_submit',
   HISTORY_CARD_CLICK: 'history_card_click',
   START_NEW_DIAGNOSIS_CLICK: 'start_new_diagnosis_click',
+  // 어드민이 허용한 사용자의 "다시 진단" (만세력부터 재실행) 클릭
+  REDO_DIAGNOSIS_CLICK: 'redo_diagnosis_click',
   // 카카오 로그인 + paywall
   LOGIN_CLICK: 'login_click',
   LOGIN_SUCCESS: 'login_success',

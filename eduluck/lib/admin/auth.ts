@@ -32,7 +32,10 @@ export type AdminAction =
   | 'add_admin'
   | 'update_admin_role'
   | 'remove_admin'
-  | 'view_audit_log';
+  | 'view_audit_log'
+  | 'list_users'
+  | 'grant_redo'
+  | 'revoke_redo';
 
 interface VerifyResult {
   ok: true;
