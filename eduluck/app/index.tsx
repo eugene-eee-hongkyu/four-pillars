@@ -236,31 +236,22 @@ export default function Landing() {
           <View className="gap-3">
             {state.sessionsHistory.map((h) => {
               const isRedoing = redoingSessionId === h.sessionId;
-              // 어드민 허용 사용자만 노출 — 같은 자녀 입력으로 만세력부터 재실행
-              const redoBtn = redoEnabled ? (
-                <Pressable
-                  onPress={() => handleRedo(h)}
-                  disabled={isRedoing}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${h.childNickname} 다시 진단`}
-                  className="px-3 justify-center items-center rounded-md border border-primary bg-secondary-container"
-                  style={({ pressed }) => ({ opacity: pressed || isRedoing ? 0.6 : 1 })}
-                >
-                  <Text className="font-body-bold text-label-sm text-primary text-center leading-tight">
-                    {isRedoing ? '⏳' : '↻\n다시\n진단'}
-                  </Text>
-                </Pressable>
-              ) : null;
+              const isRestoring = restoringSessionId === h.sessionId;
               // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인.
               // 클릭 시 /api/sessions/[id] fetch → 본문 복원 → 진단 화면 진입.
-              if (h.isServerOnly) {
-                const isRestoring = restoringSessionId === h.sessionId;
-                return (
-                  <View key={h.sessionId} className="flex-row items-stretch gap-2">
+              return (
+                <View
+                  key={h.sessionId}
+                  className="rounded-md border border-outline-warm bg-surface-container-low overflow-hidden"
+                >
                   <Pressable
-                    onPress={() => handleServerOnlyClick(h.sessionId)}
+                    onPress={() =>
+                      h.isServerOnly
+                        ? handleServerOnlyClick(h.sessionId)
+                        : handleHistoryClick(h.sessionId)
+                    }
                     disabled={isRestoring}
-                    className="flex-1 p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
+                    className="p-card-padding gap-2"
                     style={({ pressed }) => ({ opacity: pressed || isRestoring ? 0.6 : 1 })}
                   >
                     <View className="flex-row items-baseline justify-between">
@@ -283,42 +274,28 @@ export default function Landing() {
                         </View>
                       </View>
                     )}
-                    <Text className="font-body text-label-sm text-text-sub mt-1">
-                      {isRestoring ? '⏳ 진단 본문 불러오는 중…' : '📡 다른 기기에서 본 진단 · 누르면 불러와요'}
-                    </Text>
+                    {h.isServerOnly && (
+                      <Text className="font-body text-label-sm text-text-sub mt-1">
+                        {isRestoring ? '⏳ 진단 본문 불러오는 중…' : '📡 다른 기기에서 본 진단 · 누르면 불러와요'}
+                      </Text>
+                    )}
                   </Pressable>
-                  {redoBtn}
-                  </View>
-                );
-              }
-              return (
-                <View key={h.sessionId} className="flex-row items-stretch gap-2">
-                <Pressable
-                  onPress={() => handleHistoryClick(h.sessionId)}
-                  className="flex-1 p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2"
-                >
-                  <View className="flex-row items-baseline justify-between">
-                    <Text className="font-heading-bold text-headline-md text-text-pri">
-                      {h.childNickname}
-                    </Text>
-                    <Text className="font-body text-label-sm text-text-sub">
-                      {formatSavedAt(h.savedAt)} 진단
-                    </Text>
-                  </View>
-                  <Text className="font-body text-label-md text-text-sub">
-                    {formatBirth(h.childBirth)}{h.childBirth.hour !== null ? ` · ${String(h.childBirth.hour).padStart(2, '0')}시` : ''}
-                  </Text>
-                  {h.hagunLabel && (
-                    <View className="flex-row gap-2 flex-wrap mt-1">
-                      <View className="px-3 py-1 rounded-full bg-secondary-container">
-                        <Text className="font-body-bold text-label-md text-primary">
-                          {h.hagunLabel}
-                        </Text>
-                      </View>
-                    </View>
+
+                  {/* 어드민 허용 사용자만 노출 — 같은 자녀 입력으로 만세력부터 재실행 */}
+                  {redoEnabled && (
+                    <Pressable
+                      onPress={() => handleRedo(h)}
+                      disabled={isRedoing}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${h.childNickname} 다시 진단`}
+                      className="flex-row items-center justify-center gap-1.5 py-3 border-t border-outline-warm/60 bg-surface"
+                      style={({ pressed }) => ({ opacity: pressed || isRedoing ? 0.6 : 1 })}
+                    >
+                      <Text className="font-body-bold text-label-md text-primary">
+                        {isRedoing ? '⏳ 진단 준비 중…' : '↻ 다시 정밀 진단'}
+                      </Text>
+                    </Pressable>
                   )}
-                </Pressable>
-                {redoBtn}
                 </View>
               );
             })}
