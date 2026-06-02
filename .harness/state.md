@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-06-02 15:59
-## 마지막 업데이트: 2026-06-02 15:59
+## 마지막 실행: 2026-06-02 17:10
+## 마지막 업데이트: 2026-06-02 17:10
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 없음
+- §13 학운 phase v2 (자평/억부 컨텍스트 + 식상 + 합충형해 + 3구간 timeline 결정성) 적용(`3a9470a`). 명리 65→80점대 향상. 학운 점수·티어·방향성 영향 0. 결제 CTA 숨김(PAYMENT_VISIBLE flag, `9121a14`). mom test funnel 측정 정책 정비 + 진단 명리 정합성 향상 동시 박제.
 
 ### 이어서 할 것
 
@@ -40,6 +40,8 @@
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
 - **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인
 - **redirect UX 인프라**: `lib/hooks/useScrollToBottomOnRedirect.ts` (setScrollToBottomFlag + hook). PaywallModal POST_LOGIN_PATH + pdf-preorder POST_PAYMENT_PATH 매핑. FlowProvider clearOnLogout → router.replace('/')
+- **결제 CTA 숨김 flag**: `lib/legal/pricing.ts PAYMENT_VISIBLE = false` — 통신판매업 신고·결제 인프라 정비 후 true swap
+- **§13 학운 phase v2**: 자평/억부 컨텍스트 (AcademicContext + scoreSipsinForAcademic + calcLuckPhaseAt pure function + calcLuckPhaseTimeline 3구간 결정성). 신강 사주의 정인 → 부호 동적 뒤집힘. 식상·branchSipsin·합충형해·수험 연령 가중치 반영. 명리 65→80점대 향상. Phase B (학업 신살·합충형해 타격 정밀)는 backlog
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
 - **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope. KakaoLoginButton chat bubble SVG 로고
 - **paywall 정책**: 비회원 자녀 1·영역 1·Part2 진입 차단 / 회원 자녀 5·영역 3
@@ -53,8 +55,8 @@
 
 ### 백로그 요약
 
-- 대기 중: 4개
-- 최근 추가: 2026-05-27 — DirectionKey 'global' → 'abroad' 코드 통일
+- 대기 중: 5개
+- 최근 추가: 2026-06-02 — §13 학운 phase Phase B (학업 신살·합충형해 정밀)
 
 ### 진행 상황
 
@@ -227,6 +229,8 @@
 - [x] **로그아웃 시 어떤 화면이든 / 자동 복귀 (`a8461a5`)** — FlowProvider clearOnLogout router.replace
 - [x] **syncOnLogin claim에 state.sessionId 포함 (`a8bc37e`)** — Part2 완료 전 카카오 로그인 흐름에서 비회원 sessionId 누락 fix
 - [x] **랜딩 hero 카피 톤 조정 (`1f1b503`)** — 운명론적 → 발견·권유 톤 (와이프 피드백)
+- [x] **결제(사전 예약) CTA 숨김 (`9121a14`)** — PAYMENT_VISIBLE feature flag. PaywallModal·interpret-premium 두 자리 hide
+- [x] **§13 학운 phase v2 (`3a9470a`)** ⭐ — 자평/억부 컨텍스트 (AcademicContext·scoreSipsinForAcademic·calcLuckPhaseAt·calcLuckPhaseTimeline) + 식상 + branchSipsin + 합충형해 + 수험 연령 가중치 + 3구간 timeline 결정성. 명리 65 → 80점대. 학운 점수·티어·방향성 영향 0
 - [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)

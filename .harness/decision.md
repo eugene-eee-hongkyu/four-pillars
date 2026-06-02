@@ -6,6 +6,35 @@
 
 ---
 
+## 2026-06-02: 결제(사전 예약) CTA 숨김 — PAYMENT_VISIBLE feature flag
+
+- **선택**: `lib/legal/pricing.ts`에 `PAYMENT_VISIBLE = false` 상수 도입. PaywallModal 회원 cap·interpret-premium Tier 1 PDF 카드 두 자리 hide. flag true 시 즉시 복원
+- **대안 검토**:
+  - 완전 제거 — 복원 시 코드 재작성 필요
+  - 환경변수 — 빌드 타임 변경. 코드보다 우회적
+  - feature flag (선택) — 한 줄 toggle, 정식 결제 도입 시 swap 빠름
+- **선택 이유**: mom test 단계엔 통신판매업 신고 진행 중 + 결제 인프라 미정비라 사전 예약 명단 수집 보류 자연. flag 패턴이 양쪽 swap 즉시
+- **영향 범위**: `lib/legal/pricing.ts` + `components/PaywallModal.tsx` + `app/(flow)/interpret-premium.tsx`. funnel: PAYWALL_PREORDER_CLICK 0건 (의도). PAYWALL_VIEW·CHILD_CAP_REACHED 유지
+- **되돌리는 방법**: `PAYMENT_VISIBLE = true` 한 줄 변경 → 모든 위치 즉시 복원
+
+---
+
+## 2026-06-02: §13 학운 phase 자평/억부 컨텍스트 적용 — mom test 전 적용
+
+- **선택**: Phase A (용신·신강약·격국 + 식상 + branchSipsin + 합충형해 + 수험 연령 + 3구간 timeline) **mom test 시작 전 즉시 적용**
+- **대안 검토**:
+  - mom test 후 적용: 측정 데이터 안정성. 단 §13 phase 변경은 *학운 점수·티어·방향성 영향 0*이라 calibration 회귀 위험 0
+  - mom test 전 적용 (선택): 명리 정합성 향상이 어머니에게 *덜 어색*하게 작용. calibration 회귀 0 확인 후 자연
+  - Phase A·B 일괄: 학업 신살·합충형해 정밀 매칭까지 통합. 작업 시간 2배. 가치 < 비용
+- **선택 이유**:
+  - §13 phase 변경은 *학운 점수·티어·방향성·12 samples selftest expected 영향 0* (코드 흐름 확인)
+  - 자평/억부 1원리(부호 동적): 신강 사주의 정인 → 인다(생각 과다) 부호 뒤집힘. 3 AI 답변 (A·B·C) 모두 1원리 위반 지적
+  - Phase B(학업 신살·합충형해 타격 정밀)는 별도 — mom test 결과 보고 결정
+- **영향 범위**: `lib/prompts/hagun-tier.ts` 5 함수 신규/변경 + `interpret-premium-shared.ts` baseline 추가 + `interpret-premium-part2.ts` §13 prompt instruct 강화. 학운 점수·티어·방향성·12 samples selftest 영향 0
+- **되돌리는 방법**: hagun-tier.ts의 옛 `calcCurrentLuckPhase` (SCHOLAR_SIPSIN +2/-2 단순 매칭)로 git revert. baseline의 [원국 컨텍스트]·[시기 카드 3구간] 삭제. prompt §13 instruct '구간 LLM 자율'로 환원
+
+---
+
 ## 2026-06-02: Commit 분리 결정 (메타데이터 vs 콘텐츠 변경)
 
 - **선택**: 카피 변경과 메타데이터(worklog, state) 동기화를 분리하여 2개 commit으로 기록

@@ -4,6 +4,19 @@
 
 ## 대기 중
 
+## 2026-06-02: §13 학운 phase Phase B — 학업 신살(문창·학당·화개) + 합충형해 타격 대상 정밀 매칭
+
+- **백로그 이유**: Phase A (자평/억부 컨텍스트·식상·branchSipsin·timeline)로 명리 65 → 80점대 향상. Phase B는 80 → 90점대 향상이지만 *학업 신살 등록 + 합충형해 타격 대상 정밀 매칭* 추가 4-6시간 필요. mom test 결과 보고 우선순위 재판단.
+- **할 것**:
+  1. `hagun-tier.ts` 학업 신살 점수 추가: 문창귀인·학당귀인·화개 (shensha 데이터에서 매칭) +1 보너스
+  2. `calcClashPenalty` 정밀 매칭: 현재 단순 시그너 count → 충/형 타격 대상 분리 (인성·관성·일지·월지·월령 hit 시 -1 추가)
+  3. 격국 lookup 학운 본체 배선 (현재 critical-year·directions에만)
+- **필요한 것**: shensha 모듈에 문창·학당·화개 결과 노출 확인. hapchunh 모듈에 타격 대상(column·pillar) 매핑 확인
+- **이전 검토**: 2026-06-02 3 AI 답변 (A·B·C) 평가. C가 학업 신살 1순위 명시. C도 "critical-year에 용신·격국 데이터 있으나 학운 본체에 배선 안 됨" 지적. Phase A에서 이미 격국명 baseline에 박았지만 점수 반영은 안 했음
+- **관련 파일**: [eduluck/lib/prompts/hagun-tier.ts](../eduluck/lib/prompts/hagun-tier.ts), [eduluck/lib/manse/shensha.ts](../eduluck/lib/manse/shensha.ts), [eduluck/lib/manse/hapchunh.ts](../eduluck/lib/manse/hapchunh.ts), [eduluck/lib/manse/critical-year.ts](../eduluck/lib/manse/critical-year.ts)
+- **참고**: Phase A commit `3a9470a`. 학운 점수·티어·방향성 영향 0 원칙 Phase B에서도 유지
+
+---
 
 ## 2026-05-27: DirectionKey 'global' → 'abroad' 코드 통일
 

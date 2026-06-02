@@ -43,6 +43,39 @@
 - 포트원 PG 사전 점검 → 가맹점 심사 신청
 
 
+## Session 2026-06-02 17:10 — 결제 CTA 숨김 + §13 학운 phase v2 (자평/억부 컨텍스트)
+
+### 작업 요약
+
+- **결제(사전 예약) CTA 숨김** (`9121a14`)
+  - mom test 단계 사전 예약 명단 수집 보류. 통신판매업 신고·결제 인프라 정비 후 활성화 예정.
+  - `lib/legal/pricing.ts`에 `PAYMENT_VISIBLE = false` flag 신규
+  - PaywallModal: PDF 가격 카드 + "사전 예약하기" 버튼 hide. MEMBER_CONTENT body 동적 분기 ('PDF 사전 예약해주세요' → '곧 추가될 예정이에요')
+  - interpret-premium Part2 완료 Tier 1 PDF 카드 hide. Tier 2(영역 선택) + Tier 3(공유·피드백) 그대로
+  - flag true로 swap 시 즉시 복원
+
+- **§13 학운 phase v2 — 자평/억부 컨텍스트 + 식상 + 합충형해 + 3구간 timeline 결정성** (`3a9470a`)
+  - 3 AI 답변 (A·B·C) 명리 65/85점 평가 반영. Phase A 한정 (학운 점수·티어·방향성 영향 0).
+  - hagun-tier.ts 신규 함수:
+    - `AcademicContext` + `buildAcademicContext(m)`: sipsin.counts 기반 dayStrength(strong·balanced·weak) + 신강/신약별 usefulSipsin·excessiveSipsin set + 격국 이름
+    - `scoreSipsinForAcademic(sipsin, ctx, weight)`: 컨텍스트 기반 동적 부호. 신강 사주의 정인은 -, 신약 사주의 정인은 ++. 식상(식신·상관) 학업 축 추가. branchSipsin 가중치 0.5
+    - 상관패인 보너스 +0.5 (자평 고전)
+    - 합충형해 (chung·hyeong) phase 패널티
+    - `calcLuckPhaseAt` pure function 분리 — 단일 daeun·sewun 입력으로 phase 계산. 3구간 timeline 재호출 가능
+    - 수험 연령(만 17-19세) 세운 가중치 1→2 동적 분기
+    - `calcLuckPhaseTimeline` 신규: 이전·현재·다음 대운 3구간 phaseLabel 결정성 박제
+    - `calcCurrentLuckPhase` 리팩토링 (calcLuckPhaseAt 호출)
+  - interpret-premium-shared.ts: baseline에 [원국 컨텍스트] + [§13 시기 카드 3구간 결정성] 추가
+  - interpret-premium-part2.ts §13: '시기 카드 [구간] baseline 그대로. LLM 자체 판단 ✗' instruct 강화
+  - 영향 범위 확인: 학운 점수·subTier·directions·12 samples selftest 변경 0. §13 phase·시기 카드·본문 LLM 출력만 변경 (명리 정합성 향상)
+  - Phase B (별도 세션): 학업 신살 (문창·학당·화개) + 합충형해 타격 대상 정밀 매칭
+
+### 다음 액션
+- 사용자 spot-check: 본인 진단 1건 새로 받아 §13 본문 + 시기 카드 라벨 어색하지 않은지 확인 (LLM 호출 4분·$0.05)
+- mom test 친구들 배포 + 인터뷰 4문항
+- 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일) → 신고 완료 후 PAYMENT_VISIBLE=true swap 검토
+
+
 ## Session 2026-06-01 18:02 — 랜딩 hero 카피 톤 부드럽게 (와이프 피드백)
 
 ### 작업 요약
