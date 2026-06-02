@@ -33,16 +33,21 @@ interface SubjectRow {
   manse_json: unknown;
 }
 
-export async function GET(request: Request, { params }: { params: { userId: string } }) {
+export async function GET(request: Request) {
   const result = await verifyAdminRequest(request, 'admin');
   if (!result.ok) {
     return Response.json({ error: result.error }, { status: result.status });
   }
   const { admin, sb } = result;
 
-  const userId = params.userId;
-  if (!userId) return Response.json({ error: 'userId required' }, { status: 400 });
-  const unmask = shouldUnmask(new URL(request.url).searchParams.get('unmask') ?? undefined);
+  // Vercel Functions은 두 번째 인자 params를 자동 주입 안 함 — URL pathname에서 직접 파싱.
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const userId = pathParts[pathParts.length - 1] || '';
+  if (!userId || !/^[0-9a-f-]{36}$/i.test(userId)) {
+    return Response.json({ error: 'userId required (uuid)' }, { status: 400 });
+  }
+  const unmask = shouldUnmask(url.searchParams.get('unmask') ?? undefined);
 
   // 사용자 기본 정보 (auth.users)
   const { data: u } = await sb.auth.admin.getUserById(userId);
@@ -126,17 +131,19 @@ export async function GET(request: Request, { params }: { params: { userId: stri
   return Response.json({ user: userInfo, sajus });
 }
 
-export async function DELETE(request: Request, { params }: { params: { userId: string } }) {
+export async function DELETE(request: Request) {
   const result = await verifyAdminRequest(request, 'admin');
   if (!result.ok) {
     return Response.json({ error: result.error }, { status: result.status });
   }
   const { admin, sb } = result;
 
-  const userId = params.userId;
-  const sessionId = new URL(request.url).searchParams.get('sessionId');
-  if (!userId || !sessionId) {
-    return Response.json({ error: 'userId and sessionId required' }, { status: 400 });
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const userId = pathParts[pathParts.length - 1] || '';
+  const sessionId = url.searchParams.get('sessionId');
+  if (!userId || !/^[0-9a-f-]{36}$/i.test(userId) || !sessionId) {
+    return Response.json({ error: 'userId(uuid) and sessionId required' }, { status: 400 });
   }
 
   // 소유권 검증 — 이 세션이 정말 이 사용자 것인지 (오삭제 방지)
