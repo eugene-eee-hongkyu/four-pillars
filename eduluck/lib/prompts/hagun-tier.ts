@@ -38,6 +38,7 @@
 
 import type { ManseResult } from '../manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
+import { buildAcademicContext, type AcademicContext } from '../manse/academic-context';
 
 // unsung.ts와 일관성: STRONG_STAGES + WEAK_STAGES 분류 그대로.
 // (이전 버그: '쇠'를 WEAK에서 누락 — unsung.ts에는 weak로 분류되지만 hagun-tier는 미반영.)
@@ -503,56 +504,10 @@ export interface CurrentLuckPhaseResult {
   oneLineSummary: string;
 }
 
-/** 학운 평가용 원국 컨텍스트 — 같은 십성도 사주마다 부호 다르게 적용. */
-export interface AcademicContext {
-  /** 일간 강약 — 신강이면 식상·재성·관성이 길, 신약이면 인성·비겁이 길 */
-  dayStrength: 'strong' | 'balanced' | 'weak';
-  /** 학업에 *길*로 작용하는 십성 set (용희신 근사). 부호 +. */
-  usefulSipsin: Set<string>;
-  /** 학업에 *기*로 작용하는 십성 set (기신·과다). 부호 -. */
-  excessiveSipsin: Set<string>;
-  /** 격국 이름 — 상관패인·상관견관 등 보너스/패널티 트리거 */
-  gyeokgukName: string;
-}
-
-/** ManseResult로부터 학업 컨텍스트 추출.
- *  신강·신약: sipsin.counts 기반 근사 (insung+bigeop vs siksang+gwansung+jaesung).
- *  용신·기신 매핑: 신강 → 식상·재성·관성이 길 / 신약 → 인성·비겁이 길 / balanced → 인성·관성 길. */
-export function buildAcademicContext(m: ManseResult): AcademicContext {
-  const c = m.sipsin.counts;
-  // 4기둥 × 2(천간·지지) = 8칸 중 분포. 일간(나)은 dayStem이라 sipsin 카운트엔 안 들어감 — bigeop는 일간 외 비견·겁재.
-  const support = c.insung + c.bigeop;          // 나를 돕는 십성
-  const drain = c.siksang + c.gwansung + c.jaesung; // 나를 누르는 십성
-  // 8칸 중 support 비율로 신강·신약·중강 근사
-  let dayStrength: AcademicContext['dayStrength'];
-  if (support >= 5) dayStrength = 'strong';
-  else if (support <= 2) dayStrength = 'weak';
-  else dayStrength = 'balanced';
-
-  // 용신·기신 매핑 (자평/억부 근사)
-  let usefulSipsin: Set<string>;
-  let excessiveSipsin: Set<string>;
-  if (dayStrength === 'strong') {
-    // 신강: 인성·비겁이 과다 → 식상·재성·정관이 길 (인을 덜어내고 일간을 통제)
-    usefulSipsin = new Set(['식신', '상관', '정재', '편재', '정관']);
-    excessiveSipsin = new Set(['정인', '편인', '비견', '겁재']);
-  } else if (dayStrength === 'weak') {
-    // 신약: 인성·비겁이 길 (나를 도와줌). 식상·재성·관성은 부담.
-    usefulSipsin = new Set(['정인', '편인', '비견', '겁재']);
-    excessiveSipsin = new Set(['식신', '상관', '정재', '편재', '편관']);
-  } else {
-    // balanced: 인성·정관 길, 편관·재성 보통, 식상 중립
-    usefulSipsin = new Set(['정인', '정관']);
-    excessiveSipsin = new Set(); // 명백한 기신 없음
-  }
-
-  return {
-    dayStrength,
-    usefulSipsin,
-    excessiveSipsin,
-    gyeokgukName: m.gyeokguk.name,
-  };
-}
+// AcademicContext·buildAcademicContext는 lib/manse/academic-context.ts로 분리 (§13·§14 공유, 상단에서 import).
+// 기존 import 경로(`from './hagun-tier'`) 유지 위해 re-export.
+export { buildAcademicContext };
+export type { AcademicContext };
 
 /** 단일 십성의 학업 점수 — 컨텍스트 기반 부호 동적.
  *  weight: 천간 = 1.0 / 지지 = 0.5 (천간 표면 작용 + 지지 환경 보조). */
