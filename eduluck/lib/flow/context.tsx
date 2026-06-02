@@ -7,6 +7,7 @@ import type { ManseResult } from '@/lib/manse/engine';
 import { hydrateManse } from '@/lib/manse/hydrate';
 import { PREMIUM_PROMPT_VERSION } from '@/lib/prompts/version';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { mergeServerHistory, type ServerSessionMeta } from './history-merge';
 
 // 옛 import path 호환 — 기존 코드 `import { PREMIUM_PROMPT_VERSION } from '@/lib/flow/context'` 유지.
 export { PREMIUM_PROMPT_VERSION };
@@ -148,15 +149,7 @@ type DeviceGlobalKeys =
   | 'part1CompleteFiredSessions'
   | 'part2CompleteFiredSessions';
 
-/** /api/sessions/my 응답 1 row (server-side만 가지는 메타 — snapshot 없음). */
-interface ServerSessionMeta {
-  sessionId: string;
-  childNickname: string;
-  childBirth: { year: number; month: number; day: number; hour: number | null };
-  hagunLabel: string | null;
-  primaryTier: number | null;
-  savedAt: string;
-}
+// ServerSessionMeta + mergeServerHistory 는 lib/flow/history-merge.ts (순수 함수, 테스트 가능)로 분리.
 
 /** /api/sessions/[sessionId] 응답 subject row (snake_case server schema). */
 interface ServerSubject {
@@ -470,48 +463,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         const { sessions } = (await res.json()) as { sessions: ServerSessionMeta[] };
         if (!Array.isArray(sessions) || cancelled) return;
 
-        setState((s) => {
-          const localBySid = new Map(s.sessionsHistory.map((h) => [h.sessionId, h]));
-          // server 응답 sessionId 순서 (created_at desc)로 표시
-          const merged: SavedSession[] = sessions.map((srv) => {
-            const local = localBySid.get(srv.sessionId);
-            // local snapshot이 진짜 채워져 있어야 (sessionId 있는 정상 entry) 본문 복원 가능.
-            // 빈 snapshot은 서버에서 fetch 필요 — server-only path로 강제.
-            const localValid = !!local?.snapshot?.sessionId;
-            if (local && localValid) {
-              // server 메타로 학운·티어 freshness 보강 (local 캐시는 옛값일 수 있음)
-              return {
-                ...local,
-                isServerOnly: false,
-                hagunLabel: srv.hagunLabel ?? local.hagunLabel,
-                primaryTier: srv.primaryTier ?? local.primaryTier,
-                savedAt: srv.savedAt ?? local.savedAt,
-              };
-            }
-            // server-only — local snapshot 없음 (다른 PC 진단 or 로그아웃 후 재로그인).
-            //   본문 캐시 없으므로 클릭 시 server에서 fetch 필요. Phase B 본문 복원 endpoint 도입 전엔
-            //   isServerOnly 플래그로 UI 비활성 처리 (loadSessionFromHistory도 false 반환).
-            return {
-              sessionId: srv.sessionId,
-              savedAt: srv.savedAt,
-              childNickname: srv.childNickname,
-              childBirth: srv.childBirth,
-              hagunLabel: srv.hagunLabel,
-              primaryTier: srv.primaryTier,
-              hasPart2: false,
-              snapshot: {} as Omit<FlowState, DeviceGlobalKeys>,
-              isServerOnly: true,
-            };
-          });
-          // local-only (server에 없음 — claim 실패했거나 다른 device로 진단)는 뒤로 append.
-          const serverSids = new Set(sessions.map((s) => s.sessionId));
-          const localOnly = s.sessionsHistory.filter((h) => !serverSids.has(h.sessionId));
-          return {
-            ...s,
-            userId,
-            sessionsHistory: [...merged, ...localOnly].slice(0, 20),
-          };
-        });
+        setState((s) => ({
+          ...s,
+          userId,
+          // 로그인 시 서버가 authoritative — 서버에 없는 로컬 항목(어드민 삭제 등)은 drop.
+          // 진행 중 세션만 in-flight 보존. (mergeServerHistory: history-merge.ts, 단위 테스트됨)
+          sessionsHistory: mergeServerHistory(s.sessionsHistory, sessions, s.sessionId),
+        }));
       } catch {
         // silent — 네트워크 실패 시 local만으로 작동 (degraded).
       }
