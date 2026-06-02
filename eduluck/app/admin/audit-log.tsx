@@ -21,6 +21,7 @@ interface LogRow {
 const ACTIONS = [
   '', 'login', 'list_subjects', 'search_subjects', 'view_subject',
   'mask_off', 'add_admin', 'update_admin_role', 'remove_admin', 'view_audit_log',
+  'list_users', 'grant_redo', 'revoke_redo', 'view_user', 'delete_session',
 ];
 
 export default function AuditLogPage() {

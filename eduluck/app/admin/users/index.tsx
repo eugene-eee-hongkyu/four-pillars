@@ -1,7 +1,8 @@
-// /admin/users — 카카오 로그인 사용자 리스트 + "정밀 진단 다시 하기" 권한 토글.
+// /admin/users — 카카오 로그인 사용자 리스트.
 //
-// 체크 시 해당 사용자에게만 첫 화면 history 카드 "다시 진단" 버튼이 노출된다.
-// (다시 진단 = 만세력부터 재실행.)
+// - 체크박스: "정밀 진단 다시 하기" 권한 토글. 체크 시 해당 사용자에게만
+//   첫 화면 history 카드 "다시 진단" 버튼 노출 (만세력부터 재실행).
+// - 행 클릭: 그 사용자가 본 사주(세션) 상세 → /admin/users/[userId] (조회·삭제).
 
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
@@ -139,8 +140,8 @@ export default function AdminUsersPage() {
             카카오 로그인 사용자
           </Text>
           <Text className="font-body text-label-sm text-text-sub leading-relaxed">
-            체크하면 그 사용자에게만 첫 화면 "이전에 본 진단" 카드에 "다시 진단" 버튼이 보입니다.
-            다시 진단을 누르면 만세력부터 새로 실행돼요.
+            왼쪽 체크박스를 누르면 그 사용자에게만 첫 화면 "이전에 본 진단" 카드에 "다시 진단" 버튼이
+            보입니다(만세력부터 재실행). 행을 누르면 그 사용자가 본 사주를 보고 삭제할 수 있어요.
           </Text>
           <Text className="font-body text-label-sm text-text-sub mt-1">
             전체 {users.length}명 · 재진단 허용 {grantedCount}명
@@ -162,25 +163,40 @@ export default function AdminUsersPage() {
               return (
                 <Pressable
                   key={u.userId}
-                  onPress={() => handleToggle(u)}
-                  disabled={busy}
+                  onPress={() => router.push(`/admin/users/${u.userId}` as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${u.nickname} 사주 보기`}
                   className="flex-row items-center gap-3 p-card-padding rounded-md border border-outline-warm bg-surface-container-low"
-                  style={({ pressed }) => ({ opacity: pressed || busy ? 0.6 : 1 })}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                 >
-                  {/* 체크박스 */}
-                  <View
-                    className={`w-6 h-6 rounded border-2 items-center justify-center ${
-                      u.redoEnabled
-                        ? 'bg-primary border-primary'
-                        : 'border-outline-warm bg-surface'
-                    }`}
+                  {/* 체크박스 — 재진단 권한 토글 (행 클릭 navigation 과 분리) */}
+                  <Pressable
+                    onPress={(e) => {
+                      e?.stopPropagation?.();
+                      handleToggle(u);
+                    }}
+                    disabled={busy}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: u.redoEnabled }}
+                    accessibilityLabel="재진단 권한"
+                    hitSlop={8}
+                    className="p-1 -m-1"
+                    style={({ pressed }) => ({ opacity: pressed || busy ? 0.5 : 1 })}
                   >
-                    {u.redoEnabled && (
-                      <Text className="font-body-bold text-label-md text-surface-container-low">
-                        ✓
-                      </Text>
-                    )}
-                  </View>
+                    <View
+                      className={`w-6 h-6 rounded border-2 items-center justify-center ${
+                        u.redoEnabled
+                          ? 'bg-primary border-primary'
+                          : 'border-outline-warm bg-surface'
+                      }`}
+                    >
+                      {u.redoEnabled && (
+                        <Text className="font-body-bold text-label-md text-surface-container-low">
+                          ✓
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
                   <View className="flex-1 gap-0.5">
                     <Text className="font-body-bold text-body-md text-text-pri">
                       {u.nickname}
@@ -195,6 +211,7 @@ export default function AdminUsersPage() {
                       <Text className="font-body-bold text-label-sm text-primary">재진단 허용</Text>
                     </View>
                   )}
+                  <Text className="font-body text-headline-md text-text-sub">›</Text>
                 </Pressable>
               );
             })}

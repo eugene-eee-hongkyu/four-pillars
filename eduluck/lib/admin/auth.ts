@@ -35,7 +35,9 @@ export type AdminAction =
   | 'view_audit_log'
   | 'list_users'
   | 'grant_redo'
-  | 'revoke_redo';
+  | 'revoke_redo'
+  | 'view_user'
+  | 'delete_session';
 
 interface VerifyResult {
   ok: true;
