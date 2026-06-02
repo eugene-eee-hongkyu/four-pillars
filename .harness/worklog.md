@@ -6,6 +6,23 @@
 
 ---
 
+## Session 2026-06-02 15:59 — 랜딩 hero 카피 톤 개선 및 하네스 메타데이터 동기화
+
+### 작업 요약
+- 랜딩 페이지 hero 카피 톤 개선 (운명론 → 발견·권유 톤으로 부드럽게 수정)
+- `worklog.md`, `state.md` 타임스탬프 및 현재 집중도 동기화
+- amend 후 force push 차단으로 인해 soft reset → 별도 commit으로 분리하여 해결
+
+### 실패한 시도
+- amend 후 force push 차단 (안전장치 작동) — soft reset으로 스테이징 되돌린 후 분리 commit으로 재구성
+
+### 다음 액션
+- 루트 untracked `worklog.md` 파일 검토 (자동 산출물 확인)
+- mom test 배포 및 인터뷰 실행
+- 통신판매업 신고 진행
+- 포트원 PG 점검 재실행
+
+
 완료했습니다. `/Users/eugene/Downloads/coding/four-pillars/worklog.md`에 세션 항목을 작성했습니다.
 
 

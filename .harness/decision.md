@@ -6,6 +6,18 @@
 
 ---
 
+## 2026-06-02: Commit 분리 결정 (메타데이터 vs 콘텐츠 변경)
+
+- **선택**: 카피 변경과 메타데이터(worklog, state) 동기화를 분리하여 2개 commit으로 기록
+- **대안 검토**: 
+  - 1개 통합 commit — 단순하지만 변경 의도가 섞임
+  - amend + force push — 차단됨 (안전장치)
+  - soft reset으로 분리 — 선택됨
+- **선택 이유**: force push 불가 제약 하에서 soft reset으로 스테이징을 되돌린 후 별도 commit으로 분리 — 각 변경(콘텐츠 vs 메타)의 의도가 명확함
+- **영향 범위**: git 커밋 히스토리, PR 검토 시 변경 추적 명확성
+- **되돌리는 방법**: 필요 시 `git rebase -i`로 두 commit을 squash하여 통합 가능
+
+
 ## 2026-06-01: 사전 예약 완료 후 trigger별 복귀 — B안 (paywall 시점 맥락 유지)
 
 - **선택**: B안 — 결제 후 paywall trigger별 *맥락 페이지*로 복귀 + 완료 안내 화면 거침
