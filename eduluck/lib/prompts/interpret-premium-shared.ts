@@ -5,7 +5,7 @@
 
 import type { ManseResult } from '@/lib/manse/engine';
 import { getStemSipsin, splitPillar } from '../manse/pillars';
-import { calculateFinalTierV2, calcCurrentLuckPhase, computeHagun } from './hagun-tier';
+import { calculateFinalTierV2, calcCurrentLuckPhase, calcLuckPhaseTimeline, buildAcademicContext, computeHagun } from './hagun-tier';
 import { getTierSchoolGroups, getDepartments, getSpecialTracks, getGeneralDetailGroups } from '../manse/tier-schools';
 
 /** 비학자 격국 (학업 본질이 좁고 표현·실무·사업·예술 트랙 중심) — V13 외부변수 안내 분기용. */
@@ -400,6 +400,8 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     fatherManse: ctx.fatherManse,
   });
   const luckPhase = calcCurrentLuckPhase(c);
+  const academicCtx = buildAcademicContext(c);
+  const phaseTimeline = calcLuckPhaseTimeline(c);
 
   const lines = [
     `[분석 기준일] ${today}`,
@@ -570,6 +572,17 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     ``,
     `[현재 학운 시기 — 백엔드 결정성. §13 "흐름" baseline]`,
     `  ${luckPhase.oneLineSummary}`,
+    ``,
+    `[원국 컨텍스트 — 학운 phase 산출 근거 (점수·라벨 강제 일관성)]`,
+    `  일간 강약: ${academicCtx.dayStrength === 'strong' ? '신강 (인성·비겁 ≥ 5칸)' : academicCtx.dayStrength === 'weak' ? '신약 (인성·비겁 ≤ 2칸)' : '중강 (balanced)'}`,
+    `  격국: ${academicCtx.gyeokgukName}`,
+    `  학업 용신 십성: ${Array.from(academicCtx.usefulSipsin).join('·')}`,
+    `  학업 기신 십성: ${Array.from(academicCtx.excessiveSipsin).join('·') || '없음'}`,
+    ``,
+    `[§13 시기 카드 3구간 — 백엔드 결정성. LLM이 ##헤더 직후 [구간] 라벨 출력 시 *이 baseline 그대로* 사용. 절대 자체 판단 X]`,
+    ...phaseTimeline.map(t =>
+      `  [구간] ${t.ageRange} | ${t.daeunSipsin} | ${t.phaseLabel}${t.isCurrent ? ' ← 현재' : ''}`
+    ),
     ``,
     ...(() => {
       const cr = calcCriticalYear({ childManse: c, birthYear: ctx.childBirthYear, grade: ctx.grade });

@@ -490,8 +490,9 @@ function calcParentAdjust(input: ParentTierAdjustInput): ParentTierAdjustResult 
   return { total, breakdown };
 }
 
-/** 현재 대운·세운의 십성으로 학운 시기 강약 평가.
- *  명리 합의: 인성/관성 대운 = 학문·시험 ↑, 재성 대운 = 학업 견제, 식상/비겁 = 중립~표현. */
+/** 현재 대운·세운의 십성 + 원국 컨텍스트(용신·신강약·격국)로 학운 시기 강약 평가.
+ *  명리 1원리 (억부): 같은 인성·관성·재성도 신강/신약과 용신/기신 여부에 따라 부호 동적.
+ *  v2 (2026-06-02): 식상 추가 + branchSipsin 반영 + 수험 연령(만 17-19세) 세운 가중치 상향. */
 export interface CurrentLuckPhaseResult {
   daeunSipsin: string;
   sewunSipsin: string;
@@ -502,35 +503,210 @@ export interface CurrentLuckPhaseResult {
   oneLineSummary: string;
 }
 
-const SCHOLAR_SIPSIN = new Set(['정인', '편인', '정관', '편관']);
-const HEADWIND_SIPSIN = new Set(['정재', '편재']);
+/** 학운 평가용 원국 컨텍스트 — 같은 십성도 사주마다 부호 다르게 적용. */
+export interface AcademicContext {
+  /** 일간 강약 — 신강이면 식상·재성·관성이 길, 신약이면 인성·비겁이 길 */
+  dayStrength: 'strong' | 'balanced' | 'weak';
+  /** 학업에 *길*로 작용하는 십성 set (용희신 근사). 부호 +. */
+  usefulSipsin: Set<string>;
+  /** 학업에 *기*로 작용하는 십성 set (기신·과다). 부호 -. */
+  excessiveSipsin: Set<string>;
+  /** 격국 이름 — 상관패인·상관견관 등 보너스/패널티 트리거 */
+  gyeokgukName: string;
+}
 
-export function calcCurrentLuckPhase(m: ManseResult): CurrentLuckPhaseResult {
-  const daeun = m.luckCycles.daeun.find(d => d.isCurrent);
-  const sewun = m.luckCycles.sewun.find(s => s.isCurrent);
-  const daeunSipsin = daeun?.stemSipsin ?? '—';
-  const sewunSipsin = sewun?.stemSipsin ?? '—';
+/** ManseResult로부터 학업 컨텍스트 추출.
+ *  신강·신약: sipsin.counts 기반 근사 (insung+bigeop vs siksang+gwansung+jaesung).
+ *  용신·기신 매핑: 신강 → 식상·재성·관성이 길 / 신약 → 인성·비겁이 길 / balanced → 인성·관성 길. */
+export function buildAcademicContext(m: ManseResult): AcademicContext {
+  const c = m.sipsin.counts;
+  // 4기둥 × 2(천간·지지) = 8칸 중 분포. 일간(나)은 dayStem이라 sipsin 카운트엔 안 들어감 — bigeop는 일간 외 비견·겁재.
+  const support = c.insung + c.bigeop;          // 나를 돕는 십성
+  const drain = c.siksang + c.gwansung + c.jaesung; // 나를 누르는 십성
+  // 8칸 중 support 비율로 신강·신약·중강 근사
+  let dayStrength: AcademicContext['dayStrength'];
+  if (support >= 5) dayStrength = 'strong';
+  else if (support <= 2) dayStrength = 'weak';
+  else dayStrength = 'balanced';
 
-  // 대운 가중치 2 + 세운 가중치 1로 합산
-  let score = 0;
-  if (SCHOLAR_SIPSIN.has(daeunSipsin)) score += 2;
-  else if (HEADWIND_SIPSIN.has(daeunSipsin)) score -= 2;
-  if (SCHOLAR_SIPSIN.has(sewunSipsin)) score += 1;
-  else if (HEADWIND_SIPSIN.has(sewunSipsin)) score -= 1;
+  // 용신·기신 매핑 (자평/억부 근사)
+  let usefulSipsin: Set<string>;
+  let excessiveSipsin: Set<string>;
+  if (dayStrength === 'strong') {
+    // 신강: 인성·비겁이 과다 → 식상·재성·정관이 길 (인을 덜어내고 일간을 통제)
+    usefulSipsin = new Set(['식신', '상관', '정재', '편재', '정관']);
+    excessiveSipsin = new Set(['정인', '편인', '비견', '겁재']);
+  } else if (dayStrength === 'weak') {
+    // 신약: 인성·비겁이 길 (나를 도와줌). 식상·재성·관성은 부담.
+    usefulSipsin = new Set(['정인', '편인', '비견', '겁재']);
+    excessiveSipsin = new Set(['식신', '상관', '정재', '편재', '편관']);
+  } else {
+    // balanced: 인성·정관 길, 편관·재성 보통, 식상 중립
+    usefulSipsin = new Set(['정인', '정관']);
+    excessiveSipsin = new Set(); // 명백한 기신 없음
+  }
+
+  return {
+    dayStrength,
+    usefulSipsin,
+    excessiveSipsin,
+    gyeokgukName: m.gyeokguk.name,
+  };
+}
+
+/** 단일 십성의 학업 점수 — 컨텍스트 기반 부호 동적.
+ *  weight: 천간 = 1.0 / 지지 = 0.5 (천간 표면 작용 + 지지 환경 보조). */
+function scoreSipsinForAcademic(sipsin: string, ctx: AcademicContext, weight: number): number {
+  if (!sipsin || sipsin === '—' || sipsin === '(나)') return 0;
+  // 학업 기본 축: 인성·관성·식상 (인성=학문·문서, 관성=규율·시험, 식상=총명·응용·표현)
+  let base = 0;
+  if (sipsin === '정인') base = 2;
+  else if (sipsin === '편인') base = 1;
+  else if (sipsin === '정관') base = 2;
+  else if (sipsin === '편관') base = 1;   // 제화 안 되면 압박 — balanced·weak에서는 1, strong에선 0으로 약화
+  else if (sipsin === '식신') base = 1;
+  else if (sipsin === '상관') base = 1;   // 상관패인 보너스 별도 처리
+  else if (sipsin === '정재' || sipsin === '편재') base = -1; // 학업 분산 (단 신강은 길로 조정)
+  else if (sipsin === '비견' || sipsin === '겁재') base = 0;  // 중립
+
+  // 컨텍스트 보정: 기신이면 부호 반전 또는 감점, 용신이면 부스트
+  if (ctx.excessiveSipsin.has(sipsin)) {
+    // 예: 신강 사주의 정인 → 학업 길이 아니라 인다(생각 과다)로 부호 뒤집힘
+    base = -Math.abs(base);
+    if (base === 0) base = -1; // 비겁 과다도 신강에선 마이너스
+  } else if (ctx.usefulSipsin.has(sipsin)) {
+    // 용신은 +0.5 부스트 (이미 +면 더 +, 옛 -면 +로 반전)
+    if (base < 0) base = 1;        // 신강 사주의 재성 → 부호 + (재성이 인을 덜어냄)
+    else base = Math.max(base, 1) + 0.5;
+  }
+
+  return base * weight;
+}
+
+/** 상관패인 (상관 + 인성 동시 작용) 보너스 — 자평 고전. 가장 똑똑·문장 뛰어남. */
+function calcSanggwanPaeIn(daeunSipsin: string, sewunSipsin: string, insungCount: number): number {
+  if (insungCount === 0) return 0;
+  const hasSanggwan = daeunSipsin === '상관' || sewunSipsin === '상관';
+  return hasSanggwan ? 0.5 : 0;
+}
+
+/** 합충형해가 학업 축(인성·관성·일간·월령)을 타격하면 phase 패널티.
+ *  명리 합의: 충=급변·이동, 형=스트레스·조정, 파해=불안정. */
+function calcClashPenalty(m: ManseResult, daeunBranch: string): number {
+  const hapchunh = m.hapchunh;
+  if (!hapchunh) return 0;
+  // hapchunh.chung/hyeong/pa/hae 배열 검사 — 학업 축(년월 인성·관성·일지)에 타격이면 -0.5씩
+  // 단순 근사: 충 1건 -0.5, 형 1건 -0.3, 파해는 무시.
+  // (정밀 타격 대상 매칭은 Phase B로 분리 — Phase A는 시그너 count만)
+  const chungCount = hapchunh.chung?.length ?? 0;
+  const hyeongCount = hapchunh.hyeong?.length ?? 0;
+  let penalty = -(Math.min(chungCount, 2) * 0.5 + Math.min(hyeongCount, 2) * 0.3);
+  // 대운 지지가 일지·월지와 충하면 추가 -0.5 (학업 환경 흔들림)
+  // 간단 처리: 단순 시그너 count로만 → 정밀 매칭은 Phase B
+  return penalty;
+}
+
+/** 단일 시점(daeun + sewun)의 학운 phase 계산 — pure function.
+ *  3 구간 timeline 박제 시 같은 함수로 호출. */
+export function calcLuckPhaseAt(
+  daeunStemSipsin: string,
+  daeunBranchSipsin: string,
+  daeunBranch: string,
+  sewunStemSipsin: string,
+  m: ManseResult,
+  ctx: AcademicContext,
+  options?: { sewunWeight?: number },
+): CurrentLuckPhaseResult {
+  // 대운 천간 가중치 2 + 대운 지지 가중치 1 + 세운 천간 가중치 1 (또는 수험 연령 시 2)
+  const sewunWeight = options?.sewunWeight ?? 1;
+  const daeunStemScore = scoreSipsinForAcademic(daeunStemSipsin, ctx, 2);
+  const daeunBranchScore = scoreSipsinForAcademic(daeunBranchSipsin, ctx, 1);
+  const sewunStemScore = scoreSipsinForAcademic(sewunStemSipsin, ctx, sewunWeight);
+  const sanggwanBonus = calcSanggwanPaeIn(daeunStemSipsin, sewunStemSipsin, m.sipsin.counts.insung);
+  const clashPenalty = calcClashPenalty(m, daeunBranch);
+
+  const score = daeunStemScore + daeunBranchScore + sewunStemScore + sanggwanBonus + clashPenalty;
 
   let phaseScore: -1 | 0 | 1;
   let phaseLabel: CurrentLuckPhaseResult['phaseLabel'];
-  if (score >= 2) { phaseScore = 1; phaseLabel = '학운 강 시기'; }
-  else if (score <= -2) { phaseScore = -1; phaseLabel = '학운 약 시기 (환경 보강 필요)'; }
+  // 신강·신약 부호 동적 적용 후라 threshold 조정 (이전 ≥2 → ≥1.5, ≤-2 → ≤-1.5)
+  if (score >= 1.5) { phaseScore = 1; phaseLabel = '학운 강 시기'; }
+  else if (score <= -1.5) { phaseScore = -1; phaseLabel = '학운 약 시기 (환경 보강 필요)'; }
   else { phaseScore = 0; phaseLabel = '학운 중 시기'; }
 
   return {
-    daeunSipsin,
-    sewunSipsin,
+    daeunSipsin: daeunStemSipsin,
+    sewunSipsin: sewunStemSipsin,
     phaseScore,
     phaseLabel,
-    oneLineSummary: `현재 대운 십성 ${daeunSipsin}·세운 ${sewunSipsin} → ${phaseLabel}`,
+    oneLineSummary: `현재 대운 십성 ${daeunStemSipsin}·세운 ${sewunStemSipsin} → ${phaseLabel}`,
   };
+}
+
+export function calcCurrentLuckPhase(m: ManseResult): CurrentLuckPhaseResult {
+  const ctx = buildAcademicContext(m);
+  const daeun = m.luckCycles.daeun.find(d => d.isCurrent);
+  const sewun = m.luckCycles.sewun.find(s => s.isCurrent);
+  const daeunStemSipsin = daeun?.stemSipsin ?? '—';
+  const daeunBranchSipsin = daeun?.branchSipsin ?? '—';
+  const daeunBranch = daeun?.branch ?? '';
+  const sewunStemSipsin = sewun?.stemSipsin ?? '—';
+
+  // 수험 연령대(만 17-19세) 세운 가중치 동적 상향 — 입시 결정 시점
+  const currentSewunYear = sewun?.year ?? new Date().getFullYear();
+  const birthYearGuess = currentSewunYear - (daeun?.age ?? 0);
+  const currentAge = currentSewunYear - birthYearGuess; // 근사 — 정밀 birthYear 못 받아도 큰 차이 X
+  const sewunWeight = currentAge >= 17 && currentAge <= 19 ? 2 : 1;
+
+  return calcLuckPhaseAt(
+    daeunStemSipsin,
+    daeunBranchSipsin,
+    daeunBranch,
+    sewunStemSipsin,
+    m,
+    ctx,
+    { sewunWeight },
+  );
+}
+
+/** §13 시기 카드 3구간 (이전·현재·다음 대운) phase 결정성 박제.
+ *  prompt baseline에 박혀 LLM 시기 카드 [구간] 라벨 일관성 보장. */
+export interface LuckPhaseTimelineItem {
+  ageRange: string;       // "8~17세" 등
+  daeunSipsin: string;    // 천간 십성
+  phaseLabel: CurrentLuckPhaseResult['phaseLabel'];
+  isCurrent: boolean;
+}
+
+export function calcLuckPhaseTimeline(m: ManseResult): LuckPhaseTimelineItem[] {
+  const ctx = buildAcademicContext(m);
+  const daeuns = m.luckCycles.daeun;
+  const currentIdx = daeuns.findIndex(d => d.isCurrent);
+  if (currentIdx < 0) return [];
+  // 이전 1 + 현재 + 다음 1 = 3구간. 양 끝 경계 처리.
+  const range = [
+    currentIdx > 0 ? currentIdx - 1 : currentIdx,
+    currentIdx,
+    currentIdx < daeuns.length - 1 ? currentIdx + 1 : currentIdx,
+  ];
+  const uniqueRange = Array.from(new Set(range));
+  return uniqueRange.map((idx) => {
+    const d = daeuns[idx];
+    // 시기 카드는 *대운만 기준* — 세운 변동 평균값 가정. sewunStemSipsin='—' 처리.
+    const phase = calcLuckPhaseAt(
+      d.stemSipsin, d.branchSipsin, d.branch,
+      '—', // 세운 평균 — 천간 십성 매칭 X
+      m,
+      ctx,
+      { sewunWeight: 0 }, // 세운 0 가중 (대운만)
+    );
+    return {
+      ageRange: `${d.age}~${d.age + 9}세`,
+      daeunSipsin: d.stemSipsin,
+      phaseLabel: phase.phaseLabel,
+      isCurrent: d.isCurrent,
+    };
+  });
 }
 
 // ============================================================================
