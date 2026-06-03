@@ -37,7 +37,7 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
 
 export default function Landing() {
   const router = useRouter();
-  const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer, beginRedo } = useFlow();
+  const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer, beginRedo, removeSessionFromHistory } = useFlow();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +48,8 @@ export default function Landing() {
   const [redoEnabled, setRedoEnabled] = useState(false);
   /** "다시 진단" 준비 중인 sessionId */
   const [redoingSessionId, setRedoingSessionId] = useState<string | null>(null);
+  /** 삭제 중인 sessionId */
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
 
   const hasHistory = state.sessionsHistory.length > 0;
   // 트리거 1: 자녀 cap 도달 시 paywall (비회원 1명, 회원 2명)
@@ -218,6 +220,41 @@ export default function Landing() {
     }
   };
 
+  // 진단(세션) 삭제 — 재진단으로 중복된 카드 정리용 (권한자만 노출)
+  const handleDelete = async (h: SavedSession) => {
+    if (deletingSessionId || redoingSessionId) return;
+    const confirmed =
+      typeof window !== 'undefined'
+        ? window.confirm(`'${h.childNickname}' 진단을 삭제할까요?\n진단 결과까지 함께 사라지고 되돌릴 수 없어요.`)
+        : true;
+    if (!confirmed) return;
+    setDeletingSessionId(h.sessionId);
+    setError(null);
+    try {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('로그인이 필요해요.');
+        return;
+      }
+      const res = await fetch(`/api/sessions/${h.sessionId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      removeSessionFromHistory(h.sessionId);
+      track(EVENTS.DELETE_DIAGNOSIS_CLICK, { deleted_session_id: h.sessionId });
+    } catch {
+      setError('삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setDeletingSessionId(null);
+    }
+  };
+
   // history 있는 경우 — 이전 진단 카드 + 새 진단 CTA
   if (hasHistory) {
     return (
@@ -237,6 +274,7 @@ export default function Landing() {
             {state.sessionsHistory.map((h) => {
               const isRedoing = redoingSessionId === h.sessionId;
               const isRestoring = restoringSessionId === h.sessionId;
+              const isDeleting = deletingSessionId === h.sessionId;
               // server-only 카드 = 다른 기기 진단 or 로그아웃 후 재로그인.
               // 클릭 시 /api/sessions/[id] fetch → 본문 복원 → 진단 화면 진입.
               return (
@@ -281,20 +319,35 @@ export default function Landing() {
                     )}
                   </Pressable>
 
-                  {/* 어드민 허용 사용자만 노출 — 같은 자녀 입력으로 만세력부터 재실행 */}
+                  {/* 어드민 허용 사용자만 노출 — 다시 정밀 진단(만세력부터 재실행) + 삭제(재진단 중복 정리) */}
                   {redoEnabled && (
-                    <Pressable
-                      onPress={() => handleRedo(h)}
-                      disabled={isRedoing}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${h.childNickname} 다시 진단`}
-                      className="flex-row items-center justify-center gap-1.5 py-3 border-t border-outline-warm/60 bg-surface"
-                      style={({ pressed }) => ({ opacity: pressed || isRedoing ? 0.6 : 1 })}
-                    >
-                      <Text className="font-body-bold text-label-md text-primary">
-                        {isRedoing ? '⏳ 진단 준비 중…' : '↻ 다시 정밀 진단'}
-                      </Text>
-                    </Pressable>
+                    <View className="flex-row border-t border-outline-warm/60 bg-surface">
+                      <Pressable
+                        onPress={() => handleRedo(h)}
+                        disabled={isRedoing || isDeleting}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${h.childNickname} 다시 진단`}
+                        className="flex-1 flex-row items-center justify-center gap-1.5 py-3"
+                        style={({ pressed }) => ({ opacity: pressed || isRedoing ? 0.6 : 1 })}
+                      >
+                        <Text className="font-body-bold text-label-md text-primary">
+                          {isRedoing ? '⏳ 진단 준비 중…' : '↻ 다시 정밀 진단'}
+                        </Text>
+                      </Pressable>
+                      <View className="w-px bg-outline-warm/60" />
+                      <Pressable
+                        onPress={() => handleDelete(h)}
+                        disabled={isRedoing || isDeleting}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${h.childNickname} 진단 삭제`}
+                        className="flex-row items-center justify-center gap-1.5 py-3 px-5"
+                        style={({ pressed }) => ({ opacity: pressed || isDeleting ? 0.6 : 1 })}
+                      >
+                        <Text className="font-body-bold text-label-md text-fire">
+                          {isDeleting ? '⏳ 삭제 중…' : '🗑 삭제'}
+                        </Text>
+                      </Pressable>
+                    </View>
                   )}
                 </View>
               );

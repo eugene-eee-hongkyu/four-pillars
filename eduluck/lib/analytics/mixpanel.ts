@@ -111,6 +111,8 @@ export const EVENTS = {
   START_NEW_DIAGNOSIS_CLICK: 'start_new_diagnosis_click',
   // 어드민이 허용한 사용자의 "다시 진단" (만세력부터 재실행) 클릭
   REDO_DIAGNOSIS_CLICK: 'redo_diagnosis_click',
+  // 어드민이 허용한 사용자의 진단(세션) 삭제 — 재진단 중복 정리
+  DELETE_DIAGNOSIS_CLICK: 'delete_diagnosis_click',
   // 카카오 로그인 + paywall
   LOGIN_CLICK: 'login_click',
   LOGIN_SUCCESS: 'login_success',

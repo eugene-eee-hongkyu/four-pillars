@@ -124,3 +124,45 @@ export async function GET(request: Request) {
     },
   });
 }
+
+// DELETE /api/sessions/[sessionId] — 회원 본인 진단(세션) 삭제.
+// header: Authorization: Bearer <JWT> (필수). 본인 소유(user_id 일치)만 삭제 (IDOR 차단).
+// 세션 삭제 → subjects·interpretations·surveys·funnel_events cascade.
+// 재진단 시 같은 자녀가 중복 생기므로 첫 화면 history 카드에서 정리용 (admin redo 허용 사용자).
+export async function DELETE(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return Response.json({ error: 'missing bearer token' }, { status: 401 });
+  }
+  const jwt = authHeader.slice(7);
+
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const sessionId = pathParts[pathParts.length - 1] || '';
+  if (!sessionId || !/^[0-9a-f-]{36}$/i.test(sessionId)) {
+    return Response.json({ error: 'sessionId required (uuid)' }, { status: 400 });
+  }
+
+  const sb = getSupabaseServer();
+  const { data: userData, error: userErr } = await sb.auth.getUser(jwt);
+  if (userErr || !userData.user) {
+    return Response.json({ error: 'invalid token' }, { status: 401 });
+  }
+  const userId = userData.user.id;
+
+  // 본인 소유 확인 (IDOR 차단)
+  const { data: session } = await sb
+    .from('sessions')
+    .select('id, user_id')
+    .eq('id', sessionId)
+    .maybeSingle();
+  if (!session) return Response.json({ error: 'not found' }, { status: 404 });
+  if (session.user_id !== userId) {
+    return Response.json({ error: 'forbidden' }, { status: 403 });
+  }
+
+  const { error } = await sb.from('sessions').delete().eq('id', sessionId);
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  return Response.json({ ok: true });
+}

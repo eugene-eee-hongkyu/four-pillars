@@ -392,6 +392,8 @@ interface FlowContextValue {
   restoreSessionFromServer: (sessionId: string) => Promise<boolean>;
   /** "다시 진단" — history 진단의 입력값만 유지하고 만세력부터 재실행 준비. 성공 시 true. */
   beginRedo: (sessionId: string) => Promise<boolean>;
+  /** history 카드 삭제 — 서버 삭제 성공 후 로컬 sessionsHistory에서 제거. */
+  removeSessionFromHistory: (sessionId: string) => void;
 }
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -900,6 +902,20 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  /** history 카드 삭제 — 서버 DELETE 성공 후 호출. 로컬 sessionsHistory에서 제거 + 현재 로드 세션이면 클리어. */
+  const removeSessionFromHistory = useCallback((sessionId: string) => {
+    setState((s) => {
+      const next = s.sessionsHistory.filter((h) => h.sessionId !== sessionId);
+      if (next.length === s.sessionsHistory.length) return s; // 변화 없음
+      const clearCurrent = s.sessionId === sessionId;
+      return {
+        ...s,
+        sessionsHistory: next,
+        ...(clearCurrent ? { sessionId: null } : {}),
+      };
+    });
+  }, []);
+
   /** PART2_COMPLETE 이벤트 dedup — sessionId 신규 mark 시 true, 이미 발사된 경우 false. */
   const markPart2CompleteFired = useCallback((sessionId: string): boolean => {
     if (!sessionId) return false;
@@ -946,6 +962,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
         markPart2CompleteFired,
         restoreSessionFromServer,
         beginRedo,
+        removeSessionFromHistory,
       }}
     >
       {children}
