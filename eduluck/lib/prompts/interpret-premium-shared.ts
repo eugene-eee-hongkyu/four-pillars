@@ -406,6 +406,13 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
   const phaseTimeline = calcLuckPhaseTimeline(c);
   const peer = calcPeerProfile(c);       // §11 친구·또래 백엔드 결정성
   const academy = calcAcademyFit(c);     // §12 학원·선생님 백엔드 결정성
+  // §15 해외 — 용신 오행 → 방위 (국가 특정 ✗, "참고 방면"만). 목=동·화=남·토=중앙·금=서·수=북.
+  const DIR_KO: Record<string, string> = { wood: '동쪽', fire: '남쪽', earth: '중앙', metal: '서쪽', water: '북쪽' };
+  const dirPrimary = DIR_KO[c.yongsin.primary] ?? '';
+  const dirSecondary = c.yongsin.secondary ? (DIR_KO[c.yongsin.secondary] ?? '') : '';
+  const abroadDirHint = dirPrimary
+    ? `${dirPrimary}${dirSecondary && dirSecondary !== dirPrimary ? `·${dirSecondary}` : ''} 방면`
+    : '';
 
   const lines = [
     `[분석 기준일] ${today}`,
@@ -476,7 +483,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
         `     · medical 강·매우 강 → trigger=medical 트랙 권유 OK (의예·치의예·한의예·약대·수의예·차의과대 등)`,
         `     · research 강·매우 강 → trigger=research 트랙 권유 OK (KAIST·POSTECH·UNIST·GIST·DGIST 등)`,
         `     · publicForce 강·매우 강 → trigger=publicForce 트랙 권유 OK (사관학교·경찰대·한국체대 등)`,
-        `     · abroad 강·매우 강 → trigger=abroad 트랙 권유 OK (하버드·MIT·Ivy·미국 Top X 학부 등). ⚠️ DirectionKey 'global' ≡ 'abroad' (동의어, V25)`,
+        `     · abroad 강·매우 강 → trigger=abroad 트랙 권유 OK. ⚠️ **구체 해외 대학명·국가명 절대 ✗** (하버드·MIT·미국 Top 등 매번 같은 학교 반복 ✗ — 명리로 특정 불가). "유학(해외 대학 진학)이 매우 도움이 되는 자리예요"·"해외 대학도 잘 맞아요"처럼 *유학 권유*로만. DirectionKey 'global' ≡ 'abroad' (동의어, V25)`,
         `     · arts 강·매우 강 (+주력 arts 강) → trigger=arts 트랙 권유 OK (한예종·서울대 미대·홍익 미대 등)`,
         `     · edu (교사 기질: 관성+인성) → trigger=edu 트랙 권유 OK (교대 ±1)`,
         `     · 적성 약·보통 → 해당 trigger 트랙 본업 권유 ✗`,
@@ -622,13 +629,17 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `[적성 점수 — 해외운. ⚠️ 동의어 매핑 (V25): 'global' (주력 방향성 DirectionKey) ≡ 'abroad' (specialTracks trigger) ≡ 'abroadScore' (적성 점수) ≡ '해외운' — 모두 같은 영역. cross-check 시 셋 다 같은 강도로 해석. 점수·시그널 이름 본문 노출 ✗, 근거만 자연]`,
     `  ${c.abroadScore.summary}`,
     `  근거: ${c.abroadScore.signals.filter(s => s.matched).map(s => s.reason).join(' / ') || '시그널 없음 — 해외운 약'}`,
-    `  §14 풀이 톤:`,
+    `  ⚠️ 구체 국가명 절대 ✗ (미국·영국·캐나다·싱가포르 등). 명리로 국가 특정 불가 — "해외/외국" + 용신 방위(참고 방면)까지만.`,
+    abroadDirHint
+      ? `  용신 방위(참고): ${abroadDirHint} 환경이 본인 기운을 보완해 더 맞는 편. ⚠️ "확률 높은 국가"가 아니라 "참고 방면"으로만, 단정 ✗.`
+      : ``,
+    `  §15 풀이 톤:`,
     c.abroadScore.level === '무조건'
-      ? `    "해외에서 자리 잡는 게 자연스러워요"·"외국이 본토보다 운이 더 풀려요" 톤. 미·영국·캐나다·싱가포르 등 구체 국가 1~2곳.`
+      ? `    "해외에서 자리 잡는 게 자연스러워요"·"유학·해외 진학이 매우 도움이 되는 자리예요" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
       : c.abroadScore.level === '강'
-        ? `    "해외운이 강한 자리예요" 톤. 미·영국·캐나다 등 1~2곳.`
+        ? `    "해외운이 강한 자리예요"·"유학 가시면 잘 풀려요" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
         : c.abroadScore.level === '보통'
-          ? `    "해외도 가능성 열린 자리예요" 톤 (강요 ✗).`
+          ? `    "해외도 가능성 열린 자리예요·유학도 잘 맞는 편이에요" 톤 (강요 ✗). 구체 국가명 ✗.`
           : `    "해외운은 약한 편이에요"·"국내가 자연스러워요" 톤.`,
     ``,
   ];
