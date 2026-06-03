@@ -6,13 +6,13 @@
 
 ---
 
-## 마지막 실행: 2026-06-03 10:39
-## 마지막 업데이트: 2026-06-03 10:39
+## 마지막 실행: 2026-06-03 13:00
+## 마지막 업데이트: 2026-06-03 13:00
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 어드민 사용자 관리(카카오 사용자 리스트 + 선택형 재진단 권한 + 본 사주 조회/삭제) 풀스택 완료. §14 조심할해 v2 + §11 친구·§12 학원 백엔드 결정성 + §15 해외운(국가 제거·용신 방위·유학 권유) 보강 완료. 명리 백엔드 결정성을 §11~§15까지 확장 — 학운 점수·티어·방향성 영향 0. mom test 배포 대기.
+- 어드민 사용자 관리(카카오 리스트 + 재진단 권한 + 본 사주 조회/삭제) + 첫 화면 재진단 허용자에게 "다시 정밀 진단 + 삭제" 풀스택 완료. §14 조심할해 v2 + §11 친구·§12 학원 백엔드 결정성 + §15 해외운(국가 제거·용신 방위·유학 권유) 보강 완료. 명리 백엔드 결정성을 §11~§15까지 확장 — 학운 점수·티어·방향성 영향 0. mom test 배포 대기.
 
 ### 이어서 할 것
 
@@ -39,8 +39,8 @@
 - **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
 - **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. `PAYMENT_VISIBLE = false` (결제 CTA 숨김, 신고·인프라 후 true)
-- **어드민 사용자 관리**: `/admin/users` (카카오 사용자 리스트·재진단 ON/OFF) + `/admin/users/[userId]`(본 사주 조회·삭제). `redo_grants` 테이블 + `/api/me/redo`. 첫 화면 history 카드 "다시 진단"(권한자만, beginRedo → 만세력부터)
-- **명리 백엔드 결정성 모듈**: §13 hagun-tier(학운 phase) · §14 critical-year(조심할해) · §11 peer-profile(친구) · §12 academy-fit(학원) · §15 abroad-score(해외). 공통 `lib/manse/academic-context.ts`(buildAcademicContext, 용신/신강약). 점수·티어 영향 0 별도 레이어
+- **어드민 사용자 관리**: `/admin/users`(카카오 리스트·재진단 ON/OFF) + `/admin/users/[userId]`(본 사주 조회·삭제). `redo_grants` 테이블 + `/api/me/redo`. 첫 화면 history 카드: 권한자에게 "다시 정밀 진단"(beginRedo → 만세력부터) + "삭제"(DELETE /api/sessions/[id], 본인 소유·cascade)
+- **명리 백엔드 결정성 모듈**: §13 hagun-tier · §14 critical-year · §11 peer-profile · §12 academy-fit · §15 abroad-score. 공통 `lib/manse/academic-context.ts`(buildAcademicContext, 용신/신강약). 점수·티어 영향 0 별도 레이어
 - **§15 해외운 정책**: abroadScore 10시그널 가중합(점수식 고정, 5 anchor 정합). 등급 약/보통/강/매우 강. **국가명 ✗ → 용신 오행 방위(참고)**. §17 해외대학명 ✗ → 유학 권유. decision.md 2026-06-03 (용신 조건부 데이터 반증)
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
 - **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope
@@ -48,7 +48,7 @@
 - **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF*(정가 20,000원, 사전 예약 4,000원 80% 할인). 명단: Supabase `pdf_preorders`
 - **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users). super-admin: eugene.eee@iskra.world · hongary@naver.com
 - **DB(Supabase eduluck `hqtletafqlwphhakoyrm`)**: 카카오 회원 3명. 신규 테이블 `redo_grants`. admin_audit_log action 확장(list_users·grant_redo·revoke_redo·view_user·delete_session)
-- **localStorage owner ship**: Phase 1 user_id 박힘 + Phase 2 claim 자동 + 로그아웃 STORAGE_KEY 삭제 + router.replace('/'). 로그인 시 mergeServerHistory(서버 authoritative — 어드민 삭제 즉시 반영, 진행 중 세션만 보존)
+- **localStorage owner ship**: Phase 1 user_id 박힘 + Phase 2 claim 자동 + 로그아웃 STORAGE_KEY 삭제 + router.replace('/'). 로그인 시 mergeServerHistory(서버 authoritative — 어드민·본인 삭제 즉시 반영, 진행 중 세션만 보존)
 - **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true · react-native-svg 15.8.0
 
 ### 백로그 요약
@@ -70,11 +70,12 @@
 - [x] 결제 CTA 숨김 (PAYMENT_VISIBLE flag, `9121a14`)
 - [x] **§13 학운 phase v2 (`3a9470a`)** ⭐ — 자평/억부 컨텍스트 + 식상 + branchSipsin + 합충형해 + 수험연령 + 3구간 timeline. 명리 65→80점대. 점수·티어·방향성 0 영향
 - [x] **어드민 카카오 사용자 리스트 + 선택형 재진단 권한 (`e81708d`·`7841359`)** ⭐ — redo_grants + /api/me/redo + 첫 화면 "다시 진단" 버튼
-- [x] **어드민 사용자 상세 — 본 사주 조회·삭제 (`a9e73bd`·`2dd439d`·`b9fb94c`)** ⭐ — Vercel params 500 fix + prod e2e(임시 admin)
+- [x] **어드민 사용자 상세 — 본 사주 조회·삭제 (`a9e73bd`·`2dd439d`·`b9fb94c`)** ⭐ — Vercel params 500 fix + prod e2e
 - [x] **어드민 삭제 홈 history 반영 fix (`a2e6ff1`)** — mergeServerHistory 순수함수 + 테스트
 - [x] **§14 조심할해 v2 (`ca59ac8`)** ⭐ — 충 용신/기신 동적 + 형·파·양인·백호 + 수험연령. 테스트 8개
 - [x] **§11 친구·§12 학원 백엔드 결정성 + 전섹션 일관성 (`d1c5922`)** ⭐ — peer-profile·academy-fit + buildSharedManseContext 주입. 테스트 7개
 - [x] **§15 해외운 국가 제거 + 용신 방위 + §17 유학 권유 (`6155b62`·`576065a`)** ⭐ — 5 anchor 용신조건부 반증·점수 무변경, 라벨 무조건→매우 강
+- [x] **첫 화면 카드 "삭제" 버튼 (재진단 허용자) (`da482e9`)** ⭐ — DELETE /api/sessions/[id](본인 소유·cascade·IDOR) + removeSessionFromHistory + prod e2e
 - [x] e2e playbook 검증 17·18·19·20 추가 (`26a7d8a`·`1eb27fa`)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
