@@ -6,6 +6,27 @@
 
 ---
 
+## Session 2026-06-03 08:23 — 어드민 사용자 관리(재진단·사주 삭제) + §14·§11·§12·§15 명리 백엔드 결정성 보강
+
+### 작업 요약
+- **어드민 카카오 사용자 리스트 + 선택형 "다시 정밀 진단" 권한** (`e81708d`) — redo_grants 테이블(presence=allow, service_role only) + audit action 3종 확장 + `/api/me/redo` + 첫 화면 history 카드 "다시 진단" 버튼(권한자만). beginRedo: 자녀·부모 입력 유지, 새 세션 발급 후 만세력부터 재실행
+- **첫 화면 "다시 진단" 버튼 디자인** (`7841359`) — 세로 글자 막대 → 카드 하단 전체너비 풋터, 일반/다른기기 카드 분기 통합
+- **어드민 사용자 상세 — 본 사주 조회 + 삭제** (`a9e73bd`) — `/admin/users/[userId]` + GET(마스킹·unmask 토글) + DELETE(세션 cascade·소유권 검증·확인모달·audit). admin_audit_log view_user·delete_session 확장
+- **사용자 행 UI 개선** (`2dd439d`) — 앞 체크박스 제거 → 오른쪽 "재진단 ON/OFF" 토글 + "상세" 버튼 (행 전체 클릭 모호성 해소)
+- **사용자 상세 API 500 fix** (`b9fb94c`) — Vercel Functions가 2번째 인자 params 미주입 → URL pathname 파싱(sessions/[sessionId] 동일 패턴). 임시 admin 계정 생성해 프로덕션 e2e 검증(GET 200·삭제 cascade·가드 403/404·401) 후 계정·흔적 정리
+- **§14 조심할해 v2** (`ca59ac8`) — buildAcademicContext를 academic-context.ts로 추출(§13·§14 공유) + 충 가중 용신/기신 동적 + 형(삼형·자묘상형)·파·양인·백호 추가 + 수험 연령 가중. 학운 점수·티어 영향 0. 테스트 8개
+- **어드민 삭제 홈 history 미반영 버그 fix** (`a2e6ff1`) — syncOnLogin이 서버에 없는 로컬 항목을 local-only로 재append → 어드민 삭제가 클라이언트에 반영 안 됨. mergeServerHistory 순수함수 추출(로그인 시 서버 authoritative, 진행 중 세션만 in-flight 보존) + 테스트 8개
+- **§11 친구·§12 학원 백엔드 결정성** (`d1c5922`) — peer-profile.ts(3축 벡터·비견/겁재 분리·용신 조건부·구설 트리거) + academy-fit.ts(격국 lookup·印多 보정·fit 프레이밍). buildSharedManseContext 주입 → Part1·Part2·deep 공유로 §19·§20·§10·§8 일관성 규칙. 테스트 7개
+- **§15 해외운 국가 제거 + 방위** (`6155b62`) — 5 anchor(재원·재호·홍규·정아·윤수, 해외 5년 거주) 실측 검증으로 용신 조건부 반증(5명 모두 水 기신 아님) → 점수식 무변경. 국가명 삭제 → 용신 오행 방위(참고 방면) + §17 해외 대학명("하버드·MIT") → 유학 권유 추상화
+- **§15 라벨 무조건→매우 강** (`576065a`) — overclaim 톤다운 + 등급 문구(강=해외가 한국보다 좋다 / 매우 강=적극 추천·한국보다 운 훨씬 트임)
+- **DB 마이그레이션 prod 적용**: redo_grants + admin_audit_log action 2회 확장 (Supabase eduluck `hqtletafqlwphhakoyrm`)
+- 매 커밋 typecheck·웹 export 빌드·유닛 57/57 PASS 검증
+
+### 다음 액션
+- mom test 배포 + 인터뷰 4문항 → admin 검수
+- §11·§12·§15 백엔드 결정성 LLM 실출력 모순·품질 점검 (배포 후 테스트 사주로 §15·§17·§19·§20 본문)
+- 통신판매업 신고 + 포트원 PG 가맹점 심사
+
 ## Session 2026-06-02 15:59 — 랜딩 hero 카피 톤 개선 및 하네스 메타데이터 동기화
 
 ### 작업 요약

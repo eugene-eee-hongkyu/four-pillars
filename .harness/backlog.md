@@ -4,6 +4,14 @@
 
 ## 대기 중
 
+## 2026-06-03: §11·§12·§15 백엔드 결정성 가중치 calibration (mom test 후)
+
+- **백로그 이유**: 가중치·임계값이 휴리스틱·미보정 (anchor N 작음). mom test 실데이터 필요. 회귀 위험 있어 지금 손대지 않음
+- **할 것**: §11(peer-profile) 3축 가중·임계, §12(academy-fit) 격국 lookup, §15(abroad) cutoff(2/5/8) 및 정아(5)·홍규(3) "보통"→"강" 격상 검토를 실데이터로 재보정. (선택) §15 용신 조건부 재검토
+- **필요한 것**: mom test 친구 사주 + 실제 친구관계·학원·해외 거주 outcome 피드백
+- **이전 검토**: §15는 5 anchor(해외 거주)로 용신 조건부 반증 + 점수 무변경 결정(decision.md 2026-06-03). §11/§12는 골든 단위테스트만, calibration anchor 없음
+- **관련 파일**: lib/manse/peer-profile.ts · academy-fit.ts · abroad-score.ts
+
 ## 2026-06-02: §13 학운 phase Phase B — 학업 신살(문창·학당·화개) + 합충형해 타격 대상 정밀 매칭
 
 - **백로그 이유**: Phase A (자평/억부 컨텍스트·식상·branchSipsin·timeline)로 명리 65 → 80점대 향상. Phase B는 80 → 90점대 향상이지만 *학업 신살 등록 + 합충형해 타격 대상 정밀 매칭* 추가 4-6시간 필요. mom test 결과 보고 우선순위 재판단.
@@ -72,10 +80,6 @@
 ---
 
 ## 완료/취소
-
-### 2026-06-01 정리 시 완료 처리
-
-- ~~[1] 2026-06-01: 비회원 진단 server-side device_id cap (anonymous_cap_reached)~~ — **완료** (사용자 결정으로 mom test 전 즉시 적용, defense-in-depth + claim cap 5도 함께)
 
 ### 2026-05-26 정리 시 완료 처리
 

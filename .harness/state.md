@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-06-02 17:10
-## 마지막 업데이트: 2026-06-02 17:10
+## 마지막 실행: 2026-06-03 08:23
+## 마지막 업데이트: 2026-06-03 08:23
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- §13 학운 phase v2 (자평/억부 컨텍스트 + 식상 + 합충형해 + 3구간 timeline 결정성) 적용(`3a9470a`). 명리 65→80점대 향상. 학운 점수·티어·방향성 영향 0. 결제 CTA 숨김(PAYMENT_VISIBLE flag, `9121a14`). mom test funnel 측정 정책 정비 + 진단 명리 정합성 향상 동시 박제.
+- 어드민 사용자 관리(카카오 사용자 리스트 + 선택형 재진단 권한 + 본 사주 조회/삭제) 풀스택 완료. §14 조심할해 v2 + §11 친구·§12 학원 백엔드 결정성 + §15 해외운(국가 제거·용신 방위·유학 권유) 보강 완료. 명리 백엔드 결정성을 §11~§15까지 확장 — 학운 점수·티어·방향성 영향 0. mom test 배포 대기.
 
 ### 이어서 할 것
 
-1. **mom test 친구들 배포 + 인터뷰 4문항** → admin에서 진단 검수 가능. 가이드: `eduluck/docs/mom-test/interview-guide.md`
-2. **통신판매업 신고** (정부24 또는 강남구청, 3-7영업일) → `business-info.ts` `ecommerceNumber` 채움 (LegalFooter 자동 복원)
-3. **포트원 PG 사전 점검 재실행** → 가맹점 심사 신청 (토스페이먼츠 메인)
+1. **mom test 친구들 배포 + 인터뷰 4문항** → admin에서 진단 검수. 가이드: `eduluck/docs/mom-test/interview-guide.md`
+2. **§11·§12·§15 백엔드 결정성 LLM 실출력 점검** — 배포 후 테스트 사주로 §15·§17·§19·§20 본문 모순·품질 확인
+3. **통신판매업 신고** + **포트원 PG 가맹점 심사 신청**
 
 ### 막힌 것
 
@@ -38,208 +38,52 @@
 - **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
 - **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL
 - **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
-- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인
-- **redirect UX 인프라**: `lib/hooks/useScrollToBottomOnRedirect.ts` (setScrollToBottomFlag + hook). PaywallModal POST_LOGIN_PATH + pdf-preorder POST_PAYMENT_PATH 매핑. FlowProvider clearOnLogout → router.replace('/')
-- **결제 CTA 숨김 flag**: `lib/legal/pricing.ts PAYMENT_VISIBLE = false` — 통신판매업 신고·결제 인프라 정비 후 true swap
-- **§13 학운 phase v2**: 자평/억부 컨텍스트 (AcademicContext + scoreSipsinForAcademic + calcLuckPhaseAt pure function + calcLuckPhaseTimeline 3구간 결정성). 신강 사주의 정인 → 부호 동적 뒤집힘. 식상·branchSipsin·합충형해·수험 연령 가중치 반영. 명리 65→80점대 향상. Phase B (학업 신살·합충형해 타격 정밀)는 backlog
+- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. `PAYMENT_VISIBLE = false` (결제 CTA 숨김, 신고·인프라 후 true)
+- **어드민 사용자 관리**: `/admin/users` (카카오 사용자 리스트·재진단 ON/OFF) + `/admin/users/[userId]`(본 사주 조회·삭제). `redo_grants` 테이블 + `/api/me/redo`. 첫 화면 history 카드 "다시 진단"(권한자만, beginRedo → 만세력부터)
+- **명리 백엔드 결정성 모듈**: §13 hagun-tier(학운 phase) · §14 critical-year(조심할해) · §11 peer-profile(친구) · §12 academy-fit(학원) · §15 abroad-score(해외). 공통 `lib/manse/academic-context.ts`(buildAcademicContext, 용신/신강약). 점수·티어 영향 0 별도 레이어
+- **§15 해외운 정책**: abroadScore 10시그널 가중합(점수식 고정, 5 anchor 정합). 등급 약/보통/강/매우 강. **국가명 ✗ → 용신 오행 방위(참고)**. §17 해외대학명 ✗ → 유학 권유. decision.md 2026-06-03 (용신 조건부 데이터 반증)
 - **결제 PG 결정**: 포트원(PG 라우터) + 토스페이먼츠(메인 PG)
-- **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope. KakaoLoginButton chat bubble SVG 로고
-- **paywall 정책**: 비회원 자녀 1·영역 1·Part2 진입 차단 / 회원 자녀 5·영역 3
-- **server cap defense**: POST /api/session 비회원 device_id 매칭 403 + POST /api/sessions/claim 회원 cap 5
-- **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF + 추가 기능* (정가 20,000원, 사전 예약 4,000원 80% 할인)
-- **사전 예약 명단**: Supabase `pdf_preorders` 테이블 (RLS active)
+- **카카오 로그인**: 일반 사용자·admin 모두 default account_email scope
+- **paywall 정책**: 비회원 자녀 1·영역 1·Part2 진입 차단 / 회원 자녀 5·영역 3. server cap: POST /api/session device_id 403 + claim cap 5
+- **새 BM**: 자녀 5명·영역 3개까지 무료 / 그 이상 *20영역 PDF*(정가 20,000원, 사전 예약 4,000원 80% 할인). 명단: Supabase `pdf_preorders`
 - **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users). super-admin: eugene.eee@iskra.world · hongary@naver.com
-- **DB 현황**: subjects 37 (child·v3) · sessions 70 (회원 매핑 1명 hongary 3건)
-- **localStorage owner ship**: Phase 1 user_id 직접 박힘. Phase 2 claim 자동 + 로그아웃 시 STORAGE_KEY 통째 삭제 + router.replace('/'). Phase 2 B안 server 본문 fetch endpoint 활성 (cross-PC sync)
+- **DB(Supabase eduluck `hqtletafqlwphhakoyrm`)**: 카카오 회원 3명. 신규 테이블 `redo_grants`. admin_audit_log action 확장(list_users·grant_redo·revoke_redo·view_user·delete_session)
+- **localStorage owner ship**: Phase 1 user_id 박힘 + Phase 2 claim 자동 + 로그아웃 STORAGE_KEY 삭제 + router.replace('/'). 로그인 시 mergeServerHistory(서버 authoritative — 어드민 삭제 즉시 반영, 진행 중 세션만 보존)
 - **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock · .npmrc shamefully-hoist=true · react-native-svg 15.8.0
 
 ### 백로그 요약
 
-- 대기 중: 5개
-- 최근 추가: 2026-06-02 — §13 학운 phase Phase B (학업 신살·합충형해 정밀)
+- 대기 중: 7개
+- 최근 추가: 2026-06-03 — §11·§12·§15 백엔드 결정성 가중치 calibration (mom test 후)
 
 ### 진행 상황
 
-- [x] sajutalk MVP Phase 1-20 + 만세력 보정 production 배포
-- [x] eduluck 기획 + Phase 0-9 (Supabase·만세력·UI·E2E·Vercel deploy)
-- [x] 정밀 진단 prompt v3 — Sonnet 4.6 100/100
-- [x] Phase A-F 만세력 화면 정통 명식판 전환
-- [x] 운영 안정성 hotfix 5건
-- [x] prompt 강화·대학 권유 정직성 정책
-- [x] Phase G 가족 정보 옵션화
-- [x] 학운 알고리즘 코드 결정성 계산화
-- [x] 실제 사주 calibration (jaeho·POSTECH·울산대)
-- [x] Confidence 구간 도입
-- [x] Self-test 인프라
-- [x] Phase H 13-6 스텝 UX 단순화
-- [x] 가독성 Phase 1·2 (v6 prompt 92.8)
-- [x] 6-5 스텝 단순화
-- [x] SSE 스트리밍 진단 로그
-- [x] 가독성 perception UX 5종
-- [x] v7 톤 전환 (친근한 이모/언니)
-- [x] 해외운 다층 점수제
-- [x] A 격국 진로 보강 + B arts-score 모듈
-- [x] 재호 비교 보강
-- [x] 양인격 추진력형 보강
-- [x] 랜딩 카피 A+D 조합
-- [x] 40대 어른 calibration N=7
-- [x] calibration sample _private 저장
-- [x] 사용자 회고 재해석
-- [x] 05·06·07 LLM 풀이 검증
-- [x] N=7 학운 시스템 ≈97/100 점수
-- [x] 정밀 prefetch (옵션 B)
-- [x] 공유 URL — DB migration + /api/share + /share/[token]
-- [x] calibration sample PII 분리
-- [x] N=11 calibration — 의사 2명·해외 직장인 2명 추가
-- [x] 두흥 ⭐⭐⭐ 격상
-- [x] 자녀 시간 필수화
-- [x] 의약 점수 모듈(medical-score) ⭐
-- [x] N=9 학운 시스템 97.8/100점 ⭐
-- [x] 부모 사주 입력 제거
-- [x] §14 prompt 강화 ⭐
-- [x] 부모 사주 옵션 재도입
-- [x] 자녀 시간 모름 인라인 가이드
-- [x] 정밀 분석 4종 (초기)
-- [x] trait 점수 직관 정합 ⭐
-- [x] 16섹션 분리
-- [x] 학운 10가지 trait 확장
-- [x] TraitScoreCard ⓘ + 모달
-- [x] "+ 새 진단 시작" 버튼
-- [x] 성인/회고용 학년 옵션
-- [x] PREMIUM_PROMPT_VERSION 캐시 무효 메커니즘
-- [x] hydrate.ts 강화
-- [x] SCORING_SYSTEM.md 문서화
-- [x] 학운 점수 시스템 v7 — 4-Layer 14 시그너 ⭐
-- [x] TraitScoreCard v4 — 별점·그룹 분류 ⭐
-- [x] HagunSignerBreakdown
-- [x] v8 진로 방향성 8 카테고리 ⭐
-- [x] DirectionCard — 8 방향성 카드
-- [x] 학습 특성 4개 분리
-- [x] LLM prompt §12 8 방향성 baseline 주입
-- [x] v10 화면 위계 4단계
-- [x] 방향성 카드 펼침 제거
-- [x] HAGUN_REFACTOR_ANALYSIS.md
-- [x] daeun 청소년기 누락 bugfix + N=9 회귀 복원 ⭐
-- [x] calibration sample 03·10·11 md v7 갱신 — Eugene → 홍규
-- [x] Counterfactual 검증 신규 — B안 gap 18.1 ⭐
-- [x] youthLuck x2 → x1.5 보수화
-- [x] LOOCV × Counterfactual 교차 검증
-- [x] 학운 v7 표현 약화
-- [x] 방향성 v8 정직성 (DIRECTION_SCORING §0+§9+§10 + 김기승 인용)
-- [x] DirectionCard ⓘ 면책 모달
-- [x] 분포 시뮬 스크립트 — eval-direction-distribution
-- [x] recommendedFields 환경 키워드 보강 (Phase C)
-- [x] LLM 9 sample §12 자연성 검증 — 환경 단어 9/9, 단정 0
-- [x] 정밀 진단 LLM Haiku 4.5 다운그레이드 ⭐ — 9 sample 검증
-- [x] 100만 random 사주 시뮬 + cutoff 안정성 검증
-- [x] 30단계 내부 티어 + 사회 분포 cutoff 설계 ⭐
-- [x] V1-V12 calibration loop · 30부터 100까지 시나리오 sweep
-- [x] V11 Loop 603 prod hagun-tier + 13명 self-test 100% 일치 (`466fbf2`) ⭐
-- [x] DIRECTION_SYSTEM_v3_RESEARCH.md 작성
-- [x] Direction System V1-V12 — Step 0-6 + perfect fit 7/7 ⭐
-- [x] V12 Loop 720 hagun + 14명 정합 (`cb2df11`)
-- [x] Phase 1-5 정밀 진단 v5 (Part1/2 분리 + 신규 4섹션 + Context·hydrate)
-- [x] 가족 공유 풀스택 (`d9077ba`부터 `df777f2`) ⭐
-- [x] v2 30 sub-tier 시스템 도입 (`d8c2307`) ⭐
-- [x] tier-schools 옵션 A — sub-tier 별 3부터 5개 학교 chip (`473b5c0`) ⭐
-- [x] hagun-tier refactor v2 (sub-tier 직접 매핑, PROMPT_VERSION v5.11) ⭐
-- [x] hagun-tier V13 영진 narrow trigger + 외부변수 안내 prompt ⭐
-- [x] Score·티어 audit (4 영역) + Phase A-E 일괄 정리 ⭐
-- [x] Playwright e2e 영진·세형 prod 검증 + hero chip raw signer fix
-- [x] V14 physical direction + researchScore + publicForceScore 신규 (`6582b21`) ⭐
-- [x] V15 명명 통일 (주력 방향성·적성 점수) + 가치 메모 + 대운 발현 시기 라벨 (`2c5ed9a`) ⭐
-- [x] V16 정규화 16 모듈 0부터 100까지 + 두 level 시스템 (`24562fb`·`939a5e8`)
-- [x] V17 도전 chip 재도입 + 가능·도전 룰 (`6c212ab`)
-- [x] V18 30 sub-tier 학교 데이터 단일 source + 학과·별도 트랙 (`c21aa4f`) ⭐
-- [x] V19 generalDetail 세세화 + specialTracks {name, triggers[]} 객체화 (`2cc8077`) ⭐
-- [x] V20 성인 회고 모드 찬사 멘트 (`10975d8`)
-- [x] V21 남자 사주 여대 권유 차단 (`6583c26`)
-- [x] V22 학교명 약어 풀어쓰기 (`fd812a0`)
-- [x] V23 명리 근거 카드 라벨 친화 변환 (`1cb6996`)
-- [x] V24 10단계 학운 라벨 + hero 점수 + signer X N fix (`13771be`·`25eb1bf`) ⭐
-- [x] V25 별 0.5 단위 + 정합성 audit fix (`f470c6d`·`b8c9154`) ⭐
-- [x] verify-v8-prod.ts V24 baseline snapshot 갱신 (`fe013f9`)
-- [x] mom test 질문 세트 설계 11문항 (정량 6 + 정성 4 + 결제 1)
-- [x] Mixpanel SDK + 9 step funnel 트래킹 통합 (`de40a3f`) ⭐
-- [x] Mixpanel 공식 MCP 활성화 + claude mcp add four-pillars scope
-- [x] 자체 피드백 폼 풀스택 (`550b99e`) — DB·API·UI·CTA 2자리·Mixpanel 이벤트 ⭐
-- [x] e2e 검증 (API+UI+DB) + test data DELETE 완료
-- [x] Supabase 진단 데이터 저장 확인 — sessions 110·subjects 165·interpretations 128
-- [x] 진단 history 카드 + 새 진단 분기 (`e469511`) — localStorage sessionsHistory[] ⭐
-- [x] VersionFooter build patch KST timestamp (`a1e2edb`·`4d1f4c8`)
-- [x] BirthSummary 카드 (`40bb081`·`7813ea0`) ⭐
-- [x] 피드백 제출 후 CTA 자동 숨김 (`8579349`)
-- [x] Mixpanel deviceId 분리 (`7813ea0`) ⭐
-- [x] project root 임시 PNG 12개 삭제 + .gitignore 보강 (`25c939f`)
-- [x] 정확성 audit 5 rounds — BUG A-H fix (`02aaa18`) ⭐
-- [x] DB migration prod 적용 — feedback_responses·session.device_id·subjects.gender 백필
-- [x] 듀얼 API 폴더 단일화 — app/api/*+api.ts 10파일 삭제 (BUG G)
-- [x] 무료진단 전면 제거 (BUG H)
-- [x] 옛 흐름 dead screen 5파일 삭제 (DG2.B)
-- [x] selftest-calibration-v25-prod.ts + 12 samples expected V25 baseline (DG1.C) — 12/12 PASS ⭐
-- [x] **보안 audit Round 1 (`3eb52c3`)** ⭐
-- [x] **/api/checkout mock 결제 endpoint 삭제** (paid flag bypass)
-- [x] **sessions.llm_call_count + cap 50** (ISSUE-2)
-- [x] **4 LLM API IDOR fix** (ISSUE-3)
-- [x] **/api/share-backfill 삭제** + ShareButton 폴백 제거
-- [x] **subjects nickname sanitize** (prompt injection 방어)
-- [x] **/api/subjects deviceId 검증**
-- [x] **보안 audit Round 2 (`233f091`)** ⭐
-- [x] **increment_llm_call_count INVOKER + EXECUTE 회수**
-- [x] **feedback_responses.anon_insert_feedback policy 제거**
-- [x] **vercel.json 보안 헤더 추가**
-- [x] **Mixpanel `latest_gyeokguk`·`latest_day_pillar` 제거**
-- [x] **e2e Playbook 작성** ⭐
-- [x] **e2e 검증 2회 모두 PASS**
-- [x] **Mixpanel Lexicon 일괄 정비** (`abbd950`) ⭐
-- [x] **history_card_click prop 분리** (`abbd950`)
-- [x] **카카오 로그인 + paywall 풀스택** (`b01a158`) ⭐
-- [x] **paywall 트리거 1·2 통합** (`b01a158`)
-- [x] **Mixpanel auth/paywall 5 EVENTS** (`b01a158`)
-- [x] **e2e-playbook 검증 6-10 추가** (`219bab9`) ⭐
-- [x] **KOE205 해결 — Supabase scope URL 직접 교체** (`4246f04`) ⭐
-- [x] **UX round 1-4** (`75fd19c`·`8eb7003`·`485eb95`·`96a8536`)
-- [x] **paywall cap 정책** (`3b463ea` + `e75978a`) ⭐
-- [x] **한국 사주 BM 가격 조사**
-- [x] **"아빠" → "아버지" 어휘 통일** (`d2783a2`) — PREMIUM_PROMPT_VERSION v5.26
-- [x] **부모 사주 자동 로드** (`d2783a2`·`b681aaf`) ⭐
-- [x] **mom test 측정 인프라 (`2108d49`)** ⭐
-- [x] **e2e-playbook 검증 11-16 추가 (`60f6a98`)** ⭐
-- [x] **PG 심사 5종 충족 풀스택 (`38cdec1`)** ⭐
-- [x] **사업자 등록 정보 4종 입력 (`43c25d1`·`f51669d`)**
-- [x] **랜딩 history 화면 LegalFooter 위치 fix (`3b4f563`)**
-- [x] **eduluck admin 풀스택 (`0da8879`)** ⭐
-- [x] **expo SDK 51 → 52 upgrade (`9a8fe1f`)** ⭐
-- [x] **PIPA §22 ② 자녀 만 14세 미만 조건부 노출 (`5fb1855`)**
-- [x] **localStorage PII Phase 1 (`4db2d0e` + `f050cd6`)** ⭐
-- [x] **localStorage PII Phase 2 (`d5b3b9f`)** ⭐
-- [x] **Phase 2 B안 cross-PC server 본문 복원 (`bcf9553`)** ⭐
-- [x] **LegalFooter 통신판매업 placeholder 자동 숨김 (`c21bacd`)**
-- [x] **Part2 비회원 paywall + 회원 cap 5→3 + 가격 20,000원·80% 할인 4,000원 (`a7f42b9` + `edec4d3`)** ⭐
-- [x] **Part2 SilentSsePrefetch 회원 only (`5470749`)**
-- [x] **PaywallModal 카피·이메일 scope default·CTA label override (`d405555`)** ⭐
-- [x] **PaywallModal 3-zone 디자인 + 폰트 통일 + shadow (`7edf995`)**
-- [x] **Part2 완료 4-CTA 3-tier 재배치 (`851f0a4`)** ⭐
-- [x] **KakaoLoginButton 카카오 chat bubble SVG 로고 (`16ebbd8`)**
-- [x] **server-side cap defense (`e210452`)** ⭐
-- [x] **PaywallModal trigger별 카카오 로그인 자동 복귀 (`3e4e14c`)**
-- [x] **pdf-preorder trigger별 결제 복귀 B안 (`86e7947`)**
-- [x] **랜딩 hero 분기 PaywallModal + new_child·deepdive 메시지 정정 (`973de14`)**
-- [x] **로그인·결제 후 본문 끝 자동 scroll (`8543e92`)** ⭐ — useScrollToBottomOnRedirect hook + interpret-premium·deep-select 적용
-- [x] **로그아웃 시 어떤 화면이든 / 자동 복귀 (`a8461a5`)** — FlowProvider clearOnLogout router.replace
-- [x] **syncOnLogin claim에 state.sessionId 포함 (`a8bc37e`)** — Part2 완료 전 카카오 로그인 흐름에서 비회원 sessionId 누락 fix
-- [x] **랜딩 hero 카피 톤 조정 (`1f1b503`)** — 운명론적 → 발견·권유 톤 (와이프 피드백)
-- [x] **결제(사전 예약) CTA 숨김 (`9121a14`)** — PAYMENT_VISIBLE feature flag. PaywallModal·interpret-premium 두 자리 hide
-- [x] **§13 학운 phase v2 (`3a9470a`)** ⭐ — 자평/억부 컨텍스트 (AcademicContext·scoreSipsinForAcademic·calcLuckPhaseAt·calcLuckPhaseTimeline) + 식상 + branchSipsin + 합충형해 + 수험 연령 가중치 + 3구간 timeline 결정성. 명리 65 → 80점대. 학운 점수·티어·방향성 영향 0
-- [x] **e2e playbook 검증 17·18·19·20 추가 (`26a7d8a` + `1eb27fa`)**
+- [x] sajutalk MVP + eduluck Phase 0-9 + 정밀 진단 v5 production 배포
+- [x] 학운 시스템 N=9 97.8/100 + 30 sub-tier + 방향성 11 + 적성 점수 5 모듈
+- [x] V11-V25 calibration + selftest 12/12 + Haiku 4.5 다운그레이드
+- [x] 가족 공유 풀스택 + 정밀 진단 Part1/2 분리 + 신규 4섹션
+- [x] 보안 audit Round 1·2 + e2e playbook 20종
+- [x] 카카오 로그인 + paywall + server cap defense + 사업자 등록 + PG 심사 5종
+- [x] localStorage PII Phase 1·2 + cross-PC 본문 복원
+- [x] Part2 비회원 paywall + 회원 cap + 가격 정책 + PaywallModal 디자인
+- [x] redirect UX (본문 끝 scroll + 로그아웃 / 복귀) + 랜딩 hero 카피 톤
+- [x] 결제 CTA 숨김 (PAYMENT_VISIBLE flag, `9121a14`)
+- [x] **§13 학운 phase v2 (`3a9470a`)** ⭐ — 자평/억부 컨텍스트 + 식상 + branchSipsin + 합충형해 + 수험연령 + 3구간 timeline. 명리 65→80점대. 점수·티어·방향성 0 영향
+- [x] **어드민 카카오 사용자 리스트 + 선택형 재진단 권한 (`e81708d`·`7841359`)** ⭐ — redo_grants + /api/me/redo + 첫 화면 "다시 진단" 버튼
+- [x] **어드민 사용자 상세 — 본 사주 조회·삭제 (`a9e73bd`·`2dd439d`·`b9fb94c`)** ⭐ — Vercel params 500 fix + prod e2e(임시 admin)
+- [x] **어드민 삭제 홈 history 반영 fix (`a2e6ff1`)** — mergeServerHistory 순수함수 + 테스트
+- [x] **§14 조심할해 v2 (`ca59ac8`)** ⭐ — 충 용신/기신 동적 + 형·파·양인·백호 + 수험연령. 테스트 8개
+- [x] **§11 친구·§12 학원 백엔드 결정성 + 전섹션 일관성 (`d1c5922`)** ⭐ — peer-profile·academy-fit + buildSharedManseContext 주입. 테스트 7개
+- [x] **§15 해외운 국가 제거 + 용신 방위 + §17 유학 권유 (`6155b62`·`576065a`)** ⭐ — 5 anchor 용신조건부 반증·점수 무변경, 라벨 무조건→매우 강
+- [x] e2e playbook 검증 17·18·19·20 추가 (`26a7d8a`·`1eb27fa`)
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
 - [ ] Mom test 친구들 배포 + 인터뷰 4문항 → GO/HOLD/KILL 판정
-- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 구현 + POST_PAYMENT_PATH B→A안 swap
+- [ ] §11·§12·§15 백엔드 결정성 LLM 실출력 모순·품질 점검
+- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 + POST_PAYMENT_PATH B→A
 - [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
-- [ ] 06·08 sample v7 포맷 갱신
-- [ ] Deep-dive 일 N회 cap 운영 결정
+- [ ] §13 학운 phase Phase B (학업 신살·합충형해 타격 정밀)
 - [ ] CSP Report-Only → Enforce 전환 (2026-06-04 권장)
 - [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체

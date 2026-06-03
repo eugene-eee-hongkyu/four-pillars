@@ -6,6 +6,16 @@
 
 ---
 
+## 2026-06-03: §15 해외운 용신 조건부 미적용 (5 anchor ground-truth로 반증)
+
+- **선택**: abroadScore 점수식 무변경. 용신 조건부(水/金이 기신이면 해외 하향) 미적용. 국가명 제거 + 용신 오행 방위(참고 방면)만 추가
+- **대안 검토**:
+  - (A) 용신 조건부 적용 — §13/§14/§11/§12와 동일 명리 1원리. 이론상 정합. 단 점수 변동 → 5 anchor 회귀 위험
+  - (B) 미적용 + 표현 레이어(방위·라벨)만 — 정합 보존, 명리 1원리 미반영
+- **선택 이유**: 해외 5년 거주 anchor 5명(재원·재호·홍규·정아·윤수) 실측 — 전원 水가 과다기신 아님(0/5). 용신 조건부는 (a) 발동조차 안 하고 (b) 억지 적용 시 정합 깰 위험만. ground-truth가 이론을 반증. 또 5명 전원 "약(국내형)" 아님 → 현재 형식 정합 성립. AI 3종이 핵심으로 민 용신 조건부를 데이터로 기각
+- **영향 범위**: lib/manse/abroad-score.ts(점수 무변경, 라벨 무조건→매우 강만) · interpret-premium-shared.ts(§15 톤·방위·§17 abroad track) · interpret-premium-part2.ts(§15 룰)
+- **되돌리는 방법**: calibration anchor 확대 후 재검토 시 abroad-score.ts CalcInput에 yongsin 추가 + elementFavor 가중 분기. 정아(5)·홍규(3) 보통→강 격상도 같은 calibration 작업에서
+
 ## 2026-06-02: 결제(사전 예약) CTA 숨김 — PAYMENT_VISIBLE feature flag
 
 - **선택**: `lib/legal/pricing.ts`에 `PAYMENT_VISIBLE = false` 상수 도입. PaywallModal 회원 cap·interpret-premium Tier 1 PDF 카드 두 자리 hide. flag true 시 즉시 복원
