@@ -1,7 +1,7 @@
 // 해외운 다층 점수제 — 단순 역마살 체크가 아닌 명리 5개+ 시그널 종합
 //
 // 배경: 재원 calibration에서 역마살·삼합 수국·수 기운만 보면 "해외운 약" 판정이지만
-//      실제로는 양인격·토 과다·충·공망·대운 50년 금·수 흐름이 모두 "해외 무조건"을
+//      실제로는 양인격·토 과다·충·공망·대운 50년 금·수 흐름이 모두 "해외 매우 강"을
 //      가리킴. 외국 거주(싱가포르) 후 한국 대비 실제 좋아진 사례로 검증.
 //
 // 가중치 합산 ≥6 → "해외 강"으로 §10 국가·해외 운 풀이 baseline 사용.
@@ -23,7 +23,7 @@ import type { GyeokgukResult } from './gyeokguk';
 import type { LuckCycles } from './luck-cycles';
 import { normalizeScore, normalizedToLevel, NORMALIZE_CUTOFFS, type NormalizedLevel } from './normalized-score';
 
-export type AbroadLevel = '약' | '보통' | '강' | '무조건';
+export type AbroadLevel = '약' | '보통' | '강' | '매우 강';
 
 export interface AbroadScoreSignal {
   /** 시그널 이름 (UI·prompt 노출용) */
@@ -211,7 +211,7 @@ export function calcAbroadScore(input: CalcInput): AbroadScoreResult {
   if (totalScore <= 2) level = '약';
   else if (totalScore <= 5) level = '보통';
   else if (totalScore <= 8) level = '강';
-  else level = '무조건';
+  else level = '매우 강'; // 9+ (이전 '무조건' — overclaim 라벨 톤다운)
 
   const normalized = normalizeScore(totalScore, NORMALIZE_CUTOFFS.abroad);
   const normalizedLevel = normalizedToLevel(normalized);

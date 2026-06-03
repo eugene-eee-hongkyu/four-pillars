@@ -634,10 +634,10 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
       ? `  용신 방위(참고): ${abroadDirHint} 환경이 본인 기운을 보완해 더 맞는 편. ⚠️ "확률 높은 국가"가 아니라 "참고 방면"으로만, 단정 ✗.`
       : ``,
     `  §15 풀이 톤:`,
-    c.abroadScore.level === '무조건'
-      ? `    "해외에서 자리 잡는 게 자연스러워요"·"유학·해외 진학이 매우 도움이 되는 자리예요" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
+    c.abroadScore.level === '매우 강'
+      ? `    "해외에 나가는 걸 적극 추천드려요"·"한국보다 해외에서 운이 훨씬 트이는 자리예요"·"유학·해외 진학 적극 권유" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
       : c.abroadScore.level === '강'
-        ? `    "해외운이 강한 자리예요"·"유학 가시면 잘 풀려요" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
+        ? `    "해외에 나가는 게 한국보다 좋은 자리예요"·"유학 가시면 잘 풀려요" 톤.${abroadDirHint ? ` 참고 방면: ${abroadDirHint} (국가 단정 ✗).` : ''}`
         : c.abroadScore.level === '보통'
           ? `    "해외도 가능성 열린 자리예요·유학도 잘 맞는 편이에요" 톤 (강요 ✗). 구체 국가명 ✗.`
           : `    "해외운은 약한 편이에요"·"국내가 자연스러워요" 톤.`,
