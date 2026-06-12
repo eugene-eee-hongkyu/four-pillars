@@ -6,6 +6,16 @@
 
 ---
 
+## 2026-06-12: 20→14 섹션 통합 시 baseline §번호 디커플링 (재번호 안 함)
+
+- **선택**: shared.ts baseline 내부 §번호(§11·§13·§16·§17·§18·§20 등)는 옛 번호 그대로 두고, 두 프롬프트에 "출력 헤더는 새 번호(1-14)만, baseline은 내용 텍스트로 매칭" 명시 지시를 추가
+- **대안 검토**:
+  - (A) shared.ts 40+개 §N을 신번호로 일괄 재번호 — 표면상 깔끔하나 pre-existing 오라벨(line 506 §14가 한마디, line 622 §18이 조심)이 섞여 있어 blind 치환 시 오염. sentinel 2-pass도 28+ Edit 또는 sed 스크립트 필요(에러 위험·tool 규칙 위반)
+  - (B) baseline 라벨은 stable key로 두고 디커플링 지시 — 라벨은 어차피 텍스트로 매칭, §번호는 장식. 최소 변경
+- **선택 이유**: 클라이언트 본문 파서가 마커 문자열 기반이라 출력 번호와 baseline 라벨 번호는 독립. baseline 라벨의 §N은 LLM이 텍스트(시기카드·격국진로매핑 등)로 매칭하므로 번호 정합 불필요. 오라벨 오염·대량 치환 리스크 회피. 일관성 강제(§595)만 신번호로 갱신
+- **영향 범위**: interpret-premium-part1/part2.ts(섹션 스펙 §1-§14 + 번호 규칙 지시) · interpret-premium-shared.ts(일관성 강제만 갱신, 나머지 §N 유지) · interpret-deep.ts(섹션맵 1-14) · interpret-premium.tsx(헤더배열) · version.ts(v6.0)
+- **되돌리는 방법**: 추후 baseline 라벨까지 신번호로 통일하려면 sentinel 2-pass 스크립트로 shared.ts 일괄 치환 + 오라벨 2곳(한마디·조심) 수동 교정. 섹션 구조 자체 롤백은 v5.26 프롬프트로 복원 + PREMIUM_PROMPT_VERSION 환원
+
 ## 2026-06-03: §15 해외운 용신 조건부 미적용 (5 anchor ground-truth로 반증)
 
 - **선택**: abroadScore 점수식 무변경. 용신 조건부(水/金이 기신이면 해외 하향) 미적용. 국가명 제거 + 용신 오행 방위(참고 방면)만 추가
