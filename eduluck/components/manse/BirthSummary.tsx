@@ -77,13 +77,13 @@ export function BirthSummary({ child, mother, motherStatus, father, fatherStatus
         label="어머니"
         birth={!motherMissing ? formatBirth(mother) : undefined}
         missing={motherMissing}
-        missingHint="입력 시 §8 엄마-자녀 합이 정밀하게 풀려요"
+        missingHint="입력 시 §6 부모-자녀 합이 정밀하게 풀려요"
       />
       <Row
         label="아버지"
         birth={!fatherMissing ? formatBirth(father) : undefined}
         missing={fatherMissing}
-        missingHint="입력 시 §9 아버지-자녀 합이 정밀하게 풀려요"
+        missingHint="입력 시 §6 부모-자녀 합이 정밀하게 풀려요"
       />
       {(motherMissing || fatherMissing) && (
         <Text className="font-body text-label-sm text-text-sub leading-relaxed mt-1">

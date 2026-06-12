@@ -1,7 +1,7 @@
-// 화면 11 ★ v5: 정밀 진단 Part 1 (10 섹션) + Part 2 prefetch + deep-dive 진입
+// 화면 11 ★ v6: 정밀 진단 Part 1 (7 섹션) + Part 2 prefetch + deep-dive 진입
 //
-// v5 흐름:
-//   1. Part 1 (10 섹션) StreamingBody — 본질·인성·관계·즉시 행동
+// v6 흐름 (20→14 섹션 통합):
+//   1. Part 1 (7 섹션) StreamingBody — 본질·인성·관계·즉시 행동
 //   2. Part 1 완료 → "📖 더 자세한 진로·미래 보기" 버튼 노출 (화면 끝)
 //      + 5초 후 Part 2 백그라운드 prefetch (옵션 B 확정)
 //   3. "더 자세히" 클릭 → Part 2 영역 노출 (캐시 hit 즉시 / 미캐시 시 StreamingBody)

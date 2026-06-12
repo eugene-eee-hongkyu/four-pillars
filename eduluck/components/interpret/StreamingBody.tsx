@@ -1,7 +1,7 @@
 // SSE 스트리밍 본문 — 섹션 헤더 기반 청크 reveal (시간 기반 ✗)
 //
 // reveal trigger:
-//   - sectionHeaders prop (예: ['1. 시작', '2. 본질', ..., '10. 강요 금지'])에서 헤더 번호 추출
+//   - sectionHeaders prop (예: ['1. 시작', '2. 본질', ..., '7. 양육 가이드'])에서 헤더 번호 추출
 //   - LLM 본문에 "## (N+3)." 헤더가 등장하면 §1~§(N+2)까지 reveal
 //     (= 한 번에 섹션 2개씩 reveal. 직전 섹션이 완료된 게 확인된 시점)
 //   - 예: "## 3." 등장 → §1·§2 reveal / "## 5." 등장 → §3·§4 추가 / ... / "## 9." → §7·§8
@@ -124,8 +124,8 @@ export function StreamingBody({
     .filter((n): n is number => n !== null);
   const maxSectionNum = sectionNums.length > 0 ? Math.max(...sectionNums) : 0;
   const minSectionNum = sectionNums.length > 0 ? Math.min(...sectionNums) : 1;
-  // reveal 시작 기준점. Part 1 (1-10) → 0, Part 2 (11-20) → 10.
-  // nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1 이라 Part 2 에선 첫 trigger 가 "## 13." 이어야 §11·§12 reveal.
+  // reveal 시작 기준점 (동적). Part 1 (1-7) → 0, Part 2 (8-14) → 7. minSectionNum에서 자동 산출.
+  // nextTriggerSectionNum = lastRevealed + SECTIONS_PER_CHUNK + 1 이라 Part 2 에선 첫 trigger "## 10." 이 §8·§9 reveal.
   const initialRevealed = sectionNums.length > 0 ? minSectionNum - 1 : 0;
 
   const [displayedText, setDisplayedText] = useState('');
@@ -139,7 +139,7 @@ export function StreamingBody({
   // 현재 청크 시작 시점 — 청크 reveal마다 reset되어 elapsedSec이 0부터 다시 카운트
   const chunkStartedAtMsRef = useRef(Date.now());
 
-  // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). Part 2 시작 시 10 (= §10 까지 다 봤다 가정).
+  // 지금까지 reveal된 섹션 번호 (예: §1·§2 reveal됐으면 2). Part 2 시작 시 7 (= §7 까지 다 봤다 가정).
   const [revealedSectionNum, setRevealedSectionNum] = useState(initialRevealed);
   const revealedSectionNumRef = useRef(initialRevealed);
 
