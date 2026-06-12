@@ -30,9 +30,9 @@ const ANON_CONTENT: Record<PaywallTrigger, { title: string; subtitle?: string; b
   },
   // part2_entry는 별도 layout 사용 — body는 fallback string.
   part2_entry: {
-    title: '🔮 다음 10 섹션',
+    title: '🔮 다음 7 섹션',
     subtitle: '어머니 고민에 답이 있어요',
-    body: '11~20 섹션 미리보기 + 인센티브',
+    body: '다음 섹션 미리보기 + 인센티브',
   },
 };
 
@@ -165,7 +165,7 @@ export function PaywallModal({ visible, trigger, isMember, onClose }: Props) {
                   </Text>
                 </View>
                 <Text className="font-body text-body-sm text-text-pri leading-relaxed">
-                  다음 10 섹션 + 추가 4명 + 3개 영역 상세 보기 무료
+                  다음 7 섹션 + 추가 4명 + 3개 영역 상세 보기 무료
                 </Text>
                 <Text className="font-body text-label-sm text-text-sub leading-relaxed">
                   닉네임·이메일만 받아요 (전화 및 추가 정보 X)

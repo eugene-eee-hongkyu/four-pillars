@@ -1,4 +1,4 @@
-// v5 화면 12: Deep-dive 섹션 선택 — 20개 카드 grid
+// v5 화면 12: Deep-dive 섹션 선택 — 14개 카드 grid
 // 어머니가 더 깊이 보고 싶은 영역을 1개 선택하면 interpret-deep로 push
 //
 // Paywall 옵션 가: 첫 영역 무료 → 이미 1개 본 후 다른 영역 시도 시 비회원이면 로그인 강제.

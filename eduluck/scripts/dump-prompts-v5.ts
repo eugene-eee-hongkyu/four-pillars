@@ -60,7 +60,7 @@ console.log(`   학운 라벨 (코드 결정): ${childManse.scores.totalLabel ??
 // Part 1
 const part1Sys = getInterpretPremiumPart1System();
 const part1User = buildInterpretPremiumPart1Prompt(ctx);
-dumpSection('PART 1 (10 섹션 — 본질·인성·관계·즉시 행동)', part1Sys, part1User);
+dumpSection('PART 1 (7 섹션 — 본질·인성·관계·즉시 행동)', part1Sys, part1User);
 if (process.env.SHOW_FULL === '1') {
   console.log('\n--- Part 1 USER MESSAGE ---');
   console.log(part1User);
@@ -69,7 +69,7 @@ if (process.env.SHOW_FULL === '1') {
 // Part 2
 const part2Sys = getInterpretPremiumPart2System();
 const part2User = buildInterpretPremiumPart2Prompt(ctx);
-dumpSection('PART 2 (10 섹션 — 학원·진로·미래)', part2Sys, part2User);
+dumpSection('PART 2 (7 섹션 — 학원·진로·미래)', part2Sys, part2User);
 if (process.env.SHOW_FULL === '1') {
   console.log('\n--- Part 2 USER MESSAGE ---');
   console.log(part2User);

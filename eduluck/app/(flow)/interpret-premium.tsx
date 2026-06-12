@@ -28,7 +28,7 @@ import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
 import { PRICING, formatPrice, PAYMENT_VISIBLE } from '@/lib/legal/pricing';
 
-// Part 1 — 10 섹션 skeleton 헤더
+// Part 1 — 7 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
   '1. 시작', '2. 본질', '3. 강점', '4. 약점·주의', '5. 환경 설계',
   '6. 부모-자녀 합', '7. 양육 가이드',
@@ -68,7 +68,7 @@ export default function InterpretPremium() {
   // 로그인·결제 후 redirect 시 본문 끝 (Part2 보기 버튼 또는 영역 선택 자리)으로 자동 scroll
   const scrollRef = useRef<ScrollView>(null);
   useScrollToBottomOnRedirect(scrollRef);
-  // Part 2 진입 paywall — 비회원은 첫 10 섹션(Part1)까지 무료, 다음 10 섹션 보기는 카카오 로그인 강제.
+  // Part 2 진입 paywall — 비회원은 첫 7 섹션(Part1)까지 무료, 다음 7 섹션 보기는 카카오 로그인 강제.
   const [part2PaywallOpen, setPart2PaywallOpen] = useState(false);
 
   // Part 2 버튼 클릭 — 비회원이면 paywall, 회원이면 그대로 노출
@@ -155,10 +155,10 @@ export default function InterpretPremium() {
           </View>
         )}
 
-        {/* === Part 1 (10 섹션) === */}
+        {/* === Part 1 (7 섹션) === */}
         <View className="px-container-padding">
           <Text className="font-body-bold text-label-md text-text-pri mb-1">
-            📖 Part 1 · 본질·관계·즉시 행동 (10 섹션)
+            📖 Part 1 · 본질·관계·즉시 행동 (7 섹션)
           </Text>
         </View>
         {state.premiumPart1Text ? (
@@ -200,14 +200,14 @@ export default function InterpretPremium() {
           />
         )}
 
-        {/* === Part 1 완료 → "다음 10개 항목 보기" 버튼 (Part 1 화면의 끝) === */}
+        {/* === Part 1 완료 → "다음 7개 항목 보기" 버튼 (Part 1 화면의 끝) === */}
         {/*    비회원: 클릭 시 카카오 로그인 paywall · 회원: 자동 진입 */}
         {part1Done && !part2Visible && !state.premiumPart2Text && (
           <View className="px-container-padding mt-4">
             <Button onPress={handlePart2Click}>
               {user
-                ? '📖 다음 10개 항목 보기 (학원·진로·미래)'
-                : '🔒 다음 10개 항목 보기 (카카오 로그인)'}
+                ? '📖 다음 7개 항목 보기 (학원·진로·미래)'
+                : '🔒 다음 7개 항목 보기 (카카오 로그인)'}
             </Button>
           </View>
         )}
@@ -220,12 +220,12 @@ export default function InterpretPremium() {
           onClose={() => setPart2PaywallOpen(false)}
         />
 
-        {/* === Part 2 (10 섹션) — 버튼 누른 후 또는 캐시 hit 시 === */}
+        {/* === Part 2 (7 섹션) — 버튼 누른 후 또는 캐시 hit 시 === */}
         {(part2Visible || state.premiumPart2Text) && (
           <>
             <View className="px-container-padding mt-2">
               <Text className="font-body-bold text-label-md text-text-pri mb-1">
-                🔮 Part 2 · 학원·진로·미래 (10 섹션)
+                🔮 Part 2 · 학원·진로·미래 (7 섹션)
               </Text>
             </View>
             {state.premiumPart2Text ? (

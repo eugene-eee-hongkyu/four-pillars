@@ -1,4 +1,4 @@
-// POST /api/interpret-premium-part2 — v5 정밀 진단 Part 2 (10 섹션) SSE
+// POST /api/interpret-premium-part2 — v5 정밀 진단 Part 2 (7 섹션) SSE
 // body: { sessionId, childSubjectId, motherSubjectId?, fatherSubjectId? }
 // Part 2: 친구·학원·흐름·해외·직업·전공·학교·조심한해·효과적액션·어머니한마디 + §21 시그니처
 

@@ -246,9 +246,9 @@ export interface FlowState {
   fatherManse: ManseResult | null;
   fatherStatus: 'pending' | 'entered' | 'skipped';
 
-  /** v5 정밀 진단 Part 1 (10 섹션 — 본질·인성·관계·즉시 행동) */
+  /** v5 정밀 진단 Part 1 (7 섹션 — 본질·인성·관계·즉시 행동) */
   premiumPart1Text: string | null;
-  /** v5 정밀 진단 Part 2 (10 섹션 — 학원·진로·미래) */
+  /** v5 정밀 진단 Part 2 (7 섹션 — 학원·진로·미래) */
   premiumPart2Text: string | null;
   /** v5 Deep-dive 캐시 — section number → 풀이 텍스트 */
   deepDiveTexts: Record<number, string>;

@@ -25,7 +25,7 @@ const SOURCE_LABEL: Record<Source, string> = {
   child_cap: '자녀 5명을 모두 보신 어머님께',
   part2_bonus: '정밀 진단을 끝까지 읽으신 어머님께',
   premium_pre: '정식 출시 전 사전 예약',
-  part2_cap: '다음 10 섹션도 보고 싶으신 어머님께',
+  part2_cap: '다음 7 섹션도 보고 싶으신 어머님께',
 };
 
 // 사전 예약 완료 후 trigger별 복귀 페이지 + 라벨 (B안 — mom test 단계에선 paywall 시점 맥락 유지).
@@ -168,7 +168,7 @@ export default function PdfPreorder() {
             {SOURCE_LABEL[source]}
           </Text>
           <Text className="font-heading-bold text-headline-lg text-text-pri">
-            📄 20개 영역 PDF 사전 예약
+            📄 전체 영역 PDF 사전 예약
           </Text>
         </View>
 
@@ -177,7 +177,7 @@ export default function PdfPreorder() {
             정식 출시 시 제공되는 것
           </Text>
           <Text className="font-body text-body-md text-text-pri leading-relaxed">
-            • 20개 영역 전체를 한 PDF로 정리{'\n'}
+            • 전체 영역을 한 PDF로 정리{'\n'}
             • 각 영역 더 길고 상세한 해석{'\n'}
             • 학년·시기별 추가 가이드{'\n'}
             • 추가 기능 (개발 중)
