@@ -1,4 +1,4 @@
-// 정밀 진단 v5 — Deep-dive: 20 섹션 중 사용자가 선택한 단일 섹션 8000자 풀이
+// 정밀 진단 v5 — Deep-dive: 14 섹션 중 사용자가 선택한 단일 섹션 8000자 풀이
 // section 1~20 모두 deep-dive 가능. system은 공통, user message에서 section 명세 주입.
 
 import {
@@ -13,14 +13,14 @@ export function getInterpretDeepSystem(): string {
   return DEEP_SYSTEM;
 }
 
-/** 20 섹션 정의 — section number + 헤더 + deep-dive 작업 가이드 + UI 표시용 메타.
+/** 14 섹션 정의 — section number + 헤더 + deep-dive 작업 가이드 + UI 표시용 메타.
  *  Part 1·Part 2 system prompt에 명시된 구조를 그대로 따라 단일 섹션 8000자 풀이로 확장. */
 export interface DeepSectionSpec {
   number: number;
   header: string;
   /** UI deep-select 카드용 한 줄 요약 (어머니가 보고 클릭할지 판단) — 12~30자 */
   oneLine: string;
-  /** Part 1(1~10) 또는 Part 2(11~20) 그룹 */
+  /** Part 1(1~7) 또는 Part 2(8~14) 그룹 */
   group: 'Part1' | 'Part2';
   /** UI 이모지 — 카드 시각 anchor */
   emoji: string;
@@ -37,45 +37,33 @@ export const DEEP_SECTIONS: Record<number, DeepSectionSpec> = {
     taskGuide: `사주의 강한 시그너(귀인·격국·일간·12운성 강·인성·관성)를 모두 짚고 학년대 액션으로 연결. 강점별로 단락 분리.` },
   4: { number: 4, header: '약점·주의 — 보강해야 할 영역', oneLine: '보강해야 할 약점·주의', group: 'Part1', emoji: '⚠️',
     taskGuide: `사주 약한 십성(인성 약·관성 약·식상 약·비겁 약)·공망·충형·약 12운성 종합. 약점은 환경·보강으로 푸는 톤.` },
-  5: { number: 5, header: '환경 설계 — 학군지·집·방·색', oneLine: '학군지·집·방·색·식물', group: 'Part1', emoji: '🏠',
-    taskGuide: `용신 오행 기반 환경. 학군지 구체 동네명 (분당 정자동·이매동, 목동 5·7단지, 중계 은행사거리, 일산 후곡마을 등). 집·방·색·식물·일과 시간대.` },
-  6: { number: 6, header: '훈육 가이드 — 푸시·자율성·인내', oneLine: '훈육 톤·푸시·자율성', group: 'Part1', emoji: '🎯',
-    taskGuide: `격국·일간 본질에 맞춘 훈육 톤. 학습 푸시 강도·자율성 비중·체벌 가이드·기다림 시점. 격국별 차등.` },
-  7: { number: 7, header: '건강 — 체질·면역·집중력', oneLine: '체질·면역·집중력 결', group: 'Part1', emoji: '💚',
-    taskGuide: `일간 오행·천의성·백호대살·양인살·12운성·오행 부재 종합. 학년대별 (초저 식습관·수면 / 초고 자세·시력 / 중·고 스트레스·체력). 건강 단정 ✗.` },
-  8: { number: 8, header: '엄마-자녀 합 — 어머니 일간 매핑', oneLine: '엄마-자녀 합·관계 결', group: 'Part1', emoji: '👩‍👧',
-    taskGuide: `어머니 일간 → 자녀 십성 매핑. 정인·편인(받쳐줌) / 정관·편관(규율) / 정재·편재(견제) / 식상(끌어냄) / 비겁(친구). 일주 합·충도 깊이. 어머니 사주 미입력이면 placeholder 길게 풀어 입력 유도 + 일반론 어머니 서포트 가이드.` },
-  9: { number: 9, header: '아버지-자녀 합 — 부친 일간 매핑', oneLine: '아버지-자녀 합·관계 결', group: 'Part1', emoji: '👨‍👧',
-    taskGuide: `아버지 일간 → 자녀 십성 매핑. 어머니 합과 같은 톤, 단 가중치 절반. 정관·편관 강조. 아버지 사주 미입력이면 placeholder + 일반론.` },
-  10: { number: 10, header: '양육 경계 — 어디까지 개입할지', oneLine: '자율을 보장할 영역', group: 'Part1', emoji: '🌿',
-    taskGuide: `격국·일간·신살 본질에 맞춰 자녀 자율을 보장할 영역 3가지 + 각각 대체 액션. "본질을 살리는 결" 긍정·중립 톤. §6 훈육이 "어떻게 개입할지"라면 §10은 "어디서 멈출지" — 명리 중도(中道)·분(分) 개념. 부정 단어("막혀요·사고") ✗.` },
-  11: { number: 11, header: '친구·또래 — 구설·경쟁·공부 친구', oneLine: '친구·또래·공부 친구', group: 'Part2', emoji: '👥',
-    taskGuide: `구설수·도화·역마·화개·합충 종합. 학년대별 친구 결. 어머니가 친구 환경 챙길 액션.` },
-  12: { number: 12, header: '학원·선생님 — 계열·접근 방식', oneLine: '학원 계열·선생님 스타일', group: 'Part2', emoji: '🎓',
-    taskGuide: `학원 브랜드명 절대 ✗. 격국 → 학원 계열 매핑. 선생님 톤·연령대·접근 방식. 학년대별 학원 결.` },
-  13: { number: 13, header: '현재~앞으로의 흐름 — 대운·세운·사춘기', oneLine: '대운·세운·사춘기 흐름', group: 'Part2', emoji: '🌊',
+  5: { number: 5, header: '환경 설계 — 학군지·집·방·색 + 건강', oneLine: '학군지·집·방·색 + 체질·건강', group: 'Part1', emoji: '🏠',
+    taskGuide: `용신 오행 기반 환경: 학군지 구체 동네명 (분당 정자동·이매동, 목동 5·7단지, 중계 은행사거리 등)·집·방·색·식물·일과 시간대. + 건강 한 단락 (일간 오행·천의성·백호·양인·12운성·오행 부재 → 체질·면역·집중력, 학년대별, 건강 단정 ✗).` },
+  6: { number: 6, header: '부모-자녀 합 — 어머니·아버지 일간 매핑', oneLine: '부모-자녀 합·관계 결', group: 'Part1', emoji: '👨‍👩‍👧',
+    taskGuide: `어머니 일간 → 자녀 십성 매핑(메인): 정인·편인(받쳐줌)/정관·편관(규율)/정재·편재(견제)/식상(끌어냄)/비겁(친구). 일주 합·충 깊이. + 아버지 일간 매핑(가중치 절반, 정관·편관 강조). 미입력 부모는 placeholder로 입력 유도 + 일반론.` },
+  7: { number: 7, header: '양육 가이드 — 훈육 + 자율 경계', oneLine: '훈육 톤 + 자율 보장 영역', group: 'Part1', emoji: '🌿',
+    taskGuide: `[개입] 격국·일간 본질에 맞춘 훈육 톤·학습 푸시·자율성·체벌·기다림 시점. + [경계] 자율 보장 영역 3가지 + 대체 액션 (명리 중도(中道)·분(分)). "본질을 살리는 결" 긍정·중립 톤, 부정 단어("막혀요·사고") ✗.` },
+  8: { number: 8, header: '친구·선생님 — 또래 + 학원/선생님', oneLine: '친구·또래 + 학원·선생님', group: 'Part2', emoji: '👥',
+    taskGuide: `[또래] user message [§11 친구·또래] baseline: 비겁 중심·신살 보조, 사교/구설/소수정예/균형 유형 + 학년대별. "친구 때문에 성적" 인과 ✗. + [학원·선생님] [§12 학원·선생님] baseline: 격국 → 학원 계열·선생님 스타일(브랜드명 ✗). efficacy 단정 ✗ → fit 톤.` },
+  9: { number: 9, header: '현재~앞으로의 흐름 — 대운·세운·사춘기', oneLine: '대운·세운·사춘기 흐름', group: 'Part2', emoji: '🌊',
     taskGuide: `user message [현재 학운 시기] baseline 사용. 대운·세운·12운성 변화. 사춘기 시기 (만 12~16세) 통합 풀이.` },
-  14: { number: 14, header: '가장 조심해야 하는 한 해', oneLine: '조심해야 하는 한 해', group: 'Part2', emoji: '🛡️',
-    taskGuide: `§13 흐름 직후 worst year zoom in. user message [조심해야 하는 한 해] baseline 사용. "사고 난다" 단정 ✗ → "흔들리기 쉬워요·집중력 흩어져요" 부드럽게. 1~2개 구체 액션.` },
-  15: { number: 15, header: '국가·해외 운 — 유학·이민', oneLine: '해외 유학·이민 운', group: 'Part2', emoji: '🌏',
-    taskGuide: `user message [해외운 점수] baseline 사용. 양인격·오행 불균형·충·공망·대운 종합. 구체 국가 1~2곳 (강 이상).` },
-  16: { number: 16, header: '전공 — 학과·계열', oneLine: '전공·학과·계열 매핑', group: 'Part2', emoji: '📚',
-    taskGuide: `격국 진로 매핑 baseline + 예술·의약 점수 보강. 1순위·2순위·이공계 대안 모두 명시. 학부 미묘함만 자유.` },
-  17: { number: 17, header: '학교 — 안정·가능·도전 3구간', oneLine: '학교 권유 (안정·가능·도전)', group: 'Part2', emoji: '🏫',
+  10: { number: 10, header: '가장 조심해야 하는 한 해', oneLine: '조심해야 하는 한 해', group: 'Part2', emoji: '🛡️',
+    taskGuide: `흐름 직후 worst year zoom in. user message [조심해야 하는 한 해] baseline 사용. "사고 난다" 단정 ✗ → "흔들리기 쉬워요·집중력 흩어져요" 부드럽게. 1~2개 구체 액션.` },
+  11: { number: 11, header: '국가·해외 운 — 유학·해외', oneLine: '해외 유학·해외 운', group: 'Part2', emoji: '🌏',
+    taskGuide: `user message [해외운 점수] baseline 사용. 양인격·오행 불균형·충·공망·대운 종합. 구체 국가명 ✗ → 용신 오행 방위(참고)·유학 권유 톤.` },
+  12: { number: 12, header: '전공·진로 — 학과·계열 + 직업 흐름', oneLine: '전공·학과 + 직업 흐름', group: 'Part2', emoji: '📚',
+    taskGuide: `[전공] 격국 진로 매핑 baseline + 예술·의약 점수 보강, 1·2순위·이공계 대안. + [직업 흐름] 주력 방향성 Top 2~3로 직장·일터 결, 일·시지 12운성. 어린 자녀라 단정 ✗.` },
+  13: { number: 13, header: '학교 — 안정·가능·도전 3구간', oneLine: '학교 권유 (안정·가능·도전)', group: 'Part2', emoji: '🏫',
     taskGuide: `user message [학운 sub-tier] baseline 사용. 학년대 구체 학교명. "안정·가능·도전" 3구간 톤. "스치다·막힘" ✗.` },
-  18: { number: 18, header: '직업·진로 흐름 — 직장 결·일터 결', oneLine: '직업·진로 흐름', group: 'Part2', emoji: '💼',
-    taskGuide: `전공·학교 정한 뒤의 직업·일터 결. 진로 방향성 Top 2~3. 일·시지 12운성으로 직장 후반 결.` },
-  19: { number: 19, header: '본질을 깨우는 가장 효과적 액션 — 3 카드', oneLine: '본질 깨우는 효과적 액션', group: 'Part2', emoji: '⚡',
-    taskGuide: `용신 환경 카드 + 약점 보강 카드 + 시기 활용 카드. "본질이 ~할 때 가장 빛난다" 어조. 단정 ✗.` },
-  20: { number: 20, header: '어머니께 한 마디 — 종합 정리', oneLine: '어머니께 종합 한 마디', group: 'Part2', emoji: '💌',
-    taskGuide: `현재 대운 + 학년 입시 타임라인 + 지금 가장 중요한 1가지 + 용신 환경 액션 + 격국별 받침 액션. 시그니처: "어머님이 잡아주시면 이뤄지는 자리예요". 성인 회고용은 본인 청자.` },
+  14: { number: 14, header: '어머니께 한 마디 — 종합 + 효과적 액션', oneLine: '종합 한 마디 + 액션 3카드', group: 'Part2', emoji: '💌',
+    taskGuide: `[종합] 현재 대운 + 입시 타임라인 + 가장 중요한 1가지 + 가치(자율선택) 메모. + [효과적 액션 3카드] 용신 환경·약점 보강·시기 활용. 시그니처 "어머님이 잡아주시면 이뤄지는 자리예요". 성인 회고용은 본인 청자.` },
 };
 
 const DEEP_SYSTEM = `당신은 한국의 사주 명리 학운 전문가입니다.
 경력 30년, 학부모 상담 다수, 정·재계·연예인 어머님들이 자녀 학운 풀이로 이름을 받아 가시는 분.
 
 지금은 **정밀 진단 Deep-dive — 사용자가 선택한 단일 섹션 1개만 깊이 풀이**합니다.
-사용자는 Part 1·Part 2에서 20 섹션 요약을 모두 읽었음 — 단순 요약 ✗, **그 섹션 하나에 깊이·구체·명리 인용 풍부**.
+사용자는 Part 1·Part 2에서 14 섹션 요약을 모두 읽었음 — 단순 요약 ✗, **그 섹션 하나에 깊이·구체·명리 인용 풍부**.
 
 ${SHARED_TONE_GUIDE}
 

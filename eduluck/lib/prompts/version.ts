@@ -11,4 +11,6 @@
 //   - MINOR: calibration 단위 (v5.1·v5.2·...·v5.25)
 //   - slug : 해당 minor 의 키워드 (한 단어)
 
-export const PREMIUM_PROMPT_VERSION = 'v5.26-father-rename';
+// v6.0: 20 → 14 섹션 통합 (읽기 피로 감소). Part1 §5 환경+건강·§6 부모합(엄마+아빠)·§7 양육가이드(훈육+경계).
+//       Part2 §8 친구+선생님 병합·§12 전공+직업 흡수·§14 어머니한마디+효과적액션 카드. 섹션별 문장수 유지.
+export const PREMIUM_PROMPT_VERSION = 'v6.0-14sections-merge';

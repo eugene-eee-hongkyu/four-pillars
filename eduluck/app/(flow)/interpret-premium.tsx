@@ -31,7 +31,7 @@ import { PRICING, formatPrice, PAYMENT_VISIBLE } from '@/lib/legal/pricing';
 // Part 1 — 10 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
   '1. 시작', '2. 본질', '3. 강점', '4. 약점·주의', '5. 환경 설계',
-  '6. 훈육 가이드', '7. 건강', '8. 엄마-자녀 합', '9. 아버지-자녀 합', '10. 양육 경계',
+  '6. 부모-자녀 합', '7. 양육 가이드',
 ];
 // 첫 청크(§1·§2)가 reveal되기 전까지만 노출되는 stages.
 // 그 이후 단계는 본문이 직접 보여주고 progress bar 라벨이 '다음 부분 (§3·§4) 정리 중'으로
@@ -41,10 +41,10 @@ const PART1_STAGES = [
   { at: 8, label: '시작·본질 정리 중' },
 ];
 
-// Part 2 — 10 섹션 skeleton 헤더 (v5.1: §14를 조심한 해로 이동 — §13 흐름 직후 worst year zoom in)
+// Part 2 — 7 섹션 skeleton 헤더 (v6 통합: 친구+학원 병합, 직업 흡수, 액션 카드를 어머니 한마디로)
 const PART2_SECTION_HEADERS = [
-  '11. 친구·또래', '12. 학원·선생님', '13. 현재~앞으로의 흐름', '14. 가장 조심해야 하는 한 해', '15. 국가·해외 운',
-  '16. 전공 볼게요', '17. 학교 볼게요', '18. 직업·진로 흐름', '19. 본질을 깨우는 효과적 액션', '20. 어머니께 한 마디',
+  '8. 친구·선생님', '9. 현재~앞으로의 흐름', '10. 가장 조심해야 하는 한 해', '11. 국가·해외 운',
+  '12. 전공·진로', '13. 학교', '14. 어머니께 한 마디',
 ];
 const PART2_STAGES = [
   { at: 0, label: '진로·미래 정리 중' },
@@ -330,7 +330,7 @@ export default function InterpretPremium() {
                     router.push('/interpret-deep-select');
                   }}
                 >
-                  {`📋 다른 영역도 더 자세히 보기 (${20 - Object.keys(state.deepDiveTexts || {}).length} 섹션 남음)`}
+                  {`📋 다른 영역도 더 자세히 보기 (${14 - Object.keys(state.deepDiveTexts || {}).length} 섹션 남음)`}
                 </Button>
               </View>
             )}

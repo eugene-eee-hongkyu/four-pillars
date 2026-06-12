@@ -592,7 +592,7 @@ export function buildSharedManseContext(ctx: InterpretPremiumContext): string {
     `  ${academy.oneLineSummary}`,
     `  근거: ${academy.evidence.join(' / ')}`,
     ``,
-    `[일관성 강제 — §11·§12·§19·§20 + Part1 §8·§10] 한 리포트 안에서 친구·또래·학원·선생님 결론은 위 [§11]·[§12] baseline과 *항상 일치*. §19 약점카드·§20 종합·§10 환경 언급도 모순 ✗ (예: §11이 '소수정예·내면형'인데 §19에서 '그룹·또래 학습' 권유 ✗).`,
+    `[일관성 강제 — Part2 §8(친구·선생님)·§14(어머니 한마디) + Part1 §6·§7] 한 리포트 안에서 친구·또래·학원·선생님 결론은 위 [§11 친구·또래]·[§12 학원·선생님] baseline(내용 매칭)과 *항상 일치*. §14 약점카드·종합, Part1 §7 환경 언급도 모순 ✗ (예: 친구 baseline이 '소수정예·내면형'인데 §14 약점카드에서 '그룹·또래 학습' 권유 ✗).`,
     ``,
     `[현재 학운 시기 — 백엔드 결정성. §13 "흐름" baseline]`,
     `  ${luckPhase.oneLineSummary}`,
