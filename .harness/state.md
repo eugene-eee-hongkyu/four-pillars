@@ -6,17 +6,17 @@
 
 ---
 
-## 마지막 실행: 2026-06-12 16:49
-## 마지막 업데이트: 2026-06-12 16:49
+## 마지막 실행: 2026-06-15 16:59
+## 마지막 업데이트: 2026-06-15 16:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 정밀 진단 v6.0(14섹션) + 잔존 "10 섹션" 라벨 7섹션 정합 완료. 학운 그릇 칩 vs §13 학교 sub-tier 불일치 → 부모 합 보정 포함으로 통일(A안, 코드 2파일 **미커밋**). 명리 백엔드 결정성 + 어드민 사용자 관리 풀스택 완료. **A안 커밋 + 배포 후 LLM 출력 점검 + mom test 배포 대기.**
+- A안(학운·아빠 부모보정 통일) 코드 2파일 작성·typecheck PASS·decision.md 기록 완료. **다음: 커밋 + 배포 후 14섹션 LLM 출력 점검 + mom test 배포.**
 
 ### 이어서 할 것
 
-1. **A안 코드 2파일 커밋** — `HagunSignerBreakdown.tsx`(Props 부모 manse 추가)·`interpret-premium.tsx:147`(부모 전달). typecheck PASS 상태, 사용자 확인 후 커밋
+1. **A안 코드 2파일 커밋** — `HagunSignerBreakdown.tsx`(Props 부모 manse 추가)·`interpret-premium.tsx:147`(부모 전달). typecheck PASS, 커밋 진행
 2. **배포 후 14섹션 LLM 출력 점검** — 테스트 사주로 Part1·Part2 전문, 새 번호(1-14) 헤더·병합 섹션·§14 액션 카드 확인
 3. **mom test 친구들 배포 + 인터뷰 4문항** → admin 검수. 가이드: `eduluck/docs/mom-test/interview-guide.md`
 
@@ -79,7 +79,7 @@
 - [x] **첫 화면 카드 "삭제" 버튼 (재진단 허용자) (`da482e9`)** ⭐ — DELETE /api/sessions/[id] + prod e2e
 - [x] **정밀 진단 20 → 14 섹션 통합 (`5b20e8d`)** ⭐ — Part1 7·Part2 7. 읽기 피로 감소, 점수 영향 0, v6.0
 - [x] **잔존 "10 섹션"·"20개 영역" 라벨 7섹션 정합 (`8d89c35`)** — 화면·페이월·PDF·프롬프트·주석 10 files
-- [ ] **학운 그릇 칩 부모보정 통일 (A안)** — 코드 2파일 작성·typecheck PASS, **미커밋**
+- [ ] **학운 그릇 칩 부모보정 통일 (A안) 커밋** — 코드 2파일 작성·typecheck PASS·decision 기록
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
 - [ ] 아빠 부모보정 주석 vs 구현 불일치 정리 (설계 결정 후)
 - [ ] 배포 후 14섹션 LLM 출력 점검 (헤더 번호·병합 내용·액션 카드)
