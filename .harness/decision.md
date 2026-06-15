@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-06-12: 학운 그릇 칩 sub-tier — 부모 합 보정 포함으로 통일 (A안)
+
+- **선택**: `HagunSignerBreakdown` 칩이 `calculateFinalTierV2` 호출 시 실제 부모 manse(`motherManse·fatherManse`)를 전달해, §13 학교·deep-dive baseline 과 동일한 sub-tier(부모 보정 포함)를 쓰도록 통일
+- **대안 검토**:
+  - (A·채택) 칩도 부모 보정 포함 → 칩·§13 모두 같은 sub-tier. 가장 단순, 모순 제거. "타고난 그릇" 의미가 "부모 포함 현실 그릇"으로 바뀜
+  - (B) §13/deep-dive 를 부모 보정 제외로 통일 → 부모 합 로직 자체 무력화, 입시 예측 정확도 하락. 비추천
+  - (C) 칩은 본질(부모 제외) 유지 + "부모 환경 반영 시 +N티어" 보조 표기 추가 → 의도 보존하나 표시 작업 추가
+- **선택 이유**: 사용자는 "타고난 본질 vs 부모 포함"을 구분해 읽지 않음. 같은 "대학 자리"가 두 값이면 신뢰 붕괴. §13 이 이미 부모 포함을 "진짜 권유"로 쓰므로 칩을 거기 맞추는 게 일관. history 저장(`saveCurrentToHistory`)도 이미 부모 포함 → 칩만 outlier 였음
+- **영향 범위**: `eduluck/components/manse/HagunSignerBreakdown.tsx`(Props 확장+호출), `eduluck/app/(flow)/interpret-premium.tsx:147`(부모 전달). 부모 미입력 자녀는 null→parentAdjust 0 (기존과 동일). typecheck PASS. **아직 미커밋**
+- **되돌리는 방법**: 칩 `calculateFinalTierV2` 인자를 다시 `motherManse:null·fatherManse:null` 로 (1파일 1회 편집, 즉시 가역)
+
 ## 2026-06-12: gradeSpec 분량 문자열 "10 섹션" 정리 — 총 분량 유지 (섹션당 절 제거)
 
 - **선택**: `interpret-premium-shared.ts gradeSpec`의 `[Part N 분량]` 주입 문자열에서 "10 섹션" → "7 섹션"으로 바꾸고, 모순되던 ", 섹션당 N문장" 절은 삭제. 총 문장수(110~140 등)·자수·A4 페이지 목표는 그대로 유지

@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-06-12 16:27
-## 마지막 업데이트: 2026-06-12 16:27
+## 마지막 실행: 2026-06-12 16:49
+## 마지막 업데이트: 2026-06-12 16:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 정밀 진단 20 → 14 섹션 통합(v6.0, 읽기 피로 감소) 완료 + 잔존 "10 섹션"·"20개 영역" 라벨 전수 정리(7섹션 정합) 완료. 명리 백엔드 결정성 + 어드민 사용자 관리 풀스택 완료. 학운 점수·티어·방향성 영향 0. **배포 후 실제 LLM 출력 점검 + mom test 배포 대기.**
+- 정밀 진단 v6.0(14섹션) + 잔존 "10 섹션" 라벨 7섹션 정합 완료. 학운 그릇 칩 vs §13 학교 sub-tier 불일치 → 부모 합 보정 포함으로 통일(A안, 코드 2파일 **미커밋**). 명리 백엔드 결정성 + 어드민 사용자 관리 풀스택 완료. **A안 커밋 + 배포 후 LLM 출력 점검 + mom test 배포 대기.**
 
 ### 이어서 할 것
 
-1. **배포 후 14섹션 LLM 출력 점검** — 테스트 사주로 Part1·Part2 전문 뽑아 새 번호(1-14) 헤더·병합 섹션 내용·§14 액션 카드 확인
-2. **mom test 친구들 배포 + 인터뷰 4문항** → admin 검수. 가이드: `eduluck/docs/mom-test/interview-guide.md`
-3. **통신판매업 신고** + **포트원 PG 가맹점 심사 신청**
+1. **A안 코드 2파일 커밋** — `HagunSignerBreakdown.tsx`(Props 부모 manse 추가)·`interpret-premium.tsx:147`(부모 전달). typecheck PASS 상태, 사용자 확인 후 커밋
+2. **배포 후 14섹션 LLM 출력 점검** — 테스트 사주로 Part1·Part2 전문, 새 번호(1-14) 헤더·병합 섹션·§14 액션 카드 확인
+3. **mom test 친구들 배포 + 인터뷰 4문항** → admin 검수. 가이드: `eduluck/docs/mom-test/interview-guide.md`
 
 ### 막힌 것
 
@@ -26,6 +26,7 @@
 
 ### 사람 판단 필요
 
+- **아빠 부모보정 "절반 가중치" 주석 vs `+1` 구현 불일치** — `calcParentAdjust`([hagun-tier.ts:471-485](../eduluck/lib/prompts/hagun-tier.ts)) 아빠 양수 분기가 주석은 ±0.5 의도인데 코드는 엄마와 동일 +1, 음수만 0으로 막힘. 진짜 절반(+5점)으로 갈지 현행(+10·음수0) 유지할지 명리 설계 결정 필요
 - mom test 친구 배포 시점·표본 구성 (가까운 친구·친구의친구·잘 모르는 어머니 분리 권장)
 - 통신판매업 신고 시점 (지금 진행 권장 — mom test 병행)
 - 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
@@ -41,6 +42,7 @@
 - **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. `PAYMENT_VISIBLE = false`
 - **정밀 진단 구조 (v6.0, 14섹션)**: Part1 §1-§7(시작·본질·강점·약점·환경+건강·부모합·양육가이드) / Part2 §8-§14(친구선생님·흐름·조심할해·해외·전공진로·학교·어머니한마디+액션카드) + 시그니처. `PREMIUM_PROMPT_VERSION = v6.0-14sections-merge`. baseline §번호는 옛 번호 유지(텍스트 매칭) — decision.md 2026-06-12
 - **"더 자세히 보기"(deep-dive) 분량**: 단일 섹션 60-100문장 / 5500-8000자 / A4 2-3p (`interpret-deep.ts` 72-74·139·113행)
+- **학운 sub-tier 산출**: `calculateFinalTierV2` = hagunScore + 부모보정(엄마 -10/0/+10, 아빠 0/+10, 합 -10~+20, 10점 계단) → `scoreToSubTier`. **칩·§13·history 모두 부모 포함으로 통일(A안)**. tier→학교는 `tier-schools.ts` 단일 source
 - **명리 백엔드 결정성 모듈**: §13 hagun-tier · §14 critical-year · §11 peer-profile · §12 academy-fit · §15 abroad-score (구 번호 기준). 공통 `lib/manse/academic-context.ts`. 점수·티어 영향 0 별도 레이어
 - **§15 해외운 정책**: abroadScore 10시그널 가중합(점수식 고정, 5 anchor 정합). 등급 약/보통/강/매우 강. **국가명 ✗ → 용신 오행 방위(참고)**. §17 해외대학명 ✗ → 유학 권유. decision.md 2026-06-03
 - **어드민 사용자 관리**: `/admin/users`(카카오 리스트·재진단 ON/OFF) + `/admin/users/[userId]`(본 사주 조회·삭제). `redo_grants` + `/api/me/redo`. 첫 화면 카드: 권한자에게 "다시 정밀 진단"(beginRedo) + "삭제"(DELETE /api/sessions/[id], 본인 소유·cascade)
@@ -77,7 +79,9 @@
 - [x] **첫 화면 카드 "삭제" 버튼 (재진단 허용자) (`da482e9`)** ⭐ — DELETE /api/sessions/[id] + prod e2e
 - [x] **정밀 진단 20 → 14 섹션 통합 (`5b20e8d`)** ⭐ — Part1 7·Part2 7. 읽기 피로 감소, 점수 영향 0, v6.0
 - [x] **잔존 "10 섹션"·"20개 영역" 라벨 7섹션 정합 (`8d89c35`)** — 화면·페이월·PDF·프롬프트·주석 10 files
+- [ ] **학운 그릇 칩 부모보정 통일 (A안)** — 코드 2파일 작성·typecheck PASS, **미커밋**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
+- [ ] 아빠 부모보정 주석 vs 구현 불일치 정리 (설계 결정 후)
 - [ ] 배포 후 14섹션 LLM 출력 점검 (헤더 번호·병합 내용·액션 카드)
 - [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
 - [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
