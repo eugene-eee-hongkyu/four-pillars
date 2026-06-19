@@ -1,7 +1,7 @@
 // /admin/settings — 전역 설정.
-// "더 자세히 보기"(deep-dive) 14개 영역 무료 공개 정책.
-//   모드 1) 영역별 선택 — 영역마다 무료/유료 토글
-//   모드 2) 앞에서부터 N개 — 1..N번 무료, 나머지 유료
+// "더 자세히 보기"(deep-dive) 14개 영역 무료 공개 정책. 둘 중 하나의 모드만 적용됨.
+//   모드 1) 영역별 선택(per_section) — 영역마다 무료/유료 토글 (모든 사용자 동일)
+//   모드 2) 무작위 N개(count) — 14개 중 무작위 N개 무료. 사용자마다 조합이 다름(결정적)
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
@@ -10,16 +10,12 @@ import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
+import { resolveFreeSections, type DeepSectionAccessConfig } from '@/lib/config/app-config';
 
 const SECTIONS = Object.values(DEEP_SECTIONS).sort((a, b) => a.number - b.number);
 const TOTAL = SECTIONS.length;
 
-type Mode = 'per_section' | 'count';
-interface Config {
-  mode: Mode;
-  freeSections: number[];
-  freeCount: number;
-}
+type Config = DeepSectionAccessConfig;
 
 /** "시작 — 인사·이름·전체 그림" 같은 헤더에서 em dash 앞부분만 추출 */
 function headerShort(header: string): string {
@@ -32,6 +28,16 @@ function sameConfig(a: Config, b: Config): boolean {
   if (a.freeSections.length !== b.freeSections.length) return false;
   const setB = new Set(b.freeSections);
   return a.freeSections.every((n) => setB.has(n));
+}
+
+/** 적용 중 상태 한 줄 요약. */
+function summarize(c: Config): string {
+  if (c.mode === 'count') {
+    if (c.freeCount <= 0) return '무작위 N개 · 전체 유료 (0개)';
+    if (c.freeCount >= TOTAL) return '무작위 N개 · 전체 무료';
+    return `무작위 ${c.freeCount}개 무료 (사용자마다 다름)`;
+  }
+  return `영역별 선택 · 무료 ${c.freeSections.length}개`;
 }
 
 export default function SettingsPage() {
@@ -71,18 +77,6 @@ export default function SettingsPage() {
     () => !!config && !!savedConfig && !sameConfig(config, savedConfig),
     [config, savedConfig],
   );
-
-  /** 현재 모드 기준 섹션 N이 무료인지 (미리보기·표시용). */
-  const isFree = (n: number): boolean => {
-    if (!config) return true;
-    return config.mode === 'count' ? n <= config.freeCount : config.freeSections.includes(n);
-  };
-
-  const freeCount = config
-    ? config.mode === 'count'
-      ? config.freeCount
-      : config.freeSections.length
-    : TOTAL;
 
   const update = (patch: Partial<Config>) => {
     setSavedMsg(false);
@@ -132,6 +126,17 @@ export default function SettingsPage() {
   }
 
   const mode = config?.mode ?? 'count';
+  const appliedMode = savedConfig?.mode;
+
+  // count 모드 무작위 예시 — "사용자마다 다름"을 구체적으로 보여줌.
+  const exampleA =
+    config && mode === 'count'
+      ? resolveFreeSections({ ...config, mode: 'count' }, 'example-user-A')
+      : [];
+  const exampleB =
+    config && mode === 'count'
+      ? resolveFreeSections({ ...config, mode: 'count' }, 'example-user-B')
+      : [];
 
   return (
     <View className="flex-1 bg-surface">
@@ -176,25 +181,36 @@ export default function SettingsPage() {
             상세 진단 무료 공개 설정
           </Text>
           <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-            "더 자세히 보기"의 14개 영역 중 과금 없이 볼 수 있는 범위를 정합니다. 유료 영역은 사용자에게
-            잠금(결제 안내)으로 표시돼요. 이미 본 영역은 사용자가 계속 다시 볼 수 있어요.
+            "더 자세히 보기"의 14개 영역 중 과금 없이 볼 수 있는 범위를 정합니다. 아래 두 방식 중
+            하나만 적용되며, 유료 영역은 사용자에게 잠금(결제 안내)으로 표시돼요.
           </Text>
         </View>
 
-        {loading || !config ? (
+        {loading || !config || !savedConfig ? (
           <ActivityIndicator size="large" />
         ) : (
           <>
-            {/* 모드 선택 */}
+            {/* 현재 적용 중 상태 */}
+            <View className="p-card-padding rounded-md border border-secondary bg-secondary-container/30 gap-1">
+              <Text className="font-body text-label-sm text-text-sub">현재 적용 중</Text>
+              <Text className="font-body-bold text-body-md text-text-pri">{summarize(savedConfig)}</Text>
+              {dirty && (
+                <Text className="font-body text-label-sm text-fire">
+                  변경됨 — 아래 "저장"을 눌러야 실제로 적용돼요.
+                </Text>
+              )}
+            </View>
+
+            {/* 모드 선택 — 적용 중 모드에 배지 */}
             <View className="gap-2">
-              <Text className="font-body-bold text-body-md text-text-pri">공개 방식</Text>
+              <Text className="font-body-bold text-body-md text-text-pri">공개 방식 (택1)</Text>
               <View className="flex-row gap-2">
                 <Pressable
                   onPress={() => update({ mode: 'count' })}
                   className={`flex-1 px-4 py-3 rounded-md border ${mode === 'count' ? 'border-primary bg-secondary-container' : 'border-outline-warm bg-surface'}`}
                 >
                   <Text className={`font-body text-label-md text-center ${mode === 'count' ? 'text-primary font-body-bold' : 'text-text-sub'}`}>
-                    앞에서부터 N개
+                    무작위 N개{appliedMode === 'count' ? ' · 적용 중' : ''}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -202,16 +218,16 @@ export default function SettingsPage() {
                   className={`flex-1 px-4 py-3 rounded-md border ${mode === 'per_section' ? 'border-primary bg-secondary-container' : 'border-outline-warm bg-surface'}`}
                 >
                   <Text className={`font-body text-label-md text-center ${mode === 'per_section' ? 'text-primary font-body-bold' : 'text-text-sub'}`}>
-                    영역별 선택
+                    영역별 선택{appliedMode === 'per_section' ? ' · 적용 중' : ''}
                   </Text>
                 </Pressable>
               </View>
             </View>
 
-            {/* count 모드 — 무료 개수 stepper */}
+            {/* count 모드 — 무료 개수 stepper + 무작위 안내 */}
             {mode === 'count' && (
-              <View className="gap-2 p-card-padding rounded-md border border-outline-warm bg-surface-container-low">
-                <Text className="font-body-bold text-body-md text-text-pri">앞에서부터 무료 개수</Text>
+              <View className="gap-3 p-card-padding rounded-md border border-outline-warm bg-surface-container-low">
+                <Text className="font-body-bold text-body-md text-text-pri">무작위 무료 개수</Text>
                 <View className="flex-row items-center justify-between">
                   <Pressable
                     onPress={() => update({ freeCount: Math.max(0, config.freeCount - 1) })}
@@ -232,74 +248,80 @@ export default function SettingsPage() {
                     <Text className="font-heading-bold text-headline-md text-primary">＋</Text>
                   </Pressable>
                 </View>
-                <Text className="font-body text-label-sm text-text-sub text-center">
+                <Text className="font-body text-label-sm text-text-sub leading-relaxed">
                   {config.freeCount === 0
-                    ? '전체 유료'
+                    ? '전체 유료 — 무료로 열리는 영역이 없어요.'
                     : config.freeCount >= TOTAL
-                      ? '전체 무료'
-                      : `1~${config.freeCount}번 무료 · ${config.freeCount + 1}~${TOTAL}번 유료`}
+                      ? '전체 무료 — 14개 영역 모두 열려요.'
+                      : `14개 중 무작위 ${config.freeCount}개가 무료로 열립니다. 어떤 영역이 무료인지는 사용자마다 달라요.`}
                 </Text>
+                {config.freeCount > 0 && config.freeCount < TOTAL && (
+                  <View className="gap-0.5 pt-1 border-t border-outline-warm">
+                    <Text className="font-body text-label-sm text-text-sub">예시 (임의 사용자)</Text>
+                    <Text className="font-body text-label-sm text-text-pri">· 사용자 A: {exampleA.join(', ')}번 무료</Text>
+                    <Text className="font-body text-label-sm text-text-pri">· 사용자 B: {exampleB.join(', ')}번 무료</Text>
+                  </View>
+                )}
               </View>
             )}
 
-            {/* per_section 모드 — 전체 무료/잠금 빠른 버튼 */}
+            {/* per_section 모드 — 전체 무료/잠금 + 14개 토글 */}
             {mode === 'per_section' && (
-              <View className="flex-row items-center justify-between">
-                <Text className="font-body-bold text-body-md text-text-pri">
-                  무료 {freeCount} / {TOTAL}개
-                </Text>
-                <View className="flex-row gap-2">
-                  <Pressable
-                    onPress={() => update({ freeSections: SECTIONS.map((s) => s.number) })}
-                    className="px-3 py-1.5 rounded-md border border-outline-warm"
-                  >
-                    <Text className="font-body text-label-sm text-text-pri">전체 무료</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => update({ freeSections: [] })}
-                    className="px-3 py-1.5 rounded-md border border-outline-warm"
-                  >
-                    <Text className="font-body text-label-sm text-text-pri">전체 잠금</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
-
-            {/* 14개 영역 — per_section: 토글 / count: 미리보기(읽기 전용) */}
-            <View className="gap-2">
-              {SECTIONS.map((s) => {
-                const free = isFree(s.number);
-                const interactive = mode === 'per_section';
-                return (
-                  <View
-                    key={s.number}
-                    className="flex-row items-center gap-3 p-card-padding rounded-md border border-outline-warm bg-surface-container-low"
-                  >
-                    <Text className="text-headline-md">{s.emoji}</Text>
-                    <View className="flex-1 gap-0.5">
-                      <Text className="font-body-bold text-body-md text-text-pri">
-                        {s.number}. {headerShort(s.header)}
-                      </Text>
-                      <Text className="font-body text-label-sm text-text-sub">{s.oneLine}</Text>
-                    </View>
+              <>
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-body-bold text-body-md text-text-pri">
+                    무료 {config.freeSections.length} / {TOTAL}개
+                  </Text>
+                  <View className="flex-row gap-2">
                     <Pressable
-                      onPress={interactive ? () => toggleSection(s.number) : undefined}
-                      disabled={!interactive}
-                      accessibilityRole={interactive ? 'switch' : 'text'}
-                      accessibilityState={{ checked: free, disabled: !interactive }}
-                      accessibilityLabel={`${s.number}번 ${headerShort(s.header)} ${free ? '무료' : '유료'}`}
-                      className={`px-4 py-2 rounded-full border ${free ? 'border-primary bg-secondary-container' : 'border-outline-warm bg-surface'} ${interactive ? '' : 'opacity-80'}`}
+                      onPress={() => update({ freeSections: SECTIONS.map((s) => s.number) })}
+                      className="px-3 py-1.5 rounded-md border border-outline-warm"
                     >
-                      <Text
-                        className={`font-body text-label-md ${free ? 'text-primary font-body-bold' : 'text-text-sub'}`}
-                      >
-                        {free ? '무료' : '유료'}
-                      </Text>
+                      <Text className="font-body text-label-sm text-text-pri">전체 무료</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => update({ freeSections: [] })}
+                      className="px-3 py-1.5 rounded-md border border-outline-warm"
+                    >
+                      <Text className="font-body text-label-sm text-text-pri">전체 잠금</Text>
                     </Pressable>
                   </View>
-                );
-              })}
-            </View>
+                </View>
+
+                <View className="gap-2">
+                  {SECTIONS.map((s) => {
+                    const free = config.freeSections.includes(s.number);
+                    return (
+                      <View
+                        key={s.number}
+                        className="flex-row items-center gap-3 p-card-padding rounded-md border border-outline-warm bg-surface-container-low"
+                      >
+                        <Text className="text-headline-md">{s.emoji}</Text>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="font-body-bold text-body-md text-text-pri">
+                            {s.number}. {headerShort(s.header)}
+                          </Text>
+                          <Text className="font-body text-label-sm text-text-sub">{s.oneLine}</Text>
+                        </View>
+                        <Pressable
+                          onPress={() => toggleSection(s.number)}
+                          accessibilityRole="switch"
+                          accessibilityState={{ checked: free }}
+                          accessibilityLabel={`${s.number}번 ${headerShort(s.header)} ${free ? '무료' : '유료'}`}
+                          className={`px-4 py-2 rounded-full border ${free ? 'border-primary bg-secondary-container' : 'border-outline-warm bg-surface'}`}
+                        >
+                          <Text
+                            className={`font-body text-label-md ${free ? 'text-primary font-body-bold' : 'text-text-sub'}`}
+                          >
+                            {free ? '무료' : '유료'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </View>
+              </>
+            )}
 
             {/* 저장 */}
             <View className="gap-2">

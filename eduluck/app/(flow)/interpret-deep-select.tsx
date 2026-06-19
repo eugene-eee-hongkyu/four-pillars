@@ -3,12 +3,16 @@
 //
 // Paywall 옵션 가: 첫 영역 무료 → 이미 1개 본 후 다른 영역 시도 시 비회원이면 로그인 강제.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { PaywallModal } from '@/components/PaywallModal';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
+import {
+  resolveFreeSections,
+  type DeepSectionAccessConfig,
+} from '@/lib/config/app-config';
 import { useFlow } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
@@ -27,19 +31,24 @@ export default function InterpretDeepSelect() {
   const part2 = sections.filter(s => s.group === 'Part2');
   const seenSections = Object.keys(state.deepDiveTexts).map(Number);
 
-  // 무료 공개 섹션 — admin 설정(app_config) 기준. 로드 전(null)에는 전부 무료로 가정해 잠금 깜빡임 방지.
-  const [freeSections, setFreeSections] = useState<number[] | null>(null);
+  // 무료 공개 정책 — admin 설정(app_config). count 모드는 내 sessionId 로 무작위 N개를 resolve.
+  // 로드 전(null)에는 전부 무료로 가정해 잠금 깜빡임 방지.
+  const [accessConfig, setAccessConfig] = useState<DeepSectionAccessConfig | null>(null);
   useEffect(() => {
     let cancelled = false;
     fetch('/api/config/deep-sections')
       .then(r => (r.ok ? r.json() : null))
       .then(j => {
-        if (!cancelled && j && Array.isArray(j.freeSections)) setFreeSections(j.freeSections);
+        if (!cancelled && j && j.config) setAccessConfig(j.config as DeepSectionAccessConfig);
       })
       .catch(() => { /* fail-open: 전체 무료 유지 */ });
     return () => { cancelled = true; };
   }, []);
 
+  const freeSections = useMemo(
+    () => (accessConfig ? resolveFreeSections(accessConfig, state.sessionId ?? 'default') : null),
+    [accessConfig, state.sessionId],
+  );
   const isFree = (n: number) => freeSections === null || freeSections.includes(n);
 
   const handleSelect = (n: number) => {

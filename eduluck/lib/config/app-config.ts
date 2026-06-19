@@ -1,8 +1,10 @@
-// 전역 런타임 설정 (app_config 테이블) 접근 — 서버 only (service_role).
+// 전역 런타임 설정 (app_config 테이블) 접근.
+// 순수 resolve 함수는 client·server 공용 (DB 미접근), 조회·저장은 서버 only (service_role).
 //
 // deep_section_access: "더 자세히 보기"(deep-dive) 무료 공개 정책.
-//   mode 'per_section' — freeSections 에 든 번호만 무료.
-//   mode 'count'       — 앞에서부터 freeCount 개(1..N) 무료, 나머지 유료.
+//   mode 'per_section' — freeSections 에 든 번호만 무료 (모든 사용자 동일).
+//   mode 'count'       — 14개 중 무작위 freeCount 개 무료. 사용자(seed)마다 다르되,
+//                        같은 seed 면 항상 같은 조합 (결정적 셔플 → client·server 일치).
 //   config 미존재·오류 시 전체 무료(fail-open) — paywall 오작동으로 정상 흐름 차단 방지.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -57,12 +59,47 @@ function normalize(raw: Partial<DeepSectionAccessConfig> | null | undefined): De
   return { mode, freeSections, freeCount };
 }
 
-/** config → 실제 무료 섹션 번호 목록 (모드 적용 후). */
-export function effectiveFreeSections(cfg: DeepSectionAccessConfig): number[] {
-  if (cfg.mode === 'count') {
-    return ALL_DEEP_SECTION_NUMBERS.slice(0, cfg.freeCount);
+// ─── 결정적(seeded) 무작위 — Math.random ✗. 같은 seed → 항상 같은 결과 (client·server 일치). ───
+function hashSeed(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  return cfg.freeSections.filter((n) => ALL_DEEP_SECTION_NUMBERS.includes(n));
+  return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** seed 기반 결정적 Fisher-Yates 셔플 (원본 불변). */
+function seededShuffle(arr: number[], seed: string): number[] {
+  const rng = mulberry32(hashSeed(seed));
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** config + seed(사용자 식별자) → 실제 무료 섹션 번호 목록.
+ *  per_section: 모든 사용자 동일. count: seed 마다 무작위 freeCount 개 (결정적). */
+export function resolveFreeSections(cfg: DeepSectionAccessConfig, seed: string): number[] {
+  if (cfg.mode === 'per_section') {
+    return cfg.freeSections.filter((n) => ALL_DEEP_SECTION_NUMBERS.includes(n));
+  }
+  const n = Math.max(0, Math.min(ALL_DEEP_SECTION_NUMBERS.length, cfg.freeCount));
+  if (n <= 0) return [];
+  if (n >= ALL_DEEP_SECTION_NUMBERS.length) return [...ALL_DEEP_SECTION_NUMBERS];
+  return seededShuffle(ALL_DEEP_SECTION_NUMBERS, seed).slice(0, n).sort((a, b) => a - b);
 }
 
 /** 전체 config 조회. 미설정/오류 시 기본값(전체 무료). */
@@ -78,11 +115,6 @@ export async function getDeepSectionAccess(sb: SupabaseClient): Promise<DeepSect
   } catch {
     return defaultConfig();
   }
-}
-
-/** 실제 무료 섹션 번호 목록. 소비자(서버 게이트·공개 API)용. */
-export async function getFreeDeepSections(sb: SupabaseClient): Promise<number[]> {
-  return effectiveFreeSections(await getDeepSectionAccess(sb));
 }
 
 /** config 저장 (admin). 정규화 후 저장, 저장된 config 반환. */

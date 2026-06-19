@@ -13,7 +13,7 @@ import { PREMIUM_PROMPT_VERSION } from '../lib/prompts/version';
 import { hydrateManse } from '../lib/manse/hydrate';
 import { getSupabaseServer } from '../lib/supabase/server';
 import { checkLlmQuota } from '../lib/llm/rate-limit';
-import { getFreeDeepSections } from '../lib/config/app-config';
+import { getDeepSectionAccess, resolveFreeSections } from '../lib/config/app-config';
 
 interface Body {
   sessionId: string;
@@ -69,8 +69,10 @@ export async function POST(request: Request) {
   }
 
   // 무료 공개 섹션 게이트 — admin 설정(app_config) 기준. 비무료 섹션은 차단.
+  // count 모드는 sessionId 기반 결정적 무작위라 클라이언트와 같은 목록을 resolve.
   // 단 이미 생성된(본 적 있는) 섹션은 재열람 허용 (사후 설정 변경에도 본 것은 유지). config 오류 시 전체 무료.
-  const freeSections = await getFreeDeepSections(sb);
+  const accessConfig = await getDeepSectionAccess(sb);
+  const freeSections = resolveFreeSections(accessConfig, body.sessionId);
   if (!freeSections.includes(body.section)) {
     const { data: existing } = await sb
       .from('interpretations')
