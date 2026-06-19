@@ -29,7 +29,10 @@ export function AdminNav({
   const isSuper = role === 'super_admin';
 
   return (
-    <View className="flex-row items-center justify-between px-container-padding py-3 border-b border-outline-warm bg-surface">
+    <View
+      className="flex-row items-center justify-between px-container-padding py-3 border-b border-outline-warm bg-surface-container-low z-10"
+      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
+    >
       <View className="flex-row items-center gap-1.5">
         <Text className="font-heading-bold text-headline-md text-text-pri mr-1.5">eduluck admin</Text>
         {TABS.filter((t) => !t.superOnly || isSuper).map((t) => {
