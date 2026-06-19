@@ -35,6 +35,23 @@ function formatBirth(b: { year: number; month: number; day: number }): string {
   return `${b.year}-${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')}`;
 }
 
+// "다시 진단/삭제" 권한 캐시 — 사용자별. 거의 안 바뀌는 값이라 마지막 값을 localStorage에
+// 보관해 다음 진입 시 버튼을 즉시 노출(서버 권한 조회 대기 제거). 진입 후 백그라운드 재검증.
+const REDO_CACHE_PREFIX = 'eduluck.redoEnabled.';
+function readRedoCache(userId: string): boolean | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+  const v = window.localStorage.getItem(REDO_CACHE_PREFIX + userId);
+  return v === null ? null : v === '1';
+}
+function writeRedoCache(userId: string, enabled: boolean): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(REDO_CACHE_PREFIX + userId, enabled ? '1' : '0');
+  } catch {
+    // storage 꽉참 등 — 캐시 실패해도 기능엔 영향 없음
+  }
+}
+
 export default function Landing() {
   const router = useRouter();
   const { state, setSessionId, loadSessionFromHistory, startNewSession, restoreSessionFromServer, beginRedo, removeSessionFromHistory } = useFlow();
@@ -163,6 +180,10 @@ export default function Landing() {
       setRedoEnabled(false);
       return;
     }
+    // 1) 캐시 즉시 반영 — 지난번 권한값으로 버튼 바로 노출 (서버 조회 대기 제거)
+    const cached = readRedoCache(user.id);
+    if (cached !== null) setRedoEnabled(cached);
+    // 2) 백그라운드 재검증 — 어드민이 부여/회수했으면 갱신 + 캐시 업데이트
     (async () => {
       try {
         const supabase = getSupabaseClient();
@@ -172,9 +193,12 @@ export default function Landing() {
         const res = await fetch('/api/me/redo', { headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) return;
         const json = (await res.json()) as { enabled?: boolean };
-        if (!cancelled) setRedoEnabled(!!json.enabled);
+        if (!cancelled) {
+          setRedoEnabled(!!json.enabled);
+          writeRedoCache(user.id, !!json.enabled);
+        }
       } catch {
-        // silent — 권한 조회 실패 시 버튼 미노출 (degraded)
+        // silent — 권한 조회 실패 시 캐시값 유지 (degraded)
       }
     })();
     return () => {
