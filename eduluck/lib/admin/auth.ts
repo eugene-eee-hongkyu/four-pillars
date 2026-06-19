@@ -37,7 +37,8 @@ export type AdminAction =
   | 'grant_redo'
   | 'revoke_redo'
   | 'view_user'
-  | 'delete_session';
+  | 'delete_session'
+  | 'update_config';
 
 interface VerifyResult {
   ok: true;

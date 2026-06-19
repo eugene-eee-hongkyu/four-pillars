@@ -77,6 +77,9 @@ export default function AuditLogPage() {
           <Pressable onPress={() => router.push('/admin/users' as never)}>
             <Text className="font-body text-label-md text-text-sub">사용자</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/admin/settings' as never)}>
+            <Text className="font-body text-label-md text-text-sub">설정</Text>
+          </Pressable>
           <Pressable onPress={() => router.push('/admin/admins' as never)}>
             <Text className="font-body text-label-md text-text-sub">어드민</Text>
           </Pressable>

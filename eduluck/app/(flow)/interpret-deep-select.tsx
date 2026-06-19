@@ -11,7 +11,6 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { useFlow } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { isSectionCapReached } from '@/lib/paywall/policy';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { useScrollToBottomOnRedirect } from '@/lib/hooks/useScrollToBottomOnRedirect';
 
@@ -27,25 +26,27 @@ export default function InterpretDeepSelect() {
   const part1 = sections.filter(s => s.group === 'Part1');
   const part2 = sections.filter(s => s.group === 'Part2');
   const seenSections = Object.keys(state.deepDiveTexts).map(Number);
-  // 트리거 2: 영역 cap 도달 시 paywall (비회원 1개, 회원 5개). 이미 본 영역은 캐시 hit 자유 진입.
-  const sectionCapReached = isSectionCapReached(seenSections.length, !!user);
 
-  // sessionId 단위 1회만 fire — Mixpanel funnel 정확도
-  const capFiredRef = useRef<string | null>(null);
+  // 무료 공개 섹션 — admin 설정(app_config) 기준. 로드 전(null)에는 전부 무료로 가정해 잠금 깜빡임 방지.
+  const [freeSections, setFreeSections] = useState<number[] | null>(null);
   useEffect(() => {
-    if (sectionCapReached && state.sessionId && capFiredRef.current !== state.sessionId) {
-      capFiredRef.current = state.sessionId;
-      track(EVENTS.SECTION_CAP_REACHED, {
-        seen_count: seenSections.length,
-        member: !!user,
-      });
-    }
-  }, [sectionCapReached, state.sessionId, seenSections.length, user]);
+    let cancelled = false;
+    fetch('/api/config/deep-sections')
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        if (!cancelled && j && Array.isArray(j.freeSections)) setFreeSections(j.freeSections);
+      })
+      .catch(() => { /* fail-open: 전체 무료 유지 */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const isFree = (n: number) => freeSections === null || freeSections.includes(n);
 
   const handleSelect = (n: number) => {
     // 이미 본 영역은 무료로 다시 보기 가능 (캐시 hit)
     const alreadySeen = seenSections.includes(n);
-    if (!alreadySeen && sectionCapReached) {
+    if (!alreadySeen && !isFree(n)) {
+      track(EVENTS.SECTION_CAP_REACHED, { section: n, member: !!user });
       setPaywallOpen(true);
       return;
     }
@@ -80,12 +81,12 @@ export default function InterpretDeepSelect() {
         <SectionGrid title="📖 Part 1 · 본질·관계·즉시 행동" sections={part1}
           onSelect={handleSelect}
           seenSections={seenSections}
-          lockedForNew={sectionCapReached}
+          isFree={isFree}
         />
         <SectionGrid title="🔮 Part 2 · 학원·진로·미래" sections={part2}
           onSelect={handleSelect}
           seenSections={seenSections}
-          lockedForNew={sectionCapReached}
+          isFree={isFree}
         />
 
         <PaywallModal
@@ -104,11 +105,11 @@ interface GridProps {
   sections: { number: number; header: string; oneLine: string; emoji: string }[];
   onSelect: (sectionNumber: number) => void;
   seenSections: number[];
-  /** 비회원이 무료 1개를 이미 본 상태 — 새 영역은 잠금 표시. 캐시된 영역(seen)은 자유롭게 재진입. */
-  lockedForNew: boolean;
+  /** 섹션별 무료 여부. 무료 ✗ + 미열람이면 잠금 표시. 이미 본 영역(seen)은 자유롭게 재진입. */
+  isFree: (sectionNumber: number) => boolean;
 }
 
-function SectionGrid({ title, sections, onSelect, seenSections, lockedForNew }: GridProps) {
+function SectionGrid({ title, sections, onSelect, seenSections, isFree }: GridProps) {
   return (
     <View className="gap-3">
       <View className="px-container-padding">
@@ -117,7 +118,7 @@ function SectionGrid({ title, sections, onSelect, seenSections, lockedForNew }: 
       <View className="px-container-padding gap-2">
         {sections.map((s) => {
           const seen = seenSections.includes(s.number);
-          const locked = lockedForNew && !seen;
+          const locked = !isFree(s.number) && !seen;
           return (
             <Pressable
               key={s.number}

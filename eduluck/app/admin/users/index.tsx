@@ -112,6 +112,9 @@ export default function AdminUsersPage() {
           <Pressable onPress={() => router.push('/admin/users' as never)}>
             <Text className="font-body-bold text-label-md text-primary">사용자</Text>
           </Pressable>
+          <Pressable onPress={() => router.push('/admin/settings' as never)}>
+            <Text className="font-body text-label-md text-text-sub">설정</Text>
+          </Pressable>
           {me.role === 'super_admin' && (
             <>
               <Pressable onPress={() => router.push('/admin/admins' as never)}>
