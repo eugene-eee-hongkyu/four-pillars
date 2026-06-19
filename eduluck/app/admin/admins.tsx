@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { AdminNav } from '@/components/admin/AdminNav';
 
 interface AdminRow {
   id: string;
@@ -116,32 +117,7 @@ export default function AdminsPage() {
 
   return (
     <View className="flex-1 bg-surface">
-      <View className="flex-row items-center justify-between px-container-padding py-3 border-b border-outline-warm">
-        <View className="flex-row items-center gap-3">
-          <Text className="font-heading-bold text-headline-md text-text-pri">eduluck admin</Text>
-          <Pressable onPress={() => router.push('/admin/subjects' as never)}>
-            <Text className="font-body text-label-md text-text-sub">진단</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/users' as never)}>
-            <Text className="font-body text-label-md text-text-sub">사용자</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/settings' as never)}>
-            <Text className="font-body text-label-md text-text-sub">설정</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/admins' as never)}>
-            <Text className="font-body-bold text-label-md text-primary">어드민</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/audit-log' as never)}>
-            <Text className="font-body text-label-md text-text-sub">감사로그</Text>
-          </Pressable>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <Text className="font-body text-label-sm text-text-sub">{me.email}</Text>
-          <Pressable onPress={logout} className="px-3 py-1.5 rounded-md border border-outline-warm">
-            <Text className="font-body text-label-sm text-text-sub">로그아웃</Text>
-          </Pressable>
-        </View>
-      </View>
+      <AdminNav active="admins" role={me.role} email={me.email} onLogout={logout} />
 
       <ScrollView className="flex-1" contentContainerClassName="px-container-padding py-6 gap-6 max-w-3xl w-full self-center">
         {/* 새 admin 추가 폼 */}

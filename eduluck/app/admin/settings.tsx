@@ -5,10 +5,10 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
 import { resolveFreeSections, type DeepSectionAccessConfig } from '@/lib/config/app-config';
 
@@ -41,7 +41,6 @@ function summarize(c: Config): string {
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const { me, loading: authLoading } = useAdminMe();
   const { logout } = useAuth();
 
@@ -140,37 +139,7 @@ export default function SettingsPage() {
 
   return (
     <View className="flex-1 bg-surface">
-      {/* nav */}
-      <View className="flex-row items-center justify-between px-container-padding py-3 border-b border-outline-warm">
-        <View className="flex-row items-center gap-3">
-          <Text className="font-heading-bold text-headline-md text-text-pri">eduluck admin</Text>
-          <Pressable onPress={() => router.push('/admin/subjects' as never)}>
-            <Text className="font-body text-label-md text-text-sub">진단</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/users' as never)}>
-            <Text className="font-body text-label-md text-text-sub">사용자</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/admin/settings' as never)}>
-            <Text className="font-body-bold text-label-md text-primary">설정</Text>
-          </Pressable>
-          {me.role === 'super_admin' && (
-            <>
-              <Pressable onPress={() => router.push('/admin/admins' as never)}>
-                <Text className="font-body text-label-md text-text-sub">어드민</Text>
-              </Pressable>
-              <Pressable onPress={() => router.push('/admin/audit-log' as never)}>
-                <Text className="font-body text-label-md text-text-sub">감사로그</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-        <View className="flex-row items-center gap-2">
-          <Text className="font-body text-label-sm text-text-sub">{me.email}</Text>
-          <Pressable onPress={logout} className="px-3 py-1.5 rounded-md border border-outline-warm">
-            <Text className="font-body text-label-sm text-text-sub">로그아웃</Text>
-          </Pressable>
-        </View>
-      </View>
+      <AdminNav active="settings" role={me.role} email={me.email} onLogout={logout} />
 
       <ScrollView
         className="flex-1"
