@@ -6,6 +6,18 @@
 
 ---
 
+## Session 2026-06-19 17:20 — 가족 만세력 보기 링크 + 어드민 3분 피드백 조회
+
+### 작업 요약
+- **홈 카드 재진단/삭제 버튼 캐시 → 되돌림** (`48a8e75` → revert `3bcbe76`): 버튼이 `/api/me/redo` 응답까지 늦게 뜨던 문제로 localStorage 캐시(낙관적 즉시 표시)를 넣었으나, 사용자 판단 — "권한 회수됐는데 버튼 보였다 사라지는 게 더 나쁘다"(정확성 > 속도)로 원복. 정확성 위해 "서버 확정 후 표시"가 본질이라 늦음은 불가피. 더 빠르게 하려면 서버 `getUser` 로컬 JWT 검증 필요(SUPABASE_JWT_SECRET, 보류)
+- **정밀진단 → 가족 만세력 보기** (`e44a175`): interpret-premium "다른 영역 더 자세히 보기" 아래 "📜 가족 만세력 보기" 버튼(part2Done) → 기존 `child-manse`(가족 만세력) 화면. child-manse는 진단 완료 재방문 시(diagnosisDone) 하단에 "정밀 학운 보기" + 가족 공유(ShareButton) + 한 줄 피드백(3분) 노출, 정방향 흐름은 "정밀 진단 받기" 유지. 스냅샷·서버복원 모두 만세력 포함 확인(과거 세션 동작)
+- **어드민 3분 피드백 조회** (`81c32f6`): `/admin/feedback` 신설 — feedback_responses(정량6+정성5+메타) 최신순 300건. GET /api/admin/feedback(verifyAdminRequest service_role). AdminNav '피드백' 탭 추가. 각 응답: 평균점수·출처·메타 + 6점 + 정성 텍스트. 읽기 전용(audit 미기록)
+- 전 작업 tsc --noEmit PASS
+
+### 다음 액션
+- 배포 후 14섹션 LLM 출력 점검 + mom test 배포
+- 통신판매업 신고 + 포트원 PG 가맹점 심사
+
 ## Session 2026-06-19 16:58 — 어드민 헤더 프레임 분리 + 성능 개선(인증 캐싱·번들 누수) + tree-shaking 검증
 
 ### 작업 요약
