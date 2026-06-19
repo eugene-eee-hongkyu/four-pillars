@@ -6,6 +6,19 @@
 
 ---
 
+## Session 2026-06-19 16:58 — 어드민 헤더 프레임 분리 + 성능 개선(인증 캐싱·번들 누수) + tree-shaking 검증
+
+### 작업 요약
+- **어드민 헤더 프레임 분리** (`06e08fa`): nav가 페이지와 같은 배경(#FBF8F1)이라 한 덩어리로 보이던 문제 → nav를 흰색(surface-container-low)+엷은 그림자로 띄워 상단 바로 분리 (공유 AdminNav, 전 페이지 공통)
+- **성능 진단** (프로덕션 느림): 근거 — ① useAdminMe 무캐시 → 탭 이동마다 `/api/admin/me` 재호출 + 모든 어드민 API가 `verifyAdminRequest`에서 `getUser` 네트워크 왕복, ② 단일 2.5MB 번들(`output: single`, asyncRoutes off), ③ 서버리스 콜드스타트
+- **어드민 신원 세션 캐싱** (`608dfa4`): `fetchAdminMe`를 access_token 키로 캐시 → 탭 이동 시 `/api/admin/me` 왕복 제거(페이지당 약 1 round-trip 절감). 로그아웃 시 `clearAdminMeCache`. **보안 영향 0**(데이터 API의 서버 검증은 매 요청 유지)
+- **DEEP_SECTIONS leaf 분리** (`cea36b3`): 클라가 섹션 메타 하나 쓰려고 `interpret-deep → interpret-premium-shared → hagun-tier/tier-schools` 전체를 끌어오던 누수 차단. `lib/prompts/deep-sections.ts`(무거운 import 0)로 분리, 클라 4곳 repoint, interpret-deep는 re-export. 번들 2,528,295 → 2,457,481 (-69KB). vitest 6/6 PASS
+- **tree-shaking 검증** (적용 ✗, 측정만): metro `experimentalImportSupport` + `EXPO_UNSTABLE_TREE_SHAKING`/`METRO_OPTIMIZE_GRAPH` env로 테스트 빌드 → 2,457,481 → 2,278,297 (-175KB, -7.3%). Playwright로 로컬 served dist 검증: 랜딩 렌더·콘솔에러 0, 클릭→세션 경로 실행(유일 에러는 로컬 정적서버 `501 POST /api/session` = 인프라, 번들 무관). **사용자 판단: 차이 작아 미적용**, metro 변경 되돌림
+
+### 다음 액션
+- 배포 후 14섹션 LLM 출력 점검 + mom test 배포
+- 통신판매업 신고 + 포트원 PG 가맹점 심사
+
 ## Session 2026-06-19 15:59 — 어드민 설정 화면: 진단 공개 정책 + 네비 UI
 
 ### 작업 요약

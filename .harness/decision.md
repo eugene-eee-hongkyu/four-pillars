@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-06-19: 어드민 성능 개선 범위 — 인증 캐싱·번들 누수만 적용, tree-shaking 보류
+
+- **선택**: 무위험 개선 2종만 적용 — ① 어드민 신원 세션 캐싱(`fetchAdminMe` 토큰 키 캐시) ② DEEP_SECTIONS leaf 분리(클라 번들에서 점수/프롬프트 그래프 누수 차단). tree-shaking·asyncRoutes는 미적용
+- **대안 검토**:
+  - (a 적용) 인증 캐싱 + leaf 분리 — 코드 변경 작고 tsc/vitest로 검증됨. 캐싱은 보안 영향 0(데이터 API 서버 검증 유지), leaf는 -69KB
+  - (tree-shaking 측정 후 보류) `EXPO_UNSTABLE_TREE_SHAKING` — 테스트 빌드 -175KB(-7.3%), Playwright 랜딩 검증 통과. 그러나 SDK 52에서 experimental + 로컬 검증이 랜딩까지만이라 깊은 화면 보장 ✗. 효과(약 7%)가 작아 사용자 판단으로 미적용
+  - (asyncRoutes 기각) 공식 문서상 alpha + 정적배포(static export) 호환 미명시 → 프로덕션 SPA에 부적합
+- **선택 이유**: "공짜·무위험·즉효"인 번들 축소법은 없음(큰 레버는 모두 experimental/alpha). 위험 0인 캐싱·누수차단만 취하고, experimental 의존(tree-shaking)은 효과 대비 검증부담이 커 보류. 큰 번들 분할은 별도 세션 주제
+- **영향 범위**: `lib/admin/client.ts`(캐시) · `lib/hooks/useAuth.ts`(로그아웃 무효화) · `lib/prompts/deep-sections.ts`(신규 leaf) + 클라 4곳 import repoint · `interpret-deep.ts` re-export. metro.config는 실험 후 원복(미적용)
+- **되돌리는 방법**: 캐싱은 `fetchAdminMe`에서 캐시 분기 제거. leaf는 import를 interpret-deep로 환원(re-export 있어 동작 동일). tree-shaking 적용하려면 metro `experimentalImportSupport` + build:web에 env 2개 추가 후 Vercel 프리뷰로 전 흐름 검증
+
 ## 2026-06-19: 진단 무료/유료 설정 모드 선택 (단일 vs 이중)
 
 - **선택**: 2가지 모드 통합 (무작위 무료 모드 + 영역별 수동 선택 모드)
