@@ -21,6 +21,7 @@ import { hydrateManse } from '@/lib/manse/hydrate';
 import { useFlow } from '@/lib/flow/context';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { BirthSummary } from '@/components/manse/BirthSummary';
+import { ShareButton } from '@/components/interpret/ShareButton';
 
 export default function ChildManse() {
   const router = useRouter();
@@ -30,6 +31,9 @@ export default function ChildManse() {
   const mother = state.motherManse ? hydrateManse(state.motherManse) : null;
   const father = state.fatherManse ? hydrateManse(state.fatherManse) : null;
   const name = state.child.nickname || '아이';
+  // 진단 완료 후 interpret-premium "만세력 보기"로 들어온 경우 — 돌아가기 + 공유 + 피드백 노출.
+  // 정방향 흐름(아직 진단 전)에서는 "정밀 진단 받기"만.
+  const diagnosisDone = !!(state.premiumPart1Text || state.premiumPart2Text);
 
   useEffect(() => {
     track(EVENTS.CHILD_MANSE_VIEW);
@@ -123,9 +127,34 @@ export default function ChildManse() {
             {/* 학운 명리 4축 학습 가이드 — 화면 카드들의 명리 근거 */}
             <HagunGuideCard />
 
-            <Text className="font-body text-label-sm text-text-sub text-center">
-              위 정보를 토대로 학년에 맞춰 풀이를 드릴게요.
-            </Text>
+            {diagnosisDone ? (
+              /* 진단 완료 후 재방문 — 가족 공유 + 한 줄 피드백 (interpret-premium Tier 3 패턴) */
+              state.sessionId && (
+                <View className="mt-2 flex-row items-center justify-center gap-1 flex-wrap">
+                  <ShareButton sessionId={state.sessionId} nickname={name} compact={true} />
+                  {!state.feedbackSubmittedSessions.includes(state.sessionId) && (
+                    <>
+                      <Text className="font-body text-label-md text-text-sub">·</Text>
+                      <Pressable
+                        onPress={() => {
+                          track(EVENTS.FEEDBACK_CTA_CLICK, { source: 'manse' });
+                          router.push('/feedback?source=premium-part2' as never);
+                        }}
+                        className="py-2 px-2 active:opacity-50"
+                      >
+                        <Text className="font-body text-label-md text-text-sub">
+                          📝 한 줄 피드백 (3분)
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
+              )
+            ) : (
+              <Text className="font-body text-label-sm text-text-sub text-center">
+                위 정보를 토대로 학년에 맞춰 풀이를 드릴게요.
+              </Text>
+            )}
           </>
         ) : (
           <Text className="font-body text-body-md text-text-sub">만세력 데이터가 없어요.</Text>
@@ -133,7 +162,11 @@ export default function ChildManse() {
       </ScrollView>
 
       <StickyCTA>
-        <Button onPress={() => { track(EVENTS.PREMIUM_START_CLICK); router.push('/(flow)/interpret-premium'); }}>정밀 진단 받기</Button>
+        {diagnosisDone ? (
+          <Button onPress={() => router.push('/(flow)/interpret-premium')}>정밀 학운 보기</Button>
+        ) : (
+          <Button onPress={() => { track(EVENTS.PREMIUM_START_CLICK); router.push('/(flow)/interpret-premium'); }}>정밀 진단 받기</Button>
+        )}
       </StickyCTA>
     </View>
   );

@@ -335,6 +335,18 @@ export default function InterpretPremium() {
               </View>
             )}
 
+            {/* === 가족 만세력 보기 === */}
+            {part2Done && (
+              <View className="px-container-padding mt-3">
+                <Button
+                  variant="secondary"
+                  onPress={() => router.push('/(flow)/child-manse' as never)}
+                >
+                  📜 가족 만세력 보기
+                </Button>
+              </View>
+            )}
+
             {/* === Tier 3: 공유 + 피드백 ghost cluster (부가 액션 한 줄 약화) === */}
             {part2Done && state.sessionId && (
               <View className="px-container-padding mt-6 flex-row items-center justify-center gap-1 flex-wrap">
