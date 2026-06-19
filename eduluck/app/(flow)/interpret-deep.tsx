@@ -7,7 +7,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { StreamingBody } from '@/components/interpret/StreamingBody';
 import { InterpretBody } from '@/components/interpret/InterpretBody';
-import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
+import { DEEP_SECTIONS } from '@/lib/prompts/deep-sections';
 import { useFlow } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { BirthSummary } from '@/components/manse/BirthSummary';

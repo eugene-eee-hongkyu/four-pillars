@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { PaywallModal } from '@/components/PaywallModal';
-import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
+import { DEEP_SECTIONS } from '@/lib/prompts/deep-sections';
 import {
   resolveFreeSections,
   type DeepSectionAccessConfig,

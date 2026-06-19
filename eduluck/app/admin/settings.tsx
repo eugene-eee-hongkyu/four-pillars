@@ -9,7 +9,7 @@ import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { DEEP_SECTIONS } from '@/lib/prompts/interpret-deep';
+import { DEEP_SECTIONS } from '@/lib/prompts/deep-sections';
 import { resolveFreeSections, type DeepSectionAccessConfig } from '@/lib/config/app-config';
 
 const SECTIONS = Object.values(DEEP_SECTIONS).sort((a, b) => a.number - b.number);

@@ -8,7 +8,7 @@
 //   config 미존재·오류 시 전체 무료(fail-open) — paywall 오작동으로 정상 흐름 차단 방지.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DEEP_SECTIONS } from '../prompts/interpret-deep';
+import { DEEP_SECTIONS } from '../prompts/deep-sections';
 
 export const DEEP_SECTION_ACCESS_KEY = 'deep_section_access';
 
