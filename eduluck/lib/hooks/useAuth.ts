@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { clearAdminMeCache } from '@/lib/admin/client';
 
 export interface AuthUser {
   id: string;
@@ -142,6 +143,7 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const logout = useCallback(async () => {
+    clearAdminMeCache();
     const supabase = getSupabaseClient();
     const { error: err } = await supabase.auth.signOut();
     if (err) setError(err);
