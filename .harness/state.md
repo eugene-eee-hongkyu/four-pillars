@@ -6,8 +6,8 @@
 
 ---
 
-## 마지막 실행: 2026-06-19 17:20
-## 마지막 업데이트: 2026-06-19 17:20
+## 마지막 실행: 2026-06-20 16:03
+## 마지막 업데이트: 2026-06-20 16:03
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
@@ -46,11 +46,11 @@
 - **어드민 무료공개 설정**: `/admin/settings` — deep-dive 14영역 무료정책. `app_config.deep_section_access`(jsonb: mode `per_section`|`count`, freeSections[], freeCount). count = 무작위 N개(sessionId 결정적 셔플 client·server 일치), 기본 전체 무료. GET/PUT `/api/admin/config`(audit `update_config`) + 공개 GET `/api/config/deep-sections`. 서버 게이트 interpret-deep 402(본 섹션 재열람 허용)
 - **어드민 피드백 조회**: `/admin/feedback` — feedback_responses(정량6+정성5+메타) 최신 300건. GET `/api/admin/feedback`(service_role). 읽기 전용(audit 미기록)
 - **어드민 공통 UI/perf**: 공유 `AdminNav`(탭: 진단·사용자·피드백·설정 / super: 어드민·감사로그). 선택탭 배경+굵게, 헤더 흰바+그림자. 신원 세션 캐싱(`fetchAdminMe` 토큰키) — 보안 영향 0(데이터 API verifyAdminRequest 매 요청 유지)
-- **학운 sub-tier 산출**: `calculateFinalTierV2` = hagunScore + 부모보정(엄마 -10/0/+10, 아빠 0/+10, 합 -10~+20, 10점 계단) → `scoreToSubTier`. 칩·§13·history 모두 부모 포함(A안). tier→학교는 `tier-schools.ts`
+- **학운 sub-tier 산출**: `calculateFinalTierV2` = hagunScore + 부모보정(엄마 -10/0/+10, 아빠 0/+10, 합 -10..+20, 10점 계단) → `scoreToSubTier`. 칩·§13·history 모두 부모 포함(A안). tier→학교는 `tier-schools.ts`
 - **명리 백엔드 결정성 모듈**: §13 hagun-tier · §14 critical-year · §11 peer-profile · §12 academy-fit · §15 abroad-score. 공통 `lib/manse/academic-context.ts`. 점수·티어 영향 0
 - **§15 해외운 정책**: 국가명 ✗ → 용신 방위. §17 해외대학명 ✗ → 유학 권유. decision.md 2026-06-03
 - **paywall 정책**: 비회원 자녀 1·Part2 진입 차단 / 회원 자녀 5. server cap: device_id 403 + claim cap 5. **deep-dive 영역 게이트는 어드민 무료공개 설정(app_config)으로 대체**
-- **재진단/삭제 버튼(홈)**: `/api/me/redo`(getUser+redo_grants) 권한 확정 후에만 노출 — 정확성 위해 캐시 안 함(decision.md 2026-06-19). 첫 진입 지연은 서버 왕복 탓
+- **재진단/삭제 버튼(홈)**: `/api/me/redo`(getUser+redo_grants) 권한 확정 후에만 노출 — 정확성 위해 캐시 안 함(decision.md 2026-06-20). 첫 진입 지연은 서버 왕복 탓
 - **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users). super-admin: eugene.eee@iskra.world · hongary@naver.com
 - **DB(Supabase eduluck `hqtletafqlwphhakoyrm`)**: 카카오 회원 3명. `redo_grants` + `app_config` + `feedback_responses` 테이블. admin_audit_log action 확장(…·delete_session·`update_config`)
 - **localStorage owner ship**: Phase 1 user_id + Phase 2 claim 자동 + 로그아웃 STORAGE_KEY 삭제. 로그인 시 mergeServerHistory(서버 authoritative)
