@@ -49,9 +49,8 @@ export interface ReportPdfInput {
   issuedAt: string; // 'YYYY-MM-DD'
 }
 
-export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
-  const { nickname, part1, part2, issuedAt } = input;
-
+/** react-pdf(ESM) 로드 + 폰트 등록 + 공통 스타일. 요약/상세 렌더러 공용. */
+async function loadPdfKit() {
   // ESM 전용 패키지 — 실행 시점 동적 import().
   // ⚠️ 리터럴 specifier 로 두어야 @vercel/nft 가 의존성을 추적해 함수 번들에 포함한다
   //    (Function/변수로 감싸면 'Cannot find package' 로 런타임 누락됨).
@@ -60,8 +59,8 @@ export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
   //    ⚠️ tsconfig.json 에 module 키를 넣으면 @vercel/node 가 전체 함수를 ESM 으로 내보내
   //       'Cannot use import statement outside a module' 로 API 전체가 크래시한다. 절대 넣지 말 것.
   //       tsc 의 dynamic-import 문법 검사는 typecheck 스크립트의 `--module esnext` 로만 통과시킨다.
-  const { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } =
-    await import('@react-pdf/renderer');
+  const kit = await import('@react-pdf/renderer');
+  const { Font, StyleSheet } = kit;
 
   // 한글 폰트 — 서버 번들 로컬 TTF(매 렌더 네트워크 fetch ✗). 없으면 google/fonts URL fallback.
   const LOCAL_FONT = path.join(process.cwd(), 'assets/fonts/NanumGothic-Regular.ttf');
@@ -90,33 +89,87 @@ export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
     h2: styles.h2, h3: styles.h3, quote: styles.quote, highlight: styles.highlight, bullet: styles.bullet, para: styles.para,
   };
 
-  const section = (title: string, text: string) => {
-    const children = parseBlocks(text).map((b, i) => h(Text, { key: i, style: BLOCK_STYLE[b.t] }, b.text));
-    return h(View, null, h(Text, { style: styles.partDivider }, title), ...children);
-  };
+  // 마커 텍스트 블록들 → Text 엘리먼트 배열
+  const renderBlocks = (text: string, keyPrefix: string) =>
+    parseBlocks(text).map((b, i) => h(kit.Text, { key: `${keyPrefix}-${i}`, style: BLOCK_STYLE[b.t] }, b.text));
+
+  return { kit, styles, renderBlocks };
+}
+
+function footerEl(kit: Awaited<ReturnType<typeof loadPdfKit>>['kit'], styles: Awaited<ReturnType<typeof loadPdfKit>>['styles'], label: string) {
+  return h(kit.Text, {
+    key: 'footer',
+    style: styles.footer,
+    fixed: true,
+    render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
+      `${label} · ${pageNumber}/${totalPages}`,
+  });
+}
+
+export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
+  const { nickname, part1, part2, issuedAt } = input;
+  const { kit, styles, renderBlocks } = await loadPdfKit();
+  const { Document, Page, Text, View, renderToBuffer } = kit;
+
+  const section = (title: string, text: string, key: string) =>
+    h(View, { key }, h(Text, { style: styles.partDivider }, title), ...renderBlocks(text, key));
 
   const body: React.ReactElement[] = [
     h(Text, { key: 'title', style: styles.coverTitle }, `${nickname}의 정밀 학운 리포트`),
     h(Text, { key: 'sub1', style: styles.coverSub }, '사주 만세력 기반 학운 정밀 진단 · 14개 영역'),
     h(Text, { key: 'sub2', style: styles.coverSub }, `발행일 ${issuedAt} · eduluck (luck.z21labs.world)`),
   ];
-  if (part1) body.push(h(View, { key: 'p1' }, section('Part 1 · 본질 · 관계 · 즉시 행동', part1)));
-  if (part2) body.push(h(View, { key: 'p2' }, section('Part 2 · 학원 · 진로 · 미래', part2)));
-  body.push(
-    h(Text, {
-      key: 'footer',
-      style: styles.footer,
-      fixed: true,
-      render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
-        `${nickname} 정밀 학운 리포트 · ${pageNumber}/${totalPages}`,
-    }),
-  );
+  if (part1) body.push(section('Part 1 · 본질 · 관계 · 즉시 행동', part1, 'p1'));
+  if (part2) body.push(section('Part 2 · 학원 · 진로 · 미래', part2, 'p2'));
+  body.push(footerEl(kit, styles, `${nickname} 정밀 학운 리포트`));
 
   const doc = h(
     Document,
     { title: `${nickname} 정밀 학운 리포트`, author: 'eduluck' },
     h(Page, { size: 'A4', style: styles.page, wrap: true }, ...body),
   );
+  return renderToBuffer(doc);
+}
 
+export interface DetailReportSection {
+  number: number;
+  header: string;
+  text: string;
+}
+export interface DetailReportPdfInput {
+  nickname: string;
+  sections: DetailReportSection[];
+  issuedAt: string; // 'YYYY-MM-DD'
+}
+
+/** 상세 리포트 — 14개 영역 각각의 심화 풀이(섹션당 수천 자). */
+export async function renderDetailReportPdf(input: DetailReportPdfInput): Promise<Buffer> {
+  const { nickname, sections, issuedAt } = input;
+  const { kit, styles, renderBlocks } = await loadPdfKit();
+  const { Document, Page, Text, View, renderToBuffer } = kit;
+
+  const body: React.ReactElement[] = [
+    h(Text, { key: 'title', style: styles.coverTitle }, `${nickname}의 정밀 학운 상세 리포트`),
+    h(Text, { key: 'sub1', style: styles.coverSub }, '14개 영역 심화 풀이 — 본질·강약·환경·관계·진로·학교·흐름'),
+    h(Text, { key: 'sub2', style: styles.coverSub }, `발행일 ${issuedAt} · eduluck (luck.z21labs.world)`),
+  ];
+  for (const s of sections) {
+    const key = `sec${s.number}`;
+    body.push(
+      h(
+        View,
+        { key, wrap: true },
+        h(Text, { style: styles.partDivider }, `${s.number}. ${s.header}`),
+        ...renderBlocks(s.text, key),
+      ),
+    );
+  }
+  body.push(footerEl(kit, styles, `${nickname} 정밀 학운 상세 리포트`));
+
+  const doc = h(
+    Document,
+    { title: `${nickname} 정밀 학운 상세 리포트`, author: 'eduluck' },
+    h(Page, { size: 'A4', style: styles.page, wrap: true }, ...body),
+  );
   return renderToBuffer(doc);
 }

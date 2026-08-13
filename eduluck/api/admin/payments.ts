@@ -28,13 +28,21 @@ export async function POST(request: Request) {
   if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
   const { sb } = result;
 
-  let body: { orderId?: string; email?: string };
+  let body: { orderId?: string; email?: string; detail?: boolean };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: 'invalid json' }, { status: 400 });
   }
   if (!body.orderId) return Response.json({ error: 'missing orderId' }, { status: 400 });
+
+  // 상세 리포트(메일2) 재생성·재발송 — deep 14섹션 보장 후 상세 PDF 이메일.
+  if (body.detail) {
+    const { processOrderDetail } = require('../../lib/payments/fulfill-detail') as typeof import('../../lib/payments/fulfill-detail');
+    const r = await processOrderDetail(sb, body.orderId);
+    const ok = r.status === 'done' || r.status === 'skipped' || r.status === 'in_progress';
+    return Response.json(r, { status: ok ? 200 : r.status === 'failed' ? 500 : 400 });
+  }
 
   const { data: order } = await sb.from('payment_orders').select('*').eq('id', body.orderId).single();
   if (!order) return Response.json({ error: 'order not found' }, { status: 404 });

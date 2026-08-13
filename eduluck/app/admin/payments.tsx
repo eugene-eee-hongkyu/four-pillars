@@ -17,6 +17,8 @@ interface OrderRow {
   payment_key: string | null;
   fulfilled: boolean;
   fulfill_error: string | null;
+  detail_fulfilled: boolean;
+  detail_error: string | null;
   created_at: string;
   paid_at: string | null;
 }
@@ -54,6 +56,26 @@ export default function PaymentsPage() {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  // 상세 리포트(메일2) 재생성·재발송.
+  const resendDetail = async (orderId: string) => {
+    if (resending) return;
+    setResending(orderId);
+    setError(null);
+    try {
+      const res = await adminFetch('/api/admin/payments', {
+        method: 'POST',
+        body: JSON.stringify({ orderId, detail: true }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      await fetchOrders();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '상세 재발송 실패');
+    } finally {
+      setResending(null);
+    }
+  };
 
   // email 주면 받는 주소 교정 후 재발송, 없으면 현재 주소로 재발송.
   const resend = async (orderId: string, email?: string) => {
@@ -191,6 +213,26 @@ export default function PaymentsPage() {
                       </View>
                     </View>
                   )}
+
+                  {/* 상세 리포트(메일2) 상태 + 재발송 */}
+                  <View className="flex-row items-center justify-between gap-2 flex-wrap border-t border-outline-warm/40 pt-2">
+                    <Text
+                      className={`font-body text-label-sm flex-1 ${r.detail_fulfilled ? 'text-secondary' : 'text-text-sub'}`}
+                    >
+                      {r.detail_fulfilled
+                        ? '✓ 상세 리포트 발송 완료'
+                        : `⏳ 상세 리포트 준비 중${r.detail_error ? ` — ${r.detail_error}` : ''}`}
+                    </Text>
+                    <Pressable
+                      onPress={() => resendDetail(r.id)}
+                      disabled={resending === r.id}
+                      className="px-3 py-1.5 rounded-md border border-outline-warm"
+                    >
+                      <Text className="font-body text-label-sm text-text-pri">
+                        {resending === r.id ? '처리 중…' : '상세 재발송'}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               )}
               <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>

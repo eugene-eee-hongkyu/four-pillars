@@ -23,6 +23,8 @@ interface OrderRow {
   status: string;
   fulfilled: boolean;
   fulfill_error: string | null;
+  detail_fulfilled: boolean;
+  detail_error: string | null;
   created_at: string;
   paid_at: string | null;
 }
@@ -34,6 +36,8 @@ function toClient(o: OrderRow) {
     status: o.status,
     fulfilled: o.fulfilled,
     fulfillError: o.fulfill_error,
+    detailFulfilled: o.detail_fulfilled,
+    detailError: o.detail_error,
     email: o.email,
     childNickname: o.child_nickname,
     orderName: o.order_name,
@@ -58,7 +62,7 @@ export async function GET(request: Request) {
   const sb = getSupabaseServer();
   const { data, error } = await sb
     .from('payment_orders')
-    .select('id, session_id, email, child_nickname, amount, order_name, status, fulfilled, fulfill_error, created_at, paid_at')
+    .select('id, session_id, email, child_nickname, amount, order_name, status, fulfilled, fulfill_error, detail_fulfilled, detail_error, created_at, paid_at')
     .in('session_id', sessionIds)
     .order('created_at', { ascending: false })
     .limit(100);
@@ -68,7 +72,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  let body: { sessionId?: string; orderId?: string; email?: string };
+  let body: { sessionId?: string; orderId?: string; email?: string; detail?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -91,6 +95,14 @@ export async function POST(request: Request) {
   }
   if (order.status !== 'paid') {
     return Response.json({ error: '결제완료 리포트만 다시 받을 수 있어요.' }, { status: 400 });
+  }
+
+  // 상세 리포트(메일2) 다시 받기 — 소유 검증 후 상세 생성·발송.
+  if (body.detail) {
+    const { processOrderDetail } = require('../lib/payments/fulfill-detail') as typeof import('../lib/payments/fulfill-detail');
+    const r = await processOrderDetail(sb, order.id);
+    const ok = r.status === 'done' || r.status === 'skipped' || r.status === 'in_progress';
+    return Response.json(r, { status: ok ? 200 : r.status === 'failed' ? 500 : 400 });
   }
 
   // 이메일 교정(선택) — 본인 주문 한정

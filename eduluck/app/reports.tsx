@@ -14,6 +14,8 @@ interface ReportOrder {
   status: 'pending' | 'paid' | 'failed';
   fulfilled: boolean;
   fulfillError: string | null;
+  detailFulfilled: boolean;
+  detailError: string | null;
   email: string;
   childNickname: string | null;
   orderName: string;
@@ -86,13 +88,44 @@ export default function MyReports() {
       if (!res.ok) throw new Error(j.error ?? `재발송 실패 (${res.status})`);
       setEditingId(null);
       if (j.fulfilled) {
-        setNotice(`${j.email ?? order.email}로 리포트를 다시 보내드렸어요. 메일함(스팸함 포함)을 확인해주세요.`);
+        setNotice(`${j.email ?? order.email}로 요약 리포트를 다시 보내드렸어요. 메일함(스팸함 포함)을 확인해주세요.`);
       } else {
         setError('다시 보내는 데 실패했어요. 잠시 후 한 번 더 시도해주세요.');
       }
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : '재발송에 실패했어요.');
+    } finally {
+      setResending(null);
+    }
+  };
+
+  // 상세 리포트(메일2) 다시 받기 — 없으면 생성까지.
+  const resendDetail = async (order: ReportOrder) => {
+    if (resending || !order.sessionId) return;
+    setResending(order.orderId);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: order.sessionId, orderId: order.orderId, detail: true }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? `상세 발송 실패 (${res.status})`);
+      if (j.status === 'done') {
+        setNotice(`${order.email}로 상세 리포트를 보내드렸어요. 메일함(스팸함 포함)을 확인해주세요.`);
+      } else if (j.status === 'in_progress') {
+        setNotice('상세 리포트를 만드는 중이에요. 잠시 뒤 이메일로 도착합니다.');
+      } else if (j.status === 'skipped') {
+        setNotice('상세 리포트는 이미 발송됐어요. 메일함(스팸함 포함)을 확인해주세요.');
+      } else {
+        setError('상세 리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '상세 발송에 실패했어요.');
     } finally {
       setResending(null);
     }
@@ -139,7 +172,12 @@ export default function MyReports() {
               <Text
                 className={`font-body text-label-sm ${o.fulfilled ? 'text-secondary' : 'text-fire'}`}
               >
-                {o.fulfilled ? `✓ ${o.email}로 발송됨` : '✗ 아직 발송되지 않았어요'}
+                {o.fulfilled ? `✓ 요약 리포트 — ${o.email}로 발송됨` : '✗ 요약 리포트 아직 발송 안 됨'}
+              </Text>
+              <Text
+                className={`font-body text-label-sm ${o.detailFulfilled ? 'text-secondary' : 'text-text-sub'}`}
+              >
+                {o.detailFulfilled ? '✓ 상세 리포트 — 발송됨' : '⏳ 상세 리포트 — 준비되는 대로 이메일로 보내드려요'}
               </Text>
 
               {editingId === o.orderId ? (
@@ -173,14 +211,23 @@ export default function MyReports() {
                   </View>
                 </View>
               ) : (
-                <View className="flex-row items-center gap-2">
+                <View className="flex-row items-center gap-2 flex-wrap">
                   <Pressable
                     onPress={() => resend(o)}
                     disabled={resending === o.orderId}
                     className={`px-3 py-2 rounded-md ${resending === o.orderId ? 'bg-outline-warm' : 'bg-primary'}`}
                   >
                     <Text className="font-body-bold text-label-sm text-white">
-                      {resending === o.orderId ? '보내는 중…' : '다시 받기'}
+                      {resending === o.orderId ? '보내는 중…' : '요약 다시 받기'}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => resendDetail(o)}
+                    disabled={resending === o.orderId}
+                    className="px-3 py-2 rounded-md border border-primary"
+                  >
+                    <Text className="font-body-bold text-label-sm text-primary">
+                      {resending === o.orderId ? '처리 중…' : o.detailFulfilled ? '상세 다시 받기' : '상세 지금 받기'}
                     </Text>
                   </Pressable>
                   <Pressable

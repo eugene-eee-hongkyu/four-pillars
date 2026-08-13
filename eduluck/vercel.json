@@ -13,8 +13,13 @@
     "api/relation-mini.ts": { "maxDuration": 60 },
     "api/share-link.ts": { "maxDuration": 30 },
     "api/feedback.ts": { "maxDuration": 30 },
-    "api/payments/confirm.ts": { "maxDuration": 60, "includeFiles": "assets/fonts/**" }
+    "api/payments/confirm.ts": { "maxDuration": 60, "includeFiles": "assets/fonts/**" },
+    "api/tasks/fulfill-detail.ts": { "maxDuration": 300, "includeFiles": "assets/fonts/**" },
+    "api/cron/fulfill-details.ts": { "maxDuration": 300, "includeFiles": "assets/fonts/**" }
   },
+  "crons": [
+    { "path": "/api/cron/fulfill-details", "schedule": "*/5 * * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
