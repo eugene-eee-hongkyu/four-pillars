@@ -4,12 +4,13 @@
 import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export type AdminTab = 'subjects' | 'users' | 'feedback' | 'settings' | 'admins' | 'audit-log';
+export type AdminTab = 'subjects' | 'users' | 'feedback' | 'payments' | 'settings' | 'admins' | 'audit-log';
 
 const TABS: { key: AdminTab; label: string; path: string; superOnly?: boolean }[] = [
   { key: 'subjects', label: '진단', path: '/admin/subjects' },
   { key: 'users', label: '사용자', path: '/admin/users' },
   { key: 'feedback', label: '피드백', path: '/admin/feedback' },
+  { key: 'payments', label: '결제', path: '/admin/payments' },
   { key: 'settings', label: '설정', path: '/admin/settings' },
   { key: 'admins', label: '어드민', path: '/admin/admins', superOnly: true },
   { key: 'audit-log', label: '감사로그', path: '/admin/audit-log', superOnly: true },
