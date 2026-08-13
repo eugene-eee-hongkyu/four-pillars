@@ -395,6 +395,7 @@ export default function Landing() {
       <ScrollView
         contentContainerClassName="px-container-padding pb-32 gap-6"
       >
+        <UnfulfilledReportBanner />
         <View className="flex-1 items-center justify-center gap-6 pt-12 min-h-[60vh]">
           <Text className="font-heading-bold text-display-lg text-text-pri text-center leading-tight mt-2">
             아이의 본질,{'\n'}미리 들여다보세요
