@@ -68,7 +68,10 @@ async function loadPdfKit() {
     ? LOCAL_FONT
     : 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
   Font.register({ family: 'NanumGothic', src: FONT_SRC });
-  Font.registerHyphenationCallback((word) => [word]);
+  // 한글은 공백이 적어 긴 문단이 하나의 '단어'로 취급된다. 통짜로 두면(=[word])
+  // yoga 레이아웃 폭이 오버플로되어 'unsupported number' 로 렌더 실패한다.
+  // 긴 토큰은 글자 단위로 쪼개 어디서든 줄바꿈되게 한다.
+  Font.registerHyphenationCallback((word) => (word.length > 12 ? Array.from(word) : [word]));
 
   const styles = StyleSheet.create({
     page: { paddingVertical: 48, paddingHorizontal: 44, fontFamily: 'NanumGothic', fontSize: 10.5, lineHeight: 1.6, color: '#2B2B2B' },
@@ -148,28 +151,33 @@ export async function renderDetailReportPdf(input: DetailReportPdfInput): Promis
   const { kit, styles, renderBlocks } = await loadPdfKit();
   const { Document, Page, Text, View, renderToBuffer } = kit;
 
-  const body: React.ReactElement[] = [
-    h(Text, { key: 'title', style: styles.coverTitle }, `${nickname}의 정밀 학운 상세 리포트`),
-    h(Text, { key: 'sub1', style: styles.coverSub }, '14개 영역 심화 풀이 — 본질·강약·환경·관계·진로·학교·흐름'),
-    h(Text, { key: 'sub2', style: styles.coverSub }, `발행일 ${issuedAt} · eduluck (luck.z21labs.world)`),
+  const footerLabel = `${nickname} 정밀 학운 상세 리포트`;
+
+  // ⚠️ 14섹션을 한 <Page> 에 몰아넣으면 누적 높이가 임계를 넘어 yoga 레이아웃이
+  //    'unsupported number' 로 실패한다(섹션 4개쯤부터). 섹션마다 별도 Page 로 분리.
+  const pages: React.ReactElement[] = [
+    h(
+      Page,
+      { key: 'cover', size: 'A4', style: styles.page, wrap: true },
+      h(Text, { key: 'title', style: styles.coverTitle }, `${nickname}의 정밀 학운 상세 리포트`),
+      h(Text, { key: 'sub1', style: styles.coverSub }, '14개 영역 심화 풀이 — 본질·강약·환경·관계·진로·학교·흐름'),
+      h(Text, { key: 'sub2', style: styles.coverSub }, `발행일 ${issuedAt} · eduluck (luck.z21labs.world)`),
+      footerEl(kit, styles, footerLabel),
+    ),
   ];
   for (const s of sections) {
     const key = `sec${s.number}`;
-    body.push(
+    pages.push(
       h(
-        View,
-        { key, wrap: true },
+        Page,
+        { key, size: 'A4', style: styles.page, wrap: true },
         h(Text, { style: styles.partDivider }, `${s.number}. ${s.header}`),
         ...renderBlocks(s.text, key),
+        footerEl(kit, styles, footerLabel),
       ),
     );
   }
-  body.push(footerEl(kit, styles, `${nickname} 정밀 학운 상세 리포트`));
 
-  const doc = h(
-    Document,
-    { title: `${nickname} 정밀 학운 상세 리포트`, author: 'eduluck' },
-    h(Page, { size: 'A4', style: styles.page, wrap: true }, ...body),
-  );
+  const doc = h(Document, { title: footerLabel, author: 'eduluck' }, ...pages);
   return renderToBuffer(doc);
 }
