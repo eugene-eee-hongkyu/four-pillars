@@ -77,22 +77,42 @@ export default function PaymentsPage() {
     }
   };
 
-  // email 주면 받는 주소 교정 후 재발송, 없으면 현재 주소로 재발송.
-  const resend = async (orderId: string, email?: string) => {
+  // 요약 리포트(메일1) 재발송 — 현재 저장된 주소로.
+  const resend = async (orderId: string) => {
     if (resending) return;
     setResending(orderId);
     setError(null);
     try {
       const res = await adminFetch('/api/admin/payments', {
         method: 'POST',
-        body: JSON.stringify(email ? { orderId, email } : { orderId }),
+        body: JSON.stringify({ orderId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      await fetchOrders();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '재발송 실패');
+    } finally {
+      setResending(null);
+    }
+  };
+
+  // 받는 이메일만 변경(발송 안 함) — 발송은 변경 후 재발송/상세 재발송을 따로 누른다.
+  const saveEmail = async (orderId: string, email: string) => {
+    if (resending) return;
+    setResending(orderId);
+    setError(null);
+    try {
+      const res = await adminFetch('/api/admin/payments', {
+        method: 'POST',
+        body: JSON.stringify({ orderId, setEmail: email }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       setEditingId(null);
       await fetchOrders();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '재발송 실패');
+      setError(e instanceof Error ? e.message : '이메일 변경 실패');
     } finally {
       setResending(null);
     }
@@ -178,9 +198,12 @@ export default function PaymentsPage() {
                     )}
                   </View>
 
-                  {/* 이메일 교정 입력 */}
+                  {/* 이메일 교정 입력 — 변경만 하고, 발송은 변경 후 재발송/상세 재발송을 따로 누른다 */}
                   {editingId === r.id && (
                     <View className="gap-2">
+                      <Text className="font-body text-label-sm text-text-sub">
+                        받는 주소만 바꿔요. 변경 후 아래 재발송·상세 재발송으로 보내세요.
+                      </Text>
                       <TextInput
                         value={editEmail}
                         onChangeText={setEditEmail}
@@ -202,12 +225,12 @@ export default function PaymentsPage() {
                           <Text className="font-body text-label-sm text-text-sub">취소</Text>
                         </Pressable>
                         <Pressable
-                          onPress={() => resend(r.id, editEmail.trim())}
+                          onPress={() => saveEmail(r.id, editEmail.trim())}
                           disabled={resending === r.id || !editEmail.trim()}
                           className={`px-3 py-1.5 rounded-md ${resending === r.id || !editEmail.trim() ? 'bg-outline-warm' : 'bg-primary'}`}
                         >
                           <Text className="font-body-bold text-label-sm text-white">
-                            {resending === r.id ? '발송 중…' : '변경 후 재발송'}
+                            {resending === r.id ? '저장 중…' : '이 주소로 변경'}
                           </Text>
                         </Pressable>
                       </View>
