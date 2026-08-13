@@ -57,7 +57,7 @@ export default function CheckoutSuccess() {
           <Text className="font-body text-body-md text-text-sub text-center leading-relaxed">
             {fulfilled
               ? '입력하신 이메일로 정밀 학운 PDF 리포트를 보내드렸어요. 메일함(스팸함 포함)을 확인해주세요.'
-              : '결제는 완료됐어요. 리포트는 잠시 후 이메일로 보내드릴게요.'}
+              : '결제는 정상적으로 완료됐어요. 다만 리포트 이메일 발송이 지연되고 있어요. 조금 기다렸다가 메일함(스팸함 포함)을 확인해주시고, 도착하지 않으면 문의해주세요.'}
           </Text>
           <Pressable onPress={() => router.replace('/')} className="mt-2 px-5 py-3 rounded-md bg-primary">
             <Text className="font-body-bold text-label-md text-surface-container-low">처음으로</Text>
