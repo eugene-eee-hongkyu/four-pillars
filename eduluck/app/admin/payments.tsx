@@ -1,7 +1,7 @@
 // /admin/payments — 결제 주문(payment_orders) 조회. 상태·이행(PDF 이메일) 확인.
 
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, TextInput } from 'react-native';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAdminLogout } from '@/lib/admin/session';
@@ -31,6 +31,9 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState<string | null>(null);
+  // 이메일 수정 중인 주문 id + 입력값
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editEmail, setEditEmail] = useState('');
 
   const fetchOrders = useCallback(async () => {
     if (!me) return;
@@ -52,17 +55,19 @@ export default function PaymentsPage() {
     fetchOrders();
   }, [fetchOrders]);
 
-  const resend = async (orderId: string) => {
+  // email 주면 받는 주소 교정 후 재발송, 없으면 현재 주소로 재발송.
+  const resend = async (orderId: string, email?: string) => {
     if (resending) return;
     setResending(orderId);
     setError(null);
     try {
       const res = await adminFetch('/api/admin/payments', {
         method: 'POST',
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify(email ? { orderId, email } : { orderId }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      setEditingId(null);
       await fetchOrders();
     } catch (e) {
       setError(e instanceof Error ? e.message : '재발송 실패');
@@ -116,23 +121,76 @@ export default function PaymentsPage() {
               <Text className="font-body text-label-sm text-text-sub">
                 {(r.child_nickname ?? '아이')} · {r.email}
               </Text>
-              {/* 이행(PDF 이메일 발송) 상태 + 재발송 */}
+              {/* 이행(PDF 이메일 발송) 상태 + 재발송 + 이메일 수정 */}
               {r.status === 'paid' && (
-                <View className="flex-row items-center justify-between gap-2 flex-wrap">
-                  <Text
-                    className={`font-body text-label-sm flex-1 ${r.fulfilled ? 'text-secondary' : 'text-fire'}`}
-                  >
-                    {r.fulfilled ? '✓ PDF 이메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
-                  </Text>
-                  <Pressable
-                    onPress={() => resend(r.id)}
-                    disabled={resending === r.id}
-                    className="px-3 py-1.5 rounded-md border border-outline-warm"
-                  >
-                    <Text className="font-body text-label-sm text-text-pri">
-                      {resending === r.id ? '발송 중…' : '재발송'}
+                <View className="gap-2">
+                  <View className="flex-row items-center justify-between gap-2 flex-wrap">
+                    <Text
+                      className={`font-body text-label-sm flex-1 ${r.fulfilled ? 'text-secondary' : 'text-fire'}`}
+                    >
+                      {r.fulfilled ? '✓ PDF 이메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
                     </Text>
-                  </Pressable>
+                    {editingId !== r.id && (
+                      <View className="flex-row items-center gap-2">
+                        <Pressable
+                          onPress={() => {
+                            setEditingId(r.id);
+                            setEditEmail(r.email);
+                            setError(null);
+                          }}
+                          disabled={resending === r.id}
+                          className="px-3 py-1.5 rounded-md border border-outline-warm"
+                        >
+                          <Text className="font-body text-label-sm text-text-sub">이메일 수정</Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => resend(r.id)}
+                          disabled={resending === r.id}
+                          className="px-3 py-1.5 rounded-md border border-outline-warm"
+                        >
+                          <Text className="font-body text-label-sm text-text-pri">
+                            {resending === r.id ? '발송 중…' : '재발송'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* 이메일 교정 입력 */}
+                  {editingId === r.id && (
+                    <View className="gap-2">
+                      <TextInput
+                        value={editEmail}
+                        onChangeText={setEditEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        placeholder="받는 이메일"
+                        placeholderTextColor="#9CA3AF"
+                        className="px-3 py-2 rounded-md border border-outline-warm bg-surface font-body text-label-md text-text-pri"
+                      />
+                      <View className="flex-row items-center justify-end gap-2">
+                        <Pressable
+                          onPress={() => {
+                            setEditingId(null);
+                            setError(null);
+                          }}
+                          disabled={resending === r.id}
+                          className="px-3 py-1.5 rounded-md border border-outline-warm"
+                        >
+                          <Text className="font-body text-label-sm text-text-sub">취소</Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => resend(r.id, editEmail.trim())}
+                          disabled={resending === r.id || !editEmail.trim()}
+                          className={`px-3 py-1.5 rounded-md ${resending === r.id || !editEmail.trim() ? 'bg-outline-warm' : 'bg-primary'}`}
+                        >
+                          <Text className="font-body-bold text-label-sm text-white">
+                            {resending === r.id ? '발송 중…' : '변경 후 재발송'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
               <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>

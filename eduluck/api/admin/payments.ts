@@ -1,10 +1,13 @@
 // /api/admin/payments — 결제 주문(payment_orders) (admin).
 //   GET: 최신순 300건 조회
-//   POST { orderId }: 결제완료 주문 PDF 리포트 재발송 (발송 실패건 재시도)
+//   POST { orderId, email? }: 결제완료 주문 PDF 리포트 재발송.
+//        email 주어지면 받는 주소를 먼저 갱신(오타 교정 등) 후 발송.
 // service_role 경유.
 
 import { verifyAdminRequest } from '../../lib/admin/auth';
 import { fulfillOrder } from '../../lib/payments/fulfill';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET(request: Request) {
   const result = await verifyAdminRequest(request, 'admin');
@@ -25,7 +28,7 @@ export async function POST(request: Request) {
   if (!result.ok) return Response.json({ error: result.error }, { status: result.status });
   const { sb } = result;
 
-  let body: { orderId?: string };
+  let body: { orderId?: string; email?: string };
   try {
     body = await request.json();
   } catch {
@@ -39,6 +42,20 @@ export async function POST(request: Request) {
     return Response.json({ error: '결제완료 주문만 재발송할 수 있어요.' }, { status: 400 });
   }
 
+  // 이메일 교정 요청이 있으면 먼저 갱신 후 그 주소로 발송.
+  const newEmail = typeof body.email === 'string' ? body.email.trim() : '';
+  if (newEmail && newEmail !== order.email) {
+    if (!EMAIL_RE.test(newEmail)) {
+      return Response.json({ error: '올바른 이메일을 입력해주세요.' }, { status: 400 });
+    }
+    const { error: updErr } = await sb
+      .from('payment_orders')
+      .update({ email: newEmail })
+      .eq('id', order.id);
+    if (updErr) return Response.json({ error: updErr.message }, { status: 500 });
+    order.email = newEmail;
+  }
+
   const { fulfilled, error } = await fulfillOrder(sb, order);
-  return Response.json({ fulfilled, error });
+  return Response.json({ fulfilled, error, email: order.email });
 }
