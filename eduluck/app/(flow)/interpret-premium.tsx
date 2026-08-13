@@ -71,6 +71,29 @@ export default function InterpretPremium() {
   // Part 2 진입 paywall — 비회원은 첫 7 섹션(Part1)까지 무료, 다음 7 섹션 보기는 카카오 로그인 강제.
   const [part2PaywallOpen, setPart2PaywallOpen] = useState(false);
 
+  // 현재 세션에 이미 결제완료된 주문이 있으면 결제 버튼 대신 '구매 내역 보기'로 대체.
+  // 서버(/api/reports)가 신뢰 소스 — 로컬 paid 플래그는 미사용. 조회 실패 시 결제 버튼 유지(수익 안전).
+  const [hasPaidOrder, setHasPaidOrder] = useState(false);
+  useEffect(() => {
+    const sid = state.sessionId;
+    if (!sid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/reports?sessionIds=${encodeURIComponent(sid)}`);
+        if (!res.ok) return;
+        const json = (await res.json()) as { orders: { status: string }[] };
+        if (cancelled) return;
+        setHasPaidOrder((json.orders ?? []).some((o) => o.status === 'paid'));
+      } catch {
+        // silent — 결제 버튼 기본 노출 유지
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [state.sessionId, part2Done]);
+
   // Part 2 버튼 클릭 — 비회원이면 paywall, 회원이면 그대로 노출
   const handlePart2Click = () => {
     if (!user) {
@@ -267,8 +290,8 @@ export default function InterpretPremium() {
                 Tier 3: 가족 공유 + 한 줄 피드백 ghost cluster (Substack 패턴, 부가 액션 약화)
                 mom test 종료 후 PDF↔영역 선택 위치 swap 권장 (자연 UX 원칙) */}
 
-            {/* === Tier 1: PDF 사전 예약 카드 — PAYMENT_VISIBLE=false 시 hide === */}
-            {part2Done && PAYMENT_VISIBLE && (
+            {/* === Tier 1: PDF 사전 예약 카드 — PAYMENT_VISIBLE=false 시 hide, 이미 결제한 세션엔 숨김 === */}
+            {part2Done && PAYMENT_VISIBLE && !hasPaidOrder && (
               <View className="px-container-padding mt-6">
                 <View
                   className="rounded-xl border border-primary/40 bg-primary-container/30 p-5 gap-3"
@@ -347,18 +370,30 @@ export default function InterpretPremium() {
               </View>
             )}
 
-            {/* === 정밀 학운 PDF 리포트 결제 === */}
+            {/* === 정밀 학운 PDF 리포트 결제 / 이미 결제했으면 구매 내역 보기 === */}
             {part2Done && (
               <View className="px-container-padding mt-3">
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => router.push('/(flow)/checkout' as never)}
-                  className="px-6 py-4 rounded-md bg-primary items-center active:opacity-80"
-                >
-                  <Text className="font-body-bold text-body-md text-surface-container-low">
-                    📄 정밀 학운 리포트 PDF로 받기 ({formatPrice(PDF_REPORT.price)})
-                  </Text>
-                </Pressable>
+                {hasPaidOrder ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/reports' as never)}
+                    className="px-6 py-4 rounded-md border border-primary items-center active:opacity-80"
+                  >
+                    <Text className="font-body-bold text-body-md text-primary">
+                      📄 리포트 구매 내역 보기
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push('/(flow)/checkout' as never)}
+                    className="px-6 py-4 rounded-md bg-primary items-center active:opacity-80"
+                  >
+                    <Text className="font-body-bold text-body-md text-surface-container-low">
+                      📄 정밀 학운 리포트 PDF로 받기 ({formatPrice(PDF_REPORT.price)})
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             )}
 

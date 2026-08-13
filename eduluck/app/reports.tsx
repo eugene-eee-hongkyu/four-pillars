@@ -31,6 +31,13 @@ interface ReportOrder {
 
 type ConfirmKind = 'summary' | 'detail';
 
+// 구매 일시 — YYYY.MM.DD hh:mm (사용자 로컬 시간대). 결제 날짜·시각·분까지 표시.
+function formatPurchasedAt(iso: string): string {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 export default function MyReports() {
   const router = useRouter();
   const { state } = useFlow();
@@ -185,9 +192,9 @@ export default function MyReports() {
           <Text className="font-body text-label-sm text-text-sub">← 홈으로</Text>
         </Pressable>
 
-        <Text className="font-heading-bold text-headline-lg text-text-pri">내 리포트</Text>
+        <Text className="font-heading-bold text-headline-lg text-text-pri">리포트 구매 내역</Text>
         <Text className="font-body text-body-sm text-text-sub leading-relaxed">
-          결제하신 정밀 학운 PDF 리포트예요. 메일이 안 왔거나 잃어버렸다면 여기서 다시 받을 수 있어요.
+          결제하신 정밀 학운 PDF 리포트 내역이에요. 메일이 안 왔거나 잃어버렸다면 여기서 다시 받을 수 있어요.
           이미 잘 받으신 리포트는 다시 받기가 각각 3회까지예요.
         </Text>
 
@@ -219,7 +226,7 @@ export default function MyReports() {
                     {(o.childNickname ?? '아이')}의 정밀 학운 리포트
                   </Text>
                   <Text className="font-body text-label-sm text-text-sub">
-                    {new Date(o.paidAt ?? o.createdAt).toLocaleDateString('ko-KR')}
+                    {formatPurchasedAt(o.paidAt ?? o.createdAt)}
                   </Text>
                 </View>
 

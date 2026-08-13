@@ -82,14 +82,14 @@ export function UnfulfilledReportBanner() {
         아직 받지 못한 리포트가 있어요
       </Text>
       <Text className="font-body text-label-md text-text-sub leading-relaxed">
-        결제하신 정밀 학운 리포트가 이메일로 아직 전달되지 않았어요. '내 리포트'에서 다시 받거나 이메일을 바꿔 받을 수 있어요.
+        결제하신 정밀 학운 리포트가 이메일로 아직 전달되지 않았어요. '리포트 구매 내역'에서 다시 받거나 이메일을 바꿔 받을 수 있어요.
       </Text>
       <View className="flex-row items-center gap-2 mt-1">
         <Pressable
           onPress={() => router.push('/reports' as never)}
           className="px-4 py-2 rounded-md bg-primary"
         >
-          <Text className="font-body-bold text-label-sm text-white">내 리포트에서 다시 받기</Text>
+          <Text className="font-body-bold text-label-sm text-white">구매 내역에서 다시 받기</Text>
         </Pressable>
         <Pressable
           onPress={() => {

@@ -18,7 +18,7 @@ export function AppHeader() {
   const { state } = useFlow();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 진단 이력이 있는 사용자(구매자 포함)에게만 '내 리포트' 노출 — 신규 방문자에겐 숨김.
+  // 진단 이력이 있는 사용자(구매자 포함)에게만 '리포트 구매 내역' 노출 — 신규 방문자에겐 숨김.
   const hasHistory = state.sessionsHistory.length > 0 || !!state.sessionId;
 
   const handleLogo = () => router.push('/' as never);
@@ -51,10 +51,10 @@ export function AppHeader() {
           <Pressable
             onPress={() => router.push('/reports' as never)}
             accessibilityRole="button"
-            accessibilityLabel="내 리포트"
+            accessibilityLabel="리포트 구매 내역"
             className="px-2 py-1 active:opacity-70"
           >
-            <Text className="font-body text-label-sm text-text-sub">내 리포트</Text>
+            <Text className="font-body text-label-sm text-text-sub">리포트 구매 내역</Text>
           </Pressable>
         )}
         {user ? (
