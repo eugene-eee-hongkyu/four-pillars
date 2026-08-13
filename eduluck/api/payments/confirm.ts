@@ -5,8 +5,8 @@
 // 4) 진단 전문(part1+part2) → PDF → 이메일 발송 (실패해도 결제는 유지, 발송실패만 기록)
 
 import { getSupabaseServer } from '../../lib/supabase/server';
-// PDF(react-pdf)·이메일(resend) 모듈은 무거워 top-level import 시 함수 로드가 실패할 수 있음.
-// → 이행(fulfill) 시점에 동적 import. 로드/생성 실패해도 결제(승인)는 유지.
+import { fulfillOrder } from '../../lib/payments/fulfill';
+// PDF(react-pdf)·이메일(resend) 모듈은 fulfillOrder 안에서 require(지연 로드) — 함수 로드 크래시 방지.
 
 interface Body {
   paymentKey?: string;
@@ -38,73 +38,38 @@ export async function POST(request: Request) {
   // 주문 조회 + 금액 서버검증
   const { data: order } = await sb.from('payment_orders').select('*').eq('id', orderId).single();
   if (!order) return Response.json({ error: 'order not found' }, { status: 404 });
-  if (order.status === 'paid') {
-    return Response.json({ ok: true, alreadyPaid: true, fulfilled: order.fulfilled });
-  }
-  if (order.amount !== amount) {
-    return Response.json({ error: 'amount mismatch' }, { status: 400 });
+  // 이미 결제완료 + 발송완료 → 그대로 반환. 결제완료지만 발송실패면 아래에서 재이행(재승인 ✗).
+  if (order.status === 'paid' && order.fulfilled) {
+    return Response.json({ ok: true, alreadyPaid: true, fulfilled: true });
   }
 
-  // 토스 승인
-  const auth = Buffer.from(`${secretKey}:`).toString('base64');
-  const tossRes = await fetch(TOSS_CONFIRM_URL, {
-    method: 'POST',
-    headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymentKey, orderId, amount }),
-  });
-  const tossJson = await tossRes.json().catch(() => ({}));
-  if (!tossRes.ok) {
-    await sb.from('payment_orders').update({ status: 'failed' }).eq('id', orderId);
-    return Response.json(
-      { error: tossJson?.message ?? '결제 승인 실패', code: tossJson?.code ?? null },
-      { status: 402 },
-    );
-  }
-
-  // paid 마킹
-  await sb
-    .from('payment_orders')
-    .update({ status: 'paid', payment_key: paymentKey, paid_at: new Date().toISOString() })
-    .eq('id', orderId);
-
-  // 이행 — PDF 생성 + 이메일. 실패해도 결제는 성공 유지.
-  let fulfilled = false;
-  let fulfillError: string | null = null;
-  try {
-    const { data: rows } = await sb
-      .from('interpretations')
-      .select('kind, body_text, created_at')
-      .eq('session_id', order.session_id)
-      .in('kind', ['premium-part1', 'premium-part2'])
-      .order('created_at', { ascending: false });
-
-    const latest = (kind: string) =>
-      (rows ?? []).find((r) => r.kind === kind)?.body_text ?? '';
-    const part1 = latest('premium-part1');
-    const part2 = latest('premium-part2');
-    if (!part1 && !part2) throw new Error('진단 본문을 찾지 못했습니다.');
-
-    // 무거운 모듈(react-pdf·resend)은 이행 시점에 require — 함수 로드 실패(모듈 init 크래시) 방지.
-    // 여기서 로드/생성 실패해도 catch 되어 결제(승인)는 유지됨.
-    const { renderReportPdf } = require('../../lib/pdf/report-pdf') as typeof import('../../lib/pdf/report-pdf');
-    const { sendReportEmail } = require('../../lib/email/send-report') as typeof import('../../lib/email/send-report');
-    const pdf = await renderReportPdf({
-      nickname: order.child_nickname ?? '아이',
-      part1,
-      part2,
-      issuedAt: new Date().toISOString().slice(0, 10),
+  // 아직 미결제면 토스 승인 진행. 이미 결제된(미발송) 주문은 승인 건너뛰고 재이행만.
+  if (order.status !== 'paid') {
+    if (order.amount !== amount) {
+      return Response.json({ error: 'amount mismatch' }, { status: 400 });
+    }
+    const auth = Buffer.from(`${secretKey}:`).toString('base64');
+    const tossRes = await fetch(TOSS_CONFIRM_URL, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentKey, orderId, amount }),
     });
-    await sendReportEmail({ to: order.email, nickname: order.child_nickname ?? '아이', pdf });
-    fulfilled = true;
-  } catch (e) {
-    fulfillError = e instanceof Error ? e.message : 'fulfill failed';
-    console.error('[payments/confirm] fulfill error', { orderId, error: fulfillError });
+    const tossJson = await tossRes.json().catch(() => ({}));
+    if (!tossRes.ok) {
+      await sb.from('payment_orders').update({ status: 'failed' }).eq('id', orderId);
+      return Response.json(
+        { error: tossJson?.message ?? '결제 승인 실패', code: tossJson?.code ?? null },
+        { status: 402 },
+      );
+    }
+    await sb
+      .from('payment_orders')
+      .update({ status: 'paid', payment_key: paymentKey, paid_at: new Date().toISOString() })
+      .eq('id', orderId);
   }
 
-  await sb
-    .from('payment_orders')
-    .update({ fulfilled, fulfill_error: fulfillError })
-    .eq('id', orderId);
+  // 이행 — PDF 생성 + 이메일. 실패해도 결제는 성공 유지(공유 fulfillOrder 사용).
+  const { fulfilled } = await fulfillOrder(sb, order);
 
   return Response.json({ ok: true, fulfilled });
 }

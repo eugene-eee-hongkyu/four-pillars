@@ -1,19 +1,20 @@
-// 정밀 학운 PDF 리포트 생성 — 서버(api/payments/confirm)에서만 호출.
-// 진단 전문(Part1+Part2, 14섹션 마커 텍스트)을 읽어 PDF Buffer 로 렌더.
-// react-pdf(순수 JS, 서버리스 안전) + 한글 폰트(Noto Sans KR) URL 등록.
+// 정밀 학운 PDF 리포트 생성 — 서버(api/payments/confirm)에서 require 로만 호출.
+// ⚠️ JSX 미사용(React.createElement) — .ts 로 두어 require 시 트랜스파일 없이도 로드 가능
+//    (.tsx 를 require 하면 Vercel 함수에서 '<' 파싱 에러 발생하던 문제 회피).
 
-import * as React from 'react'; // classic JSX 런타임(서버 함수 컴파일러) 대비 — React 바인딩 필요
+import * as React from 'react';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from '@react-pdf/renderer';
 
-// 한글 폰트 — 서버에 번들된 로컬 TTF 사용(매 렌더 네트워크 fetch ✗). 없으면 google/fonts URL fallback.
+const h = React.createElement;
+
+// 한글 폰트 — 서버 번들 로컬 TTF(매 렌더 네트워크 fetch ✗). 없으면 google/fonts URL fallback.
 const LOCAL_FONT = path.join(process.cwd(), 'assets/fonts/NanumGothic-Regular.ttf');
 const FONT_SRC = fs.existsSync(LOCAL_FONT)
   ? LOCAL_FONT
   : 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
 Font.register({ family: 'NanumGothic', src: FONT_SRC });
-// 한글은 음절 단위 줄바꿈 — 단어 하이픈 분해 방지.
 Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
@@ -43,8 +44,7 @@ function parseBlocks(raw: string): Block[] {
   const out: Block[] = [];
   const lines = raw.replace(/\r\n/g, '\n').split('\n');
   for (const rawLine of lines) {
-    const line = rawLine.replace(/\*\*/g, '').trimEnd();
-    const t = line.trim();
+    const t = rawLine.replace(/\*\*/g, '').trim();
     if (!t) continue;
 
     const tldr = t.match(/^>\s*한\s*줄\s*요약\s*[:：]\s*(.*)$/);
@@ -63,21 +63,14 @@ function parseBlocks(raw: string): Block[] {
   return out;
 }
 
-function Section({ title, text }: { title: string; text: string }) {
-  const blocks = parseBlocks(text);
-  return (
-    <View>
-      <Text style={styles.partDivider}>{title}</Text>
-      {blocks.map((b, i) => {
-        if (b.t === 'h2') return <Text key={i} style={styles.h2}>{b.text}</Text>;
-        if (b.t === 'h3') return <Text key={i} style={styles.h3}>{b.text}</Text>;
-        if (b.t === 'quote') return <Text key={i} style={styles.quote}>{b.text}</Text>;
-        if (b.t === 'highlight') return <Text key={i} style={styles.highlight}>{b.text}</Text>;
-        if (b.t === 'bullet') return <Text key={i} style={styles.bullet}>{b.text}</Text>;
-        return <Text key={i} style={styles.para}>{b.text}</Text>;
-      })}
-    </View>
-  );
+type PdfStyle = (typeof styles)[keyof typeof styles];
+const BLOCK_STYLE: Record<Block['t'], PdfStyle> = {
+  h2: styles.h2, h3: styles.h3, quote: styles.quote, highlight: styles.highlight, bullet: styles.bullet, para: styles.para,
+};
+
+function section(title: string, text: string) {
+  const children = parseBlocks(text).map((b, i) => h(Text, { key: i, style: BLOCK_STYLE[b.t] }, b.text));
+  return h(View, null, h(Text, { style: styles.partDivider }, title), ...children);
 }
 
 export interface ReportPdfInput {
@@ -87,25 +80,30 @@ export interface ReportPdfInput {
   issuedAt: string; // 'YYYY-MM-DD'
 }
 
-function ReportDocument({ nickname, part1, part2, issuedAt }: ReportPdfInput) {
-  return (
-    <Document title={`${nickname} 정밀 학운 리포트`} author="eduluck">
-      <Page size="A4" style={styles.page} wrap>
-        <Text style={styles.coverTitle}>{nickname}의 정밀 학운 리포트</Text>
-        <Text style={styles.coverSub}>사주 만세력 기반 학운 정밀 진단 · 14개 영역</Text>
-        <Text style={styles.coverSub}>발행일 {issuedAt} · eduluck (luck.z21labs.world)</Text>
-        {part1 ? <Section title="Part 1 · 본질 · 관계 · 즉시 행동" text={part1} /> : null}
-        {part2 ? <Section title="Part 2 · 학원 · 진로 · 미래" text={part2} /> : null}
-        <Text
-          style={styles.footer}
-          render={({ pageNumber, totalPages }) => `${nickname} 정밀 학운 리포트 · ${pageNumber}/${totalPages}`}
-          fixed
-        />
-      </Page>
-    </Document>
+function reportDocument({ nickname, part1, part2, issuedAt }: ReportPdfInput) {
+  const body: React.ReactElement[] = [
+    h(Text, { key: 'title', style: styles.coverTitle }, `${nickname}의 정밀 학운 리포트`),
+    h(Text, { key: 'sub1', style: styles.coverSub }, '사주 만세력 기반 학운 정밀 진단 · 14개 영역'),
+    h(Text, { key: 'sub2', style: styles.coverSub }, `발행일 ${issuedAt} · eduluck (luck.z21labs.world)`),
+  ];
+  if (part1) body.push(h(View, { key: 'p1' }, section('Part 1 · 본질 · 관계 · 즉시 행동', part1)));
+  if (part2) body.push(h(View, { key: 'p2' }, section('Part 2 · 학원 · 진로 · 미래', part2)));
+  body.push(
+    h(Text, {
+      key: 'footer',
+      style: styles.footer,
+      fixed: true,
+      render: ({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) =>
+        `${nickname} 정밀 학운 리포트 · ${pageNumber}/${totalPages}`,
+    }),
+  );
+  return h(
+    Document,
+    { title: `${nickname} 정밀 학운 리포트`, author: 'eduluck' },
+    h(Page, { size: 'A4', style: styles.page, wrap: true }, ...body),
   );
 }
 
 export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
-  return renderToBuffer(<ReportDocument {...input} />);
+  return renderToBuffer(reportDocument(input));
 }

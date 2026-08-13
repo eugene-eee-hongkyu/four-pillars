@@ -1,7 +1,7 @@
 // /admin/payments — 결제 주문(payment_orders) 조회. 상태·이행(PDF 이메일) 확인.
 
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -30,6 +30,7 @@ export default function PaymentsPage() {
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     if (!me) return;
@@ -50,6 +51,25 @@ export default function PaymentsPage() {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  const resend = async (orderId: string) => {
+    if (resending) return;
+    setResending(orderId);
+    setError(null);
+    try {
+      const res = await adminFetch('/api/admin/payments', {
+        method: 'POST',
+        body: JSON.stringify({ orderId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      await fetchOrders();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '재발송 실패');
+    } finally {
+      setResending(null);
+    }
+  };
 
   if (authLoading || !me) {
     return (
@@ -96,13 +116,24 @@ export default function PaymentsPage() {
               <Text className="font-body text-label-sm text-text-sub">
                 {(r.child_nickname ?? '아이')} · {r.email}
               </Text>
-              {/* 이행(PDF 이메일 발송) 상태 */}
+              {/* 이행(PDF 이메일 발송) 상태 + 재발송 */}
               {r.status === 'paid' && (
-                <Text
-                  className={`font-body text-label-sm ${r.fulfilled ? 'text-secondary' : 'text-fire'}`}
-                >
-                  {r.fulfilled ? '✓ PDF 이메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
-                </Text>
+                <View className="flex-row items-center justify-between gap-2 flex-wrap">
+                  <Text
+                    className={`font-body text-label-sm flex-1 ${r.fulfilled ? 'text-secondary' : 'text-fire'}`}
+                  >
+                    {r.fulfilled ? '✓ PDF 이메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
+                  </Text>
+                  <Pressable
+                    onPress={() => resend(r.id)}
+                    disabled={resending === r.id}
+                    className="px-3 py-1.5 rounded-md border border-outline-warm"
+                  >
+                    <Text className="font-body text-label-sm text-text-pri">
+                      {resending === r.id ? '발송 중…' : '재발송'}
+                    </Text>
+                  </Pressable>
+                </View>
               )}
               <Text className="font-body text-label-sm text-text-sub" numberOfLines={1}>
                 {r.id}
