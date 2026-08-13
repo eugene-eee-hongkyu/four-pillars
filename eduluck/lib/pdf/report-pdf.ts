@@ -55,7 +55,11 @@ export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
   // ESM 전용 패키지 — 실행 시점 동적 import().
   // ⚠️ 리터럴 specifier 로 두어야 @vercel/nft 가 의존성을 추적해 함수 번들에 포함한다
   //    (Function/변수로 감싸면 'Cannot find package' 로 런타임 누락됨).
-  //    동적 import() 는 esbuild 가 require 로 낮추지 않아 ESM 그대로 로드된다.
+  //    @vercel/node 는 정적 import 를 require 로 내보내므로 함수는 CJS 로 로드되고,
+  //    동적 import() 는 esbuild 가 네이티브로 유지 → ESM 그대로 로드된다.
+  //    ⚠️ tsconfig.json 에 module 키를 넣으면 @vercel/node 가 전체 함수를 ESM 으로 내보내
+  //       'Cannot use import statement outside a module' 로 API 전체가 크래시한다. 절대 넣지 말 것.
+  //       tsc 의 dynamic-import 문법 검사는 typecheck 스크립트의 `--module esnext` 로만 통과시킨다.
   const { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } =
     await import('@react-pdf/renderer');
 

@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --module esnext"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
