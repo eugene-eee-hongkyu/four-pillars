@@ -10,11 +10,6 @@ import * as fs from 'node:fs';
 
 const h = React.createElement;
 
-// esbuild(@vercel/node)/SWC 가 `import()` 를 다시 require() 로 downlevel 하면
-// ESM 전용 패키지에서 'require of ES Module not supported' 로 또 실패한다.
-// Function 생성자로 감싸 정적 분석·재작성을 우회 → 런타임 네이티브 import() 강제.
-const nativeImport = new Function('s', 'return import(s)') as (s: string) => Promise<any>;
-
 type Block =
   | { t: 'h2'; text: string }
   | { t: 'h3'; text: string }
@@ -57,9 +52,12 @@ export interface ReportPdfInput {
 export async function renderReportPdf(input: ReportPdfInput): Promise<Buffer> {
   const { nickname, part1, part2, issuedAt } = input;
 
-  // ESM 전용 패키지 — 실행 시점 네이티브 동적 로드(위 nativeImport 참고).
+  // ESM 전용 패키지 — 실행 시점 동적 import().
+  // ⚠️ 리터럴 specifier 로 두어야 @vercel/nft 가 의존성을 추적해 함수 번들에 포함한다
+  //    (Function/변수로 감싸면 'Cannot find package' 로 런타임 누락됨).
+  //    동적 import() 는 esbuild 가 require 로 낮추지 않아 ESM 그대로 로드된다.
   const { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } =
-    (await nativeImport('@react-pdf/renderer')) as typeof import('@react-pdf/renderer');
+    await import('@react-pdf/renderer');
 
   // 한글 폰트 — 서버 번들 로컬 TTF(매 렌더 네트워크 fetch ✗). 없으면 google/fonts URL fallback.
   const LOCAL_FONT = path.join(process.cwd(), 'assets/fonts/NanumGothic-Regular.ttf');
