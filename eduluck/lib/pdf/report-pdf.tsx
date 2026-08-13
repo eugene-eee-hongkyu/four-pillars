@@ -2,18 +2,22 @@
 // 진단 전문(Part1+Part2, 14섹션 마커 텍스트)을 읽어 PDF Buffer 로 렌더.
 // react-pdf(순수 JS, 서버리스 안전) + 한글 폰트(Noto Sans KR) URL 등록.
 
+import * as React from 'react'; // classic JSX 런타임(서버 함수 컴파일러) 대비 — React 바인딩 필요
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from '@react-pdf/renderer';
 
-// 한글 폰트 — react-pdf 가 렌더 시 fetch (콜드스타트당 1회, 이후 캐시).
-Font.register({
-  family: 'NotoSansKR',
-  src: 'https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/OTF/Korean/NotoSansKR-Regular.otf',
-});
+// 한글 폰트 — 서버에 번들된 로컬 TTF 사용(매 렌더 네트워크 fetch ✗). 없으면 google/fonts URL fallback.
+const LOCAL_FONT = path.join(process.cwd(), 'assets/fonts/NanumGothic-Regular.ttf');
+const FONT_SRC = fs.existsSync(LOCAL_FONT)
+  ? LOCAL_FONT
+  : 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/nanumgothic/NanumGothic-Regular.ttf';
+Font.register({ family: 'NanumGothic', src: FONT_SRC });
 // 한글은 음절 단위 줄바꿈 — 단어 하이픈 분해 방지.
 Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
-  page: { paddingVertical: 48, paddingHorizontal: 44, fontFamily: 'NotoSansKR', fontSize: 10.5, lineHeight: 1.6, color: '#2B2B2B' },
+  page: { paddingVertical: 48, paddingHorizontal: 44, fontFamily: 'NanumGothic', fontSize: 10.5, lineHeight: 1.6, color: '#2B2B2B' },
   coverTitle: { fontSize: 22, marginBottom: 6, color: '#1F2937' },
   coverSub: { fontSize: 12, color: '#6B7280', marginBottom: 2 },
   partDivider: { fontSize: 15, marginTop: 18, marginBottom: 8, color: '#B45309' },

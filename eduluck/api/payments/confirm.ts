@@ -5,8 +5,8 @@
 // 4) 진단 전문(part1+part2) → PDF → 이메일 발송 (실패해도 결제는 유지, 발송실패만 기록)
 
 import { getSupabaseServer } from '../../lib/supabase/server';
-import { renderReportPdf } from '../../lib/pdf/report-pdf';
-import { sendReportEmail } from '../../lib/email/send-report';
+// PDF(react-pdf)·이메일(resend) 모듈은 무거워 top-level import 시 함수 로드가 실패할 수 있음.
+// → 이행(fulfill) 시점에 동적 import. 로드/생성 실패해도 결제(승인)는 유지.
 
 interface Body {
   paymentKey?: string;
@@ -84,6 +84,10 @@ export async function POST(request: Request) {
     const part2 = latest('premium-part2');
     if (!part1 && !part2) throw new Error('진단 본문을 찾지 못했습니다.');
 
+    // 무거운 모듈(react-pdf·resend)은 이행 시점에 require — 함수 로드 실패(모듈 init 크래시) 방지.
+    // 여기서 로드/생성 실패해도 catch 되어 결제(승인)는 유지됨.
+    const { renderReportPdf } = require('../../lib/pdf/report-pdf') as typeof import('../../lib/pdf/report-pdf');
+    const { sendReportEmail } = require('../../lib/email/send-report') as typeof import('../../lib/email/send-report');
     const pdf = await renderReportPdf({
       nickname: order.child_nickname ?? '아이',
       part1,

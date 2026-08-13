@@ -4,10 +4,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import Svg, { Rect, Path, Text as SvgText } from 'react-native-svg';
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { useFlow } from '@/lib/flow/context';
 import { PDF_REPORT, formatPrice } from '@/lib/legal/pricing';
 import { LegalFooter } from '@/components/ui/LegalFooter';
+
+/** 상품 대표 이미지 — 정밀 학운 PDF 리포트 커버 (SVG 그래픽). */
+function ProductVisual() {
+  return (
+    <View className="items-center py-2">
+      <Svg width={148} height={188} viewBox="0 0 148 188">
+        <Rect x={12} y={10} width={124} height={168} rx={10} fill="#FFFFFF" stroke="#E2DED5" strokeWidth={2} />
+        <Path d="M104 10 L136 42 L104 42 Z" fill="#F3E5D8" />
+        <Rect x={28} y={46} width={80} height={11} rx={3} fill="#B45309" />
+        <Rect x={28} y={66} width={58} height={6} rx={3} fill="#D6C9B6" />
+        {[92, 106, 120, 134].map((y, i) => (
+          <Rect key={i} x={28} y={y} width={i % 2 ? 70 : 92} height={5} rx={2} fill="#EDE7DB" />
+        ))}
+        <SvgText x={74} y={168} fontSize={11} fontWeight="bold" fill="#B45309" textAnchor="middle">
+          학운 리포트 · PDF
+        </SvgText>
+      </Svg>
+    </View>
+  );
+}
 
 const CLIENT_KEY = process.env.EXPO_PUBLIC_TOSS_CLIENT_KEY ?? '';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -109,7 +130,8 @@ export default function Checkout() {
           <Text className="font-body text-label-sm text-text-sub">← 돌아가기</Text>
         </Pressable>
 
-        {/* 상품 정보 — 명칭·설명·금액 (카드사 심사 요건) */}
+        {/* 상품 정보 — 이미지·명칭·설명·금액 (카드사 심사 요건) */}
+        <ProductVisual />
         <View className="gap-2">
           <Text className="font-heading-bold text-headline-lg text-text-pri">{PDF_REPORT.name}</Text>
           <Text className="font-body text-body-sm text-text-sub leading-relaxed">{PDF_REPORT.description}</Text>
