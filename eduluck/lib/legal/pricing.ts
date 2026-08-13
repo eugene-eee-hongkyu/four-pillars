@@ -13,6 +13,15 @@ export const PRICING = {
   pdfDiscountPercent: 80,
 } as const;
 
+/** 정밀 학운 PDF 리포트 — 토스페이먼츠 실판매 상품 (단건 결제).
+ *  결제 완료 후 진단 전문(Part1+Part2 14섹션)을 PDF로 이메일 발송. */
+export const PDF_REPORT = {
+  price: 30000,
+  name: '정밀 학운 리포트 (PDF)',
+  description:
+    '자녀의 만세력을 기반으로 한 학운 정밀 진단 전문(본질·강점·약점·환경·부모합·양육·친구·흐름·진로·학교 등 14개 영역)을 PDF 리포트로 정리해 이메일로 보내드립니다. 결제 후 즉시 발송되며 영구 소장하실 수 있습니다.',
+} as const;
+
 /** 결제(사전 예약) CTA 노출 토글.
  *  false: PaywallModal 회원 cap·interpret-premium Tier 1 PDF 카드 모두 hide.
  *  true: 정상 노출 (mom test 사전 예약 명단 수집 + 정식 결제 도입 후).

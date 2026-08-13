@@ -12,7 +12,8 @@
     "api/interpret-deep.ts": { "maxDuration": 300 },
     "api/relation-mini.ts": { "maxDuration": 60 },
     "api/share-link.ts": { "maxDuration": 30 },
-    "api/feedback.ts": { "maxDuration": 30 }
+    "api/feedback.ts": { "maxDuration": 30 },
+    "api/payments/confirm.ts": { "maxDuration": 60 }
   },
   "headers": [
     {

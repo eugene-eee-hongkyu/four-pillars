@@ -26,7 +26,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 import { calculateFinalTierV2 } from '@/lib/prompts/hagun-tier';
-import { PRICING, formatPrice, PAYMENT_VISIBLE } from '@/lib/legal/pricing';
+import { PRICING, formatPrice, PAYMENT_VISIBLE, PDF_REPORT } from '@/lib/legal/pricing';
 
 // Part 1 — 7 섹션 skeleton 헤더
 const PART1_SECTION_HEADERS = [
@@ -344,6 +344,21 @@ export default function InterpretPremium() {
                 >
                   📜 가족 만세력 보기
                 </Button>
+              </View>
+            )}
+
+            {/* === 정밀 학운 PDF 리포트 결제 === */}
+            {part2Done && (
+              <View className="px-container-padding mt-3">
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/(flow)/checkout' as never)}
+                  className="px-6 py-4 rounded-md bg-primary items-center active:opacity-80"
+                >
+                  <Text className="font-body-bold text-body-md text-surface-container-low">
+                    📄 정밀 학운 리포트 PDF로 받기 ({formatPrice(PDF_REPORT.price)})
+                  </Text>
+                </Pressable>
               </View>
             )}
 
