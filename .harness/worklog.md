@@ -6,6 +6,21 @@
 
 ---
 
+## Session 2026-08-13 14:59 — 패키지 설치 계획 (Resend & PDF 생성)
+
+### 작업 요약
+- 결제 흐름 완성을 위해 필요한 3개 패키지 설치 계획 수립: `resend`(이메일 발송), `html2pdf` + `@sparticuz/chromium`(PDF 생성)
+- 결제 성공 후 PDF 리포트 생성 → info@z21labs.xyz로 이메일 발송하는 엔드투엔드 흐름 설계 검토
+
+### 다음 액션
+- `npm install resend html2pdf @sparticuz/chromium` 실행
+- 설치 완료 후 checkout 페이지·API 엔드포인트·이메일 발송 로직 구현
+
+---
+
+패키지 설치를 진행해도 될까요? 아니면 먼저 다른 작업을 더 보겠습니까?
+
+
 ## Session 2026-06-20 16:03 — 워크로그·상태 파일 업데이트 + 푸시
 
 ### 작업 요약

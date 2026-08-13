@@ -214,3 +214,10 @@
 - **할 것**: 통신판매업 신고 절차 완료, 포트원 PG 가맹점 심사 신청
 - **필요한 것**: 사업자등록증, 대표자 신분증 등 필요서류
 - **이전 검토**: (없음)
+
+## 2026-08-13: Resend, html2pdf, @sparticuz/chromium 패키지 설치
+
+- **백로그 이유**: 결제 흐름의 이메일 발송(Resend) · PDF 리포트 생성(html2pdf + Chromium)이 필수이나 npm 권한 승인 대기
+- **할 것**: `npm install resend html2pdf @sparticuz/chromium` 실행 후 checkout 페이지 · API 엔드포인트 · 이메일 발송 구현 진행
+- **필요한 것**: npm install 권한 승인
+- **이전 검토**: 정보 이메일(info@z21labs.xyz), PDF 리포트가 결제 완료 후 고객 알림에 필수 구성요소
