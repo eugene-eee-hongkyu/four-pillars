@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import Svg, { Rect, Path, Text as SvgText } from 'react-native-svg';
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { useFlow } from '@/lib/flow/context';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { PDF_REPORT, formatPrice } from '@/lib/legal/pricing';
 import { LegalFooter } from '@/components/ui/LegalFooter';
 
@@ -36,9 +37,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function Checkout() {
   const router = useRouter();
   const { state } = useFlow();
+  const { user } = useAuth();
   const nickname = state.child.nickname || '아이';
 
   const [email, setEmail] = useState('');
+  // 사용자가 직접 입력/수정하면 true — 로그인 이메일 prefill 이 덮어쓰지 않도록.
+  const [emailTouched, setEmailTouched] = useState(false);
   const [widgetReady, setWidgetReady] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +50,13 @@ export default function Checkout() {
   const widgetsRef = useRef<Awaited<ReturnType<Awaited<ReturnType<typeof loadTossPayments>>['widgets']>> | null>(null);
 
   const ready = !!(state.sessionId && state.childSubjectId);
+
+  // 로그인 사용자면 이메일 자동 채움(수정 가능). 사용자가 손대기 전, 빈 칸일 때만.
+  useEffect(() => {
+    if (!emailTouched && !email && user?.email) {
+      setEmail(user.email);
+    }
+  }, [user?.email, emailTouched, email]);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !ready || !CLIENT_KEY) return;
@@ -146,7 +157,10 @@ export default function Checkout() {
           <Text className="font-body-bold text-label-md text-text-pri">리포트 받으실 이메일</Text>
           <TextInput
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(t) => {
+              setEmailTouched(true);
+              setEmail(t);
+            }}
             placeholder="you@example.com"
             placeholderTextColor="#9CA3AF"
             autoCapitalize="none"
