@@ -5,10 +5,18 @@ let _client: Anthropic | null = null;
 
 export function getAnthropicClient(): Anthropic {
   if (_client) return _client;
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) {
     throw new Error('ANTHROPIC_API_KEY 환경변수 미설정. eduluck/.env.local 확인');
   }
-  _client = new Anthropic();
+  // sk-ant-oat... = Claude Code OAuth 토큰 → x-api-key 가 아니라 Authorization: Bearer +
+  //   anthropic-beta: oauth-2025-04-20 헤더로 인증. (일반 sk-ant-api 키는 apiKey 그대로.)
+  const isOAuth = key.startsWith('sk-ant-oat');
+  // ⚠️ OAuth 시 apiKey:null 을 명시해야 SDK 가 x-api-key 를 안 보낸다.
+  //    (환경변수 ANTHROPIC_API_KEY 를 자동으로 읽어 x-api-key 도 같이 보내면 401.)
+  _client = isOAuth
+    ? new Anthropic({ apiKey: null, authToken: key, defaultHeaders: { 'anthropic-beta': 'oauth-2025-04-20' } })
+    : new Anthropic({ apiKey: key });
   return _client;
 }
 
