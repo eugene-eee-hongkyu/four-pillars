@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-08-13: 결제 연동 = 토스 직접 SDK + PDF는 react-pdf(비-JSX .ts)
+
+- **선택**: 토스페이먼츠 **결제위젯 v2 직접 연동**(포트원 라우팅 ✗). 상품 = 정밀 학운 PDF 리포트 30,000원(진단 후 진입, 비회원). PDF = **@react-pdf/renderer를 JSX 없이 `React.createElement`로 작성한 `.ts`**, 한글 폰트 서버 번들, 이메일 Resend
+- **대안 검토**:
+  - 연동: (A·채택) 토스 직접 — 토스는 포트원 테스트 채널 미지원(네이버페이·토스·페이팔 예외) + 이미 토스 MID 보유라 일관. (B) 포트원 라우팅 — PG 승인 전 토스 테스트 불가라 지금 부적합
+  - PDF: (A·채택) react-pdf 순수JS — 서버리스 안전, 단 **.tsx(JSX)를 require하면 Vercel 함수가 트랜스파일 안 해 '<' 파싱 크래시** → `.ts`+createElement로 회피. (B) 헤드리스 크로미움 — 고fidelity지만 무겁고 한글폰트 별도 필요(동일 문제) → react-pdf가 Vercel서 실패하면 그때 전환. (C) 폰트 URL fetch — 404·매 렌더 네트워크 → 로컬 TTF 번들로 대체
+  - 진입점: (채택) **진단 결과 이후** — 상품이 개인화 리포트라 랜딩에서 바로 결제 불가(사용자 지적)
+- **선택 이유**: 카드사 심사는 테스트 결제창으로 가능(가이드) → 토스 테스트 키로 최단. 개인화 상품이라 무료진단(비회원) → 결과 → PDF 결제가 자연스러운 결제경로. 무거운 모듈은 require 지연로드 + fulfill 실패해도 결제는 유지(리뷰 크리티컬 경로 보호)
+- **영향 범위**: `app/(flow)/checkout*.tsx` · `api/payments/{order,confirm}.ts` · `lib/pdf/report-pdf.ts` · `lib/email/send-report.ts` · `lib/payments/fulfill.ts` · `api/admin/payments.ts` + `app/admin/payments.tsx`(재발송) · `payment_orders` 마이그레이션 · `assets/fonts/NanumGothic-Regular.ttf` · vercel.json(maxDuration·includeFiles) · business-info(등록증 일치)
+- **되돌리는 방법**: PDF 방식은 `renderReportPdf` 내부만 교체(크로미움 등). 결제 숨기려면 checkout 진입 버튼 제거. 통신판매업 신고번호는 은행 에스크로로 확보 후 business-info에 입력
+
 ## 2026-06-20: 홈 재진단/삭제 버튼 캐시 정책
 
 - **선택**: 캐시 제거, 정확성 우선 정책

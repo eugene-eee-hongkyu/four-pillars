@@ -6,20 +6,30 @@
 
 ---
 
-## Session 2026-08-13 14:59 — 패키지 설치 계획 (Resend & PDF 생성)
+## Session 2026-08-13 16:07 — 토스페이먼츠 결제 붙이기 (정밀 학운 PDF 30,000원) — 카드사 심사용
 
 ### 작업 요약
-- 결제 흐름 완성을 위해 필요한 3개 패키지 설치 계획 수립: `resend`(이메일 발송), `html2pdf` + `@sparticuz/chromium`(PDF 생성)
-- 결제 성공 후 PDF 리포트 생성 → info@z21labs.xyz로 이메일 발송하는 엔드투엔드 흐름 설계 검토
+- **결제 도입 시점 기록 확인**: decision/worklog상 "mom test 완료 + 정가 확정 + 통신판매업 신고 + PG 심사"가 선행 조건. `PAYMENT_VISIBLE=false`로 사전예약 Fake Door만 있던 상태
+- **사실확인(웹검색)**: ① 포트원은 PG 계약 전 테스트 연동 되지만 **토스·네이버페이·페이팔은 예외**(토스 테스트 키는 토스에서 직접) → 토스 직접(B안)이 맞음(이미 토스 MID z21labvmkq 보유). ② **통신판매업은 PG 완료 불필요** — 은행(KB 등) 에스크로로 구매안전서비스 확인증 받아 지금 신고 가능(사용자 "PG 먼저"는 오해). 가이드 7p상 footer에 신고번호 필요
+- **사업자정보 footer 등록증 완전일치** (`965bc20`): 상호명 "(영업소)", 주소 "(도곡동)" — 심사 요건
+- **토스 결제 풀스택** (`a4d3bdb`): 진단완료(part2Done) → "정밀 학운 리포트 PDF로 받기(30,000원)" → `/checkout`(상품·금액·이메일 + 토스 위젯 v2 ANONYMOUS) → `/api/payments/order`(pending, 금액 서버고정·IDOR) → 토스 결제 → `/checkout-success` → `/api/payments/confirm`(토스 승인+금액검증 → paid → PDF+이메일). `payment_orders` 테이블 마이그레이션(사용자 적용). deps: @tosspayments/tosspayments-sdk·resend·@react-pdf/renderer
+- **confirm 크래시 수정 + 폰트 번들 + 상품 이미지** (`613e761`): react-pdf JSX 'React 미정의' + 무거운 모듈 top-level import → require 지연로드. 폰트 URL 404 → NanumGothic TTF 서버 번들(includeFiles). checkout 상품 SVG 이미지
+- **어드민 결제 조회** (`1df0ba0`): `/admin/payments` — payment_orders 최신순 + fulfilled/fulfill_error. AdminNav '결제' 탭
+- **PDF 발송 실패 'Unexpected token <' 근본수정** (`9a18f9f`): require로 부른 report-pdf.**tsx**가 Vercel에서 트랜스파일 안 돼 JSX '<' 파싱 에러 → **React.createElement(.ts, JSX 없음)로 재작성**(로컬 require 테스트 통과). 이행 로직 `lib/payments/fulfill.ts` 공유 추출 + confirm 멱등/재이행 + 어드민 "재발송" 버튼(재결제 없이 검증)
+
+### 실패한 시도
+- react-pdf 폰트 URL(googlefonts/noto-cjk 경로) 404 → 로컬 TTF 번들로 전환
+- report-pdf를 .tsx(JSX)로 두고 require → Vercel 함수에서 '<' 파싱 크래시(발송 실패) → .ts createElement로 해결
+- Supabase MCP: 사용자가 재연결했으나 이 실행 세션엔 도구 미로드(세션 시작 시점 고정) — 직접 조회 불가, 어드민 화면·프로덕션 curl로 대체 검증
+
+### 검증 상태
+- ✅ 클라 키(스토어 test_gck_Ba5PzR…) 번들 반영 / ✅ TOSS_SECRET_KEY + payment_orders 테이블(confirm 404) / ✅ 실결제 1건 성공(토스 이메일 수신)
+- ⏳ **우리 PDF 이메일 발송**: 첫 시도 JSX 크래시로 실패 → 수정 배포. **재배포 후 /admin/payments "재발송"으로 최종 확인 대기** (react-pdf의 Vercel 실동작 + Resend 도메인 첫 검증)
 
 ### 다음 액션
-- `npm install resend html2pdf @sparticuz/chromium` 실행
-- 설치 완료 후 checkout 페이지·API 엔드포인트·이메일 발송 로직 구현
-
----
-
-패키지 설치를 진행해도 될까요? 아니면 먼저 다른 작업을 더 보겠습니까?
-
+- 재배포 후 **/admin/payments "재발송" → PDF 이메일 도착 확인**. 실패 시: react-pdf(yoga wasm)면 헤드리스 크로미움 전환 / Resend면 z21labs.xyz 도메인 인증 확인
+- 은행 에스크로 → 통신판매업 신고 병행, 결제경로 PPT 제작 → 토스 심사 제출
+- 심사 제출 시 공개 docs 키 → 내 상점 키 확인(현재 스토어 키 적용됨)
 
 ## Session 2026-06-20 16:03 — 워크로그·상태 파일 업데이트 + 푸시
 

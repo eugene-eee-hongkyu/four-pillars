@@ -6,19 +6,19 @@
 
 ---
 
-## 마지막 실행: 2026-08-13 14:59
-## 마지막 업데이트: 2026-08-13 14:59
+## 마지막 실행: 2026-08-13 16:07
+## 마지막 업데이트: 2026-08-13 16:07
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
 
-- 결제 흐름 구현을 위한 패키지 설치 및 이메일·PDF 생성 연동
+- **토스페이먼츠 결제 붙이기(정밀 학운 PDF 30,000원) — 카드사 심사용.** 결제창·승인·payment_orders·어드민 조회까지 완료·검증됨. **우리 PDF 이메일 발송만 첫 시도 JSX 크래시로 실패 → 근본수정 배포. 재배포 후 /admin/payments "재발송"으로 최종 확인 대기.**
 
 ### 이어서 할 것
 
-1. npm install resend html2pdf @sparticuz/chromium 실행
-2. 결제 성공 후 PDF 리포트 생성 구현
-3. Resend를 통한 이메일 발송 구현 (info@z21labs.xyz)
+1. **재배포 후 `/admin/payments`에서 실패 주문 "재발송"** → PDF 이메일 도착 확인 (react-pdf의 Vercel 실동작 + Resend 도메인 첫 검증). 실패 시 사유별 대응(크로미움 전환 / Resend 도메인 인증)
+2. **통신판매업 신고** — PG 무관, 은행(KB 등) 에스크로로 구매안전서비스 확인증 받아 지금 병행 가능
+3. **결제경로 PPT 제작 → 토스 심사 제출** (심사 제출 시 공개 docs 키 → 내 상점 키 확인. 현재 스토어 키 적용됨)
 
 ### 막힌 것
 
@@ -26,30 +26,33 @@
 
 ### 사람 판단 필요
 
-- 없음
+- **아빠 부모보정 "절반 가중치" 주석 vs `+1` 구현 불일치** — 진짜 절반(+5점) vs 현행 유지, 명리 설계 결정
+- mom test 친구 배포 시점·표본 구성
+- 통신판매업 신고 시점 (지금 은행 에스크로로 진행 권장)
+- 회사 대표 유선번호 확보 (현재 임시 휴대폰 010-4195-3278)
+- CSP Enforce 전환 (1주 모니터링 후)
 
 ### 운영 자료
 
 - **e2e 검증 playbook**: `.harness/e2e-playbook.md` — 20종 검증
-- **Mixpanel funnel dashboard**: https://mixpanel.com/project/4028508/app/boards#id=11235075 — 3 funnel
-- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md` — 4문항 + GO/HOLD/KILL
-- **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — placeholder 1종(통신판매업) 남음. LegalFooter 자동 hide
-- **가격 단일 source**: `eduluck/lib/legal/pricing.ts` — 정가 20,000원·사전 예약 4,000원·80% 할인. `PAYMENT_VISIBLE = false`
-- **정밀 진단 구조 (v6.0, 14섹션)**: Part1 §1-§7 / Part2 §8-§14 + 시그니처. `PREMIUM_PROMPT_VERSION = v6.0-14sections-merge`. baseline §번호 옛 번호 유지(텍스트 매칭) — decision.md 2026-06-12
-- **가족 만세력 화면**: `app/(flow)/child-manse.tsx` — 자녀+부모 PalcaTable·오행·대운 등. 정방향 흐름(진단 전) "정밀 진단 받기" / 진단 완료 재방문(diagnosisDone) "정밀 학운 보기" + 공유 + 피드백. interpret-premium 하단 "📜 가족 만세력 보기" 버튼(part2Done)에서 진입
-- **"더 자세히 보기"(deep-dive)**: 단일 섹션 60-100문장 / 5500-8000자. DEEP_SECTIONS는 `lib/prompts/deep-sections.ts`(순수 데이터 leaf — 클라 번들 누수 차단), 빌더는 `interpret-deep.ts`
-- **어드민 무료공개 설정**: `/admin/settings` — deep-dive 14영역 무료정책. `app_config.deep_section_access`(jsonb: mode `per_section`|`count`, freeSections[], freeCount). count = 무작위 N개(sessionId 결정적 셔플 client·server 일치), 기본 전체 무료. GET/PUT `/api/admin/config`(audit `update_config`) + 공개 GET `/api/config/deep-sections`. 서버 게이트 interpret-deep 402(본 섹션 재열람 허용)
-- **어드민 피드백 조회**: `/admin/feedback` — feedback_responses(정량6+정성5+메타) 최신 300건. GET `/api/admin/feedback`(service_role). 읽기 전용(audit 미기록)
-- **어드민 공통 UI/perf**: 공유 `AdminNav`(탭: 진단·사용자·피드백·설정 / super: 어드민·감사로그). 선택탭 배경+굵게, 헤더 흰바+그림자. 신원 세션 캐싱(`fetchAdminMe` 토큰키) — 보안 영향 0(데이터 API verifyAdminRequest 매 요청 유지)
-- **학운 sub-tier 산출**: `calculateFinalTierV2` = hagunScore + 부모보정(엄마 -10/0/+10, 아빠 0/+10, 합 -10..+20, 10점 계단) → `scoreToSubTier`. 칩·§13·history 모두 부모 포함(A안). tier→학교는 `tier-schools.ts`
-- **명리 백엔드 결정성 모듈**: §13 hagun-tier · §14 critical-year · §11 peer-profile · §12 academy-fit · §15 abroad-score. 공통 `lib/manse/academic-context.ts`. 점수·티어 영향 0
-- **§15 해외운 정책**: 국가명 ✗ → 용신 방위. §17 해외대학명 ✗ → 유학 권유. decision.md 2026-06-03
-- **paywall 정책**: 비회원 자녀 1·Part2 진입 차단 / 회원 자녀 5. server cap: device_id 403 + claim cap 5. **deep-dive 영역 게이트는 어드민 무료공개 설정(app_config)으로 대체**
-- **재진단/삭제 버튼(홈)**: `/api/me/redo`(getUser+redo_grants) 권한 확정 후에만 노출 — 정확성 위해 캐시 안 함(decision.md 2026-06-20). 첫 진입 지연은 서버 왕복 탓
-- **admin 진입**: https://luck.z21labs.world/admin (Google 또는 카카오 + admin_users). super-admin: eugene.eee@iskra.world · hongary@naver.com
-- **DB(Supabase eduluck `hqtletafqlwphhakoyrm`)**: 카카오 회원 3명. `redo_grants` + `app_config` + `feedback_responses` 테이블. admin_audit_log action 확장(…·delete_session·`update_config`)
-- **localStorage owner ship**: Phase 1 user_id + Phase 2 claim 자동 + 로그아웃 STORAGE_KEY 삭제. 로그인 시 mergeServerHistory(서버 authoritative)
-- **SDK 버전**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 exact lock
+- **Mixpanel funnel**: https://mixpanel.com/project/4028508/app/boards#id=11235075
+- **mom test 인터뷰 가이드**: `eduluck/docs/mom-test/interview-guide.md`
+- **사업자 정보 단일 source**: `eduluck/lib/legal/business-info.ts` — 등록증과 완전 일치(상호명 "(영업소)"·주소 "(도곡동)"). 통신판매업 신고번호만 placeholder → LegalFooter 그 줄만 숨김(나머지 사업자정보는 항상 노출)
+- **결제(토스페이먼츠)**: 진단완료(part2Done) → "정밀 학운 리포트 PDF로 받기(30,000원)" → `/checkout`(토스 결제위젯 v2, 비회원 ANONYMOUS, 이메일 수집) → `/api/payments/order`(pending·금액 서버고정·IDOR) → 결제 → `/checkout-success` → `/api/payments/confirm`(토스 승인+금액검증 → paid → `lib/payments/fulfill.ts` → PDF+Resend 이메일). `payment_orders` 테이블. 상품 정의 `lib/legal/pricing.ts` `PDF_REPORT`(30,000). PDF: `lib/pdf/report-pdf.ts`(**JSX 없이 createElement — .tsx require 시 Vercel '<' 크래시 회피**), 폰트 `assets/fonts/NanumGothic-Regular.ttf`(vercel includeFiles). 이메일 `lib/email/send-report.ts`(Resend, from info@z21labs.xyz)
+- **env(Vercel+.env.local)**: `EXPO_PUBLIC_TOSS_CLIENT_KEY`(스토어 test 위젯키) · `TOSS_SECRET_KEY` · `RESEND_API_KEY`
+- **어드민 결제 조회**: `/admin/payments` — payment_orders 최신순 + status·fulfilled·fulfill_error + **"재발송"**(POST `/api/admin/payments`, 재결제 없이 재이행)
+- **가격 단일 source(구 사전예약)**: `pricing.ts` PRICING(정가 20,000·사전예약 4,000). `PAYMENT_VISIBLE=false`(사전예약 Fake Door CTA만 숨김 — PDF 결제 버튼은 독립적으로 노출)
+- **정밀 진단 구조 (v6.0, 14섹션)**: Part1 §1-§7 / Part2 §8-§14. `PREMIUM_PROMPT_VERSION=v6.0-14sections-merge`. baseline §번호 옛 번호 유지 — decision.md 2026-06-12
+- **가족 만세력 화면**: `app/(flow)/child-manse.tsx` — interpret-premium "📜 가족 만세력 보기"(part2Done)에서 진입. diagnosisDone 시 "정밀 학운 보기"+공유+피드백
+- **어드민 무료공개 설정**: `/admin/settings` — deep-dive 14영역 `app_config.deep_section_access`(mode per_section|count·무작위N sessionId 셔플·기본 전체무료). GET/PUT `/api/admin/config`(audit update_config) + 공개 `/api/config/deep-sections`. 서버게이트 interpret-deep 402
+- **어드민 피드백**: `/admin/feedback` — feedback_responses 최신 300건
+- **어드민 공통**: 공유 `AdminNav`(탭: 진단·사용자·피드백·**결제**·설정 / super: 어드민·감사로그). 선택탭 배경+굵게, 헤더 프레임. 신원 세션 캐싱(fetchAdminMe 토큰키·보안영향0)
+- **학운 sub-tier**: `calculateFinalTierV2` = hagunScore + 부모보정(엄마 -10/0/+10·아빠 0/+10·10점계단) → scoreToSubTier. 칩·§13·history 부모 포함. tier→학교 `tier-schools.ts`
+- **명리 결정성 모듈**: §13 hagun-tier·§14 critical-year·§11 peer·§12 academy·§15 abroad. 공통 `academic-context.ts`. 점수·티어 영향 0
+- **paywall**: 비회원 자녀 1·Part2 차단 / 회원 자녀 5. deep-dive 게이트는 app_config로 대체
+- **admin 진입**: https://luck.z21labs.world/admin (Google/카카오 + admin_users). super: eugene.eee@iskra.world · hongary@naver.com
+- **DB(Supabase eduluck `hqtletafqlwphhakoyrm`)**: `redo_grants`·`app_config`·`feedback_responses`·**`payment_orders`** 테이블. admin_audit_log action(…·update_config)
+- **SDK**: expo 52.0.49 · expo-router 4.0.22 · react 18.3.1 · react-native 0.76.9 · supabase-js 2.104.1 · +@tosspayments/tosspayments-sdk·resend·@react-pdf/renderer
 
 ### 백로그 요약
 
@@ -59,32 +62,22 @@
 ### 진행 상황
 
 - [x] sajutalk MVP + eduluck Phase 0-9 + 정밀 진단 v5 production 배포
-- [x] 학운 시스템 N=9 97.8/100 + 30 sub-tier + 방향성 11 + 적성 점수 5 모듈
-- [x] V11-V25 calibration + selftest 12/12 + Haiku 4.5 다운그레이드
-- [x] 가족 공유 풀스택 + 정밀 진단 Part1/2 분리 + 보안 audit Round 1·2 + e2e playbook 20종
-- [x] 카카오 로그인 + paywall + server cap defense + 사업자 등록 + PG 심사 5종
-- [x] localStorage PII Phase 1·2 + cross-PC 본문 복원 + Part2 paywall + 가격 정책
-- [x] redirect UX + 랜딩 hero 카피 톤 + 결제 CTA 숨김 (PAYMENT_VISIBLE flag)
-- [x] **§13 학운 phase v2 (`3a9470a`)** ⭐ / **§14 조심할해 v2 (`ca59ac8`)** ⭐ / **§11·§12 (`d1c5922`)** ⭐ / **§15 해외운 (`6155b62`·`576065a`)** ⭐
-- [x] **어드민 카카오 사용자 리스트·재진단 권한·상세 조회·삭제 (`e81708d`·`7841359`·`a9e73bd`·`2dd439d`·`b9fb94c`)** ⭐
-- [x] **첫 화면 카드 "삭제" 버튼 (`da482e9`)** ⭐ — DELETE /api/sessions/[id] + prod e2e
-- [x] **정밀 진단 20 → 14 섹션 통합 (`5b20e8d`)** ⭐ + 잔존 라벨 정합 (`8d89c35`) + 학운 칩 부모보정 통일 A안 (`e021205`)
-- [x] **어드민 상세진단 무료공개 설정 (`4aa8610`·`79f9dde`)** ⭐ — 모드2종(무작위N·영역별), app_config 마이그레이션, vitest 6/6
-- [x] **어드민 공유 네비·선택탭 강조·헤더 프레임 (`7f79132`·`06e08fa`) + 신원 세션 캐싱·번들 누수 차단 (`608dfa4`·`cea36b3`)**
-- [x] **정밀진단 → 가족 만세력 보기 링크 + 만세력 하단 액션 (`e44a175`)** ⭐
-- [x] **어드민 3분 피드백 조회 `/admin/feedback` (`81c32f6`)** ⭐
+- [x] 학운 시스템 N=9 97.8/100 + 30 sub-tier + 방향성 11 + 적성 점수 5 모듈 + V11-V25 calibration
+- [x] 가족 공유 + Part1/2 분리 + 보안 audit 1·2 + e2e playbook 20종
+- [x] 카카오 로그인 + paywall + server cap + 사업자 등록 + PG 심사 5종 + localStorage PII Phase 1·2
+- [x] **§13·§14·§11·§12·§15 명리 결정성 모듈** ⭐ / **어드민 사용자·재진단·상세·삭제** ⭐
+- [x] **정밀 진단 20 → 14 섹션 통합 (`5b20e8d`)** ⭐ + 라벨 정합 + 학운 칩 부모보정 A안
+- [x] **어드민 무료공개 설정 (`4aa8610`)** ⭐ + **공유 네비·프레임·성능(`7f79132`·`06e08fa`·`608dfa4`·`cea36b3`)**
+- [x] **가족 만세력 보기 링크 (`e44a175`)** + **어드민 3분 피드백 (`81c32f6`)** ⭐
+- [x] **토스페이먼츠 결제 풀스택 (`a4d3bdb`·`613e761`·`9a18f9f`)** ⭐ — checkout·위젯·order·confirm·PDF·이메일·payment_orders·어드민조회·재발송. 결제·승인·DB 검증됨 / PDF 이메일 발송은 재발송 최종확인 대기
+- [x] **사업자정보 등록증 일치 (`965bc20`)** + **어드민 결제 조회 (`1df0ba0`)**
 - [-] sajutalk 프로젝트 hold — eduluck mom test 후 재개 여부 결정
-- [ ] **결제 흐름 구현 (패키지 설치 + PDF 생성 + 이메일 발송)** — resend, html2pdf, @sparticuz/chromium
+- [ ] **결제 PDF 이메일 발송 최종 확인** (/admin/payments 재발송 → 도착) + 실패 시 크로미움/Resend 도메인 대응
+- [ ] **통신판매업 신고**(은행 에스크로) + 결제경로 PPT + 토스 심사 제출
 - [ ] 아빠 부모보정 주석 vs 구현 불일치 정리 (설계 결정 후)
-- [ ] 배포 후 14섹션 LLM 출력 점검 (헤더 번호·병합 내용·액션 카드)
-- [ ] 통신판매업 신고 (정부24 또는 강남구청, 3-7영업일)
-- [ ] 포트원 PG 사전 점검 재실행 → 가맹점 심사 신청
-- [ ] Mom test 친구들 배포 + 인터뷰 4문항 → GO/HOLD/KILL 판정
-- [ ] §11·§12·§15 백엔드 결정성 LLM 실출력 모순·품질 점검
-- [ ] mom test 결과 → 정가 confirm → 포트원 + 토스페이먼츠 결제 페이지 + POST_PAYMENT_PATH B→A
-- [ ] 방향성 시스템 정비 별도 세션 — score.ts·categoryScores·체육 명명·DirectionKey global 통일
-- [ ] §13 학운 phase Phase B (학업 신살·합충형해 타격 정밀)
-- [ ] CSP Report-Only → Enforce 전환
-- [ ] LLM prompt XML wrapping (mom test 후 calibration 동반)
+- [ ] 배포 후 14섹션 LLM 출력 점검
+- [ ] Mom test 친구들 배포 + 인터뷰 4문항 → GO/HOLD/KILL
+- [ ] §11·§12·§15 백엔드 결정성 LLM 실출력 점검
+- [ ] 방향성 시스템 정비 별도 세션 / §13 Phase B / CSP Enforce / LLM prompt XML wrapping
 - [ ] 회사 대표 유선번호 확보 → BUSINESS_INFO phone 교체
 - [ ] admin audit log retention 정책 (90일·분기 archive)
