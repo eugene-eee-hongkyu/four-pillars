@@ -1,9 +1,10 @@
 // 정밀 학운 PDF 리포트 이메일 발송 — Resend. 서버(api/payments/confirm)에서만 호출.
-// 발신: info@z21labs.xyz (Resend 에서 z21labs.xyz 도메인 인증 필요).
+// 발신: Resend 에 이미 인증(Verified)된 도메인 aiusage.z21labs.world 사용.
+//       (회신은 받지 않는 no-reply 주소.)
 
 import { Resend } from 'resend';
 
-const FROM = 'eduluck 정밀 학운 <info@z21labs.xyz>';
+const FROM = 'eduluck 정밀 학운 <noreply@aiusage.z21labs.world>';
 
 export interface SendReportInput {
   to: string;
