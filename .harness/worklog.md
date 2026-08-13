@@ -6,6 +6,18 @@
 
 ---
 
+## Session 2026-08-13 19:44 — 결제 완료 세션 CTA 대체 + '리포트 구매 내역' 명칭·구매 일시 표기
+
+### 작업 요약
+- **결제 완료 세션은 결제 버튼→'리포트 구매 내역 보기'로 대체** (`f393553`): interpret-premium Part2 완료 CTA에서 현재 세션에 paid 주문이 있으면 '정밀 학운 리포트 PDF로 받기' 대신 '📄 리포트 구매 내역 보기'(→/reports). 판정은 서버 `/api/reports?sessionIds=현재세션`으로, 조회 실패 시 결제 버튼 유지(수익 안전). PAYMENT_VISIBLE 사전예약 카드에도 `!hasPaidOrder` 방어 추가. **주의: flow state의 `paid` 플래그는 setPaid가 어디서도 호출 안 되는 죽은 값** — 서버가 신뢰 소스
+- **'내 리포트' → '리포트 구매 내역' 명칭 통일**: 화면 제목(reports.tsx), 헤더 링크(AppHeader), 홈 미수신 배너 문구(UnfulfilledReportBanner)
+- **구매 일시 YYYY.MM.DD hh:mm 표기**: reports.tsx 카드 날짜를 `toLocaleDateString`(날짜만)에서 분까지(`formatPurchasedAt`, 로컬 시간대)로 변경
+- **프로덕션 검증**(luck.z21labs.world, localStorage flow state 주입): 결제 세션(cda3e412, premiumPart2Text+버전 주입해 part2Done 유도) → '구매 내역 보기' 노출+클릭 시 /reports 이동 / 미결제 세션(임의 uuid) → 결제 버튼 그대로 / reports 화면 제목·헤더 '리포트 구매 내역', 날짜 '2026.08.13 15:44' 확인. DB 변경·메일 발송 없음
+- 타입체크 0 에러 + 웹 빌드 통과, git push main 배포
+
+### 다음 액션
+- 어드민 결제화면(직전 세션 item5 이메일 변경/발송 분리) 브라우저 검증 — 어드민 id/pw 필요
+
 ## Session 2026-08-13 19:00 — 재발송 어뷰징 방지(3회 제한) + 결제완료 문구 + 이메일 변경/발송 분리
 
 ### 작업 요약

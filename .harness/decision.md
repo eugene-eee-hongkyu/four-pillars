@@ -6,6 +6,17 @@
 
 ---
 
+## 2026-08-13: 결제 완료 판정은 서버(/api/reports) 조회 — 로컬 paid 플래그 미사용
+
+- **선택**: interpret-premium에서 '이미 결제했는가'를 **서버 `/api/reports?sessionIds=현재세션`으로 조회**해 paid 주문 유무로 판정. 결제 버튼↔'구매 내역 보기' 전환에 사용. 조회 실패 시 결제 버튼 유지.
+- **대안 검토**:
+  - **flow state의 `paid` 플래그 사용**: 이미 존재하나 `setPaid`가 코드 어디서도 호출 안 됨(죽은 값) → 항상 false. 신뢰 불가
+  - **checkout-success에서 setPaid(true) 켜서 로컬 플래그 살리기**: 같은 기기·같은 세션에서만 유효, 재방문·타 기기·캐시 삭제 시 놓침. 서버가 더 견고
+  - **로컬 플래그 + 서버 병행**: 복잡도만 늘고 서버 조회로 충분
+- **선택 이유**: payment_orders.session_id가 신뢰 소스. 익명 세션 모델([[project_eduluck_api_source_of_truth]])과 정합. 조회 1회 비용 낮고, 실패 시 결제 버튼 유지로 수익 안전
+- **영향 범위**: `app/(flow)/interpret-premium.tsx`(hasPaidOrder useEffect + CTA 분기). `paid` 플래그는 그대로 방치(제거하면 snapshot 스키마 변경 파장)
+- **되돌리는 방법**: useEffect 제거하고 항상 결제 버튼 노출로 복귀. 또는 setPaid를 checkout-success에 연결해 로컬 플래그 방식으로 전환
+
 ## 2026-08-13: 재발송 어뷰징 방지 = 요약·상세 별도 카운터, 각 3회. 최초 발송·이메일 변경은 무제한
 
 - **선택**: 발송 성공한 리포트의 '다시 받기'를 **요약·상세 각각 별도 카운터로 3회씩** 제한(`summary_resend_count`/`detail_resend_count`). 최초 발송(fulfilled=false 복구)과 이메일 주소 변경(setEmail)은 카운트하지 않음. 서버(`/api/reports`)에서 강제, 어드민은 무제한(운영자 override).
