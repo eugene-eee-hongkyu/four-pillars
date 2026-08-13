@@ -6,6 +6,30 @@
 
 ---
 
+## Session 2026-08-13 18:37 — PDF 이메일 발송 복구 + 어드민 id/pw 분리 + 상세 리포트 2단계 발송 + AI 키 복구
+
+### 작업 요약
+- **PDF 발송 'require of ES Module' 수정** (`ddae8bc`·`4a6de7b`): @react-pdf/renderer 4.x는 순수 ESM이라 require 불가 → renderReportPdf 안에서 리터럴 `await import()`. tsconfig module 키는 절대 금지(아래 장애 참고)
+- **⚠️ 프로덕션 전체 500 장애 → 긴급 복구** (`22655ad`): tsconfig.json에 넣은 `module:esnext`를 @vercel/node가 읽어 전 함수를 ESM import로 내보냄 → 'Cannot use import statement outside a module'로 공개 API 포함 전체 크래시. module 키 제거로 복구. dynamic import의 tsc TS1323은 typecheck 스크립트 `--module esnext` CLI 플래그로만 통과(tsconfig 불변)
+- **Resend 발송 도메인 수정** (`cd056f4`): z21labs.xyz(미인증) → 이미 Verified된 `aiusage.z21labs.world`(no-reply). 실 발송 테스트 통과
+- **어드민 id/pw 인증 — 유저 OAuth 완전 분리** (`6d11251`): admin_users에 username/password_hash(scrypt), admin_sessions(토큰 sha256, 30일). verifyAdminRequest가 Supabase 유저 안 보고 세션 토큰만 검증. `/api/admin/login·logout`, id/pw 로그인 폼. super_admin 시드(username `eduluck-admin`). 실 DB 통합테스트 통과
+- **그룹1(즉시 개선)**: 완료화면 거짓 문구 수정(`772ea9f`) + 결제 이메일 로그인 자동채움(`0ab1021`) + 어드민 이메일 수정 후 재발송(`f4fe221`)
+- **그룹2(셀프 복구)**: 세션 기준 `/api/reports`(조회·재발송, 소유 검증)(`0d46258`·`3808f69`) + "내 리포트" 화면·다시받기(`09025e3`) + 홈 미수신 배너(`f00f014`·`c2b7bc5`)
+- **상세 리포트 2단계 발송** (`9f4a416`): 결제 시 요약 PDF 즉시(메일1) + 백그라운드로 14영역 상세 조회 생성 → 상세 PDF(메일2). payment_orders detail_* 컬럼, generate-deep(누락 14섹션 Haiku 생성·resumable), fulfill-detail + processOrderDetail(잠금), api/tasks + api/cron(5분 스윕) + vercel.json cron, 어드민/내리포트 상세 상태·재발송
+- **AI 생성 2개월 다운 → 복구**: ANTHROPIC_API_KEY가 6/12부터 무효(만세력 인터프리트 전체 실패였음). 사용자가 Claude Code OAuth 토큰(sk-ant-oat) 추가 → **OAuth Bearer 인증 지원**(`51b3fbd`): sk-ant-oat면 apiKey:null + authToken + `anthropic-beta: oauth-2025-04-20`. Vercel에도 유효 키 반영
+- **상세 PDF 렌더 실패 수정** (`42dd4f5`): 14섹션 한 Page에 몰면 누적 높이 임계 초과로 yoga 'unsupported number' → 섹션마다 별도 Page 분리. 실 14섹션(≈60k자) 307KB 정상
+- **프로덕션 end-to-end 검증**: 운영자 주문으로 deep-5 삭제 후 prod `/api/tasks/fulfill-detail` 호출 → prod가 자기 키로 deep-5 재생성(3983자) + detail_fulfilled=true + 메일2 발송. cron `{processed:0}`, `/api/session` 200
+
+### 실패한 시도
+- **tsconfig module:esnext 추가** → 프로덕션 전 함수 500 크래시(위). 근본원인: @vercel/node가 own tsconfig의 module 키를 읽어 ESM 출력. 절대 넣지 말 것
+- **Function 래핑 dynamic import** → @vercel/nft가 추적 못해 'Cannot find package'. 리터럴 specifier로 되돌림
+- **OAuth 토큰을 apiKey로 전달** → SDK가 env ANTHROPIC_API_KEY도 x-api-key로 함께 보내 401. apiKey:null 명시로 해결
+
+### 다음 액션
+- **정식 Anthropic API 키로 교체 권장**: 현재 Vercel 키가 Claude Code 구독 OAuth 토큰(sk-ant-oat)이면 만료·회전·차단 위험 → 판매 늘면 결제 연결 정식 키로. 지금은 정상 작동
+- 실 신규 결제 1건으로 요약 즉시 + 상세 몇 분 뒤 도착 최종 관찰
+- 상세 리포트 자동 재시도(그룹3) 여부 판단 — 현재 cron 5분 스윕이 재시도 겸함
+
 ## Session 2026-08-13 16:07 — 토스페이먼츠 결제 붙이기 (정밀 학운 PDF 30,000원) — 카드사 심사용
 
 ### 작업 요약

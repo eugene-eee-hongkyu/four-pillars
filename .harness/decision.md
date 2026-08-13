@@ -6,6 +6,25 @@
 
 ---
 
+## 2026-08-13: 상세 리포트는 2단계 이메일(요약 즉시 + 상세 백그라운드), 크론 구동
+
+- **선택**: 결제 시 **요약본 PDF(14영역 요약, premium-part1/part2)를 즉시 메일1**로 보내고, 백그라운드에서 **14영역 각각을 상세 조회(deep-1..14 생성)해 상세 PDF를 메일2**로 보낸다. 백그라운드 구동은 **Vercel 크론 5분 스윕**(`api/cron/fulfill-details`) — 결제 직후 fire-and-forget 대신.
+- **대안 검토**:
+  - **동기(결제 화면에서 14개 생성 대기)**: UX 나쁨·타임아웃 위험(14 LLM 호출) → 탈락
+  - **결제 confirm에서 fire-and-forget 트리거**: serverless에서 응답 후 백그라운드 유실 위험 + confirm 60s 한계 → 크론이 더 견고
+  - **PDF에 요약 없이 상세만**: 사용자가 "요약은 메일1에서 갔으니 메일2는 상세만" 명시
+- **선택 이유**: 사용자 요구("요약 먼저 보내고 오늘 중 상세 별도 발송"). 크론은 자동 재시도(그룹3)를 겸하고 "오늘 중" 지연 허용에 부합. Haiku라 14 생성 비용·시간 부담 낮음
+- **영향 범위**: `payment_orders`(detail_fulfilled/detail_error/detail_started_at), `lib/payments/generate-deep.ts`·`fulfill-detail.ts`, `lib/pdf/report-pdf.ts`(renderDetailReportPdf — **섹션마다 별도 Page**), `lib/email/send-report.ts`(sendDetailReportEmail), `api/tasks/fulfill-detail`·`api/cron/fulfill-details`, `vercel.json` cron, 어드민/내리포트 UI
+- **되돌리는 방법**: cron 제거(vercel.json) + detail_* 컬럼·엔드포인트 제거. 요약 단일 발송(fulfillOrder)만 유지하면 이전 동작
+
+## 2026-08-13: 어드민 인증 = id/pw 자체(유저 OAuth 완전 분리)
+
+- **선택**: 어드민은 **admin_users.username + scrypt password_hash**로 로그인, **admin_sessions 토큰(sha256, 30일)** 세션. Supabase 유저(카카오/구글)와 완전 분리 — verifyAdminRequest가 유저 auth를 안 본다.
+- **대안 검토**: (기존) Supabase OAuth 유저 + admin_users.email 매칭 — 유저 로그인 체계에 얹혀 있어 "완전 분리" 요구 불충족 / OAuth 유지하며 별도 role — 여전히 유저 세션 의존
+- **선택 이유**: 사용자 요구("admin은 카톡 아니라 id/pw, 유저와 완전 분리"). 새 환경변수 없이 DB 세션 토큰으로 자체 인증
+- **영향 범위**: `lib/admin/auth.ts`·`client.ts`·`session.ts`·`useAdminMe.ts`, `api/admin/login·logout·me`, `app/admin/index.tsx`(id/pw 폼), admin 페이지 8곳 로그아웃, migration `admin_users(username,password_hash)`·`admin_sessions`
+- **되돌리는 방법**: verifyAdminRequest를 옛 OAuth 매칭으로 복구 + 로그인 폼 되돌림. admin_sessions/컬럼은 유지해도 무해
+
 ## 2026-08-13: 결제 연동 = 토스 직접 SDK + PDF는 react-pdf(비-JSX .ts)
 
 - **선택**: 토스페이먼츠 **결제위젯 v2 직접 연동**(포트원 라우팅 ✗). 상품 = 정밀 학운 PDF 리포트 30,000원(진단 후 진입, 비회원). PDF = **@react-pdf/renderer를 JSX 없이 `React.createElement`로 작성한 `.ts`**, 한글 폰트 서버 번들, 이메일 Resend
