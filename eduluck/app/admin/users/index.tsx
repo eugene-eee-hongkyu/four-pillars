@@ -9,7 +9,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-nati
 import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 
 interface KakaoUser {
@@ -33,7 +33,7 @@ function formatDate(iso: string | null): string {
 export default function AdminUsersPage() {
   const router = useRouter();
   const { me, loading: authLoading } = useAdminMe(); // admin 이상
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [users, setUsers] = useState<KakaoUser[]>([]);
   const [loading, setLoading] = useState(false);

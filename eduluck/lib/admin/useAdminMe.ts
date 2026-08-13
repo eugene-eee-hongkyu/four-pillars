@@ -1,9 +1,9 @@
-// admin 페이지 인증 가드 hook.
+// admin 페이지 인증 가드 hook — admin 세션 토큰 기반 (유저 OAuth 와 무관).
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { fetchAdminMe, type AdminMe } from './client';
+import { getAdminToken } from './session';
 
 export interface UseAdminMeReturn {
   me: AdminMe | null;
@@ -16,15 +16,13 @@ export interface UseAdminMeReturn {
  */
 export function useAdminMe(requireSuperAdmin = false): UseAdminMeReturn {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const [me, setMe] = useState<AdminMe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      // 로그인 안 됨 → /admin (로그인 페이지)
+    // 토큰 없음 → 로그인 페이지
+    if (!getAdminToken()) {
       router.replace('/admin' as never);
       setLoading(false);
       return;
@@ -33,9 +31,9 @@ export function useAdminMe(requireSuperAdmin = false): UseAdminMeReturn {
     fetchAdminMe().then((res) => {
       if (cancelled) return;
       if (!res.isAdmin) {
-        // admin 아니거나 토큰 만료. /admin 화면이 진단·재로그인 안내.
+        // 토큰 만료·무효 → /admin 재로그인
         router.replace('/admin' as never);
-        setError('error' in res ? res.error : 'admin 권한 없음');
+        setError(res.error);
         setLoading(false);
         return;
       }
@@ -51,7 +49,7 @@ export function useAdminMe(requireSuperAdmin = false): UseAdminMeReturn {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, requireSuperAdmin, router]);
+  }, [requireSuperAdmin, router]);
 
   return { me, loading, error };
 }

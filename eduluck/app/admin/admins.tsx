@@ -5,7 +5,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator, TextInput, Alert 
 import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 
 interface AdminRow {
@@ -20,7 +20,7 @@ interface AdminRow {
 export default function AdminsPage() {
   const router = useRouter();
   const { me, loading: authLoading } = useAdminMe(true); // require super_admin
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(false);

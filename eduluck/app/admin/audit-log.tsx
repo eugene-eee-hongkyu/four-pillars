@@ -5,7 +5,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator, TextInput } from 
 import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 
 interface LogRow {
@@ -28,7 +28,7 @@ const ACTIONS = [
 export default function AuditLogPage() {
   const router = useRouter();
   const { me, loading: authLoading } = useAdminMe(true);
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(false);

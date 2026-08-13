@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 
 interface FeedbackRow {
@@ -63,7 +63,7 @@ function avgScore(r: FeedbackRow): string {
 
 export default function FeedbackPage() {
   const { me, loading: authLoading } = useAdminMe();
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [rows, setRows] = useState<FeedbackRow[]>([]);
   const [loading, setLoading] = useState(false);

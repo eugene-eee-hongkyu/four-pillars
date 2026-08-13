@@ -10,7 +10,7 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-nati
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 
 interface Saju {
   sessionId: string;
@@ -58,7 +58,7 @@ export default function UserDetailPage() {
   const router = useRouter();
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { me, loading: authLoading } = useAdminMe();
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [user, setUser] = useState<UserInfo | null>(null);
   const [sajus, setSajus] = useState<Saju[]>([]);

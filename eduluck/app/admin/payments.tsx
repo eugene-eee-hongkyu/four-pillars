@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 
 interface OrderRow {
@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<string, string> = { pending: '대기', paid: '결제�
 
 export default function PaymentsPage() {
   const { me, loading: authLoading } = useAdminMe();
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);

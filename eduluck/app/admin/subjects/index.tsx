@@ -16,7 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { DIRECTION_KEYS, DIRECTION_UI_LABELS, type DirectionKey } from '@/lib/direction-system';
 
@@ -63,7 +63,7 @@ interface ListResponse {
 export default function AdminSubjects() {
   const router = useRouter();
   const { me, loading: authLoading } = useAdminMe();
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 

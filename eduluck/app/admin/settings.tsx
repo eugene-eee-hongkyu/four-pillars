@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useAdminMe } from '@/lib/admin/useAdminMe';
 import { adminFetch } from '@/lib/admin/client';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAdminLogout } from '@/lib/admin/session';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { DEEP_SECTIONS } from '@/lib/prompts/deep-sections';
 import { resolveFreeSections, type DeepSectionAccessConfig } from '@/lib/config/app-config';
@@ -42,7 +42,7 @@ function summarize(c: Config): string {
 
 export default function SettingsPage() {
   const { me, loading: authLoading } = useAdminMe();
-  const { logout } = useAuth();
+  const logout = useAdminLogout();
 
   const [config, setConfig] = useState<Config | null>(null);
   const [savedConfig, setSavedConfig] = useState<Config | null>(null);
