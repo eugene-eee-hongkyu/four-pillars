@@ -9,12 +9,17 @@ import { View, Text, Pressable, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useFlow } from '@/lib/flow/context';
 import { track, EVENTS } from '@/lib/analytics/mixpanel';
 
 export function AppHeader() {
   const router = useRouter();
   const { user, login, logout } = useAuth();
+  const { state } = useFlow();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // 진단 이력이 있는 사용자(구매자 포함)에게만 '내 리포트' 노출 — 신규 방문자에겐 숨김.
+  const hasHistory = state.sessionsHistory.length > 0 || !!state.sessionId;
 
   const handleLogo = () => router.push('/' as never);
 
@@ -42,6 +47,16 @@ export function AppHeader() {
       </Pressable>
 
       <View className="flex-row items-center gap-3">
+        {hasHistory && (
+          <Pressable
+            onPress={() => router.push('/reports' as never)}
+            accessibilityRole="button"
+            accessibilityLabel="내 리포트"
+            className="px-2 py-1 active:opacity-70"
+          >
+            <Text className="font-body text-label-sm text-text-sub">내 리포트</Text>
+          </Pressable>
+        )}
         {user ? (
           <Pressable
             onPress={() => setMenuOpen(true)}

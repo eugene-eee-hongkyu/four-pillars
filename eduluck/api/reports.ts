@@ -28,6 +28,7 @@ interface OrderRow {
 function toClient(o: OrderRow) {
   return {
     orderId: o.id,
+    sessionId: o.session_id, // 재발송 시 소유 검증에 사용(클라이언트가 이미 소유)
     status: o.status,
     fulfilled: o.fulfilled,
     fulfillError: o.fulfill_error,
