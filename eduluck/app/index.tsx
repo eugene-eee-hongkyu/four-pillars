@@ -15,6 +15,7 @@ import { StickyCTA } from '@/components/ui/StickyCTA';
 import { Toast } from '@/components/ui/Toast';
 import { LegalFooter } from '@/components/ui/LegalFooter';
 import { PaywallModal } from '@/components/PaywallModal';
+import { UnfulfilledReportBanner } from '@/components/UnfulfilledReportBanner';
 import { useFlow, getOrCreateDeviceId, type SavedSession } from '@/lib/flow/context';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { isChildCapReached } from '@/lib/paywall/policy';
@@ -260,6 +261,7 @@ export default function Landing() {
     return (
       <View className="flex-1 bg-surface">
         <ScrollView contentContainerClassName="flex-grow pt-6 pb-32">
+        <UnfulfilledReportBanner />
         <View className="px-container-padding gap-6">
           <View className="gap-2 mt-2">
             <Text className="font-heading-bold text-display-sm text-text-pri">
