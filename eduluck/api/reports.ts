@@ -9,6 +9,8 @@ import { getSupabaseServer } from '../lib/supabase/server';
 import { fulfillOrder } from '../lib/payments/fulfill';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// session_id 는 uuid 컬럼 — uuid 아닌 값을 .in() 에 넣으면 Postgres 가 500. 형식 필터로 방어.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_SESSIONS = 50;
 
 interface OrderRow {
@@ -47,7 +49,7 @@ export async function GET(request: Request) {
   const sessionIds = raw
     .split(',')
     .map((s) => s.trim())
-    .filter(Boolean)
+    .filter((s) => UUID_RE.test(s)) // uuid 형식만 (잘못된 값 → 500 방지)
     .slice(0, MAX_SESSIONS);
   if (sessionIds.length === 0) {
     return Response.json({ orders: [] });
