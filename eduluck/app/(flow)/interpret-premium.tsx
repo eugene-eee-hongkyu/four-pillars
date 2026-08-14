@@ -226,12 +226,37 @@ export default function InterpretPremium() {
         {/* === Part 1 완료 → "다음 7개 항목 보기" 버튼 (Part 1 화면의 끝) === */}
         {/*    비회원: 클릭 시 카카오 로그인 paywall · 회원: 자동 진입 */}
         {part1Done && !part2Visible && !state.premiumPart2Text && (
-          <View className="px-container-padding mt-4">
+          <View className="px-container-padding mt-4 gap-3">
             <Button onPress={handlePart2Click}>
               {user
                 ? '📖 다음 7개 항목 보기 (학원·진로·미래)'
                 : '🔒 다음 7개 항목 보기 (카카오 로그인)'}
             </Button>
+
+            {/* 비회원 결제 진입로 — 로그인 없이도 결제까지 도달 가능해야 함(토스 PG 검수 요건).
+                checkout 은 sessionId+childSubjectId 만 필요, Part2 열람과 무관. 회원은 Part2 완료 후 결제 CTA로 커버. */}
+            {!user &&
+              (hasPaidOrder ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/reports' as never)}
+                  className="px-6 py-4 rounded-md border border-primary items-center active:opacity-80"
+                >
+                  <Text className="font-body-bold text-body-md text-primary">
+                    📄 리포트 구매 내역 보기
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push('/(flow)/checkout' as never)}
+                  className="px-6 py-4 rounded-md bg-primary items-center active:opacity-80"
+                >
+                  <Text className="font-body-bold text-body-md text-surface-container-low">
+                    📄 정밀 학운 리포트 PDF로 받기 ({formatPrice(PDF_REPORT.price)})
+                  </Text>
+                </Pressable>
+              ))}
           </View>
         )}
 
