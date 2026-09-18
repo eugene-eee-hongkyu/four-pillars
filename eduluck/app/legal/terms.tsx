@@ -6,7 +6,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LegalFooter } from '@/components/ui/LegalFooter';
 import { BUSINESS_INFO } from '@/lib/legal/business-info';
-import { PRICING } from '@/lib/legal/pricing';
+import { PDF_REPORT } from '@/lib/legal/pricing';
 
 export default function Terms() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function Terms() {
             {'1. "서비스"란 회사가 제공하는 사주 학운 진단 및 관련 부가 서비스를 의미합니다.\n'}
             {'2. "이용자"란 본 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.\n'}
             {'3. "회원"이란 카카오 계정 등 외부 인증을 통해 서비스에 가입한 자를 의미합니다.\n'}
-            {'4. "유료 콘텐츠"란 결제를 통해 제공되는 PDF 진단 결과 및 추가 기능을 의미합니다.'}
+            {'4. "유료 콘텐츠"란 결제를 통해 제공되는 정밀 학운 리포트 PDF(요약본·상세본)를 의미합니다.'}
           </Section>
 
           <Section title="제3조 (약관의 효력 및 변경)">
@@ -50,10 +50,12 @@ export default function Terms() {
 
           <Section title="제4조 (서비스의 제공)">
             {'1. 회사는 다음 서비스를 제공합니다:\n'}
-            {'   - 자녀 사주 무료 학운 진단 (회원 5명·영역 5개까지)\n'}
-            {'   - 어머니·아버지 사주 추가 정밀 진단\n'}
-            {'   - 20영역 통합 PDF 진단 결과 (유료)\n'}
-            {'2. 서비스는 연중무휴 24시간 제공함을 원칙으로 하나, 시스템 점검 등 사유로 일시 중단될 수 있습니다.'}
+            {'   - 자녀 사주 무료 학운 진단: 비회원은 자녀 1명·기본 진단(7개 영역), 회원은 자녀 5명까지 전체 진단(14개 영역)\n'}
+            {'   - 어머니·아버지 사주를 반영한 부모-자녀 합 진단\n'}
+            {'   - 영역별 상세 풀이 (회사가 정한 범위 내에서 무료 제공)\n'}
+            {'   - 정밀 학운 리포트 PDF (유료): 14개 영역 요약본 및 14개 영역 상세본\n'}
+            {'2. 서비스는 연중무휴 24시간 제공함을 원칙으로 하나, 시스템 점검 등 사유로 일시 중단될 수 있습니다.\n'}
+            {'3. 무료로 제공되는 범위(자녀 수·영역 수 등)는 회사의 운영 정책에 따라 변경될 수 있으며, 변경 시 서비스 내에 안내합니다.'}
           </Section>
 
           <Section title="제5조 (이용자의 의무)">
@@ -65,7 +67,7 @@ export default function Terms() {
           </Section>
 
           <Section title="제6조 (유료 콘텐츠 및 결제)">
-            {`1. 유료 PDF 진단의 정가는 ${PRICING.pdfRegularPrice.toLocaleString('ko-KR')}원이며, 결제 시점의 표시 가격이 적용됩니다.\n`}
+            {`1. 정밀 학운 리포트 PDF의 가격은 ${PDF_REPORT.price.toLocaleString('ko-KR')}원이며, 결제 시점의 표시 가격이 적용됩니다.\n`}
             {'2. 결제 수단은 회사가 제공하는 PG사를 통한 카드결제·간편결제 등으로 한정합니다.\n'}
             {'3. 결제 완료 후 다운로드 또는 열람 시점부터 청약철회가 제한됩니다 (자세한 사항은 환불 정책 참조).\n'}
             {'4. 유료 PDF 리포트는 결제 완료 후 이용자가 입력한 이메일로 다운로드 링크 형태로 제공되며, 이용기간은 결제일로부터 1년입니다. 이용자는 이 기간 내에 링크를 통해 리포트를 다운로드할 수 있습니다.\n'}
