@@ -195,6 +195,7 @@ export default function Checkout() {
             }}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: agreed }}
+            aria-checked={agreed}
             accessibilityLabel="환불 정책 및 다운로드 이용기간 동의 (필수)"
             className="flex-row items-start gap-3 active:opacity-70"
           >
