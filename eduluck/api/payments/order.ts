@@ -12,6 +12,8 @@ interface Body {
   childSubjectId?: string;
   email?: string;
   childNickname?: string;
+  /** 결제 화면의 필수 동의(다운로드·열람 후 환불 제한 + 이용기간 1년). true 여야 주문 생성. */
+  agreedRefundPolicy?: boolean;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,6 +32,10 @@ export async function POST(request: Request) {
   }
   if (!EMAIL_RE.test(email)) {
     return Response.json({ error: '올바른 이메일을 입력해주세요.' }, { status: 400 });
+  }
+  // 환불 제한·이용기간 동의는 서버에서도 강제 — 화면 우회로 동의 없는 결제가 생기지 않게.
+  if (body.agreedRefundPolicy !== true) {
+    return Response.json({ error: '환불 정책 및 다운로드 이용기간 안내에 동의해주세요.' }, { status: 400 });
   }
 
   const sb = getSupabaseServer();
@@ -56,6 +62,7 @@ export async function POST(request: Request) {
     amount: PDF_REPORT.price,
     order_name: PDF_REPORT.name,
     status: 'pending',
+    refund_policy_agreed_at: new Date().toISOString(), // 동의 증거(분쟁 대응)
   });
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });

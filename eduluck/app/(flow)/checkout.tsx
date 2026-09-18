@@ -46,6 +46,9 @@ export default function Checkout() {
   const [widgetReady, setWidgetReady] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // [필수] 다운로드·열람 후 환불 제한 + 이용기간 1년 동의 (전자상거래법 §17 ②5호·⑥ 사전 고지).
+  // 서버(/api/payments/order)도 동의 없으면 주문을 만들지 않고, 동의 시각을 주문에 기록한다.
+  const [agreed, setAgreed] = useState(false);
   // 토스 결제위젯 인스턴스 (결제하기 클릭 시 requestPayment 호출)
   const widgetsRef = useRef<Awaited<ReturnType<Awaited<ReturnType<typeof loadTossPayments>>['widgets']>> | null>(null);
 
@@ -88,6 +91,10 @@ export default function Checkout() {
       setError('리포트를 받으실 이메일을 정확히 입력해주세요.');
       return;
     }
+    if (!agreed) {
+      setError('환불 정책 및 다운로드 이용기간 안내에 동의해주세요.');
+      return;
+    }
     if (!widgetsRef.current || !state.sessionId || !state.childSubjectId) return;
     setPaying(true);
     try {
@@ -99,6 +106,7 @@ export default function Checkout() {
           childSubjectId: state.childSubjectId,
           email: email.trim(),
           childNickname: nickname,
+          agreedRefundPolicy: true,
         }),
       });
       if (!res.ok) {
@@ -178,10 +186,47 @@ export default function Checkout() {
           <View className="items-center py-4"><ActivityIndicator /></View>
         )}
 
+        {/* [필수] 환불 제한·이용기간 동의 — 결제 전 명확한 고지(전자상거래법 §17) */}
+        <View className="p-card-padding rounded-md border border-outline-warm bg-surface-container-low gap-2">
+          <Pressable
+            onPress={() => {
+              setAgreed((v) => !v);
+              setError(null);
+            }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: agreed }}
+            accessibilityLabel="환불 정책 및 다운로드 이용기간 동의 (필수)"
+            className="flex-row items-start gap-3 active:opacity-70"
+          >
+            <View
+              className={`w-6 h-6 mt-0.5 rounded border items-center justify-center ${agreed ? 'bg-primary border-primary' : 'bg-surface border-outline-warm'}`}
+            >
+              {agreed && <Text className="font-body-bold text-label-md text-white">✓</Text>}
+            </View>
+            <Text className="flex-1 font-body text-label-md text-text-pri leading-relaxed">
+              <Text className="font-body-bold">[필수]</Text> 본 상품은 디지털 콘텐츠로, 리포트를{' '}
+              <Text className="font-body-bold">내려받은 이후에는 환불(청약철회)이 제한</Text>되며,
+              내려받기 전에는 결제일로부터 7일 이내 전액 환불됩니다. 다운로드 이용기간은{' '}
+              <Text className="font-body-bold">결제일로부터 1년</Text>임을 확인하고 동의합니다.
+            </Text>
+          </Pressable>
+          <Text className="font-body text-label-sm text-text-sub leading-relaxed pl-9">
+            결제 전 무료 진단으로 내용과 품질을 미리 확인하실 수 있습니다.
+          </Text>
+          <View className="flex-row items-center gap-3 pl-9">
+            <Pressable onPress={() => router.push('/legal/refund' as never)} className="py-1 active:opacity-70">
+              <Text className="font-body text-label-sm text-primary underline">환불 정책 보기</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push('/legal/terms' as never)} className="py-1 active:opacity-70">
+              <Text className="font-body text-label-sm text-primary underline">이용약관 보기</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <Pressable
           onPress={handlePay}
-          disabled={!widgetReady || paying}
-          className={`px-4 py-4 rounded-md items-center ${!widgetReady || paying ? 'bg-outline-warm' : 'bg-primary'}`}
+          disabled={!widgetReady || paying || !agreed}
+          className={`px-4 py-4 rounded-md items-center ${!widgetReady || paying || !agreed ? 'bg-outline-warm' : 'bg-primary'}`}
         >
           {paying ? (
             <ActivityIndicator color="#fff" />
