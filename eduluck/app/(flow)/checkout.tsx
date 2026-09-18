@@ -167,7 +167,7 @@ export default function Checkout() {
             keyboardType="email-address"
             className="px-4 py-3 rounded-md bg-surface-container-low border border-outline-warm font-body text-body-md"
           />
-          <Text className="font-body text-label-sm text-text-sub">결제 완료 후 이 주소로 PDF 리포트를 보내드려요.</Text>
+          <Text className="font-body text-label-sm text-text-sub">결제 완료 후 이 주소로 PDF 리포트 다운로드 링크를 보내드려요. (결제일로부터 1년간 다운로드 가능)</Text>
         </View>
 
         {/* 토스 결제위젯 — 결제수단 + 약관 */}

@@ -27,9 +27,9 @@ export const BUSINESS_INFO = {
   email: 'info@z21labs.xyz',
 
   // 정책 페이지 발효일
-  termsEffectiveDate: '2026-05-30',
+  termsEffectiveDate: '2026-09-18',
   privacyEffectiveDate: '2026-05-30',
-  refundEffectiveDate: '2026-05-30',
+  refundEffectiveDate: '2026-09-18',
 } as const;
 
 /** 사업자 정보가 placeholder인지 확인 (development helper) */

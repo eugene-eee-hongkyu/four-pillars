@@ -19,9 +19,15 @@ interface OrderRow {
   fulfill_error: string | null;
   detail_fulfilled: boolean;
   detail_error: string | null;
+  summary_pdf_path: string | null;
+  detail_pdf_path: string | null;
+  download_expires_at: string | null;
+  first_downloaded_at: string | null;
   created_at: string;
   paid_at: string | null;
 }
+
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('ko-KR');
 
 const STATUS_LABEL: Record<string, string> = { pending: '대기', paid: '결제완료', failed: '실패' };
 
@@ -118,6 +124,26 @@ export default function PaymentsPage() {
     }
   };
 
+  // 다운로드 이용기간 연장(기본 1년). 만료된 주문도 오늘부터 되살아남. 감사 로그에 기록됨.
+  const extendExpiry = async (orderId: string, days = 365) => {
+    if (resending) return;
+    setResending(orderId);
+    setError(null);
+    try {
+      const res = await adminFetch('/api/admin/payments', {
+        method: 'POST',
+        body: JSON.stringify({ orderId, extendDays: days }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+      await fetchOrders();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '만료 연장 실패');
+    } finally {
+      setResending(null);
+    }
+  };
+
   if (authLoading || !me) {
     return (
       <View className="flex-1 items-center justify-center bg-surface">
@@ -170,7 +196,7 @@ export default function PaymentsPage() {
                     <Text
                       className={`font-body text-label-sm flex-1 ${r.fulfilled ? 'text-secondary' : 'text-fire'}`}
                     >
-                      {r.fulfilled ? '✓ PDF 이메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
+                      {r.fulfilled ? '✓ 요약 링크 메일 발송 완료' : `✗ 발송 실패${r.fulfill_error ? ` — ${r.fulfill_error}` : ''}`}
                     </Text>
                     {editingId !== r.id && (
                       <View className="flex-row items-center gap-2">
@@ -253,6 +279,34 @@ export default function PaymentsPage() {
                     >
                       <Text className="font-body text-label-sm text-text-pri">
                         {resending === r.id ? '처리 중…' : '상세 재발송'}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {/* 다운로드 이용기간(결제일+1년) + 연장. 만료 후 1년 더 보관 뒤 파일 삭제. */}
+                  <View className="flex-row items-center justify-between gap-2 flex-wrap border-t border-outline-warm/40 pt-2">
+                    <Text
+                      className={`font-body text-label-sm flex-1 ${
+                        r.download_expires_at && new Date(r.download_expires_at).getTime() < Date.now()
+                          ? 'text-fire'
+                          : 'text-text-sub'
+                      }`}
+                    >
+                      {r.download_expires_at
+                        ? new Date(r.download_expires_at).getTime() < Date.now()
+                          ? `⛔ 다운로드 만료 (${fmtDate(r.download_expires_at)})`
+                          : `다운로드 ${fmtDate(r.download_expires_at)}까지`
+                        : '다운로드 기간 미설정(첫 발송 시 결제일+1년)'}
+                      {r.first_downloaded_at ? ` · 최초 다운로드 ${fmtDate(r.first_downloaded_at)}` : ' · 아직 다운로드 안 함'}
+                      {` · 보관 파일: 요약 ${r.summary_pdf_path ? '○' : '✗'} / 상세 ${r.detail_pdf_path ? '○' : '✗'}`}
+                    </Text>
+                    <Pressable
+                      onPress={() => extendExpiry(r.id)}
+                      disabled={resending === r.id}
+                      className="px-3 py-1.5 rounded-md border border-outline-warm"
+                    >
+                      <Text className="font-body text-label-sm text-text-pri">
+                        {resending === r.id ? '처리 중…' : '1년 연장'}
                       </Text>
                     </Pressable>
                   </View>
