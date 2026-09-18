@@ -39,7 +39,8 @@ export type AdminAction =
   | 'revoke_redo'
   | 'view_user'
   | 'delete_session'
-  | 'update_config';
+  | 'update_config'
+  | 'extend_download_expiry';
 
 interface VerifyResult {
   ok: true;
